@@ -7,9 +7,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { Calendar as CalendarIcon, Phone, MessageSquare } from "lucide-react"
 
 type KanbanColumn = {
   id: string
@@ -19,90 +25,89 @@ type KanbanColumn = {
 
 type KanbanCard = {
   id: string
-  title: string
-  description: string
-  dueDate?: Date
+  clientName: string
+  leadSource: string
+  phoneNumber: string
+  activities?: string[]
   labels?: string[]
 }
 
 const initialColumns: KanbanColumn[] = [
   {
-    id: "primeiro-contato",
-    title: "Primeiro Contato",
+    id: "novo-cadastro",
+    title: "Novo Cadastro",
     cards: [
       {
         id: "1",
-        title: "Apresentação Inicial",
-        description: "Fazer apresentação inicial da empresa e serviços",
-        dueDate: new Date("2024-03-20"),
-        labels: ["novo-lead", "prioridade-alta"],
+        clientName: "João Silva",
+        leadSource: "Site",
+        phoneNumber: "5511999999999",
+        activities: ["Primeiro Contato"],
+        labels: ["novo-lead"],
       },
       {
         id: "2",
-        title: "Qualificação do Lead",
-        description: "Verificar interesse e potencial do cliente",
-        dueDate: new Date("2024-03-21"),
-        labels: ["qualificação"],
-      },
-    ],
-  },
-  {
-    id: "em-negociacao",
-    title: "Em Negociação",
-    cards: [
-      {
-        id: "3",
-        title: "Proposta Comercial",
-        description: "Elaborar e enviar proposta comercial personalizada",
-        dueDate: new Date("2024-03-22"),
-        labels: ["proposta", "em-andamento"],
-      },
-      {
-        id: "4",
-        title: "Follow-up",
-        description: "Acompanhamento da proposta enviada",
-        dueDate: new Date("2024-03-23"),
+        clientName: "Maria Santos",
+        leadSource: "Indicação",
+        phoneNumber: "5511988888888",
+        activities: ["Aguardando Retorno"],
         labels: ["follow-up"],
       },
     ],
   },
   {
-    id: "fechamento",
-    title: "Fechamento",
+    id: "tentativa-contato",
+    title: "Em tentativa de Contato",
     cards: [
       {
-        id: "5",
-        title: "Negociação Final",
-        description: "Ajustes finais e alinhamento de expectativas",
-        dueDate: new Date("2024-03-24"),
-        labels: ["negociação", "prioridade-alta"],
-      },
-      {
-        id: "6",
-        title: "Contrato",
-        description: "Preparação e envio do contrato para assinatura",
-        dueDate: new Date("2024-03-25"),
-        labels: ["documentação"],
+        id: "3",
+        clientName: "Pedro Oliveira",
+        leadSource: "Instagram",
+        phoneNumber: "5511977777777",
+        activities: ["Segunda Tentativa"],
+        labels: ["em-andamento"],
       },
     ],
   },
   {
-    id: "pos-venda",
-    title: "Pós-Venda",
+    id: "contato-efetivo",
+    title: "Contato Efetivo",
     cards: [
       {
-        id: "7",
-        title: "Onboarding",
-        description: "Processo de integração do novo cliente",
-        dueDate: new Date("2024-03-26"),
-        labels: ["onboarding", "cliente-novo"],
+        id: "4",
+        clientName: "Ana Costa",
+        leadSource: "Facebook",
+        phoneNumber: "5511966666666",
+        activities: ["Interesse Confirmado"],
+        labels: ["qualificado"],
       },
+    ],
+  },
+  {
+    id: "atendimento-agendado",
+    title: "Atendimento Agendado",
+    cards: [
       {
-        id: "8",
-        title: "Acompanhamento",
-        description: "Monitoramento da satisfação do cliente",
-        dueDate: new Date("2024-03-27"),
-        labels: ["satisfação"],
+        id: "5",
+        clientName: "Carlos Ferreira",
+        leadSource: "Google Ads",
+        phoneNumber: "5511955555555",
+        activities: ["Consulta Marcada"],
+        labels: ["agendado"],
+      },
+    ],
+  },
+  {
+    id: "atendimento-realizado",
+    title: "Atendimento Realizado",
+    cards: [
+      {
+        id: "6",
+        clientName: "Lucia Mendes",
+        leadSource: "LinkedIn",
+        phoneNumber: "5511944444444",
+        activities: ["Pós Atendimento"],
+        labels: ["finalizado"],
       },
     ],
   },
@@ -118,6 +123,10 @@ export function KanbanBoard() {
     event.stopPropagation()
     setSelectedDate(date)
     setIsCalendarOpen(false)
+  }
+
+  const handleWhatsAppClick = (phoneNumber: string) => {
+    window.open(`https://wa.me/${phoneNumber}`, '_blank')
   }
 
   return (
@@ -163,33 +172,64 @@ export function KanbanBoard() {
             </div>
             <div className="flex flex-col gap-4">
               {column.cards.map((card) => (
-                <Card key={card.id}>
-                  <CardHeader className="p-4">
-                    <CardTitle className="text-base">{card.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <p className="text-sm text-muted-foreground">
-                      {card.description}
-                    </p>
-                    {card.dueDate && (
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        Due: {format(card.dueDate, "PPP")}
-                      </div>
-                    )}
-                    {card.labels && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {card.labels.map((label) => (
-                          <span
-                            key={label}
-                            className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium"
-                          >
-                            {label}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                <DropdownMenu key={card.id}>
+                  <DropdownMenuTrigger asChild>
+                    <Card className="cursor-pointer hover:bg-accent/5">
+                      <CardHeader className="p-4">
+                        <CardTitle className="text-base">{card.clientName}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">
+                            Origem: {card.leadSource}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4" />
+                            <span className="text-sm">{card.phoneNumber}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-auto"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleWhatsAppClick(card.phoneNumber)
+                              }}
+                            >
+                              <MessageSquare className="h-4 w-4 text-green-500" />
+                            </Button>
+                          </div>
+                          {card.activities && (
+                            <div className="mt-2">
+                              <p className="text-xs font-medium text-muted-foreground">
+                                Última atividade:
+                              </p>
+                              <p className="text-sm">
+                                {card.activities[card.activities.length - 1]}
+                              </p>
+                            </div>
+                          )}
+                          {card.labels && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {card.labels.map((label) => (
+                                <span
+                                  key={label}
+                                  className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium"
+                                >
+                                  {label}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem>Adicionar Atividade</DropdownMenuItem>
+                    <DropdownMenuItem>Ver Histórico</DropdownMenuItem>
+                    <DropdownMenuItem>Editar Informações</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ))}
             </div>
           </div>
