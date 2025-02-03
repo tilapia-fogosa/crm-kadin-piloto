@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -14,33 +13,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-import { format, addDays, setHours, setMinutes, getHours } from "date-fns"
-import { Calendar as CalendarIcon, Phone, MessageSquare } from "lucide-react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
-type KanbanColumn = {
-  id: string
-  title: string
-  cards: KanbanCard[]
-}
-
-type KanbanCard = {
-  id: string
-  clientName: string
-  leadSource: string
-  phoneNumber: string
-  activities?: string[]
-  labels?: string[]
-}
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import { KanbanCard } from "./KanbanCard"
+import { ContactAttemptForm } from "./ContactAttemptForm"
+import { KanbanColumn, KanbanCard as KanbanCardType, ContactAttempt } from "./types"
 
 const initialColumns: KanbanColumn[] = [
   {
@@ -124,20 +103,12 @@ const initialColumns: KanbanColumn[] = [
 ]
 
 export function KanbanBoard() {
-  const [columns] = useState<KanbanColumn[]>(initialColumns)
+  const [columns, setColumns] = useState<KanbanColumn[]>(initialColumns)
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
-  const [selectedCard, setSelectedCard] = useState<KanbanCard | null>(null)
+  const [selectedCard, setSelectedCard] = useState<KanbanCardType | null>(null)
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
-  const [contactType, setContactType] = useState<string>("phone")
-  const [nextContactDate, setNextContactDate] = useState<Date>(() => {
-    const now = new Date()
-    const tomorrow = addDays(now, 1)
-    const hour = getHours(now) >= 12 ? 8 : 14
-    return setHours(setMinutes(tomorrow, 0), hour)
-  })
-  const [selectedHour, setSelectedHour] = useState<string>("08")
-  const [selectedMinute, setSelectedMinute] = useState<string>("00")
+  const { toast } = useToast()
 
   const handleDateSelect = (event: React.MouseEvent, date: Date) => {
     event.preventDefault()
@@ -161,30 +132,50 @@ export function KanbanBoard() {
 
   const handleActivitySelect = (activityId: string) => {
     setSelectedActivity(activityId)
-    if (activityId === 'tentativa') {
-      const now = new Date()
-      const tomorrow = addDays(now, 1)
-      const suggestedHour = getHours(now) >= 12 ? "08" : "14"
-      setSelectedHour(suggestedHour)
-      setSelectedMinute("00")
-      setNextContactDate(setHours(setMinutes(tomorrow, 0), parseInt(suggestedHour)))
-    }
   }
 
-  const handleDateTimeChange = (date: Date | undefined, hour: string, minute: string) => {
-    if (date) {
-      const newDate = setHours(setMinutes(date, parseInt(minute)), parseInt(hour))
-      setNextContactDate(newDate)
-    }
-  }
-
-  const handleRegisterAttempt = () => {
-    console.log("Registering attempt:", {
-      contactType,
-      nextContactDate,
-      selectedCard,
+  const handleRegisterAttempt = (attempt: ContactAttempt) => {
+    console.log("Registering attempt:", attempt)
+    
+    setColumns(prevColumns => {
+      const newColumns = [...prevColumns]
+      
+      // Find the card in the "Novo Cadastro" column
+      const novoCadastroColumn = newColumns.find(col => col.id === "novo-cadastro")
+      const cardIndex = novoCadastroColumn?.cards.findIndex(card => card.id === attempt.cardId)
+      
+      if (novoCadastroColumn && cardIndex !== undefined && cardIndex !== -1) {
+        const card = novoCadastroColumn.cards[cardIndex]
+        
+        // Remove card from "Novo Cadastro"
+        novoCadastroColumn.cards.splice(cardIndex, 1)
+        
+        // Add activity to card
+        const updatedCard = {
+          ...card,
+          activities: [
+            ...(card.activities || []),
+            `Tentativa de Contato - ${format(attempt.nextContactDate, "dd/MM/yyyy HH:mm")}`
+          ]
+        }
+        
+        // Add card to "Em tentativa de Contato"
+        const tentativaColumn = newColumns.find(col => col.id === "tentativa-contato")
+        if (tentativaColumn) {
+          tentativaColumn.cards.push(updatedCard)
+        }
+      }
+      
+      return newColumns
     })
-    // Here you would implement the logic to save the attempt
+
+    toast({
+      title: "Tentativa registrada",
+      description: "O lead foi movido para 'Em tentativa de Contato'",
+    })
+
+    // Close the dialog by clearing the selected card
+    setSelectedCard(null)
   }
 
   return (
@@ -230,54 +221,15 @@ export function KanbanBoard() {
             </div>
             <div className="flex flex-col gap-4">
               {column.cards.map((card) => (
-                <Dialog key={card.id}>
+                <Dialog key={card.id} open={selectedCard?.id === card.id} onOpenChange={(open) => !open && setSelectedCard(null)}>
                   <DialogTrigger asChild>
-                    <Card className="cursor-pointer hover:bg-accent/5">
-                      <CardHeader className="p-4">
-                        <CardTitle className="text-base">{card.clientName}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground">
-                            Origem: {card.leadSource}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="p-0"
-                              onClick={(e) => handleWhatsAppClick(e, card.phoneNumber)}
-                            >
-                              <MessageSquare className="h-4 w-4 text-green-500" />
-                            </Button>
-                            <Phone className="h-4 w-4" />
-                            <span className="text-sm">{card.phoneNumber}</span>
-                          </div>
-                          {card.activities && (
-                            <div className="mt-2">
-                              <p className="text-xs font-medium text-muted-foreground">
-                                Última atividade:
-                              </p>
-                              <p className="text-sm">
-                                {card.activities[card.activities.length - 1]}
-                              </p>
-                            </div>
-                          )}
-                          {card.labels && (
-                            <div className="mt-2 flex flex-wrap gap-1">
-                              {card.labels.map((label) => (
-                                <span
-                                  key={label}
-                                  className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium"
-                                >
-                                  {label}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <div onClick={() => setSelectedCard(card)}>
+                      <KanbanCard
+                        card={card}
+                        onClick={() => setSelectedCard(card)}
+                        onWhatsAppClick={(e) => handleWhatsAppClick(e, card.phoneNumber)}
+                      />
+                    </div>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[600px]" onPointerDownOutside={(e) => e.preventDefault()}>
                     <DialogHeader>
@@ -301,104 +253,10 @@ export function KanbanBoard() {
                       </div>
                       <div className="border-l pl-4">
                         {selectedActivity === 'tentativa' ? (
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <Label>Tipo de Contato</Label>
-                              <RadioGroup
-                                value={contactType}
-                                onValueChange={setContactType}
-                                className="flex flex-col space-y-2"
-                              >
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="phone" id="phone" />
-                                  <Label htmlFor="phone">Ligação Telefônica</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="whatsapp" id="whatsapp" />
-                                  <Label htmlFor="whatsapp">Mensagem WhatsApp</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="whatsapp-call" id="whatsapp-call" />
-                                  <Label htmlFor="whatsapp-call">Ligação WhatsApp</Label>
-                                </div>
-                              </RadioGroup>
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Próximo Contato</Label>
-                              <div className="flex flex-col gap-2">
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      className={cn(
-                                        "w-full justify-start text-left font-normal",
-                                        !nextContactDate && "text-muted-foreground"
-                                      )}
-                                    >
-                                      <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {nextContactDate ? (
-                                        format(nextContactDate, "dd/MM/yyyy")
-                                      ) : (
-                                        <span>Selecione uma data</span>
-                                      )}
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                      mode="single"
-                                      selected={nextContactDate}
-                                      onSelect={(date) => handleDateTimeChange(date, selectedHour, selectedMinute)}
-                                      initialFocus
-                                    />
-                                  </PopoverContent>
-                                </Popover>
-                                <div className="flex gap-2">
-                                  <Select
-                                    value={selectedHour}
-                                    onValueChange={(value) => {
-                                      setSelectedHour(value)
-                                      handleDateTimeChange(nextContactDate, value, selectedMinute)
-                                    }}
-                                  >
-                                    <SelectTrigger className="w-[110px]">
-                                      <SelectValue placeholder="Hora" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {Array.from({ length: 24 }, (_, i) => 
-                                        <SelectItem key={i} value={i.toString().padStart(2, '0')}>
-                                          {i.toString().padStart(2, '0')}:00
-                                        </SelectItem>
-                                      )}
-                                    </SelectContent>
-                                  </Select>
-                                  <Select
-                                    value={selectedMinute}
-                                    onValueChange={(value) => {
-                                      setSelectedMinute(value)
-                                      handleDateTimeChange(nextContactDate, selectedHour, value)
-                                    }}
-                                  >
-                                    <SelectTrigger className="w-[110px]">
-                                      <SelectValue placeholder="Minuto" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {['00', '15', '30', '45'].map((minute) => (
-                                        <SelectItem key={minute} value={minute}>
-                                          {minute}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-                            </div>
-                            <Button 
-                              onClick={handleRegisterAttempt}
-                              className="mt-4"
-                            >
-                              Cadastrar Tentativa
-                            </Button>
-                          </div>
+                          <ContactAttemptForm
+                            onSubmit={handleRegisterAttempt}
+                            cardId={card.id}
+                          />
                         ) : (
                           <p className="text-sm text-muted-foreground">
                             Selecione uma atividade para ver as opções

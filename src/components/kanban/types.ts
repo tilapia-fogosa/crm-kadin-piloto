@@ -1,0 +1,20 @@
+export type KanbanColumn = {
+  id: string
+  title: string
+  cards: KanbanCard[]
+}
+
+export type KanbanCard = {
+  id: string
+  clientName: string
+  leadSource: string
+  phoneNumber: string
+  activities?: string[]
+  labels?: string[]
+}
+
+export type ContactAttempt = {
+  type: 'phone' | 'whatsapp' | 'whatsapp-call'
+  nextContactDate: Date
+  cardId: string
+}
