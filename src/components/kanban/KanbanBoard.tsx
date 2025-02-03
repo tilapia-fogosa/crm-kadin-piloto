@@ -3,19 +3,20 @@ import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon, Phone, MessageSquare } from "lucide-react"
+import { Calendar as CalendarIcon, Phone, WhatsappIcon } from "lucide-react"
 
 type KanbanColumn = {
   id: string
@@ -117,6 +118,7 @@ export function KanbanBoard() {
   const [columns] = useState<KanbanColumn[]>(initialColumns)
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
+  const [selectedCard, setSelectedCard] = useState<KanbanCard | null>(null)
 
   const handleDateSelect = (event: React.MouseEvent, date: Date) => {
     event.preventDefault()
@@ -125,9 +127,18 @@ export function KanbanBoard() {
     setIsCalendarOpen(false)
   }
 
-  const handleWhatsAppClick = (phoneNumber: string) => {
-    window.open(`https://wa.me/${phoneNumber}`, '_blank')
+  const handleWhatsAppClick = (e: React.MouseEvent, phoneNumber: string) => {
+    e.stopPropagation()
+    const formattedNumber = phoneNumber.replace(/\D/g, '')
+    window.open(`https://api.whatsapp.com/send?phone=${formattedNumber}`, '_blank')
   }
+
+  const activities = [
+    { id: 'tentativa', label: 'Tentativa de Contato' },
+    { id: 'efetivo', label: 'Contato Efetivo' },
+    { id: 'agendamento', label: 'Agendamento' },
+    { id: 'atendimento', label: 'Atendimento' },
+  ]
 
   return (
     <div className="flex h-full w-full flex-col gap-4 p-4">
@@ -172,8 +183,8 @@ export function KanbanBoard() {
             </div>
             <div className="flex flex-col gap-4">
               {column.cards.map((card) => (
-                <DropdownMenu key={card.id}>
-                  <DropdownMenuTrigger asChild>
+                <Dialog key={card.id}>
+                  <DialogTrigger asChild>
                     <Card className="cursor-pointer hover:bg-accent/5">
                       <CardHeader className="p-4">
                         <CardTitle className="text-base">{card.clientName}</CardTitle>
@@ -184,19 +195,16 @@ export function KanbanBoard() {
                             Origem: {card.leadSource}
                           </p>
                           <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4" />
-                            <span className="text-sm">{card.phoneNumber}</span>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="ml-auto"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleWhatsAppClick(card.phoneNumber)
-                              }}
+                              className="p-0"
+                              onClick={(e) => handleWhatsAppClick(e, card.phoneNumber)}
                             >
-                              <MessageSquare className="h-4 w-4 text-green-500" />
+                              <WhatsappIcon className="h-4 w-4 text-green-500" />
                             </Button>
+                            <Phone className="h-4 w-4" />
+                            <span className="text-sm">{card.phoneNumber}</span>
                           </div>
                           {card.activities && (
                             <div className="mt-2">
@@ -223,13 +231,32 @@ export function KanbanBoard() {
                         </div>
                       </CardContent>
                     </Card>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem>Adicionar Atividade</DropdownMenuItem>
-                    <DropdownMenuItem>Ver Histórico</DropdownMenuItem>
-                    <DropdownMenuItem>Editar Informações</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                      <DialogTitle>Atividades - {card.clientName}</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-2">
+                        {activities.map((activity) => (
+                          <Button
+                            key={activity.id}
+                            variant="outline"
+                            className="justify-start"
+                            onClick={() => setSelectedCard(card)}
+                          >
+                            {activity.label}
+                          </Button>
+                        ))}
+                      </div>
+                      <div className="border-l pl-4">
+                        <p className="text-sm text-muted-foreground">
+                          Selecione uma atividade para ver as opções
+                        </p>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               ))}
             </div>
           </div>
