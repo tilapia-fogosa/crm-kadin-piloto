@@ -22,7 +22,7 @@ interface Lead {
   name: string
   contact: string
   source: string
-  status: "ligacao_mensagem" | "em_tentativa" | "contatado" | "agendado" | "atendido"
+  status: "novo_cadastro" | "em_tentativa" | "contato_efetivo" | "agendado" | "atendido"
   tentativeCount: number
   nextContactDate?: Date
 }
@@ -43,7 +43,7 @@ const mockLeads: Lead[] = [
     name: "João Silva",
     contact: "(11) 99999-9999",
     source: "Site",
-    status: "ligacao_mensagem",
+    status: "novo_cadastro",
     tentativeCount: 2,
     nextContactDate: new Date(new Date().setDate(new Date().getDate() + 1)), // Example next contact date
   },
@@ -52,7 +52,7 @@ const mockLeads: Lead[] = [
     name: "Maria Santos",
     contact: "(11) 88888-8888",
     source: "Instagram",
-    status: "contatado",
+    status: "contato_efetivo",
     tentativeCount: 1,
   },
   {
@@ -66,18 +66,18 @@ const mockLeads: Lead[] = [
 ]
 
 const columns = [
-  { id: "ligacao_mensagem", title: "Ligação/Mensagem" },
+  { id: "novo_cadastro", title: "Novo Cadastro" },
   { id: "em_tentativa", title: "Em Tentativa de Contato" },
-  { id: "contatado", title: "Contato Efetivo" },
-  { id: "agendado", title: "Agendamento" },
-  { id: "atendido", title: "Atendimento" },
+  { id: "contato_efetivo", title: "Contato Efetivo" },
+  { id: "agendado", title: "Atendimento Agendado" },
+  { id: "atendido", title: "Atendimento Realizado" },
 ]
 
 const activities = [
   { id: "tentativa", title: "Tentativa de Contato" },
   { id: "contato", title: "Contato Efetivo" },
-  { id: "agendamento", title: "Agendamento" },
-  { id: "atendimento", title: "Atendimento" },
+  { id: "agendamento", title: "Atendimento Agendado" },
+  { id: "atendimento", title: "Atendimento Realizado" },
 ]
 
 const hours = Array.from({ length: 24 }, (_, i) => 
