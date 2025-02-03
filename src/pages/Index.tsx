@@ -1,7 +1,7 @@
 import { GraduationCap, Users, Phone, Target } from "lucide-react";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { LeadsChart } from "@/components/dashboard/LeadsChart";
-import { LeadsTable } from "@/components/leads/LeadsTable";
+import LeadsTable from "@/components/leads/LeadsTable";
 
 const Index = () => {
   return (
@@ -41,7 +41,7 @@ const Index = () => {
           <div className="flex items-center justify-between space-y-2">
             <h2 className="text-2xl font-bold tracking-tight">Leads Recentes</h2>
           </div>
-          <LeadsTable />
+          <LeadsTable leads={[]} />
         </div>
       </div>
     </div>

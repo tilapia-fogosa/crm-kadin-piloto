@@ -11,7 +11,7 @@ const statusVariants: Record<LeadStatus, "default" | "destructive" | "secondary"
   converted: "outline"
 };
 
-const LeadsTable = ({ leads }) => {
+const LeadsTable = ({ leads = [] }) => {
   return (
     <Table>
       <thead>
