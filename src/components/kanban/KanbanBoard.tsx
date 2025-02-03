@@ -167,7 +167,6 @@ export function KanbanBoard() {
                       "w-full justify-start text-left font-normal",
                       !nextContactDate && "text-muted-foreground"
                     )}
-                    onClick={(e) => e.stopPropagation()}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {nextContactDate ? format(nextContactDate, "dd/MM/yyyy") : <span>Selecione uma data</span>}
@@ -177,7 +176,11 @@ export function KanbanBoard() {
                   <Calendar
                     mode="single"
                     selected={nextContactDate}
-                    onSelect={(date) => date && setNextContactDate(date)}
+                    onSelect={(date) => {
+                      if (date) {
+                        setNextContactDate(date);
+                      }
+                    }}
                     initialFocus
                   />
                 </PopoverContent>
