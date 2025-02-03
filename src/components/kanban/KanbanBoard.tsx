@@ -10,18 +10,20 @@ import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
-import { addDays, format } from "date-fns"
+import { addDays, format, set } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, Clock } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Lead {
   id: string
   name: string
   contact: string
   source: string
-  status: "novo" | "contatado" | "agendado" | "atendido"
+  status: "novo" | "em_tentativa" | "contatado" | "agendado" | "atendido"
+  tentativeCount: number
 }
 
 interface Activity {
@@ -41,6 +43,7 @@ const mockLeads: Lead[] = [
     contact: "(11) 99999-9999",
     source: "Site",
     status: "novo",
+    tentativeCount: 2,
   },
   {
     id: "2",
@@ -48,6 +51,7 @@ const mockLeads: Lead[] = [
     contact: "(11) 88888-8888",
     source: "Instagram",
     status: "contatado",
+    tentativeCount: 1,
   },
   {
     id: "3",
@@ -55,11 +59,13 @@ const mockLeads: Lead[] = [
     contact: "(11) 77777-7777",
     source: "Facebook",
     status: "agendado",
+    tentativeCount: 0,
   },
 ]
 
 const columns = [
   { id: "novo", title: "Novo Cadastro" },
+  { id: "em_tentativa", title: "Em Tentativa de Contato" },
   { id: "contatado", title: "Contato Efetivo" },
   { id: "agendado", title: "Atendimento Agendado" },
   { id: "atendido", title: "Atendimento Realizado" },
@@ -72,11 +78,25 @@ const activities = [
   { id: "atendimento", title: "Atendimento" },
 ]
 
+const hours = Array.from({ length: 24 }, (_, i) => 
+  i.toString().padStart(2, '0')
+)
+
+const minutes = Array.from({ length: 60 }, (_, i) => 
+  i.toString().padStart(2, '0')
+)
+
 export function KanbanBoard() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
   const [contactType, setContactType] = useState<string>("")
-  const [nextContactDate, setNextContactDate] = useState<Date>(addDays(new Date(), 1))
+  const [nextContactDate, setNextContactDate] = useState<Date>(() => {
+    const now = new Date()
+    const nextDay = addDays(now, 1)
+    return set(nextDay, { hours: now.getHours() < 12 ? 14 : 8, minutes: 0 })
+  })
+  const [selectedHour, setSelectedHour] = useState("08")
+  const [selectedMinute, setSelectedMinute] = useState("00")
 
   const handleActivityClick = (activityType: string) => {
     setSelectedActivity(activityType)
@@ -84,13 +104,22 @@ export function KanbanBoard() {
   }
 
   const handleSaveActivity = () => {
-    console.log("Saving activity:", {
-      leadId: selectedLead?.id,
-      type: selectedActivity,
-      contactType,
-      nextContactDate,
-    })
-    // Here we would save the activity to the database
+    if (selectedLead && selectedActivity === "tentativa") {
+      // Here we would save the activity to the database
+      console.log("Saving activity:", {
+        leadId: selectedLead.id,
+        type: selectedActivity,
+        contactType,
+        nextContactDate: set(nextContactDate, {
+          hours: parseInt(selectedHour),
+          minutes: parseInt(selectedMinute)
+        }),
+      })
+      
+      // Update lead status
+      selectedLead.status = "em_tentativa"
+      selectedLead.tentativeCount += 1
+    }
   }
 
   const renderActivityContent = () => {
@@ -110,7 +139,7 @@ export function KanbanBoard() {
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="whatsapp" id="whatsapp" />
-                <Label htmlFor="whatsapp">WhatsApp</Label>
+                <Label htmlFor="whatsapp">Mensagem WhatsApp</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="ligacao_whatsapp" id="ligacao_whatsapp" />
@@ -121,28 +150,59 @@ export function KanbanBoard() {
 
           <div className="space-y-2">
             <Label>Próximo Contato</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !nextContactDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {nextContactDate ? format(nextContactDate, "PPP") : <span>Selecione uma data</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={nextContactDate}
-                  onSelect={(date) => date && setNextContactDate(date)}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="flex flex-col gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !nextContactDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {nextContactDate ? format(nextContactDate, "dd/MM/yyyy") : <span>Selecione uma data</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
+                  <Calendar
+                    mode="single"
+                    selected={nextContactDate}
+                    onSelect={(date) => date && setNextContactDate(date)}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <div className="flex gap-2 items-center">
+                <Clock className="h-4 w-4" />
+                <Select value={selectedHour} onValueChange={setSelectedHour}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder="Hora" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {hours.map((hour) => (
+                      <SelectItem key={hour} value={hour}>
+                        {hour}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span>:</span>
+                <Select value={selectedMinute} onValueChange={setSelectedMinute}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder="Minuto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {minutes.map((minute) => (
+                      <SelectItem key={minute} value={minute}>
+                        {minute}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
 
           <Button onClick={handleSaveActivity} className="w-full">
@@ -187,6 +247,11 @@ export function KanbanBoard() {
                         <CardContent className="p-4 pt-0 text-sm text-muted-foreground">
                           <p>{lead.contact}</p>
                           <p>Origem: {lead.source}</p>
+                          {lead.tentativeCount > 0 && (
+                            <p className="mt-2 text-xs font-medium text-orange-500">
+                              {lead.tentativeCount} tentativa{lead.tentativeCount > 1 ? 's' : ''} de contato
+                            </p>
+                          )}
                         </CardContent>
                       </Card>
                     </DialogTrigger>
