@@ -7,7 +7,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
 import { useState } from "react"
+import { addDays, format } from "date-fns"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { CalendarIcon } from "lucide-react"
 
 interface Lead {
   id: string
@@ -20,7 +27,9 @@ interface Lead {
 interface Activity {
   id: string
   leadId: string
-  type: "ligacao" | "contato" | "agendamento" | "atendimento"
+  type: "tentativa" | "contato" | "agendamento" | "atendimento"
+  contactType?: "telefone" | "whatsapp" | "ligacao_whatsapp"
+  nextContactDate?: Date
   createdAt: Date
   notes?: string
 }
@@ -57,7 +66,7 @@ const columns = [
 ]
 
 const activities = [
-  { id: "ligacao", title: "Ligação/Mensagem" },
+  { id: "tentativa", title: "Tentativa de Contato" },
   { id: "contato", title: "Contato Efetivo" },
   { id: "agendamento", title: "Agendamento" },
   { id: "atendimento", title: "Atendimento" },
@@ -65,11 +74,84 @@ const activities = [
 
 export function KanbanBoard() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+  const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
+  const [contactType, setContactType] = useState<string>("")
+  const [nextContactDate, setNextContactDate] = useState<Date>(addDays(new Date(), 1))
 
   const handleActivityClick = (activityType: string) => {
-    console.log(`Activity ${activityType} registered for lead ${selectedLead?.id}`)
+    setSelectedActivity(activityType)
+    console.log(`Activity ${activityType} selected for lead ${selectedLead?.id}`)
+  }
+
+  const handleSaveActivity = () => {
+    console.log("Saving activity:", {
+      leadId: selectedLead?.id,
+      type: selectedActivity,
+      contactType,
+      nextContactDate,
+    })
     // Here we would save the activity to the database
-    // For now just logging the action
+  }
+
+  const renderActivityContent = () => {
+    if (selectedActivity === "tentativa") {
+      return (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Tipo de Contato</Label>
+            <RadioGroup
+              value={contactType}
+              onValueChange={setContactType}
+              className="flex flex-col space-y-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="telefone" id="telefone" />
+                <Label htmlFor="telefone">Ligação Telefônica</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="whatsapp" id="whatsapp" />
+                <Label htmlFor="whatsapp">WhatsApp</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="ligacao_whatsapp" id="ligacao_whatsapp" />
+                <Label htmlFor="ligacao_whatsapp">Ligação WhatsApp</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Próximo Contato</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !nextContactDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {nextContactDate ? format(nextContactDate, "PPP") : <span>Selecione uma data</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={nextContactDate}
+                  onSelect={(date) => date && setNextContactDate(date)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <Button onClick={handleSaveActivity} className="w-full">
+            Salvar Atividade
+          </Button>
+        </div>
+      )
+    }
+    return null
   }
 
   return (
@@ -108,20 +190,26 @@ export function KanbanBoard() {
                         </CardContent>
                       </Card>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="sm:max-w-[800px]">
                       <DialogHeader>
                         <DialogTitle>Atividades - {lead.name}</DialogTitle>
                       </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        {activities.map((activity) => (
-                          <Button
-                            key={activity.id}
-                            onClick={() => handleActivityClick(activity.id)}
-                            className="w-full"
-                          >
-                            {activity.title}
-                          </Button>
-                        ))}
+                      <div className="grid grid-cols-[200px,1fr] gap-4 py-4">
+                        <div className="space-y-2">
+                          {activities.map((activity) => (
+                            <Button
+                              key={activity.id}
+                              onClick={() => handleActivityClick(activity.id)}
+                              variant={selectedActivity === activity.id ? "default" : "outline"}
+                              className="w-full justify-start"
+                            >
+                              {activity.title}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="border-l pl-4">
+                          {renderActivityContent()}
+                        </div>
                       </div>
                     </DialogContent>
                   </Dialog>
