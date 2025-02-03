@@ -1,4 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
 
 interface Lead {
   id: string
@@ -6,6 +15,14 @@ interface Lead {
   contact: string
   source: string
   status: "novo" | "contatado" | "agendado" | "atendido"
+}
+
+interface Activity {
+  id: string
+  leadId: string
+  type: "ligacao" | "contato" | "agendamento" | "atendimento"
+  createdAt: Date
+  notes?: string
 }
 
 const mockLeads: Lead[] = [
@@ -39,7 +56,22 @@ const columns = [
   { id: "atendido", title: "Atendimento Realizado" },
 ]
 
+const activities = [
+  { id: "ligacao", title: "Ligação/Mensagem" },
+  { id: "contato", title: "Contato Efetivo" },
+  { id: "agendamento", title: "Agendamento" },
+  { id: "atendimento", title: "Atendimento" },
+]
+
 export function KanbanBoard() {
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+
+  const handleActivityClick = (activityType: string) => {
+    console.log(`Activity ${activityType} registered for lead ${selectedLead?.id}`)
+    // Here we would save the activity to the database
+    // For now just logging the action
+  }
+
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -61,15 +93,38 @@ export function KanbanBoard() {
               {mockLeads
                 .filter((lead) => lead.status === column.id)
                 .map((lead) => (
-                  <Card key={lead.id}>
-                    <CardHeader className="p-4">
-                      <CardTitle className="text-base">{lead.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0 text-sm text-muted-foreground">
-                      <p>{lead.contact}</p>
-                      <p>Origem: {lead.source}</p>
-                    </CardContent>
-                  </Card>
+                  <Dialog key={lead.id}>
+                    <DialogTrigger asChild>
+                      <Card
+                        className="cursor-pointer transition-all hover:scale-105"
+                        onClick={() => setSelectedLead(lead)}
+                      >
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-base">{lead.name}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0 text-sm text-muted-foreground">
+                          <p>{lead.contact}</p>
+                          <p>Origem: {lead.source}</p>
+                        </CardContent>
+                      </Card>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Atividades - {lead.name}</DialogTitle>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        {activities.map((activity) => (
+                          <Button
+                            key={activity.id}
+                            onClick={() => handleActivityClick(activity.id)}
+                            className="w-full"
+                          >
+                            {activity.title}
+                          </Button>
+                        ))}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 ))}
             </div>
           </div>
