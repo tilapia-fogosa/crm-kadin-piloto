@@ -24,6 +24,7 @@ interface Lead {
   source: string
   status: "ligacao_mensagem" | "em_tentativa" | "contatado" | "agendado" | "atendido"
   tentativeCount: number
+  nextContactDate?: Date
 }
 
 interface Activity {
@@ -44,6 +45,7 @@ const mockLeads: Lead[] = [
     source: "Site",
     status: "ligacao_mensagem",
     tentativeCount: 2,
+    nextContactDate: new Date(new Date().setDate(new Date().getDate() + 1)), // Example next contact date
   },
   {
     id: "2",
@@ -122,6 +124,7 @@ export function KanbanBoard() {
       // Update lead status
       selectedLead.status = "em_tentativa"
       selectedLead.tentativeCount += 1
+      selectedLead.nextContactDate = nextContactDate; // Update next contact date
 
       // Close dialog after saving
       setSelectedLead(null)
@@ -130,89 +133,121 @@ export function KanbanBoard() {
     }
   }
 
+  const getNextContactColor = (date: Date) => {
+    const now = new Date()
+    const tomorrow = new Date(now)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    
+    if (date < now) {
+      return 'bg-red-100'
+    }
+    
+    if (
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear()
+    ) {
+      return date.getHours() > now.getHours() ? 'bg-yellow-100' : 'bg-red-100'
+    }
+    
+    if (
+      date.getDate() === tomorrow.getDate() &&
+      date.getMonth() === tomorrow.getMonth() &&
+      date.getFullYear() === tomorrow.getFullYear()
+    ) {
+      return 'bg-green-100'
+    }
+    
+    return 'bg-red-100'
+  }
+
   const renderActivityContent = () => {
     if (selectedActivity === "tentativa") {
       return (
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Tipo de Contato</Label>
-            <RadioGroup
-              value={contactType}
-              onValueChange={setContactType}
-              className="flex flex-col space-y-2"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="telefone" id="telefone" />
-                <Label htmlFor="telefone">Ligação Telefônica</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="whatsapp" id="whatsapp" />
-                <Label htmlFor="whatsapp">Mensagem WhatsApp</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="ligacao_whatsapp" id="ligacao_whatsapp" />
-                <Label htmlFor="ligacao_whatsapp">Ligação WhatsApp</Label>
-              </div>
-            </RadioGroup>
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Tipo de Contato</Label>
+              <RadioGroup
+                value={contactType}
+                onValueChange={setContactType}
+                className="flex flex-col space-y-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="telefone" id="telefone" />
+                  <Label htmlFor="telefone">Ligação Telefônica</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="whatsapp" id="whatsapp" />
+                  <Label htmlFor="whatsapp">Mensagem WhatsApp</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="ligacao_whatsapp" id="ligacao_whatsapp" />
+                  <Label htmlFor="ligacao_whatsapp">Ligação WhatsApp</Label>
+                </div>
+              </RadioGroup>
+            </div>
 
-          <div className="space-y-2">
-            <Label>Próximo Contato</Label>
-            <div className="flex flex-col gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !nextContactDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {nextContactDate ? format(nextContactDate, "dd/MM/yyyy") : <span>Selecione uma data</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
-                  <Calendar
-                    mode="single"
-                    selected={nextContactDate}
-                    onSelect={(date) => {
-                      if (date) {
-                        setNextContactDate(date);
-                      }
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+            <div className="space-y-2">
+              <Label>Próximo Contato</Label>
+              <div className="flex flex-col gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !nextContactDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {nextContactDate ? format(nextContactDate, "dd/MM/yyyy") : <span>Selecione uma data</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
+                    <Calendar
+                      mode="single"
+                      selected={nextContactDate}
+                      onSelect={(date, e) => {
+                        e?.preventDefault()
+                        e?.stopPropagation()
+                        if (date) {
+                          setNextContactDate(date)
+                        }
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
 
-              <div className="flex gap-2 items-center">
-                <Clock className="h-4 w-4" />
-                <Select value={selectedHour} onValueChange={setSelectedHour}>
-                  <SelectTrigger className="w-[100px]">
-                    <SelectValue placeholder="Hora" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {hours.map((hour) => (
-                      <SelectItem key={hour} value={hour}>
-                        {hour}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <span>:</span>
-                <Select value={selectedMinute} onValueChange={setSelectedMinute}>
-                  <SelectTrigger className="w-[100px]">
-                    <SelectValue placeholder="Minuto" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {minutes.map((minute) => (
-                      <SelectItem key={minute} value={minute}>
-                        {minute}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2 items-center">
+                  <Clock className="h-4 w-4" />
+                  <Select value={selectedHour} onValueChange={setSelectedHour}>
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue placeholder="Hora" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {hours.map((hour) => (
+                        <SelectItem key={hour} value={hour}>
+                          {hour}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span>:</span>
+                  <Select value={selectedMinute} onValueChange={setSelectedMinute}>
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue placeholder="Minuto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {minutes.map((minute) => (
+                        <SelectItem key={minute} value={minute}>
+                          {minute}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </div>
@@ -254,7 +289,15 @@ export function KanbanBoard() {
                         onClick={() => setSelectedLead(lead)}
                       >
                         <CardHeader className="p-4">
-                          <CardTitle className="text-base">{lead.name}</CardTitle>
+                          <div className="flex justify-between items-start">
+                            <CardTitle className="text-base">{lead.name}</CardTitle>
+                            {lead.nextContactDate && (
+                              <div className={cn("text-xs p-1 rounded", getNextContactColor(lead.nextContactDate))}>
+                                <div>Próx. Contato</div>
+                                <div>{format(lead.nextContactDate, "dd/MM HH:mm")}</div>
+                              </div>
+                            )}
+                          </div>
                         </CardHeader>
                         <CardContent className="p-4 pt-0 text-sm text-muted-foreground">
                           <p>{lead.contact}</p>
