@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon, Phone, WhatsappIcon } from "lucide-react"
+import { Calendar as CalendarIcon, Phone, MessageSquare } from "lucide-react"
 
 type KanbanColumn = {
   id: string
@@ -201,7 +201,7 @@ export function KanbanBoard() {
                               className="p-0"
                               onClick={(e) => handleWhatsAppClick(e, card.phoneNumber)}
                             >
-                              <WhatsappIcon className="h-4 w-4 text-green-500" />
+                              <MessageSquare className="h-4 w-4 text-green-500" />
                             </Button>
                             <Phone className="h-4 w-4" />
                             <span className="text-sm">{card.phoneNumber}</span>
