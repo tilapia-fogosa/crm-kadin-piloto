@@ -1,49 +1,105 @@
 import { Link, useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar, LayoutDashboard, ListTodo } from "lucide-react"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
+import { Calendar, LayoutDashboard, ListTodo, Users, UserPlus, UsersRound, Target } from "lucide-react"
 
 export function AppSidebar() {
   const location = useLocation()
 
+  const mainMenuItems = [
+    {
+      title: "Dashboard",
+      icon: LayoutDashboard,
+      path: "/",
+    },
+    {
+      title: "Kanban",
+      icon: ListTodo,
+      path: "/kanban",
+    },
+    {
+      title: "Agenda",
+      icon: Calendar,
+      path: "/agenda",
+    },
+  ]
+
+  const clientMenuItems = [
+    {
+      title: "Cadastrar Novo",
+      icon: UserPlus,
+      path: "/clients/new",
+    },
+    {
+      title: "Todos os clientes",
+      icon: UsersRound,
+      path: "/clients",
+    },
+    {
+      title: "Origem dos Clientes",
+      icon: Target,
+      path: "/clients/sources",
+    },
+  ]
+
   return (
-    <div className="pb-12 border-r min-h-screen">
-      <div className="space-y-4 py-4">
-        <div className="px-3 py-2">
-          <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-            CRM Educacional
-          </h2>
-          <div className="space-y-1">
-            <Link to="/">
-              <Button
-                variant={location.pathname === "/" ? "secondary" : "ghost"}
-                className="w-full justify-start"
-              >
-                <LayoutDashboard className="mr-2 h-4 w-4" />
-                Dashboard
-              </Button>
-            </Link>
-            <Link to="/kanban">
-              <Button
-                variant={location.pathname === "/kanban" ? "secondary" : "ghost"}
-                className="w-full justify-start"
-              >
-                <ListTodo className="mr-2 h-4 w-4" />
-                Kanban
-              </Button>
-            </Link>
-            <Link to="/agenda">
-              <Button
-                variant={location.pathname === "/agenda" ? "secondary" : "ghost"}
-                className="w-full justify-start"
-              >
-                <Calendar className="mr-2 h-4 w-4" />
-                Agenda
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Sidebar>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainMenuItems.map((item) => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === item.path}
+                    tooltip={item.title}
+                  >
+                    <Link to={item.path}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Clientes</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {clientMenuItems.map((item) => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === item.path}
+                    tooltip={item.title}
+                  >
+                    <Link to={item.path}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
   )
 }
