@@ -12,19 +12,24 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { Calendar, LayoutDashboard, ListTodo, Users, UserPlus, UsersRound, Target } from "lucide-react"
+import { 
+  LayoutDashboard, 
+  ListTodo, 
+  Calendar, 
+  UserPlus, 
+  Users, 
+  Target,
+  Settings,
+  Home,
+  BarChart3
+} from "lucide-react"
 
 export function AppSidebar() {
   const location = useLocation()
 
   const mainMenuItems = [
     {
-      title: "Dashboard",
-      icon: LayoutDashboard,
-      path: "/",
-    },
-    {
-      title: "Kanban",
+      title: "Painel do Consultor",
       icon: ListTodo,
       path: "/kanban",
     },
@@ -32,6 +37,31 @@ export function AppSidebar() {
       title: "Agenda",
       icon: Calendar,
       path: "/agenda",
+    },
+    {
+      title: "Vendas",
+      icon: BarChart3,
+      path: "/sales",
+    },
+    {
+      title: "Eventos",
+      icon: Calendar,
+      path: "/events",
+    },
+    {
+      title: "Unidades",
+      icon: Home,
+      path: "/units",
+    },
+    {
+      title: "Minhas Configurações",
+      icon: Settings,
+      path: "/settings",
+    },
+    {
+      title: "Dashboard",
+      icon: LayoutDashboard,
+      path: "/",
     },
   ]
 
@@ -43,7 +73,7 @@ export function AppSidebar() {
     },
     {
       title: "Todos os clientes",
-      icon: UsersRound,
+      icon: Users,
       path: "/clients",
     },
     {
