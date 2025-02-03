@@ -7,15 +7,16 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-import { format } from "date-fns"
+import { format, addDays, setHours, setMinutes, getHours } from "date-fns"
 import { Calendar as CalendarIcon, Phone, MessageSquare } from "lucide-react"
 
 type KanbanColumn = {
@@ -119,6 +120,14 @@ export function KanbanBoard() {
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const [selectedCard, setSelectedCard] = useState<KanbanCard | null>(null)
+  const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
+  const [contactType, setContactType] = useState<string>("phone")
+  const [nextContactDate, setNextContactDate] = useState<Date>(() => {
+    const now = new Date()
+    const tomorrow = addDays(now, 1)
+    const hour = getHours(now) >= 12 ? 8 : 14
+    return setHours(setMinutes(tomorrow, 0), hour)
+  })
 
   const handleDateSelect = (event: React.MouseEvent, date: Date) => {
     event.preventDefault()
@@ -139,6 +148,16 @@ export function KanbanBoard() {
     { id: 'agendamento', label: 'Agendamento' },
     { id: 'atendimento', label: 'Atendimento' },
   ]
+
+  const handleActivitySelect = (activityId: string) => {
+    setSelectedActivity(activityId)
+    if (activityId === 'tentativa') {
+      const now = new Date()
+      const tomorrow = addDays(now, 1)
+      const suggestedHour = getHours(now) >= 12 ? 8 : 14
+      setNextContactDate(setHours(setMinutes(tomorrow, 0), suggestedHour))
+    }
+  }
 
   return (
     <div className="flex h-full w-full flex-col gap-4 p-4">
@@ -232,7 +251,7 @@ export function KanbanBoard() {
                       </CardContent>
                     </Card>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[600px]">
+                  <DialogContent className="sm:max-w-[600px]" onPointerDownOutside={(e) => e.preventDefault()}>
                     <DialogHeader>
                       <DialogTitle>Atividades - {card.clientName}</DialogTitle>
                     </DialogHeader>
@@ -242,17 +261,75 @@ export function KanbanBoard() {
                           <Button
                             key={activity.id}
                             variant="outline"
-                            className="justify-start"
-                            onClick={() => setSelectedCard(card)}
+                            className={cn(
+                              "justify-start",
+                              selectedActivity === activity.id && "bg-primary/10"
+                            )}
+                            onClick={() => handleActivitySelect(activity.id)}
                           >
                             {activity.label}
                           </Button>
                         ))}
                       </div>
                       <div className="border-l pl-4">
-                        <p className="text-sm text-muted-foreground">
-                          Selecione uma atividade para ver as opções
-                        </p>
+                        {selectedActivity === 'tentativa' ? (
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label>Tipo de Contato</Label>
+                              <RadioGroup
+                                value={contactType}
+                                onValueChange={setContactType}
+                                className="flex flex-col space-y-2"
+                              >
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="phone" id="phone" />
+                                  <Label htmlFor="phone">Ligação Telefônica</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="whatsapp" id="whatsapp" />
+                                  <Label htmlFor="whatsapp">Mensagem WhatsApp</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="whatsapp-call" id="whatsapp-call" />
+                                  <Label htmlFor="whatsapp-call">Ligação WhatsApp</Label>
+                                </div>
+                              </RadioGroup>
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Próximo Contato</Label>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full justify-start text-left font-normal",
+                                      !nextContactDate && "text-muted-foreground"
+                                    )}
+                                  >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {nextContactDate ? (
+                                      format(nextContactDate, "dd/MM/yyyy HH:mm")
+                                    ) : (
+                                      <span>Selecione uma data</span>
+                                    )}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={nextContactDate}
+                                    onSelect={(date) => date && setNextContactDate(date)}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            Selecione uma atividade para ver as opções
+                          </p>
+                        )}
                       </div>
                     </div>
                   </DialogContent>
