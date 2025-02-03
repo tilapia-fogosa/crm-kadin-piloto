@@ -22,7 +22,7 @@ interface Lead {
   name: string
   contact: string
   source: string
-  status: "novo" | "em_tentativa" | "contatado" | "agendado" | "atendido"
+  status: "ligacao_mensagem" | "em_tentativa" | "contatado" | "agendado" | "atendido"
   tentativeCount: number
 }
 
@@ -42,7 +42,7 @@ const mockLeads: Lead[] = [
     name: "João Silva",
     contact: "(11) 99999-9999",
     source: "Site",
-    status: "novo",
+    status: "ligacao_mensagem",
     tentativeCount: 2,
   },
   {
@@ -64,11 +64,11 @@ const mockLeads: Lead[] = [
 ]
 
 const columns = [
-  { id: "novo", title: "Novo Cadastro" },
+  { id: "ligacao_mensagem", title: "Ligação/Mensagem" },
   { id: "em_tentativa", title: "Em Tentativa de Contato" },
   { id: "contatado", title: "Contato Efetivo" },
-  { id: "agendado", title: "Atendimento Agendado" },
-  { id: "atendido", title: "Atendimento Realizado" },
+  { id: "agendado", title: "Agendamento" },
+  { id: "atendido", title: "Atendimento" },
 ]
 
 const activities = [
@@ -95,7 +95,10 @@ export function KanbanBoard() {
     const nextDay = addDays(now, 1)
     return set(nextDay, { hours: now.getHours() < 12 ? 14 : 8, minutes: 0 })
   })
-  const [selectedHour, setSelectedHour] = useState("08")
+  const [selectedHour, setSelectedHour] = useState(() => {
+    const now = new Date()
+    return now.getHours() < 12 ? "14" : "08"
+  })
   const [selectedMinute, setSelectedMinute] = useState("00")
 
   const handleActivityClick = (activityType: string) => {
@@ -119,6 +122,11 @@ export function KanbanBoard() {
       // Update lead status
       selectedLead.status = "em_tentativa"
       selectedLead.tentativeCount += 1
+
+      // Close dialog after saving
+      setSelectedLead(null)
+      setSelectedActivity(null)
+      setContactType("")
     }
   }
 
@@ -159,6 +167,7 @@ export function KanbanBoard() {
                       "w-full justify-start text-left font-normal",
                       !nextContactDate && "text-muted-foreground"
                     )}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {nextContactDate ? format(nextContactDate, "dd/MM/yyyy") : <span>Selecione uma data</span>}
@@ -255,7 +264,7 @@ export function KanbanBoard() {
                         </CardContent>
                       </Card>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[800px]">
+                    <DialogContent className="sm:max-w-[800px]" onClick={(e) => e.stopPropagation()}>
                       <DialogHeader>
                         <DialogTitle>Atividades - {lead.name}</DialogTitle>
                       </DialogHeader>
