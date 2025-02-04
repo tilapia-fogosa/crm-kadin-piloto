@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,9 @@ export function KanbanBoard() {
   const { data: clients, isLoading } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession()
+      if (!session.session) throw new Error('Not authenticated')
+
       const { data, error } = await supabase
         .from('clients')
         .select(`
@@ -35,12 +39,15 @@ export function KanbanBoard() {
             created_at
           )
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching clients:', error)
+        throw error
+      }
+      return data
     }
-  });
+  })
 
   const columns = [
     {
@@ -118,7 +125,7 @@ export function KanbanBoard() {
           ),
         })) || [],
     },
-  ];
+  ]
 
   const handleDateSelect = (event: React.MouseEvent, date: Date) => {
     event.preventDefault()
@@ -135,10 +142,10 @@ export function KanbanBoard() {
 
   const handleRegisterAttempt = async (attempt: ContactAttempt) => {
     try {
-      console.log("Registering attempt:", attempt);
+      console.log("Registering attempt:", attempt)
       
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) throw new Error('Not authenticated');
+      const { data: session } = await supabase.auth.getSession()
+      if (!session.session) throw new Error('Not authenticated')
 
       // First, insert the activity
       const { error: activityError } = await supabase
@@ -148,9 +155,9 @@ export function KanbanBoard() {
           type: attempt.type,
           next_contact_date: attempt.nextContactDate.toISOString(),
           created_by: session.session.user.id
-        });
+        })
 
-      if (activityError) throw activityError;
+      if (activityError) throw activityError
 
       // Then, update the client status
       const { error: statusError } = await supabase
@@ -159,33 +166,33 @@ export function KanbanBoard() {
           status: 'tentativa-contato',
           updated_at: new Date().toISOString()
         })
-        .eq('id', attempt.cardId);
+        .eq('id', attempt.cardId)
 
-      if (statusError) throw statusError;
+      if (statusError) throw statusError
 
       // Invalidate the query to refresh the data
-      await queryClient.invalidateQueries({ queryKey: ['clients'] });
+      await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       toast({
         title: "Tentativa registrada",
         description: "O lead foi movido para 'Em tentativa de Contato'",
-      });
+      })
     } catch (error) {
-      console.error('Error registering attempt:', error);
+      console.error('Error registering attempt:', error)
       toast({
         variant: "destructive",
         title: "Erro ao registrar tentativa",
         description: "Ocorreu um erro ao tentar registrar a tentativa de contato.",
-      });
+      })
     }
   }
 
   const handleRegisterEffectiveContact = async (contact: EffectiveContact) => {
     try {
-      console.log("Registering effective contact:", contact);
+      console.log("Registering effective contact:", contact)
       
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) throw new Error('Not authenticated');
+      const { data: session } = await supabase.auth.getSession()
+      if (!session.session) throw new Error('Not authenticated')
 
       // First, insert the activity
       const { error: activityError } = await supabase
@@ -195,40 +202,41 @@ export function KanbanBoard() {
           type: contact.type,
           notes: contact.notes,
           created_by: session.session.user.id
-        });
+        })
 
-      if (activityError) throw activityError;
+      if (activityError) throw activityError
 
-      // Then, update the client status
+      // Then, update the client status and observations
       const { error: statusError } = await supabase
         .from('clients')
         .update({ 
           status: 'contato-efetivo',
+          observations: contact.observations,
           updated_at: new Date().toISOString()
         })
-        .eq('id', contact.cardId);
+        .eq('id', contact.cardId)
 
-      if (statusError) throw statusError;
+      if (statusError) throw statusError
 
       // Invalidate the query to refresh the data
-      await queryClient.invalidateQueries({ queryKey: ['clients'] });
+      await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       toast({
         title: "Contato efetivo registrado",
         description: "O lead foi movido para 'Contato Efetivo'",
-      });
+      })
     } catch (error) {
-      console.error('Error registering effective contact:', error);
+      console.error('Error registering effective contact:', error)
       toast({
         variant: "destructive",
         title: "Erro ao registrar contato efetivo",
         description: "Ocorreu um erro ao tentar registrar o contato efetivo.",
-      });
+      })
     }
   }
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-full">Carregando...</div>;
+    return <div className="flex items-center justify-center h-full">Carregando...</div>
   }
 
   return (
