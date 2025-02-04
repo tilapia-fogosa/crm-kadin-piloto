@@ -14,7 +14,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => 
-            `${activity.type} - ${format(new Date(activity.created_at), "dd/MM/yyyy HH:mm")}`
+            `${activity.type}|${activity.contact_type || 'phone'}|${activity.created_at}|${activity.notes || ''}`
           ),
         })) || [],
     },
@@ -29,7 +29,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => 
-            `${activity.type} - ${format(new Date(activity.created_at), "dd/MM/yyyy HH:mm")}`
+            `${activity.type}|${activity.contact_type || 'phone'}|${activity.created_at}|${activity.notes || ''}`
           ),
         })) || [],
     },
@@ -44,7 +44,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => 
-            `${activity.type} - ${format(new Date(activity.created_at), "dd/MM/yyyy HH:mm")}`
+            `${activity.type}|${activity.contact_type || 'phone'}|${activity.created_at}|${activity.notes || ''}`
           ),
         })) || [],
     },
@@ -59,7 +59,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => 
-            `${activity.type} - ${format(new Date(activity.created_at), "dd/MM/yyyy HH:mm")}`
+            `${activity.type}|${activity.contact_type || 'phone'}|${activity.created_at}|${activity.notes || ''}`
           ),
         })) || [],
     },
@@ -74,7 +74,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => 
-            `${activity.type} - ${format(new Date(activity.created_at), "dd/MM/yyyy HH:mm")}`
+            `${activity.type}|${activity.contact_type || 'phone'}|${activity.created_at}|${activity.notes || ''}`
           ),
         })) || [],
     },
