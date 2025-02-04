@@ -18,6 +18,34 @@ interface KanbanColumnProps {
   onRegisterEffectiveContact: (contact: EffectiveContact) => void
 }
 
+const getActivityBadge = (type: string) => {
+  switch (type) {
+    case 'tentativa':
+      return 'TE'
+    case 'efetivo':
+      return 'CE'
+    case 'agendamento':
+      return 'AG'
+    case 'atendimento':
+      return 'AT'
+    default:
+      return ''
+  }
+}
+
+const getContactType = (type: string) => {
+  switch (type) {
+    case 'phone':
+      return 'Telefone'
+    case 'whatsapp':
+      return 'WhatsApp'
+    case 'whatsapp-call':
+      return 'Ligação WhatsApp'
+    default:
+      return type
+  }
+}
+
 export function KanbanColumn({ 
   column, 
   onWhatsAppClick, 
@@ -63,11 +91,34 @@ export function KanbanColumn({
                 <div className="flex flex-col gap-2">
                   <h3 className="font-semibold mb-2">Histórico de Atividades</h3>
                   <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                    {card.activities?.map((activity, index) => (
-                      <div key={index} className="mb-2 text-sm">
-                        <p>{activity}</p>
-                      </div>
-                    )) || (
+                    {card.activities?.map((activity, index) => {
+                      const parts = activity.split('|')
+                      const type = parts[0]
+                      const contactType = parts[1]
+                      const date = parts[2]
+                      const notes = parts[3]
+
+                      return (
+                        <div key={index} className="mb-4 text-sm space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="flex items-center justify-center bg-primary text-primary-foreground font-medium rounded min-w-[2rem] h-6 text-xs">
+                              {getActivityBadge(type)}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {getContactType(contactType)}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {format(new Date(date), 'dd/MM/yyyy HH:mm')}
+                            </span>
+                          </div>
+                          {notes && (
+                            <p className="text-sm text-muted-foreground ml-10">
+                              {notes}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    }) || (
                       <p className="text-sm text-muted-foreground">
                         Nenhuma atividade registrada
                       </p>
