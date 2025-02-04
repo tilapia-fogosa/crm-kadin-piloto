@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
+import { useNavigate } from "react-router-dom"
 
 const phoneRegex = /^\d{10,11}$/
 
@@ -46,6 +47,7 @@ const leadSources: { id: string; name: string }[] = [
 
 export default function NewClient() {
   const { toast } = useToast()
+  const navigate = useNavigate()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -61,16 +63,35 @@ export default function NewClient() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      console.log("Form values:", values)
-      // TODO: Implement actual API call to save the lead
+      console.log("Submitting form with values:", values)
       
+      // TODO: Replace with actual API call
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...values,
+          status: "novo_cadastro", // Initial status for new leads
+          createdAt: new Date().toISOString(),
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Erro ao cadastrar lead")
+      }
+
       toast({
         title: "Lead cadastrado com sucesso!",
         description: "O lead foi adicionado ao painel do consultor.",
       })
       
+      // Reset form and redirect to kanban board
       form.reset()
+      navigate("/kanban")
     } catch (error) {
+      console.error("Error submitting lead:", error)
       toast({
         variant: "destructive",
         title: "Erro ao cadastrar lead",
