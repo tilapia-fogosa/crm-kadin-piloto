@@ -39,7 +39,7 @@ const ApiDocsPage = () => {
           <Alert>
             <AlertTitle>Endpoint do Webhook</AlertTitle>
             <AlertDescription>
-              POST https://[seu-projeto].functions.supabase.co/webhook-leads
+              POST https://hkvjdxxndapxpslovrlc.supabase.co/rest/v1/leads
             </AlertDescription>
           </Alert>
 
@@ -56,6 +56,15 @@ const ApiDocsPage = () => {
               <li><code>lead_source</code> - Origem do lead</li>
               <li><code>observations</code> - Observações adicionais</li>
             </ul>
+
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold mb-2">Headers Necessários</h3>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><code>apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4</code></li>
+                <li><code>Content-Type: application/json</code></li>
+                <li><code>Prefer: return=minimal</code></li>
+              </ul>
+            </div>
 
             <div className="mt-6">
               <h3 className="text-xl font-semibold mb-2">Exemplo de Payload</h3>
@@ -99,9 +108,20 @@ const ApiDocsPage = () => {
                 <p className="text-muted-foreground">
                   Adicione um novo módulo HTTP e configure como POST request para o endpoint:
                   <code className="block bg-secondary p-2 rounded mt-2">
-                    https://[seu-projeto].functions.supabase.co/webhook-leads
+                    https://hkvjdxxndapxpslovrlc.supabase.co/rest/v1/leads
                   </code>
                 </p>
+              </li>
+              <li>
+                <p className="font-medium">Headers da requisição</p>
+                <p className="text-muted-foreground">
+                  Configure os seguintes headers:
+                </p>
+                <pre className="bg-secondary p-4 rounded-lg mt-2">
+{`apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4
+Content-Type: application/json
+Prefer: return=minimal`}
+                </pre>
               </li>
               <li>
                 <p className="font-medium">Configurar o payload</p>
@@ -122,16 +142,16 @@ const ApiDocsPage = () => {
                   </Button>
                 </div>
               </li>
-              <li>
-                <p className="font-medium">Headers da requisição</p>
-                <p className="text-muted-foreground">
-                  Configure o header Content-Type como:
-                  <code className="block bg-secondary p-2 rounded mt-2">
-                    Content-Type: application/json
-                  </code>
-                </p>
-              </li>
             </ol>
+
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold mb-2">Testando a Integração</h3>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Use o botão "Test" no módulo HTTP para verificar se a conexão está funcionando</li>
+                <li>Confira se o status code retornado é 201 (Created)</li>
+                <li>Verifique se os dados aparecem na tabela de leads do seu projeto</li>
+              </ul>
+            </div>
 
             <div className="mt-6">
               <h3 className="text-xl font-semibold mb-2">Dicas Importantes</h3>
@@ -148,7 +168,7 @@ const ApiDocsPage = () => {
           <Alert>
             <AlertTitle>Base URL da API</AlertTitle>
             <AlertDescription>
-              https://[seu-projeto].supabase.co/rest/v1
+              https://hkvjdxxndapxpslovrlc.supabase.co/rest/v1
             </AlertDescription>
           </Alert>
 
@@ -158,9 +178,23 @@ const ApiDocsPage = () => {
               Todas as requisições precisam incluir os seguintes headers:
             </p>
             <ul className="list-disc pl-6 space-y-2">
-              <li><code>apikey</code> - Sua chave de API do Supabase</li>
-              <li><code>Authorization</code> - Bearer token de autenticação</li>
+              <li><code>apikey</code> - A chave anônima do projeto Supabase</li>
+              <li><code>Authorization: Bearer token</code> - Token JWT para autenticação (opcional para endpoints públicos)</li>
             </ul>
+
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold mb-2">Endpoints Disponíveis</h3>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium">GET /leads</h4>
+                  <p className="text-muted-foreground">Lista todos os leads (requer autenticação)</p>
+                </div>
+                <div>
+                  <h4 className="font-medium">POST /leads</h4>
+                  <p className="text-muted-foreground">Cria um novo lead (endpoint público)</p>
+                </div>
+              </div>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
