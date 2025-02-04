@@ -41,7 +41,8 @@ export function KanbanBoard() {
         .from('client_activities')
         .insert({
           client_id: attempt.cardId,
-          type: attempt.type,
+          tipo_contato: attempt.type,
+          tipo_atividade: 'Tentativa de Contato',
           next_contact_date: attempt.nextContactDate.toISOString(),
           created_by: session.session.user.id
         })
@@ -88,7 +89,8 @@ export function KanbanBoard() {
         .from('client_activities')
         .insert({
           client_id: contact.cardId,
-          type: contact.type,
+          tipo_contato: contact.type,
+          tipo_atividade: 'Contato Efetivo',
           notes: contact.notes,
           created_by: session.session.user.id
         })

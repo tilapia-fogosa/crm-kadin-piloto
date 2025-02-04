@@ -18,23 +18,23 @@ interface KanbanColumnProps {
   onRegisterEffectiveContact: (contact: EffectiveContact) => void
 }
 
-const getActivityBadge = (type: string) => {
-  switch (type) {
-    case 'tentativa':
+const getActivityBadge = (tipo_atividade: string) => {
+  switch (tipo_atividade) {
+    case 'Tentativa de Contato':
       return 'TE'
-    case 'efetivo':
+    case 'Contato Efetivo':
       return 'CE'
-    case 'agendamento':
+    case 'Agendamento':
       return 'AG'
-    case 'atendimento':
+    case 'Atendimento':
       return 'AT'
     default:
       return ''
   }
 }
 
-const getContactType = (type: string) => {
-  switch (type) {
+const getContactType = (tipo_contato: string) => {
+  switch (tipo_contato) {
     case 'phone':
       return 'Ligação Telefônica'
     case 'whatsapp':
@@ -42,7 +42,7 @@ const getContactType = (type: string) => {
     case 'whatsapp-call':
       return 'Ligação WhatsApp'
     default:
-      return type
+      return tipo_contato
   }
 }
 
@@ -56,10 +56,10 @@ export function KanbanColumn({
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
 
   const activities = [
-    { id: 'tentativa', label: 'Tentativa de Contato', badge: 'TE' },
-    { id: 'efetivo', label: 'Contato Efetivo', badge: 'CE' },
-    { id: 'agendamento', label: 'Agendamento', badge: 'AG' },
-    { id: 'atendimento', label: 'Atendimento', badge: 'AT' },
+    { id: 'Tentativa de Contato', label: 'Tentativa de Contato', badge: 'TE' },
+    { id: 'Contato Efetivo', label: 'Contato Efetivo', badge: 'CE' },
+    { id: 'Agendamento', label: 'Agendamento', badge: 'AG' },
+    { id: 'Atendimento', label: 'Atendimento', badge: 'AT' },
   ]
 
   return (
@@ -87,28 +87,27 @@ export function KanbanColumn({
                 <DialogTitle>Atividades - {card.clientName}</DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-3 gap-4">
-                {/* Primeira Coluna - Histórico */}
                 <div className="flex flex-col gap-2">
                   <h3 className="font-semibold mb-2">Histórico de Atividades</h3>
                   <ScrollArea className="h-[400px] w-full rounded-md border p-4">
                     {card.activities?.map((activity, index) => {
                       try {
                         const parts = activity.split('|')
-                        const type = parts[0]
-                        const contactType = parts[1]
+                        const tipo_atividade = parts[0]
+                        const tipo_contato = parts[1]
                         const date = new Date(parts[2])
                         const notes = parts[3]
                         
-                        console.log('Activity data:', { type, contactType, date, notes })
+                        console.log('Activity data:', { tipo_atividade, tipo_contato, date, notes })
 
                         return (
                           <div key={index} className="mb-4 text-sm space-y-1">
                             <div className="flex items-center gap-2">
                               <span className="flex items-center justify-center bg-primary text-primary-foreground font-medium rounded min-w-[2rem] h-6 text-xs">
-                                {getActivityBadge(type)}
+                                {getActivityBadge(tipo_atividade)}
                               </span>
                               <span className="text-muted-foreground">
-                                {getContactType(contactType)}
+                                {getContactType(tipo_contato)}
                               </span>
                               <span className="text-muted-foreground">
                                 {format(date, 'dd/MM/yyyy HH:mm')}
@@ -134,7 +133,6 @@ export function KanbanColumn({
                   </ScrollArea>
                 </div>
 
-                {/* Segunda Coluna - Novas Atividades */}
                 <div className="flex flex-col gap-2">
                   <h3 className="font-semibold mb-2">Nova Atividade</h3>
                   <div className="flex flex-col gap-2">
@@ -157,15 +155,14 @@ export function KanbanColumn({
                   </div>
                 </div>
 
-                {/* Terceira Coluna - Formulário Dinâmico */}
                 <div className="border-l pl-4">
                   <h3 className="font-semibold mb-2">Detalhes da Atividade</h3>
-                  {selectedActivity === 'tentativa' ? (
+                  {selectedActivity === 'Tentativa de Contato' ? (
                     <ContactAttemptForm
                       onSubmit={onRegisterAttempt}
                       cardId={card.id}
                     />
-                  ) : selectedActivity === 'efetivo' ? (
+                  ) : selectedActivity === 'Contato Efetivo' ? (
                     <EffectiveContactForm
                       onSubmit={onRegisterEffectiveContact}
                       cardId={card.id}

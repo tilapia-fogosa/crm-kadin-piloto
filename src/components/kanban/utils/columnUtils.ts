@@ -1,3 +1,4 @@
+
 import { format } from "date-fns"
 
 export const transformClientsToColumnData = (clients: any[] | null) => {
@@ -14,7 +15,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
-            return `${activity.type}|${activity.contact_type}|${activity.created_at}|${activity.notes || ''}`
+            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}`
           }),
         })) || [],
     },
@@ -30,7 +31,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
-            return `${activity.type}|${activity.contact_type}|${activity.created_at}|${activity.notes || ''}`
+            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}`
           }),
         })) || [],
     },
@@ -46,7 +47,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
-            return `${activity.type}|${activity.contact_type}|${activity.created_at}|${activity.notes || ''}`
+            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}`
           }),
         })) || [],
     },
@@ -62,7 +63,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
-            return `${activity.type}|${activity.contact_type}|${activity.created_at}|${activity.notes || ''}`
+            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}`
           }),
         })) || [],
     },
@@ -78,7 +79,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
-            return `${activity.type}|${activity.contact_type}|${activity.created_at}|${activity.notes || ''}`
+            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}`
           }),
         })) || [],
     },

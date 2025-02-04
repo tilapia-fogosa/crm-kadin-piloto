@@ -17,7 +17,8 @@ export type Database = {
           id: string
           next_contact_date: string | null
           notes: string | null
-          type: string
+          tipo_atividade: string
+          tipo_contato: string
         }
         Insert: {
           client_id: string
@@ -26,7 +27,8 @@ export type Database = {
           id?: string
           next_contact_date?: string | null
           notes?: string | null
-          type: string
+          tipo_atividade: string
+          tipo_contato: string
         }
         Update: {
           client_id?: string
@@ -35,7 +37,8 @@ export type Database = {
           id?: string
           next_contact_date?: string | null
           notes?: string | null
-          type?: string
+          tipo_atividade?: string
+          tipo_contato?: string
         }
         Relationships: [
           {

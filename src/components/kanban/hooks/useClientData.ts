@@ -19,7 +19,8 @@ export function useClientData() {
           observations,
           status,
           client_activities (
-            type,
+            tipo_contato,
+            tipo_atividade,
             notes,
             created_at
           )
