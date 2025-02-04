@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -10,7 +9,7 @@ interface BoardHeaderProps {
   selectedDate: Date | undefined
   isCalendarOpen: boolean
   setIsCalendarOpen: (open: boolean) => void
-  handleDateSelect: (event: React.MouseEvent, date: Date) => void
+  handleDateSelect: (date: Date) => void
 }
 
 export function BoardHeader({
@@ -43,7 +42,7 @@ export function BoardHeader({
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={(date) => date && handleDateSelect({} as React.MouseEvent, date)}
+            onSelect={handleDateSelect}
             initialFocus
           />
         </PopoverContent>

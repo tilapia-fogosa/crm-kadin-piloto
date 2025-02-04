@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
@@ -16,9 +15,7 @@ export function KanbanBoard() {
   const queryClient = useQueryClient()
   const { data: clients, isLoading } = useClientData()
 
-  const handleDateSelect = (event: React.MouseEvent, date: Date) => {
-    event.preventDefault()
-    event.stopPropagation()
+  const handleDateSelect = (date: Date) => {
     setSelectedDate(date)
     setIsCalendarOpen(false)
   }
