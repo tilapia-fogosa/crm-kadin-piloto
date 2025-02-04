@@ -1,24 +1,8 @@
 import { useState } from "react"
-import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { format, setHours, setMinutes } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { cn } from "@/lib/utils"
 import { EffectiveContact } from "./types"
 import { useToast } from "@/components/ui/use-toast"
 
@@ -29,33 +13,9 @@ interface EffectiveContactFormProps {
 
 export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormProps) {
   const [contactType, setContactType] = useState<'phone' | 'whatsapp' | 'whatsapp-call' | undefined>(undefined)
-  const [contactDate, setContactDate] = useState<Date>(() => new Date())
-  const [selectedHour, setSelectedHour] = useState<string>(() => {
-    const now = new Date()
-    return now.getHours().toString().padStart(2, '0')
-  })
-  const [selectedMinute, setSelectedMinute] = useState<string>(() => {
-    const now = new Date()
-    return now.getMinutes().toString().padStart(2, '0')
-  })
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const [notes, setNotes] = useState("")
   const [observations, setObservations] = useState("")
   const { toast } = useToast()
-
-  const handleDateTimeChange = (date: Date | undefined, hour: string, minute: string) => {
-    if (date) {
-      const newDate = setHours(setMinutes(date, parseInt(minute)), parseInt(hour))
-      setContactDate(newDate)
-    }
-  }
-
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      handleDateTimeChange(date, selectedHour, selectedMinute)
-      setIsCalendarOpen(false)
-    }
-  }
 
   const handleSubmit = () => {
     if (!contactType) {
@@ -69,7 +29,7 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
 
     onSubmit({
       type: contactType,
-      contactDate,
+      contactDate: new Date(), // Using current date as default
       notes,
       observations,
       cardId
@@ -98,75 +58,6 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
             <Label htmlFor="whatsapp-call">Ligação WhatsApp</Label>
           </div>
         </RadioGroup>
-      </div>
-      <div className="space-y-2">
-        <Label>Data do Contato Efetivo</Label>
-        <div className="flex flex-col gap-2">
-          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !contactDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {contactDate ? (
-                  format(contactDate, "dd/MM/yyyy")
-                ) : (
-                  <span>Selecione uma data</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={contactDate}
-                onSelect={handleDateSelect}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-          <div className="flex gap-2">
-            <Select
-              value={selectedHour}
-              onValueChange={(value) => {
-                setSelectedHour(value)
-                handleDateTimeChange(contactDate, value, selectedMinute)
-              }}
-            >
-              <SelectTrigger className="w-[110px]">
-                <SelectValue placeholder="Hora" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 24 }, (_, i) => 
-                  <SelectItem key={i} value={i.toString().padStart(2, '0')}>
-                    {i.toString().padStart(2, '0')}:00
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-            <Select
-              value={selectedMinute}
-              onValueChange={(value) => {
-                setSelectedMinute(value)
-                handleDateTimeChange(contactDate, selectedHour, value)
-              }}
-            >
-              <SelectTrigger className="w-[110px]">
-                <SelectValue placeholder="Minuto" />
-              </SelectTrigger>
-              <SelectContent>
-                {['00', '15', '30', '45'].map((minute) => (
-                  <SelectItem key={minute} value={minute}>
-                    {minute}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
       </div>
       <div className="space-y-2">
         <Label>Descritivo</Label>
