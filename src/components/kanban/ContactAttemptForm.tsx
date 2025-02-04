@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { ContactAttempt } from "./types"
+import { useToast } from "@/components/ui/use-toast"
 
 interface ContactAttemptFormProps {
   onSubmit: (attempt: ContactAttempt) => void
@@ -26,7 +27,7 @@ interface ContactAttemptFormProps {
 }
 
 export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps) {
-  const [contactType, setContactType] = useState<'phone' | 'whatsapp' | 'whatsapp-call'>('phone')
+  const [contactType, setContactType] = useState<'phone' | 'whatsapp' | 'whatsapp-call' | undefined>(undefined)
   const [nextContactDate, setNextContactDate] = useState<Date>(() => {
     const now = new Date()
     const tomorrow = addDays(now, 1)
@@ -35,6 +36,7 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
   })
   const [selectedHour, setSelectedHour] = useState<string>("08")
   const [selectedMinute, setSelectedMinute] = useState<string>("00")
+  const { toast } = useToast()
 
   const handleDateTimeChange = (date: Date | undefined, hour: string, minute: string) => {
     if (date) {
@@ -44,6 +46,15 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
   }
 
   const handleSubmit = () => {
+    if (!contactType) {
+      toast({
+        title: "Erro",
+        description: "Selecione o tipo de contato",
+        variant: "destructive",
+      })
+      return
+    }
+
     onSubmit({
       type: contactType,
       nextContactDate,
