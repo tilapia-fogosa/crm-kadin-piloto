@@ -1,33 +1,19 @@
 import { useState } from "react"
 import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { KanbanCard } from "./KanbanCard"
-import { ContactAttemptForm } from "./ContactAttemptForm"
-import { KanbanColumn, KanbanCard as KanbanCardType, ContactAttempt } from "./types"
+import { KanbanColumn } from "./KanbanColumn"
+import { ContactAttempt } from "./types"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
 export function KanbanBoard() {
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
-  const [selectedCard, setSelectedCard] = useState<KanbanCardType | null>(null)
-  const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
   const { toast } = useToast()
 
   const { data: clients, isLoading } = useQuery({
@@ -55,7 +41,7 @@ export function KanbanBoard() {
     }
   });
 
-  const columns: KanbanColumn[] = [
+  const columns = [
     {
       id: "novo-cadastro",
       title: "Novo Cadastro",
@@ -146,17 +132,6 @@ export function KanbanBoard() {
     window.open(`https://api.whatsapp.com/send?phone=${formattedNumber}`, '_blank')
   }
 
-  const activities = [
-    { id: 'tentativa', label: 'Tentativa de Contato' },
-    { id: 'efetivo', label: 'Contato Efetivo' },
-    { id: 'agendamento', label: 'Agendamento' },
-    { id: 'atendimento', label: 'Atendimento' },
-  ]
-
-  const handleActivitySelect = (activityId: string) => {
-    setSelectedActivity(activityId)
-  }
-
   const handleRegisterAttempt = async (attempt: ContactAttempt) => {
     try {
       console.log("Registering attempt:", attempt);
@@ -164,19 +139,17 @@ export function KanbanBoard() {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error('Not authenticated');
 
-      // Add activity
       const { error: activityError } = await supabase
         .from('client_activities')
-        .insert([{
+        .insert({
           client_id: attempt.cardId,
           type: attempt.type,
-          next_contact_date: attempt.nextContactDate,
+          next_contact_date: attempt.nextContactDate.toISOString(),
           created_by: session.session.user.id
-        }]);
+        });
 
       if (activityError) throw activityError;
 
-      // Update client status
       const { error: statusError } = await supabase
         .from('clients')
         .update({ status: 'tentativa-contato' })
@@ -188,9 +161,6 @@ export function KanbanBoard() {
         title: "Tentativa registrada",
         description: "O lead foi movido para 'Em tentativa de Contato'",
       });
-
-      // Close the dialog by clearing the selected card
-      setSelectedCard(null);
     } catch (error) {
       console.error('Error registering attempt:', error);
       toast({
@@ -239,63 +209,12 @@ export function KanbanBoard() {
 
       <div className="flex h-full gap-4 overflow-x-auto pb-4">
         {columns.map((column) => (
-          <div key={column.id} className="flex w-80 flex-none flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{column.title}</h2>
-              <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium">
-                {column.cards.length}
-              </span>
-            </div>
-            <div className="flex flex-col gap-4">
-              {column.cards.map((card) => (
-                <Dialog key={card.id} open={selectedCard?.id === card.id} onOpenChange={(open) => !open && setSelectedCard(null)}>
-                  <DialogTrigger asChild>
-                    <div onClick={() => setSelectedCard(card)}>
-                      <KanbanCard
-                        card={card}
-                        onClick={() => setSelectedCard(card)}
-                        onWhatsAppClick={(e) => handleWhatsAppClick(e, card.phoneNumber)}
-                      />
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[600px]" onPointerDownOutside={(e) => e.preventDefault()}>
-                    <DialogHeader>
-                      <DialogTitle>Atividades - {card.clientName}</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-2">
-                        {activities.map((activity) => (
-                          <Button
-                            key={activity.id}
-                            variant="outline"
-                            className={cn(
-                              "justify-start",
-                              selectedActivity === activity.id && "bg-primary/10"
-                            )}
-                            onClick={() => handleActivitySelect(activity.id)}
-                          >
-                            {activity.label}
-                          </Button>
-                        ))}
-                      </div>
-                      <div className="border-l pl-4">
-                        {selectedActivity === 'tentativa' ? (
-                          <ContactAttemptForm
-                            onSubmit={handleRegisterAttempt}
-                            cardId={card.id}
-                          />
-                        ) : (
-                          <p className="text-sm text-muted-foreground">
-                            Selecione uma atividade para ver as opções
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              ))}
-            </div>
-          </div>
+          <KanbanColumn
+            key={column.id}
+            column={column}
+            onWhatsAppClick={handleWhatsAppClick}
+            onRegisterAttempt={handleRegisterAttempt}
+          />
         ))}
       </div>
     </div>
