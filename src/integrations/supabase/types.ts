@@ -9,6 +9,89 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      client_activities: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string
+          id: string
+          next_contact_date: string | null
+          notes: string | null
+          type: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          next_contact_date?: string | null
+          notes?: string | null
+          type: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          next_contact_date?: string | null
+          notes?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_activities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          age_range: string | null
+          created_at: string
+          created_by: string
+          id: string
+          lead_source: string
+          meta_id: string | null
+          name: string
+          observations: string | null
+          original_ad: string | null
+          phone_number: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          age_range?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          lead_source: string
+          meta_id?: string | null
+          name: string
+          observations?: string | null
+          original_ad?: string | null
+          phone_number: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          age_range?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          lead_source?: string
+          meta_id?: string | null
+          name?: string
+          observations?: string | null
+          original_ad?: string | null
+          phone_number?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
