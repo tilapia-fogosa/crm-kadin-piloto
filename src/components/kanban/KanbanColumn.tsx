@@ -92,33 +92,41 @@ export function KanbanColumn({
                   <h3 className="font-semibold mb-2">Histórico de Atividades</h3>
                   <ScrollArea className="h-[400px] w-full rounded-md border p-4">
                     {card.activities?.map((activity, index) => {
-                      const parts = activity.split('|')
-                      const type = parts[0]
-                      const contactType = parts[1]
-                      const date = parts[2]
-                      const notes = parts[3]
+                      try {
+                        const parts = activity.split('|')
+                        const type = parts[0]
+                        const contactType = parts[1]
+                        const date = new Date(parts[2])
+                        const notes = parts[3]
+                        
+                        console.log('Activity data:', { type, contactType, date, notes })
 
-                      return (
-                        <div key={index} className="mb-4 text-sm space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="flex items-center justify-center bg-primary text-primary-foreground font-medium rounded min-w-[2rem] h-6 text-xs">
-                              {getActivityBadge(type)}
-                            </span>
-                            <span className="text-muted-foreground">
-                              {getContactType(contactType)}
-                            </span>
-                            <span className="text-muted-foreground">
-                              {format(new Date(date), 'dd/MM/yyyy HH:mm')}
-                            </span>
+                        return (
+                          <div key={index} className="mb-4 text-sm space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="flex items-center justify-center bg-primary text-primary-foreground font-medium rounded min-w-[2rem] h-6 text-xs">
+                                {getActivityBadge(type)}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {getContactType(contactType)}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {format(date, 'dd/MM/yyyy HH:mm')}
+                              </span>
+                            </div>
+                            {notes && (
+                              <p className="text-sm text-muted-foreground ml-10">
+                                {notes}
+                              </p>
+                            )}
                           </div>
-                          {notes && (
-                            <p className="text-sm text-muted-foreground ml-10">
-                              {notes}
-                            </p>
-                          )}
-                        </div>
-                      )
-                    }) || (
+                        )
+                      } catch (error) {
+                        console.error('Error parsing activity:', error)
+                        return null
+                      }
+                    })}
+                    {(!card.activities || card.activities.length === 0) && (
                       <p className="text-sm text-muted-foreground">
                         Nenhuma atividade registrada
                       </p>
