@@ -8,13 +8,14 @@ import { Calendar as CalendarIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { KanbanColumn } from "./KanbanColumn"
 import { ContactAttempt } from "./types"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
 export function KanbanBoard() {
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const { toast } = useToast()
+  const queryClient = useQueryClient()
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ['clients'],
@@ -139,6 +140,7 @@ export function KanbanBoard() {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error('Not authenticated');
 
+      // First, insert the activity
       const { error: activityError } = await supabase
         .from('client_activities')
         .insert({
@@ -150,12 +152,19 @@ export function KanbanBoard() {
 
       if (activityError) throw activityError;
 
+      // Then, update the client status
       const { error: statusError } = await supabase
         .from('clients')
-        .update({ status: 'tentativa-contato' })
+        .update({ 
+          status: 'tentativa-contato',
+          updated_at: new Date().toISOString()
+        })
         .eq('id', attempt.cardId);
 
       if (statusError) throw statusError;
+
+      // Invalidate the query to refresh the data
+      await queryClient.invalidateQueries({ queryKey: ['clients'] });
 
       toast({
         title: "Tentativa registrada",
