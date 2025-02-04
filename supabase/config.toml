@@ -1,2 +1,2 @@
-
-project_id = "hkvjdxxndapxpslovrlc"
+[functions.evolution-api]
+verify_jwt = false
