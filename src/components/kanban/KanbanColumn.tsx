@@ -7,6 +7,8 @@ import { EffectiveContactForm } from "./EffectiveContactForm"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { ContactAttempt, EffectiveContact } from "./types"
+import { format } from "date-fns"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface KanbanColumnProps {
   column: KanbanColumnType
@@ -51,27 +53,50 @@ export function KanbanColumn({
                 />
               </div>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]" onPointerDownOutside={(e) => e.preventDefault()}>
+            <DialogContent className="sm:max-w-[900px]" onPointerDownOutside={(e) => e.preventDefault()}>
               <DialogHeader>
                 <DialogTitle>Atividades - {card.clientName}</DialogTitle>
               </DialogHeader>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
+                {/* Primeira Coluna - Histórico */}
                 <div className="flex flex-col gap-2">
-                  {activities.map((activity) => (
-                    <Button
-                      key={activity.id}
-                      variant="outline"
-                      className={cn(
-                        "justify-start",
-                        selectedActivity === activity.id && "bg-primary/10"
-                      )}
-                      onClick={() => setSelectedActivity(activity.id)}
-                    >
-                      {activity.label}
-                    </Button>
-                  ))}
+                  <h3 className="font-semibold mb-2">Histórico de Atividades</h3>
+                  <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                    {card.activities?.map((activity, index) => (
+                      <div key={index} className="mb-2 text-sm">
+                        <p>{activity}</p>
+                      </div>
+                    )) || (
+                      <p className="text-sm text-muted-foreground">
+                        Nenhuma atividade registrada
+                      </p>
+                    )}
+                  </ScrollArea>
                 </div>
+
+                {/* Segunda Coluna - Novas Atividades */}
+                <div className="flex flex-col gap-2">
+                  <h3 className="font-semibold mb-2">Nova Atividade</h3>
+                  <div className="flex flex-col gap-2">
+                    {activities.map((activity) => (
+                      <Button
+                        key={activity.id}
+                        variant="outline"
+                        className={cn(
+                          "justify-start",
+                          selectedActivity === activity.id && "bg-primary/10"
+                        )}
+                        onClick={() => setSelectedActivity(activity.id)}
+                      >
+                        {activity.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Terceira Coluna - Formulário Dinâmico */}
                 <div className="border-l pl-4">
+                  <h3 className="font-semibold mb-2">Detalhes da Atividade</h3>
                   {selectedActivity === 'tentativa' ? (
                     <ContactAttemptForm
                       onSubmit={onRegisterAttempt}
