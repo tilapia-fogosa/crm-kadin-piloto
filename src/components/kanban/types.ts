@@ -18,3 +18,11 @@ export type ContactAttempt = {
   nextContactDate: Date
   cardId: string
 }
+
+export type EffectiveContact = {
+  type: 'phone' | 'whatsapp' | 'whatsapp-call'
+  contactDate: Date
+  notes: string
+  observations: string
+  cardId: string
+}

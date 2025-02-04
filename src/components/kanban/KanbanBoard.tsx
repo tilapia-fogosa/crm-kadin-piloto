@@ -7,7 +7,7 @@ import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { KanbanColumn } from "./KanbanColumn"
-import { ContactAttempt } from "./types"
+import { ContactAttempt, EffectiveContact } from "./types"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
@@ -180,6 +180,53 @@ export function KanbanBoard() {
     }
   }
 
+  const handleRegisterEffectiveContact = async (contact: EffectiveContact) => {
+    try {
+      console.log("Registering effective contact:", contact);
+      
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) throw new Error('Not authenticated');
+
+      // First, insert the activity
+      const { error: activityError } = await supabase
+        .from('client_activities')
+        .insert({
+          client_id: contact.cardId,
+          type: contact.type,
+          notes: contact.notes,
+          created_by: session.session.user.id
+        });
+
+      if (activityError) throw activityError;
+
+      // Then, update the client status
+      const { error: statusError } = await supabase
+        .from('clients')
+        .update({ 
+          status: 'contato-efetivo',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', contact.cardId);
+
+      if (statusError) throw statusError;
+
+      // Invalidate the query to refresh the data
+      await queryClient.invalidateQueries({ queryKey: ['clients'] });
+
+      toast({
+        title: "Contato efetivo registrado",
+        description: "O lead foi movido para 'Contato Efetivo'",
+      });
+    } catch (error) {
+      console.error('Error registering effective contact:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao registrar contato efetivo",
+        description: "Ocorreu um erro ao tentar registrar o contato efetivo.",
+      });
+    }
+  }
+
   if (isLoading) {
     return <div className="flex items-center justify-center h-full">Carregando...</div>;
   }
@@ -223,6 +270,7 @@ export function KanbanBoard() {
             column={column}
             onWhatsAppClick={handleWhatsAppClick}
             onRegisterAttempt={handleRegisterAttempt}
+            onRegisterEffectiveContact={handleRegisterEffectiveContact}
           />
         ))}
       </div>

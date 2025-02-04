@@ -3,17 +3,24 @@ import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType } from "
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ContactAttemptForm } from "./ContactAttemptForm"
+import { EffectiveContactForm } from "./EffectiveContactForm"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
-import { ContactAttempt } from "./types"
+import { ContactAttempt, EffectiveContact } from "./types"
 
 interface KanbanColumnProps {
   column: KanbanColumnType
   onWhatsAppClick: (e: React.MouseEvent, phoneNumber: string) => void
   onRegisterAttempt: (attempt: ContactAttempt) => void
+  onRegisterEffectiveContact: (contact: EffectiveContact) => void
 }
 
-export function KanbanColumn({ column, onWhatsAppClick, onRegisterAttempt }: KanbanColumnProps) {
+export function KanbanColumn({ 
+  column, 
+  onWhatsAppClick, 
+  onRegisterAttempt,
+  onRegisterEffectiveContact 
+}: KanbanColumnProps) {
   const [selectedCard, setSelectedCard] = useState<KanbanCardType | null>(null)
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
 
@@ -68,6 +75,11 @@ export function KanbanColumn({ column, onWhatsAppClick, onRegisterAttempt }: Kan
                   {selectedActivity === 'tentativa' ? (
                     <ContactAttemptForm
                       onSubmit={onRegisterAttempt}
+                      cardId={card.id}
+                    />
+                  ) : selectedActivity === 'efetivo' ? (
+                    <EffectiveContactForm
+                      onSubmit={onRegisterEffectiveContact}
                       cardId={card.id}
                     />
                   ) : (
