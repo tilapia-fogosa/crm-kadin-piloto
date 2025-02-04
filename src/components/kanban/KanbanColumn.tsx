@@ -36,9 +36,9 @@ const getActivityBadge = (type: string) => {
 const getContactType = (type: string) => {
   switch (type) {
     case 'phone':
-      return 'Telefone'
+      return 'Ligação Telefônica'
     case 'whatsapp':
-      return 'WhatsApp'
+      return 'Mensagem WhatsApp'
     case 'whatsapp-call':
       return 'Ligação WhatsApp'
     default:
