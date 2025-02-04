@@ -1,18 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit, Trash, Plus } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +12,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { LeadSourceForm } from "./LeadSourceForm";
+import { LeadSourceActions } from "./LeadSourceActions";
 
 type LeadSource = {
   id: string;
@@ -30,74 +21,8 @@ type LeadSource = {
   is_system: boolean;
 };
 
-const LeadSourceForm = ({ onClose, initialData = null }: { onClose: () => void; initialData?: LeadSource | null }) => {
-  const [name, setName] = React.useState(initialData?.name || "");
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const id = initialData?.id || name.toLowerCase().replace(/\s+/g, '-');
-      
-      if (initialData) {
-        await supabase
-          .from('lead_sources')
-          .update({ name })
-          .eq('id', initialData.id);
-      } else {
-        await supabase
-          .from('lead_sources')
-          .insert([{ id, name }]);
-      }
-      
-      toast({
-        title: `Origem ${initialData ? 'atualizada' : 'adicionada'} com sucesso!`,
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ['leadSources'] });
-      onClose();
-    } catch (error) {
-      console.error('Erro ao salvar origem:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao salvar origem",
-        description: "Ocorreu um erro ao tentar salvar a origem do lead.",
-      });
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="name" className="text-sm font-medium">
-          Nome da Origem
-        </label>
-        <input
-          id="name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full p-2 border rounded-md"
-          required
-        />
-      </div>
-      <div className="flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancelar
-        </Button>
-        <Button type="submit">
-          {initialData ? 'Atualizar' : 'Adicionar'}
-        </Button>
-      </div>
-    </form>
-  );
-};
-
 export default function LeadSourcesTable() {
   const [isAddOpen, setIsAddOpen] = React.useState(false);
-  const [editingSource, setEditingSource] = React.useState<LeadSource | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -173,54 +98,11 @@ export default function LeadSourcesTable() {
           {leadSources?.map((source) => (
             <TableRow key={source.id}>
               <TableCell>{source.name}</TableCell>
-              <TableCell className="space-x-2">
-                <Dialog open={editingSource?.id === source.id} onOpenChange={(open) => !open && setEditingSource(null)}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setEditingSource(source)}
-                      disabled={source.is_system}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Editar Origem</DialogTitle>
-                    </DialogHeader>
-                    <LeadSourceForm 
-                      initialData={source} 
-                      onClose={() => setEditingSource(null)} 
-                    />
-                  </DialogContent>
-                </Dialog>
-
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      disabled={source.is_system}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Tem certeza que deseja excluir esta origem? Esta ação não pode ser desfeita.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDelete(source)}>
-                        Confirmar
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+              <TableCell>
+                <LeadSourceActions 
+                  source={source} 
+                  onDelete={handleDelete}
+                />
               </TableCell>
             </TableRow>
           ))}
