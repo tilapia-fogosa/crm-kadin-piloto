@@ -36,12 +36,20 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
   })
   const [selectedHour, setSelectedHour] = useState<string>("08")
   const [selectedMinute, setSelectedMinute] = useState<string>("00")
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const { toast } = useToast()
 
   const handleDateTimeChange = (date: Date | undefined, hour: string, minute: string) => {
     if (date) {
       const newDate = setHours(setMinutes(date, parseInt(minute)), parseInt(hour))
       setNextContactDate(newDate)
+    }
+  }
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      handleDateTimeChange(date, selectedHour, selectedMinute)
+      setIsCalendarOpen(false)
     }
   }
 
@@ -88,7 +96,7 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
       <div className="space-y-2">
         <Label>Próximo Contato</Label>
         <div className="flex flex-col gap-2">
-          <Popover>
+          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -109,10 +117,9 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
               <Calendar
                 mode="single"
                 selected={nextContactDate}
-                onSelect={(date) => handleDateTimeChange(date, selectedHour, selectedMinute)}
+                onSelect={handleDateSelect}
                 initialFocus
                 fromDate={new Date()}
-                className="rounded-md border shadow-md bg-popover"
               />
             </PopoverContent>
           </Popover>

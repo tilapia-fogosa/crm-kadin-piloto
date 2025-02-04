@@ -38,6 +38,7 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
     const now = new Date()
     return now.getMinutes().toString().padStart(2, '0')
   })
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const [notes, setNotes] = useState("")
   const [observations, setObservations] = useState("")
   const { toast } = useToast()
@@ -46,6 +47,13 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
     if (date) {
       const newDate = setHours(setMinutes(date, parseInt(minute)), parseInt(hour))
       setContactDate(newDate)
+    }
+  }
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      handleDateTimeChange(date, selectedHour, selectedMinute)
+      setIsCalendarOpen(false)
     }
   }
 
@@ -94,7 +102,7 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
       <div className="space-y-2">
         <Label>Data do Contato Efetivo</Label>
         <div className="flex flex-col gap-2">
-          <Popover>
+          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -115,7 +123,7 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
               <Calendar
                 mode="single"
                 selected={contactDate}
-                onSelect={(date) => handleDateTimeChange(date, selectedHour, selectedMinute)}
+                onSelect={handleDateSelect}
                 initialFocus
               />
             </PopoverContent>
