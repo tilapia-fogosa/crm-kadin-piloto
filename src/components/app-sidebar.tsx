@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import {
@@ -10,7 +9,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { 
@@ -93,6 +91,10 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarContent>
+        <div className="flex items-center justify-between px-2 py-2">
+          <span className="text-lg font-semibold text-sidebar-foreground">Menu</span>
+          <SidebarTrigger />
+        </div>
         <SidebarGroup>
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
