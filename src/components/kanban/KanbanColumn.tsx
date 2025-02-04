@@ -1,3 +1,4 @@
+
 import { KanbanCard } from "./KanbanCard"
 import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType } from "./types"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -27,10 +28,10 @@ export function KanbanColumn({
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
 
   const activities = [
-    { id: 'tentativa', label: 'Tentativa de Contato' },
-    { id: 'efetivo', label: 'Contato Efetivo' },
-    { id: 'agendamento', label: 'Agendamento' },
-    { id: 'atendimento', label: 'Atendimento' },
+    { id: 'tentativa', label: 'Tentativa de Contato', badge: 'TE' },
+    { id: 'efetivo', label: 'Contato Efetivo', badge: 'CE' },
+    { id: 'agendamento', label: 'Agendamento', badge: 'AG' },
+    { id: 'atendimento', label: 'Atendimento', badge: 'AT' },
   ]
 
   return (
@@ -83,11 +84,14 @@ export function KanbanColumn({
                         key={activity.id}
                         variant="outline"
                         className={cn(
-                          "justify-start",
+                          "justify-start gap-2",
                           selectedActivity === activity.id && "bg-primary/10"
                         )}
                         onClick={() => setSelectedActivity(activity.id)}
                       >
+                        <span className="flex items-center justify-center bg-primary text-primary-foreground font-medium rounded min-w-[2rem] h-6 text-xs">
+                          {activity.badge}
+                        </span>
                         {activity.label}
                       </Button>
                     ))}
