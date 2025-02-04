@@ -1,7 +1,6 @@
-
 import { KanbanCard } from "./KanbanCard"
 import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType } from "./types"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { ContactAttemptForm } from "./ContactAttemptForm"
 import { EffectiveContactForm } from "./EffectiveContactForm"
@@ -72,8 +71,8 @@ export function KanbanColumn({
       </div>
       <div className="flex flex-col gap-4">
         {column.cards.map((card) => (
-          <Dialog key={card.id} open={selectedCard?.id === card.id} onOpenChange={(open) => !open && setSelectedCard(null)}>
-            <DialogTrigger asChild>
+          <Sheet key={card.id} open={selectedCard?.id === card.id} onOpenChange={(open) => !open && setSelectedCard(null)}>
+            <SheetTrigger asChild>
               <div onClick={() => setSelectedCard(card)}>
                 <KanbanCard
                   card={card}
@@ -81,15 +80,15 @@ export function KanbanColumn({
                   onWhatsAppClick={(e) => onWhatsAppClick(e, card.phoneNumber)}
                 />
               </div>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[900px]" onPointerDownOutside={(e) => e.preventDefault()}>
-              <DialogHeader>
-                <DialogTitle>Atividades - {card.clientName}</DialogTitle>
-              </DialogHeader>
-              <div className="grid grid-cols-3 gap-4">
+            </SheetTrigger>
+            <SheetContent className="w-[900px] sm:max-w-[900px] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()}>
+              <SheetHeader>
+                <SheetTitle>Atividades - {card.clientName}</SheetTitle>
+              </SheetHeader>
+              <div className="grid grid-cols-3 gap-4 mt-6">
                 <div className="flex flex-col gap-2">
                   <h3 className="font-semibold mb-2">Histórico de Atividades</h3>
-                  <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                  <ScrollArea className="h-[600px] w-full rounded-md border p-4">
                     {card.activities?.map((activity, index) => {
                       try {
                         const parts = activity.split('|')
@@ -174,8 +173,8 @@ export function KanbanColumn({
                   )}
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
+            </SheetContent>
+          </Sheet>
         ))}
       </div>
     </div>
