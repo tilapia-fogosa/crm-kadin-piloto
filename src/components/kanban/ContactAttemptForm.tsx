@@ -111,7 +111,8 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
                 selected={nextContactDate}
                 onSelect={(date) => handleDateTimeChange(date, selectedHour, selectedMinute)}
                 initialFocus
-                fromDate={new Date()} // Removido para permitir seleção de qualquer data
+                fromDate={new Date()}
+                className="cursor-pointer"
               />
             </PopoverContent>
           </Popover>
