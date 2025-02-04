@@ -10,6 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { 
   LayoutDashboard, 
@@ -26,6 +27,7 @@ import {
 
 export function AppSidebar() {
   const location = useLocation()
+  const { state } = useSidebar()
 
   const mainMenuItems = [
     {
@@ -89,10 +91,15 @@ export function AppSidebar() {
   ]
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarContent>
         <div className="flex items-center justify-between px-2 py-2">
-          <span className="text-lg font-semibold text-sidebar-foreground">Menu</span>
+          <span className={cn(
+            "text-lg font-semibold text-sidebar-foreground transition-opacity duration-200",
+            state === "collapsed" && "opacity-0"
+          )}>
+            Menu
+          </span>
           <SidebarTrigger />
         </div>
         <SidebarGroup>
