@@ -18,16 +18,30 @@ export default function Auth() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    console.log("Iniciando login para:", email);
+    
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
-      navigate("/");
+      console.log("Login bem sucedido:", data);
+      
+      toast({
+        title: "Login realizado com sucesso!",
+        description: "Redirecionando para a página inicial...",
+      });
+
+      // Pequeno delay para garantir que o toast seja visto
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
+
     } catch (error: any) {
+      console.error("Erro no login:", error);
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
@@ -41,19 +55,24 @@ export default function Auth() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    console.log("Iniciando cadastro para:", email);
+
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (error) throw error;
 
+      console.log("Cadastro bem sucedido:", data);
+      
       toast({
         title: "Cadastro realizado com sucesso!",
         description: "Verifique seu email para confirmar o cadastro.",
       });
     } catch (error: any) {
+      console.error("Erro no cadastro:", error);
       toast({
         variant: "destructive",
         title: "Erro ao criar conta",
