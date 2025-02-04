@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import {
@@ -21,7 +22,8 @@ import {
   Target,
   Settings,
   Home,
-  BarChart3
+  BarChart3,
+  FileJson
 } from "lucide-react"
 
 export function AppSidebar() {
@@ -52,6 +54,11 @@ export function AppSidebar() {
       title: "Unidades",
       icon: Home,
       path: "/units",
+    },
+    {
+      title: "Documentação API",
+      icon: FileJson,
+      path: "/api-docs",
     },
     {
       title: "Minhas Configurações",
