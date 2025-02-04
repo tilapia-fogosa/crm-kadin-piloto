@@ -105,14 +105,14 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 z-50" align="start">
+            <PopoverContent className="w-auto p-0 z-[100]" align="start">
               <Calendar
                 mode="single"
                 selected={nextContactDate}
                 onSelect={(date) => handleDateTimeChange(date, selectedHour, selectedMinute)}
                 initialFocus
                 fromDate={new Date()}
-                className="cursor-pointer"
+                className="cursor-pointer rounded-md border bg-popover p-0"
               />
             </PopoverContent>
           </Popover>
