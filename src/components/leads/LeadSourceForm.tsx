@@ -24,17 +24,31 @@ export function LeadSourceForm({ onClose, initialData }: LeadSourceFormProps) {
     e.preventDefault();
     
     try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) throw new Error('Not authenticated');
+
       const id = initialData?.id || name.toLowerCase().replace(/\s+/g, '-');
       
       if (initialData) {
-        await supabase
+        const { error } = await supabase
           .from('lead_sources')
-          .update({ name })
+          .update({ 
+            name,
+            created_by: session.session.user.id 
+          })
           .eq('id', initialData.id);
+
+        if (error) throw error;
       } else {
-        await supabase
+        const { error } = await supabase
           .from('lead_sources')
-          .insert([{ id, name }]);
+          .insert([{ 
+            id, 
+            name,
+            created_by: session.session.user.id 
+          }]);
+
+        if (error) throw error;
       }
       
       toast({

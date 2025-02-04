@@ -26,17 +26,31 @@ export default function LeadSourcesTable() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const { data: session } = useQuery({
+    queryKey: ['session'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    },
+  });
+
   const { data: leadSources, isLoading } = useQuery({
     queryKey: ['leadSources'],
     queryFn: async () => {
+      if (!session) throw new Error('Not authenticated');
+      
       const { data, error } = await supabase
         .from('lead_sources')
         .select('*')
         .order('name');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching lead sources:', error);
+        throw error;
+      }
       return data as LeadSource[];
     },
+    enabled: !!session,
   });
 
   const handleDelete = async (source: LeadSource) => {
@@ -65,6 +79,10 @@ export default function LeadSourcesTable() {
 
   if (isLoading) {
     return <div>Carregando...</div>;
+  }
+
+  if (!session) {
+    return <div>Por favor, faça login para acessar esta página.</div>;
   }
 
   return (
