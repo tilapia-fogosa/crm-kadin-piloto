@@ -1,4 +1,3 @@
-```typescript
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,7 +21,7 @@ type LeadSource = {
   is_system: boolean;
 };
 
-export default function LeadSourcesTable() {
+const LeadSourcesTable = () => {
   const [isAddOpen, setIsAddOpen] = React.useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -129,5 +128,6 @@ export default function LeadSourcesTable() {
       </Table>
     </div>
   );
-}
-```
+};
+
+export default LeadSourcesTable;
