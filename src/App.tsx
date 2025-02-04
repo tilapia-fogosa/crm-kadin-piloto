@@ -9,6 +9,7 @@ import Kanban from "@/pages/Kanban";
 import Agenda from "@/pages/Agenda";
 import NewClient from "@/pages/clients/new";
 import ClientsPage from "@/pages/clients";
+import LeadSourcesPage from "@/pages/clients/sources";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
               <Route path="/agenda" element={<Agenda />} />
               <Route path="/clients/new" element={<NewClient />} />
               <Route path="/clients" element={<ClientsPage />} />
+              <Route path="/clients/sources" element={<LeadSourcesPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
