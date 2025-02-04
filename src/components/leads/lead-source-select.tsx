@@ -14,19 +14,27 @@ import {
 } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import { LeadFormData } from "@/types/lead-form";
-
-// This would come from your API in a real application
-const leadSources = [
-  { id: "1", name: "Facebook" },
-  { id: "2", name: "Instagram" },
-  { id: "3", name: "Indicação" },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LeadSourceSelectProps {
   form: UseFormReturn<LeadFormData>;
 }
 
 export function LeadSourceSelect({ form }: LeadSourceSelectProps) {
+  const { data: leadSources, isLoading } = useQuery({
+    queryKey: ['leadSources'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('lead_sources')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
   return (
     <FormField
       control={form.control}
@@ -41,7 +49,7 @@ export function LeadSourceSelect({ form }: LeadSourceSelectProps) {
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {leadSources.map((source) => (
+              {leadSources?.map((source) => (
                 <SelectItem key={source.id} value={source.id}>
                   {source.name}
                 </SelectItem>

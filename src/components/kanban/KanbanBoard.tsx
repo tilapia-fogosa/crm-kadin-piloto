@@ -16,99 +16,122 @@ import {
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { KanbanCard } from "./KanbanCard"
 import { ContactAttemptForm } from "./ContactAttemptForm"
 import { KanbanColumn, KanbanCard as KanbanCardType, ContactAttempt } from "./types"
-
-const initialColumns: KanbanColumn[] = [
-  {
-    id: "novo-cadastro",
-    title: "Novo Cadastro",
-    cards: [
-      {
-        id: "1",
-        clientName: "João Silva",
-        leadSource: "Site",
-        phoneNumber: "5511999999999",
-        activities: ["Primeiro Contato"],
-        labels: ["novo-lead"],
-      },
-      {
-        id: "2",
-        clientName: "Maria Santos",
-        leadSource: "Indicação",
-        phoneNumber: "5511988888888",
-        activities: ["Aguardando Retorno"],
-        labels: ["follow-up"],
-      },
-    ],
-  },
-  {
-    id: "tentativa-contato",
-    title: "Em tentativa de Contato",
-    cards: [
-      {
-        id: "3",
-        clientName: "Pedro Oliveira",
-        leadSource: "Instagram",
-        phoneNumber: "5511977777777",
-        activities: ["Segunda Tentativa"],
-        labels: ["em-andamento"],
-      },
-    ],
-  },
-  {
-    id: "contato-efetivo",
-    title: "Contato Efetivo",
-    cards: [
-      {
-        id: "4",
-        clientName: "Ana Costa",
-        leadSource: "Facebook",
-        phoneNumber: "5511966666666",
-        activities: ["Interesse Confirmado"],
-        labels: ["qualificado"],
-      },
-    ],
-  },
-  {
-    id: "atendimento-agendado",
-    title: "Atendimento Agendado",
-    cards: [
-      {
-        id: "5",
-        clientName: "Carlos Ferreira",
-        leadSource: "Google Ads",
-        phoneNumber: "5511955555555",
-        activities: ["Consulta Marcada"],
-        labels: ["agendado"],
-      },
-    ],
-  },
-  {
-    id: "atendimento-realizado",
-    title: "Atendimento Realizado",
-    cards: [
-      {
-        id: "6",
-        clientName: "Lucia Mendes",
-        leadSource: "LinkedIn",
-        phoneNumber: "5511944444444",
-        activities: ["Pós Atendimento"],
-        labels: ["finalizado"],
-      },
-    ],
-  },
-]
+import { useQuery } from "@tanstack/react-query"
+import { supabase } from "@/integrations/supabase/client"
 
 export function KanbanBoard() {
-  const [columns, setColumns] = useState<KanbanColumn[]>(initialColumns)
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const [selectedCard, setSelectedCard] = useState<KanbanCardType | null>(null)
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
   const { toast } = useToast()
+
+  const { data: clients, isLoading } = useQuery({
+    queryKey: ['clients'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select(`
+          id,
+          name,
+          phone_number,
+          lead_source,
+          observations,
+          status,
+          client_activities (
+            type,
+            notes,
+            created_at
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const columns: KanbanColumn[] = [
+    {
+      id: "novo-cadastro",
+      title: "Novo Cadastro",
+      cards: clients
+        ?.filter(client => client.status === 'novo-cadastro')
+        .map(client => ({
+          id: client.id,
+          clientName: client.name,
+          leadSource: client.lead_source,
+          phoneNumber: client.phone_number,
+          activities: client.client_activities?.map(activity => 
+            `${activity.type} - ${format(new Date(activity.created_at), "dd/MM/yyyy HH:mm")}`
+          ),
+        })) || [],
+    },
+    {
+      id: "tentativa-contato",
+      title: "Em tentativa de Contato",
+      cards: clients
+        ?.filter(client => client.status === 'tentativa-contato')
+        .map(client => ({
+          id: client.id,
+          clientName: client.name,
+          leadSource: client.lead_source,
+          phoneNumber: client.phone_number,
+          activities: client.client_activities?.map(activity => 
+            `${activity.type} - ${format(new Date(activity.created_at), "dd/MM/yyyy HH:mm")}`
+          ),
+        })) || [],
+    },
+    {
+      id: "contato-efetivo",
+      title: "Contato Efetivo",
+      cards: clients
+        ?.filter(client => client.status === 'contato-efetivo')
+        .map(client => ({
+          id: client.id,
+          clientName: client.name,
+          leadSource: client.lead_source,
+          phoneNumber: client.phone_number,
+          activities: client.client_activities?.map(activity => 
+            `${activity.type} - ${format(new Date(activity.created_at), "dd/MM/yyyy HH:mm")}`
+          ),
+        })) || [],
+    },
+    {
+      id: "atendimento-agendado",
+      title: "Atendimento Agendado",
+      cards: clients
+        ?.filter(client => client.status === 'atendimento-agendado')
+        .map(client => ({
+          id: client.id,
+          clientName: client.name,
+          leadSource: client.lead_source,
+          phoneNumber: client.phone_number,
+          activities: client.client_activities?.map(activity => 
+            `${activity.type} - ${format(new Date(activity.created_at), "dd/MM/yyyy HH:mm")}`
+          ),
+        })) || [],
+    },
+    {
+      id: "atendimento-realizado",
+      title: "Atendimento Realizado",
+      cards: clients
+        ?.filter(client => client.status === 'atendimento-realizado')
+        .map(client => ({
+          id: client.id,
+          clientName: client.name,
+          leadSource: client.lead_source,
+          phoneNumber: client.phone_number,
+          activities: client.client_activities?.map(activity => 
+            `${activity.type} - ${format(new Date(activity.created_at), "dd/MM/yyyy HH:mm")}`
+          ),
+        })) || [],
+    },
+  ];
 
   const handleDateSelect = (event: React.MouseEvent, date: Date) => {
     event.preventDefault()
@@ -134,48 +157,52 @@ export function KanbanBoard() {
     setSelectedActivity(activityId)
   }
 
-  const handleRegisterAttempt = (attempt: ContactAttempt) => {
-    console.log("Registering attempt:", attempt)
-    
-    setColumns(prevColumns => {
-      const newColumns = [...prevColumns]
+  const handleRegisterAttempt = async (attempt: ContactAttempt) => {
+    try {
+      console.log("Registering attempt:", attempt);
       
-      // Find the card in the "Novo Cadastro" column
-      const novoCadastroColumn = newColumns.find(col => col.id === "novo-cadastro")
-      const cardIndex = novoCadastroColumn?.cards.findIndex(card => card.id === attempt.cardId)
-      
-      if (novoCadastroColumn && cardIndex !== undefined && cardIndex !== -1) {
-        const card = novoCadastroColumn.cards[cardIndex]
-        
-        // Remove card from "Novo Cadastro"
-        novoCadastroColumn.cards.splice(cardIndex, 1)
-        
-        // Add activity to card
-        const updatedCard = {
-          ...card,
-          activities: [
-            ...(card.activities || []),
-            `Tentativa de Contato - ${format(attempt.nextContactDate, "dd/MM/yyyy HH:mm")}`
-          ]
-        }
-        
-        // Add card to "Em tentativa de Contato"
-        const tentativaColumn = newColumns.find(col => col.id === "tentativa-contato")
-        if (tentativaColumn) {
-          tentativaColumn.cards.push(updatedCard)
-        }
-      }
-      
-      return newColumns
-    })
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) throw new Error('Not authenticated');
 
-    toast({
-      title: "Tentativa registrada",
-      description: "O lead foi movido para 'Em tentativa de Contato'",
-    })
+      // Add activity
+      const { error: activityError } = await supabase
+        .from('client_activities')
+        .insert([{
+          client_id: attempt.cardId,
+          type: attempt.type,
+          next_contact_date: attempt.nextContactDate,
+          created_by: session.session.user.id
+        }]);
 
-    // Close the dialog by clearing the selected card
-    setSelectedCard(null)
+      if (activityError) throw activityError;
+
+      // Update client status
+      const { error: statusError } = await supabase
+        .from('clients')
+        .update({ status: 'tentativa-contato' })
+        .eq('id', attempt.cardId);
+
+      if (statusError) throw statusError;
+
+      toast({
+        title: "Tentativa registrada",
+        description: "O lead foi movido para 'Em tentativa de Contato'",
+      });
+
+      // Close the dialog by clearing the selected card
+      setSelectedCard(null);
+    } catch (error) {
+      console.error('Error registering attempt:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao registrar tentativa",
+        description: "Ocorreu um erro ao tentar registrar a tentativa de contato.",
+      });
+    }
+  }
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-full">Carregando...</div>;
   }
 
   return (

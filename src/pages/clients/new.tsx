@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { LeadFormFields } from "@/components/leads/lead-form-fields";
 import { LeadFormData, leadFormSchema } from "@/types/lead-form";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function NewClient() {
   const { toast } = useToast();
@@ -28,8 +29,26 @@ export default function NewClient() {
     try {
       console.log("Submitting form with values:", values);
       
-      // For now, we'll simulate a successful submission since we don't have a backend
-      // In a real application, this would be replaced with an actual API call
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        throw new Error('Not authenticated');
+      }
+
+      const { error } = await supabase
+        .from('clients')
+        .insert([{
+          name: values.name,
+          phone_number: values.phoneNumber,
+          lead_source: values.leadSource,
+          observations: values.observations,
+          age_range: values.ageRange,
+          meta_id: values.metaId,
+          original_ad: values.originalAd,
+          created_by: session.session.user.id,
+          status: 'novo-cadastro'
+        }]);
+
+      if (error) throw error;
       
       toast({
         title: "Lead cadastrado com sucesso!",
