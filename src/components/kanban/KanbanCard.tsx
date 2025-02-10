@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Phone, MessageSquare, Clock } from "lucide-react"
 import { KanbanCard as KanbanCardType } from "./types"
-import { differenceInHours, differenceInMinutes, format } from "date-fns"
+import { differenceInMinutes, format } from "date-fns"
 
 interface KanbanCardProps {
   card: KanbanCardType
@@ -14,16 +14,7 @@ interface KanbanCardProps {
 const formatElapsedTime = (registrationDate: string) => {
   const now = new Date()
   const regDate = new Date(registrationDate)
-  
-  const totalMinutes = differenceInMinutes(now, regDate)
-  const hours = totalMinutes / 60
-  // Round to nearest 0.5
-  const roundedHours = Math.round(hours * 2) / 2
-  
-  return {
-    hours: roundedHours,
-    minutes: totalMinutes
-  }
+  return differenceInMinutes(now, regDate)
 }
 
 const formatLastActivity = (activity: string) => {
@@ -40,7 +31,7 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
     ? formatLastActivity(card.activities[card.activities.length - 1])
     : null
 
-  const elapsedTime = formatElapsedTime(card.registrationDate)
+  const elapsedMinutes = formatElapsedTime(card.registrationDate)
 
   return (
     <Card className="cursor-pointer hover:bg-accent/5" onClick={onClick}>
@@ -49,7 +40,7 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
           <CardTitle className="text-base">{card.clientName}</CardTitle>
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
-            <span>{elapsedTime.hours}h ({elapsedTime.minutes}m)</span>
+            <span>{elapsedMinutes} Min</span>
           </div>
         </div>
       </CardHeader>
