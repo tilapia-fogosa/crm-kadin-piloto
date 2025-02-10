@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import {
@@ -22,7 +23,9 @@ import {
   Settings,
   Home,
   BarChart3,
-  FileJson
+  FileJson,
+  ArrowLeft,
+  ArrowRight
 } from "lucide-react"
 
 export function AppSidebar() {
@@ -100,7 +103,13 @@ export function AppSidebar() {
           )}>
             Menu
           </span>
-          <SidebarTrigger />
+          <SidebarTrigger>
+            {state === "expanded" ? (
+              <ArrowLeft className="h-4 w-4" />
+            ) : (
+              <ArrowRight className="h-4 w-4" />
+            )}
+          </SidebarTrigger>
         </div>
         <SidebarGroup>
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
