@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
@@ -33,36 +34,24 @@ export function KanbanBoard() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      // First, insert the activity
+      // Insert the activity - the trigger will handle the status update
       const { error: activityError } = await supabase
         .from('client_activities')
         .insert({
           client_id: attempt.cardId,
           tipo_contato: attempt.type,
           tipo_atividade: 'Tentativa de Contato',
-          next_contact_date: attempt.nextContactDate.toISOString(),
           created_by: session.session.user.id
         })
 
       if (activityError) throw activityError
-
-      // Then, update the client status
-      const { error: statusError } = await supabase
-        .from('clients')
-        .update({ 
-          status: 'tentativa-contato',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', attempt.cardId)
-
-      if (statusError) throw statusError
 
       // Invalidate the query to refresh the data
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       toast({
         title: "Tentativa registrada",
-        description: "O lead foi movido para 'Em tentativa de Contato'",
+        description: "A atividade foi registrada com sucesso",
       })
     } catch (error) {
       console.error('Error registering attempt:', error)
@@ -81,7 +70,7 @@ export function KanbanBoard() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      // First, insert the activity
+      // Insert the activity - the trigger will handle the status update
       const { error: activityError } = await supabase
         .from('client_activities')
         .insert({
@@ -94,24 +83,20 @@ export function KanbanBoard() {
 
       if (activityError) throw activityError
 
-      // Then, update the client status and observations
-      const { error: statusError } = await supabase
+      // Update client observations separately
+      const { error: clientError } = await supabase
         .from('clients')
-        .update({ 
-          status: 'contato-efetivo',
-          observations: contact.observations,
-          updated_at: new Date().toISOString()
-        })
+        .update({ observations: contact.observations })
         .eq('id', contact.cardId)
 
-      if (statusError) throw statusError
+      if (clientError) throw clientError
 
       // Invalidate the query to refresh the data
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       toast({
         title: "Contato efetivo registrado",
-        description: "O lead foi movido para 'Contato Efetivo'",
+        description: "A atividade foi registrada com sucesso",
       })
     } catch (error) {
       console.error('Error registering effective contact:', error)
