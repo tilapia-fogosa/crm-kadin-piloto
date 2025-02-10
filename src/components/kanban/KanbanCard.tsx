@@ -12,9 +12,13 @@ interface KanbanCardProps {
 }
 
 const formatElapsedTime = (registrationDate: string) => {
+  console.log('Registration date:', registrationDate); // Debug log
   const now = new Date()
   const regDate = new Date(registrationDate)
-  return differenceInMinutes(now, regDate)
+  console.log('Parsed date:', regDate); // Debug log
+  const minutes = differenceInMinutes(now, regDate)
+  console.log('Calculated minutes:', minutes); // Debug log
+  return minutes
 }
 
 const formatLastActivity = (activity: string) => {
