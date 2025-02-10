@@ -20,7 +20,10 @@ const formatElapsedTime = (registrationDate: string) => {
   // Round to nearest 0.5
   const roundedHours = Math.round(hours * 2) / 2
   
-  return `${roundedHours}h`
+  return {
+    hours: roundedHours,
+    minutes: totalMinutes
+  }
 }
 
 const formatLastActivity = (activity: string) => {
@@ -37,6 +40,8 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
     ? formatLastActivity(card.activities[card.activities.length - 1])
     : null
 
+  const elapsedTime = formatElapsedTime(card.registrationDate)
+
   return (
     <Card className="cursor-pointer hover:bg-accent/5" onClick={onClick}>
       <CardHeader className="p-4">
@@ -44,7 +49,7 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
           <CardTitle className="text-base">{card.clientName}</CardTitle>
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
-            <span>{formatElapsedTime(card.registrationDate)}</span>
+            <span>{elapsedTime.hours}h ({elapsedTime.minutes}m)</span>
           </div>
         </div>
       </CardHeader>
