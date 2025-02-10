@@ -1,9 +1,7 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Phone, MessageSquare, Clock } from "lucide-react"
+import { Phone, MessageSquare } from "lucide-react"
 import { KanbanCard as KanbanCardType } from "./types"
-import { differenceInMinutes, format } from "date-fns"
 
 interface KanbanCardProps {
   card: KanbanCardType
@@ -11,38 +9,11 @@ interface KanbanCardProps {
   onWhatsAppClick: (e: React.MouseEvent) => void
 }
 
-const formatElapsedTime = (registrationDate: string) => {
-  const now = new Date()
-  const regDate = new Date(registrationDate)
-  return differenceInMinutes(now, regDate)
-}
-
-const formatLastActivity = (activity: string) => {
-  const parts = activity.split('|')
-  const date = new Date(parts[2])
-  return {
-    type: `${parts[0]} - ${parts[1]}`,
-    date: format(date, 'dd-MM-yy HH:mm')
-  }
-}
-
 export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) {
-  const lastActivity = card.activities && card.activities.length > 0 
-    ? formatLastActivity(card.activities[card.activities.length - 1])
-    : null
-
-  const elapsedMinutes = formatElapsedTime(card.registrationDate)
-
   return (
     <Card className="cursor-pointer hover:bg-accent/5" onClick={onClick}>
       <CardHeader className="p-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">{card.clientName}</CardTitle>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span>{elapsedMinutes} Min</span>
-          </div>
-        </div>
+        <CardTitle className="text-base">{card.clientName}</CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <div className="space-y-2">
@@ -61,13 +32,14 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
             <Phone className="h-4 w-4" />
             <span className="text-sm">{card.phoneNumber}</span>
           </div>
-          {lastActivity && (
+          {card.activities && (
             <div className="mt-2">
               <p className="text-xs font-medium text-muted-foreground">
-                Última Atividade:
+                Última atividade:
               </p>
-              <p className="text-sm">{lastActivity.type}</p>
-              <p className="text-sm text-muted-foreground">{lastActivity.date}</p>
+              <p className="text-sm">
+                {card.activities[card.activities.length - 1]}
+              </p>
             </div>
           )}
           {card.labels && (
