@@ -13,6 +13,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           clientName: client.name,
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
+          registrationDate: client.created_at,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
             return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}`
@@ -29,6 +30,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           clientName: client.name,
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
+          registrationDate: client.created_at,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
             return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}`
@@ -45,6 +47,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           clientName: client.name,
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
+          registrationDate: client.created_at,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
             return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}`
@@ -61,6 +64,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           clientName: client.name,
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
+          registrationDate: client.created_at,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
             return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}`
@@ -77,6 +81,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           clientName: client.name,
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
+          registrationDate: client.created_at,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
             return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}`

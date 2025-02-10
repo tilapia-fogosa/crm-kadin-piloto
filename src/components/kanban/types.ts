@@ -1,3 +1,4 @@
+
 export type KanbanColumn = {
   id: string
   title: string
@@ -9,6 +10,7 @@ export type KanbanCard = {
   clientName: string
   leadSource: string
   phoneNumber: string
+  registrationDate: string
   activities?: string[]
   labels?: string[]
 }
