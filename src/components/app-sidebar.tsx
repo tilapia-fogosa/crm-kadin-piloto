@@ -103,7 +103,7 @@ export function AppSidebar() {
           )}>
             Menu
           </span>
-          <SidebarTrigger>
+          <SidebarTrigger className="z-50">
             {state === "expanded" ? (
               <ArrowLeft className="h-4 w-4" />
             ) : (
