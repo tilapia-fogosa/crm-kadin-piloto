@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
@@ -16,17 +17,29 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Pencil, Trash2 } from "lucide-react"
 import { LeadFormFields } from "@/components/leads/lead-form-fields"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form } from "@/components/ui/form"
 import { LeadFormData, leadFormSchema } from "@/types/lead-form"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 
 export default function ClientsPage() {
   const [selectedClient, setSelectedClient] = useState<any>(null)
+  const [clientToDelete, setClientToDelete] = useState<any>(null)
+  const queryClient = useQueryClient()
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ['all-clients'],
@@ -53,25 +66,38 @@ export default function ClientsPage() {
   })
 
   const handleDelete = async (clientId: string) => {
-    if (window.confirm("Tem certeza que deseja excluir este cliente?")) {
-      const { error } = await supabase
+    try {
+      console.log('Deleting client:', clientId)
+      
+      const { data: session } = await supabase.auth.getSession()
+      if (!session.session) throw new Error('Not authenticated')
+
+      // O trigger se encarregará de mover para deleted_clients
+      const { error: deleteError } = await supabase
         .from('clients')
         .delete()
-        .eq('id', clientId);
+        .eq('id', clientId)
 
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Erro ao excluir",
-          description: "Ocorreu um erro ao tentar excluir o cliente.",
-        });
-        return;
+      if (deleteError) {
+        console.error('Error deleting client:', deleteError)
+        throw deleteError
       }
+
+      await queryClient.invalidateQueries({ queryKey: ['all-clients'] })
 
       toast({
         title: "Cliente excluído",
         description: "O cliente foi removido com sucesso.",
-      });
+      })
+    } catch (error) {
+      console.error('Error in handleDelete:', error)
+      toast({
+        variant: "destructive",
+        title: "Erro ao excluir",
+        description: "Ocorreu um erro ao tentar excluir o cliente.",
+      })
+    } finally {
+      setClientToDelete(null)
     }
   }
 
@@ -164,13 +190,32 @@ export default function ClientsPage() {
                     </DialogContent>
                   </Dialog>
 
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => handleDelete(client.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <AlertDialog open={clientToDelete?.id === client.id} onOpenChange={(open) => !open && setClientToDelete(null)}>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => setClientToDelete(client)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => handleDelete(client.id)}
+                          className="bg-destructive hover:bg-destructive/90"
+                        >
+                          Excluir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </TableCell>
               </TableRow>
             ))}

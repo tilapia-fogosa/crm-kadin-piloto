@@ -162,6 +162,63 @@ export type Database = {
           },
         ]
       }
+      deleted_clients: {
+        Row: {
+          age_range: string | null
+          client_id: string
+          created_at: string
+          deleted_at: string
+          deleted_by: string
+          id: string
+          lead_source: string
+          meta_id: string | null
+          name: string
+          observations: string | null
+          original_ad: string | null
+          original_created_at: string
+          original_created_by: string
+          phone_number: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          age_range?: string | null
+          client_id: string
+          created_at?: string
+          deleted_at?: string
+          deleted_by: string
+          id: string
+          lead_source: string
+          meta_id?: string | null
+          name: string
+          observations?: string | null
+          original_ad?: string | null
+          original_created_at: string
+          original_created_by: string
+          phone_number: string
+          status: string
+          updated_at?: string | null
+        }
+        Update: {
+          age_range?: string | null
+          client_id?: string
+          created_at?: string
+          deleted_at?: string
+          deleted_by?: string
+          id?: string
+          lead_source?: string
+          meta_id?: string | null
+          name?: string
+          observations?: string | null
+          original_ad?: string | null
+          original_created_at?: string
+          original_created_by?: string
+          phone_number?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       lead_sources: {
         Row: {
           created_at: string
