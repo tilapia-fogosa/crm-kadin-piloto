@@ -2,12 +2,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { RealtimePostgresInsertPayload } from "@supabase/supabase-js"
+import { useEffect } from "react"
 
 export function useClientData() {
   const queryClient = useQueryClient()
 
   // Enable realtime subscription when the hook is mounted
-  React.useEffect(() => {
+  useEffect(() => {
     // Subscribe to realtime changes
     const channel = supabase
       .channel('schema-db-changes')
