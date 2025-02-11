@@ -34,19 +34,19 @@ export function useClientData() {
       }
 
       // Mapear as atividades diretamente
-      const clientsWithActivities = data?.map(client => ({
-        ...client,
-        client_activities: client.client_activities?.map(activity => {
-          console.log('Processing activity:', activity)
-          if (!activity.id || !activity.tipo_atividade || !activity.tipo_contato || !activity.created_at) {
-            console.error('Invalid activity data:', activity)
-            return null
-          }
-          return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
-        }).filter(Boolean) || []
-      }))
+      const clientsWithActivities = data?.map(client => {
+        console.log('Processing client:', client.name, 'Activities:', client.client_activities)
+        return {
+          ...client,
+          client_activities: client.client_activities?.map(activity => {
+            console.log('Processing activity for client', client.name, ':', activity)
+            // Remova a validação que estava causando problemas
+            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
+          }) || []
+        }
+      })
 
-      console.log('Fetched clients data:', clientsWithActivities)
+      console.log('Processed clients data:', clientsWithActivities)
       return clientsWithActivities
     }
   })
