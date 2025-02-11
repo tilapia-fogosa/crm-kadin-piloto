@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Phone, MessageSquare } from "lucide-react"
 import { KanbanCard as KanbanCardType } from "./types"
+import { format } from "date-fns"
 
 interface KanbanCardProps {
   card: KanbanCardType
@@ -10,7 +11,20 @@ interface KanbanCardProps {
   onWhatsAppClick: (e: React.MouseEvent) => void
 }
 
+const formatLastActivity = (activity: string) => {
+  const parts = activity.split('|')
+  const date = new Date(parts[2])
+  return {
+    type: `${parts[0]} - ${parts[1]}`,
+    date: format(date, 'dd-MM-yy HH:mm')
+  }
+}
+
 export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) {
+  const lastActivity = card.activities && card.activities.length > 0 
+    ? formatLastActivity(card.activities[card.activities.length - 1])
+    : null
+
   return (
     <Card className="cursor-pointer hover:bg-accent/5" onClick={onClick}>
       <CardHeader className="p-2 pb-0">
@@ -33,14 +47,13 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
             <Phone className="h-4 w-4" />
             <span className="text-sm">{card.phoneNumber}</span>
           </div>
-          {card.activities && (
+          {lastActivity && (
             <div className="mt-1">
               <p className="text-xs font-medium text-muted-foreground">
                 Última atividade:
               </p>
-              <p className="text-sm">
-                {card.activities[card.activities.length - 1]}
-              </p>
+              <p className="text-sm">{lastActivity.type}</p>
+              <p className="text-sm text-muted-foreground">{lastActivity.date}</p>
             </div>
           )}
           {card.labels && (
