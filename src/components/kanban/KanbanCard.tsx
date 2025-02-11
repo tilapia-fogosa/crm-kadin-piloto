@@ -60,15 +60,6 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
             <Phone className="h-4 w-4" />
             <span className="text-sm">{card.phoneNumber}</span>
           </div>
-          {lastActivity && (
-            <div className="mt-1">
-              <p className="text-xs font-medium text-muted-foreground">
-                Última atividade:
-              </p>
-              <p className="text-sm">{lastActivity.type}</p>
-              <p className="text-sm text-muted-foreground">{lastActivity.date}</p>
-            </div>
-          )}
           {card.labels && (
             <div className="mt-1 flex flex-wrap gap-1">
               {card.labels.map((label) => (
