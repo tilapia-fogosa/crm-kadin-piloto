@@ -1,4 +1,3 @@
-
 import { KanbanCard } from "./KanbanCard"
 import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType } from "./types"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -82,6 +81,11 @@ export function KanbanColumn({
       
       setActivityToDelete(null);
     }
+  }
+
+  const handleEffectiveContact = async (contact: EffectiveContact) => {
+    await onRegisterEffectiveContact(contact);
+    setSelectedCard(null); // Fecha a tela após registrar
   }
 
   const activities = [
@@ -203,7 +207,7 @@ export function KanbanColumn({
                     />
                   ) : selectedActivity === 'Contato Efetivo' ? (
                     <EffectiveContactForm
-                      onSubmit={onRegisterEffectiveContact}
+                      onSubmit={handleEffectiveContact}
                       cardId={card.id}
                     />
                   ) : (

@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -14,7 +15,6 @@ interface EffectiveContactFormProps {
 export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormProps) {
   const [contactType, setContactType] = useState<'phone' | 'whatsapp' | 'whatsapp-call' | undefined>(undefined)
   const [notes, setNotes] = useState("")
-  const [observations, setObservations] = useState("")
   const { toast } = useToast()
 
   const handleSubmit = () => {
@@ -29,9 +29,9 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
 
     onSubmit({
       type: contactType,
-      contactDate: new Date(), // Using current date as default
+      contactDate: new Date(),
       notes,
-      observations,
+      observations: "", // Mantendo vazio já que não será mais usado
       cardId
     })
   }
@@ -67,17 +67,9 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
           placeholder="Digite o descritivo do contato"
         />
       </div>
-      <div className="space-y-2">
-        <Label>Observações</Label>
-        <Textarea
-          value={observations}
-          onChange={(e) => setObservations(e.target.value)}
-          placeholder="Digite as observações adicionais"
-        />
-      </div>
       <Button 
         onClick={handleSubmit}
-        className="w-full"
+        className="w-full bg-orange-500 hover:bg-orange-600"
       >
         Registrar Contato Efetivo
       </Button>
