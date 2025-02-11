@@ -295,6 +295,45 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_leads: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          lead_source: string | null
+          meta_id: string | null
+          name: string
+          observations: string | null
+          original_ad: string | null
+          phone_number: string
+          processed: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          lead_source?: string | null
+          meta_id?: string | null
+          name: string
+          observations?: string | null
+          original_ad?: string | null
+          phone_number: string
+          processed?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          lead_source?: string | null
+          meta_id?: string | null
+          name?: string
+          observations?: string | null
+          original_ad?: string | null
+          phone_number?: string
+          processed?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
