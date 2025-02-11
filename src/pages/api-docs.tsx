@@ -18,11 +18,10 @@ const ApiDocsPage = () => {
 
   const webhookExample = {
     name: "João Silva",
+    email: "joao@email.com",
     phone_number: "+5511999999999",
     lead_source: "website",
-    observations: "Cliente interessado no curso de inglês",
-    meta_id: "12345",
-    original_ad: "Anúncio do Facebook"
+    observations: "Cliente interessado no curso de inglês"
   }
 
   return (
@@ -40,7 +39,7 @@ const ApiDocsPage = () => {
           <Alert>
             <AlertTitle>Endpoint do Webhook</AlertTitle>
             <AlertDescription>
-              POST https://hkvjdxxndapxpslovrlc.supabase.co/rest/v1/webhook_leads
+              POST https://hkvjdxxndapxpslovrlc.supabase.co/rest/v1/leads
             </AlertDescription>
           </Alert>
 
@@ -48,15 +47,14 @@ const ApiDocsPage = () => {
             <h3 className="text-xl font-semibold">Campos Obrigatórios</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li><code>name</code> - Nome do cliente</li>
-              <li><code>phone_number</code> - Telefone do cliente (formato internacional: +5511999999999)</li>
+              <li><code>email</code> - Email do cliente</li>
+              <li><code>phone_number</code> - Telefone do cliente</li>
             </ul>
 
             <h3 className="text-xl font-semibold mt-6">Campos Opcionais</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li><code>lead_source</code> - Origem do lead</li>
               <li><code>observations</code> - Observações adicionais</li>
-              <li><code>meta_id</code> - ID do Meta/Facebook</li>
-              <li><code>original_ad</code> - Nome/identificador do anúncio original</li>
             </ul>
 
             <div className="mt-6">
@@ -110,7 +108,7 @@ const ApiDocsPage = () => {
                 <p className="text-muted-foreground">
                   Adicione um novo módulo HTTP e configure como POST request para o endpoint:
                   <code className="block bg-secondary p-2 rounded mt-2">
-                    https://hkvjdxxndapxpslovrlc.supabase.co/rest/v1/webhook_leads
+                    https://hkvjdxxndapxpslovrlc.supabase.co/rest/v1/leads
                   </code>
                 </p>
               </li>
@@ -128,7 +126,7 @@ Prefer: return=minimal`}
               <li>
                 <p className="font-medium">Configurar o payload</p>
                 <p className="text-muted-foreground">
-                  No corpo da requisição, configure um JSON com os campos mapeados do seu trigger:
+                  No corpo da requisição, configure um JSON com os campos necessários mapeados do seu trigger:
                 </p>
                 <div className="relative mt-2">
                   <pre className="bg-secondary p-4 rounded-lg">
@@ -161,7 +159,6 @@ Prefer: return=minimal`}
                 <li>Teste o cenário com dados reais antes de ativar</li>
                 <li>Configure tratamento de erros no Make para ser notificado em caso de falhas</li>
                 <li>Monitore os logs do webhook para garantir que os dados estão chegando corretamente</li>
-                <li>Verifique se o número de telefone está no formato internacional (+5511999999999)</li>
               </ul>
             </div>
           </div>
@@ -189,12 +186,12 @@ Prefer: return=minimal`}
               <h3 className="text-xl font-semibold mb-2">Endpoints Disponíveis</h3>
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium">POST /webhook_leads</h4>
-                  <p className="text-muted-foreground">Cria um novo lead via webhook (endpoint público)</p>
+                  <h4 className="font-medium">GET /leads</h4>
+                  <p className="text-muted-foreground">Lista todos os leads (requer autenticação)</p>
                 </div>
                 <div>
-                  <h4 className="font-medium">GET /clients</h4>
-                  <p className="text-muted-foreground">Lista todos os leads (requer autenticação)</p>
+                  <h4 className="font-medium">POST /leads</h4>
+                  <p className="text-muted-foreground">Cria um novo lead (endpoint público)</p>
                 </div>
               </div>
             </div>
