@@ -19,6 +19,7 @@ export function useClientData() {
           observations,
           status,
           client_activities (
+            id,
             tipo_contato,
             tipo_atividade,
             notes,
@@ -31,6 +32,8 @@ export function useClientData() {
         console.error('Error fetching clients:', error)
         throw error
       }
+
+      console.log('Fetched clients data:', data)
       return data
     }
   })
