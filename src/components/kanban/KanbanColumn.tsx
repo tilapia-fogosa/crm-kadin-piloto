@@ -69,14 +69,21 @@ export function KanbanColumn({
   const [activityToDelete, setActivityToDelete] = useState<{id: string, clientId: string} | null>(null)
 
   const handleDeleteActivity = (id: string, clientId: string) => {
+    if (!id || !clientId) {
+      console.error('Invalid activity or client ID:', { activityId: id, clientId });
+      return;
+    }
     setActivityToDelete({ id, clientId })
   }
 
   const confirmDeleteActivity = async () => {
-    if (activityToDelete) {
-      await onDeleteActivity(activityToDelete.id, activityToDelete.clientId)
-      setActivityToDelete(null)
+    if (!activityToDelete || !activityToDelete.id || !activityToDelete.clientId) {
+      console.error('Invalid activity to delete:', activityToDelete);
+      return;
     }
+    
+    await onDeleteActivity(activityToDelete.id, activityToDelete.clientId)
+    setActivityToDelete(null)
   }
 
   const handleEffectiveContact = async (contact: EffectiveContact) => {
@@ -122,11 +129,20 @@ export function KanbanColumn({
                     {card.activities?.map((activity, index) => {
                       try {
                         const parts = activity.split('|')
+                        if (parts.length < 5) {
+                          console.error('Invalid activity format:', activity);
+                          return null;
+                        }
                         const tipo_atividade = parts[0]
                         const tipo_contato = parts[1]
                         const date = new Date(parts[2])
                         const notes = parts[3]
-                        const id = parts[4] // Adicionando o ID da atividade
+                        const id = parts[4]
+                        
+                        if (!id) {
+                          console.error('Activity without ID:', activity);
+                          return null;
+                        }
                         
                         return (
                           <div key={index} className="mb-4 text-sm space-y-1">
@@ -161,7 +177,7 @@ export function KanbanColumn({
                           </div>
                         )
                       } catch (error) {
-                        console.error('Error parsing activity:', error)
+                        console.error('Error parsing activity:', error, activity)
                         return null
                       }
                     })}

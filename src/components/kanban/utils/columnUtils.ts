@@ -15,8 +15,13 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
+            // Garantindo que o ID está presente e é uma string válida
+            if (!activity.id) {
+              console.error('Activity without ID:', activity);
+              return null;
+            }
             return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
-          }),
+          }).filter(Boolean), // Remove any null values from the array
         })) || [],
     },
     {
@@ -31,8 +36,12 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
+            if (!activity.id) {
+              console.error('Activity without ID:', activity);
+              return null;
+            }
             return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
-          }),
+          }).filter(Boolean),
         })) || [],
     },
     {
@@ -47,8 +56,12 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
+            if (!activity.id) {
+              console.error('Activity without ID:', activity);
+              return null;
+            }
             return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
-          }),
+          }).filter(Boolean),
         })) || [],
     },
     {
@@ -63,8 +76,12 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
+            if (!activity.id) {
+              console.error('Activity without ID:', activity);
+              return null;
+            }
             return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
-          }),
+          }).filter(Boolean),
         })) || [],
     },
     {
@@ -79,8 +96,12 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           activities: client.client_activities?.map((activity: any) => {
             console.log('Processing activity:', activity);
+            if (!activity.id) {
+              console.error('Activity without ID:', activity);
+              return null;
+            }
             return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
-          }),
+          }).filter(Boolean),
         })) || [],
     },
   ]
