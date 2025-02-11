@@ -27,7 +27,7 @@ export function useClientData() {
           )
         `)
         .order('created_at', { ascending: false })
-        .not('deleted_at', 'is', null) // Adiciona esta linha para filtrar registros deletados
+        .is('deleted_at', null) // Mudamos para buscar apenas registros onde deleted_at é null
 
       if (error) {
         console.error('Error fetching clients:', error)
