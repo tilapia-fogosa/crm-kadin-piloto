@@ -37,7 +37,13 @@ export function useClientData() {
       // Filtrar as atividades não excluídas para cada cliente
       const clientsWithFilteredActivities = data?.map(client => ({
         ...client,
-        client_activities: client.client_activities?.filter(activity => !activity.is_deleted) || []
+        client_activities: client.client_activities
+          ?.filter(activity => !activity.is_deleted)
+          ?.map(activity => {
+            console.log('Processing activity:', activity)
+            // Formatando a atividade no formato esperado pelo componente
+            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
+          }) || []
       }))
 
       console.log('Fetched clients data:', clientsWithFilteredActivities)
