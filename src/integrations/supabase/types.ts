@@ -152,15 +152,7 @@ export type Database = {
           tipo_contato?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "deleted_activities_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       deleted_clients: {
         Row: {
