@@ -39,15 +39,19 @@ serve(async (req) => {
     }
 
     // Normalize the lead source
-    let normalizedSource = leadSourceMapping[lead_source.toLowerCase()]
+    const sourceLower = lead_source.toLowerCase().trim()
+    let normalizedSource = leadSourceMapping[sourceLower]
     
-    // If not found in mapping, check if it's a valid source from lead_sources table
+    console.log('Looking up mapping for:', sourceLower)
+    console.log('Found mapping:', normalizedSource)
+
+    // If not found in mapping, default to 'outros'
     if (!normalizedSource) {
-      console.log(`Source "${lead_source}" not found in mapping, using as is`)
-      normalizedSource = lead_source.toLowerCase()
+      console.log(`Source "${sourceLower}" not found in mapping, defaulting to "outros"`)
+      normalizedSource = 'outros'
     }
 
-    console.log('Normalized to:', normalizedSource)
+    console.log('Final normalized source:', normalizedSource)
 
     return new Response(
       JSON.stringify({ normalized_source: normalizedSource }),
