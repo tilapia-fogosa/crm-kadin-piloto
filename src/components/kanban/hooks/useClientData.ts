@@ -23,7 +23,8 @@ export function useClientData() {
             tipo_contato,
             tipo_atividade,
             notes,
-            created_at
+            created_at,
+            is_deleted
           )
         `)
         .order('created_at', { ascending: false })
