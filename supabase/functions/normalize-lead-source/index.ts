@@ -24,13 +24,27 @@ serve(async (req) => {
     const { lead_source } = await req.json()
     console.log('Received lead_source:', lead_source)
 
+    // Handle null or undefined lead source
+    if (!lead_source) {
+      console.log('No lead source provided, defaulting to "outros"')
+      return new Response(
+        JSON.stringify({ normalized_source: 'outros' }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    }
+
     // Normalize the lead source
     let normalizedSource = leadSourceMapping[lead_source.toLowerCase()]
     
-    // If not found in mapping, default to 'outros'
+    // If not found in mapping, check if it's a valid source from lead_sources table
     if (!normalizedSource) {
-      console.log(`Unknown lead source "${lead_source}", defaulting to "outros"`)
-      normalizedSource = 'outros'
+      console.log(`Source "${lead_source}" not found in mapping, using as is`)
+      normalizedSource = lead_source.toLowerCase()
     }
 
     console.log('Normalized to:', normalizedSource)

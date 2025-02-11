@@ -41,15 +41,17 @@ serve(async (req) => {
       )
 
       if (!normalizeResponse.ok) {
+        console.error('Failed to normalize lead source:', await normalizeResponse.text())
         throw new Error('Failed to normalize lead source')
       }
 
       const { normalized_source } = await normalizeResponse.json()
+      console.log('Normalized lead source:', normalized_source)
       message.lead_source = normalized_source
 
       // Here we'll implement the WhatsApp message sending logic
       // For now, we'll just log the attempt
-      console.log(`Attempting to send message to ${phoneNumber}: ${message}`)
+      console.log(`Attempting to send message to ${phoneNumber}:`, JSON.stringify(message))
 
       return new Response(JSON.stringify({
         success: true,
