@@ -1,3 +1,4 @@
+
 import { KanbanCard } from "./KanbanCard"
 import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType } from "./types"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -9,6 +10,17 @@ import { useState } from "react"
 import { ContactAttempt, EffectiveContact } from "./types"
 import { format } from "date-fns"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Trash2 } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface KanbanColumnProps {
   column: KanbanColumnType
@@ -53,6 +65,24 @@ export function KanbanColumn({
 }: KanbanColumnProps) {
   const [selectedCard, setSelectedCard] = useState<KanbanCardType | null>(null)
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
+  const [activityToDelete, setActivityToDelete] = useState<{index: number, activity: string} | null>(null)
+
+  const handleDeleteActivity = (index: number, activity: string) => {
+    setActivityToDelete({ index, activity })
+  }
+
+  const confirmDeleteActivity = async () => {
+    if (selectedCard && activityToDelete !== null) {
+      const updatedActivities = [...(selectedCard.activities || [])];
+      updatedActivities.splice(activityToDelete.index, 1);
+      
+      // Here you would update the card's activities in your database
+      console.log('Deleting activity:', activityToDelete);
+      console.log('Updated activities:', updatedActivities);
+      
+      setActivityToDelete(null);
+    }
+  }
 
   const activities = [
     { id: 'Tentativa de Contato', label: 'Tentativa de Contato', badge: 'TE' },
@@ -97,20 +127,30 @@ export function KanbanColumn({
                         const date = new Date(parts[2])
                         const notes = parts[3]
                         
-                        console.log('Activity data:', { tipo_atividade, tipo_contato, date, notes })
-
                         return (
                           <div key={index} className="mb-4 text-sm space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="flex items-center justify-center bg-primary text-primary-foreground font-medium rounded min-w-[2rem] h-6 text-xs">
-                                {getActivityBadge(tipo_atividade)}
-                              </span>
-                              <span className="text-muted-foreground">
-                                {getContactType(tipo_contato)}
-                              </span>
-                              <span className="text-muted-foreground">
-                                {format(date, 'dd/MM/yyyy HH:mm')}
-                              </span>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="flex items-center justify-center bg-primary text-primary-foreground font-medium rounded min-w-[2rem] h-6 text-xs">
+                                  {getActivityBadge(tipo_atividade)}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  {getContactType(tipo_contato)}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  {format(date, 'dd/MM/yyyy HH:mm')}
+                                </span>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteActivity(index, activity);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
                             </div>
                             {notes && (
                               <p className="text-sm text-muted-foreground ml-10">
@@ -177,6 +217,29 @@ export function KanbanColumn({
           </Sheet>
         ))}
       </div>
+
+      <AlertDialog 
+        open={activityToDelete !== null} 
+        onOpenChange={() => setActivityToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta atividade? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteActivity}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
