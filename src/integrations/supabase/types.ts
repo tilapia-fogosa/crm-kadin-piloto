@@ -103,6 +103,56 @@ export type Database = {
           },
         ]
       }
+      deleted_activities: {
+        Row: {
+          client_activity_id: string
+          client_id: string
+          deleted_at: string
+          deleted_by: string
+          id: string
+          next_contact_date: string | null
+          notes: string | null
+          original_created_at: string
+          original_created_by: string
+          tipo_atividade: string
+          tipo_contato: string
+        }
+        Insert: {
+          client_activity_id: string
+          client_id: string
+          deleted_at?: string
+          deleted_by: string
+          id?: string
+          next_contact_date?: string | null
+          notes?: string | null
+          original_created_at: string
+          original_created_by: string
+          tipo_atividade: string
+          tipo_contato: string
+        }
+        Update: {
+          client_activity_id?: string
+          client_id?: string
+          deleted_at?: string
+          deleted_by?: string
+          id?: string
+          next_contact_date?: string | null
+          notes?: string | null
+          original_created_at?: string
+          original_created_by?: string
+          tipo_atividade?: string
+          tipo_contato?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deleted_activities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_sources: {
         Row: {
           created_at: string

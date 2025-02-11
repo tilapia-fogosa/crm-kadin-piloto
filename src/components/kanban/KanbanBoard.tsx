@@ -108,6 +108,63 @@ export function KanbanBoard() {
     }
   }
 
+  const handleDeleteActivity = async (activityId: string, clientId: string) => {
+    try {
+      const { data: session } = await supabase.auth.getSession()
+      if (!session.session) throw new Error('Not authenticated')
+
+      // Primeiro, buscar os detalhes da atividade antes de excluí-la
+      const { data: activityData, error: fetchError } = await supabase
+        .from('client_activities')
+        .select('*')
+        .eq('id', activityId)
+        .single()
+
+      if (fetchError) throw fetchError
+      if (!activityData) throw new Error('Activity not found')
+
+      // Inserir o registro na tabela deleted_activities
+      const { error: insertError } = await supabase
+        .from('deleted_activities')
+        .insert({
+          client_activity_id: activityData.id,
+          client_id: activityData.client_id,
+          tipo_atividade: activityData.tipo_atividade,
+          tipo_contato: activityData.tipo_contato,
+          notes: activityData.notes,
+          next_contact_date: activityData.next_contact_date,
+          original_created_at: activityData.created_at,
+          original_created_by: activityData.created_by,
+          deleted_by: session.session.user.id
+        })
+
+      if (insertError) throw insertError
+
+      // Depois de registrar a exclusão, deletar a atividade original
+      const { error: deleteError } = await supabase
+        .from('client_activities')
+        .delete()
+        .eq('id', activityId)
+
+      if (deleteError) throw deleteError
+
+      // Invalidate the query to refresh the data
+      await queryClient.invalidateQueries({ queryKey: ['clients'] })
+
+      toast({
+        title: "Atividade excluída",
+        description: "A atividade foi excluída com sucesso",
+      })
+    } catch (error) {
+      console.error('Error deleting activity:', error)
+      toast({
+        variant: "destructive",
+        title: "Erro ao excluir atividade",
+        description: "Ocorreu um erro ao tentar excluir a atividade.",
+      })
+    }
+  }
+
   if (isLoading) {
     return <div className="flex items-center justify-center h-full">Carregando...</div>
   }
@@ -131,6 +188,7 @@ export function KanbanBoard() {
             onWhatsAppClick={handleWhatsAppClick}
             onRegisterAttempt={handleRegisterAttempt}
             onRegisterEffectiveContact={handleRegisterEffectiveContact}
+            onDeleteActivity={handleDeleteActivity}
           />
         ))}
       </div>

@@ -26,6 +26,7 @@ interface KanbanColumnProps {
   onWhatsAppClick: (e: React.MouseEvent, phoneNumber: string) => void
   onRegisterAttempt: (attempt: ContactAttempt) => void
   onRegisterEffectiveContact: (contact: EffectiveContact) => void
+  onDeleteActivity: (activityId: string, clientId: string) => Promise<void>
 }
 
 const getActivityBadge = (tipo_atividade: string) => {
@@ -60,32 +61,27 @@ export function KanbanColumn({
   column, 
   onWhatsAppClick, 
   onRegisterAttempt,
-  onRegisterEffectiveContact 
+  onRegisterEffectiveContact,
+  onDeleteActivity 
 }: KanbanColumnProps) {
   const [selectedCard, setSelectedCard] = useState<KanbanCardType | null>(null)
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
-  const [activityToDelete, setActivityToDelete] = useState<{index: number, activity: string} | null>(null)
+  const [activityToDelete, setActivityToDelete] = useState<{id: string, clientId: string} | null>(null)
 
-  const handleDeleteActivity = (index: number, activity: string) => {
-    setActivityToDelete({ index, activity })
+  const handleDeleteActivity = (id: string, clientId: string) => {
+    setActivityToDelete({ id, clientId })
   }
 
   const confirmDeleteActivity = async () => {
-    if (selectedCard && activityToDelete !== null) {
-      const updatedActivities = [...(selectedCard.activities || [])];
-      updatedActivities.splice(activityToDelete.index, 1);
-      
-      // Here you would update the card's activities in your database
-      console.log('Deleting activity:', activityToDelete);
-      console.log('Updated activities:', updatedActivities);
-      
-      setActivityToDelete(null);
+    if (activityToDelete) {
+      await onDeleteActivity(activityToDelete.id, activityToDelete.clientId)
+      setActivityToDelete(null)
     }
   }
 
   const handleEffectiveContact = async (contact: EffectiveContact) => {
-    await onRegisterEffectiveContact(contact);
-    setSelectedCard(null); // Fecha a tela após registrar
+    await onRegisterEffectiveContact(contact)
+    setSelectedCard(null) // Fecha a tela após registrar
   }
 
   const activities = [
@@ -130,6 +126,7 @@ export function KanbanColumn({
                         const tipo_contato = parts[1]
                         const date = new Date(parts[2])
                         const notes = parts[3]
+                        const id = parts[4] // Adicionando o ID da atividade
                         
                         return (
                           <div key={index} className="mb-4 text-sm space-y-1">
@@ -150,7 +147,7 @@ export function KanbanColumn({
                                 size="sm"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleDeleteActivity(index, activity);
+                                  handleDeleteActivity(id, card.id);
                                 }}
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
