@@ -30,19 +30,9 @@ export function BoardHeader({
   setShowPendingOnly
 }: BoardHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold">Painel do Consultor</h1>
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2">
-          <Switch
-            id="pending-filter"
-            checked={showPendingOnly}
-            onCheckedChange={setShowPendingOnly}
-          />
-          <Label htmlFor="pending-filter">
-            Apenas contatos pendentes/atrasados
-          </Label>
-        </div>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Painel do Consultor</h1>
         <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -69,6 +59,16 @@ export function BoardHeader({
             />
           </PopoverContent>
         </Popover>
+      </div>
+      <div className="flex items-center gap-2">
+        <Switch
+          id="pending-filter"
+          checked={showPendingOnly}
+          onCheckedChange={setShowPendingOnly}
+        />
+        <Label htmlFor="pending-filter">
+          Apenas contatos pendentes/atrasados
+        </Label>
       </div>
     </div>
   )
