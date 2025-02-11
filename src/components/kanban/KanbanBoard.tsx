@@ -14,7 +14,8 @@ export function KanbanBoard() {
   const { registerAttempt, registerEffectiveContact, deleteActivity } = useActivityOperations()
   const { handleWhatsAppClick } = useWhatsApp()
   const { selectedDate, isCalendarOpen, setIsCalendarOpen, handleDateSelect } = useCalendarState()
-  const [showPendingOnly, setShowPendingOnly] = useState(false)
+  // Iniciando com o filtro ligado (true)
+  const [showPendingOnly, setShowPendingOnly] = useState(true)
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-full">Carregando...</div>
@@ -25,6 +26,7 @@ export function KanbanBoard() {
     if (!showPendingOnly) return clients
 
     const today = startOfDay(new Date())
+    console.log('Filtering clients with showPendingOnly:', showPendingOnly)
 
     return clients.filter(client => {
       // Encontrar a última tentativa de contato com data de próximo contato
@@ -34,23 +36,25 @@ export function KanbanBoard() {
           return tipoAtividade === 'Tentativa de Contato' && nextContactDate
         })
         .sort((a: string, b: string) => {
-          const dateA = new Date(a.split('|')[5]) // Usando o índice 5 para nextContactDate
+          const dateA = new Date(a.split('|')[5])
           const dateB = new Date(b.split('|')[5])
           return dateB.getTime() - dateA.getTime()
         })[0]
 
       if (!lastAttempt) {
-        // Se não houver tentativa de contato com próxima data, incluir o cliente
+        console.log('Client with no next contact date:', client.name)
         return true
       }
 
       const nextContactDate = new Date(lastAttempt.split('|')[5])
-      // Se o showPendingOnly estiver ativo, mostrar apenas contatos pendentes ou atrasados
-      return !isAfter(nextContactDate, today)
+      const shouldShow = !isAfter(nextContactDate, today)
+      console.log('Client:', client.name, 'Next contact:', nextContactDate, 'Should show:', shouldShow)
+      return shouldShow
     })
   }
 
   const filteredClients = filterClients(clients)
+  console.log('Filtered clients count:', filteredClients?.length)
   const columns = transformClientsToColumnData(filteredClients)
 
   return (
