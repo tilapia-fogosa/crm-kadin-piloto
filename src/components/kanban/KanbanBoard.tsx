@@ -30,24 +30,13 @@ export function KanbanBoard() {
     console.log('Filtering clients with showPendingOnly:', showPendingOnly)
 
     return clients.filter(client => {
-      // Encontrar a última tentativa de contato com data de próximo contato
-      const lastAttempt = client.client_activities
-        ?.filter((activity: string) => {
-          const [tipoAtividade, , , , , nextContactDate] = activity.split('|')
-          return tipoAtividade === 'Tentativa de Contato' && nextContactDate
-        })
-        .sort((a: string, b: string) => {
-          const dateA = new Date(a.split('|')[5])
-          const dateB = new Date(b.split('|')[5])
-          return dateB.getTime() - dateA.getTime()
-        })[0]
-
-      if (!lastAttempt) {
+      // Se não tem data de próximo contato, mostra o cliente
+      if (!client.next_contact_date) {
         console.log('Client with no next contact date:', client.name)
         return true
       }
 
-      const nextContactDate = new Date(lastAttempt.split('|')[5])
+      const nextContactDate = new Date(client.next_contact_date)
       const shouldShow = !isAfter(nextContactDate, today)
       console.log('Client:', client.name, 'Next contact:', nextContactDate, 'Should show:', shouldShow)
       return shouldShow

@@ -63,6 +63,7 @@ export type Database = {
           lead_source: string
           meta_id: string | null
           name: string
+          next_contact_date: string | null
           observations: string | null
           original_ad: string | null
           phone_number: string
@@ -78,6 +79,7 @@ export type Database = {
           lead_source: string
           meta_id?: string | null
           name: string
+          next_contact_date?: string | null
           observations?: string | null
           original_ad?: string | null
           phone_number: string
@@ -93,6 +95,7 @@ export type Database = {
           lead_source?: string
           meta_id?: string | null
           name?: string
+          next_contact_date?: string | null
           observations?: string | null
           original_ad?: string | null
           phone_number?: string
