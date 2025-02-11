@@ -91,7 +91,7 @@ export function useActivityOperations() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      // Excluir diretamente a atividade - o trigger se encarregará de mover para deleted_activities
+      // Excluir a atividade - o trigger se encarregará de mover para deleted_activities
       const { error: deleteError } = await supabase
         .from('client_activities')
         .delete()
@@ -102,6 +102,7 @@ export function useActivityOperations() {
         throw deleteError
       }
 
+      // Atualizar a query cache para refletir a mudança
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       toast({
@@ -115,6 +116,7 @@ export function useActivityOperations() {
         title: "Erro ao excluir atividade",
         description: "Ocorreu um erro ao tentar excluir a atividade.",
       })
+      throw error // Re-throw para que o componente possa lidar com o erro se necessário
     }
   }
 
