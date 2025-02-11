@@ -5,9 +5,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { ContactAttempt } from "./types"
 import { useToast } from "@/components/ui/use-toast"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { ptBR } from "date-fns/locale"
@@ -100,30 +97,22 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
 
       <div className="space-y-2">
         <Label>Data do Próximo Contato</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !date && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 z-50" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              locale={ptBR}
-              disabled={(date) => date < new Date()}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
+        <div className="border rounded-md p-3">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            locale={ptBR}
+            disabled={(date) => date < new Date()}
+            initialFocus
+            className="w-full"
+          />
+        </div>
+        {date && (
+          <p className="text-sm text-muted-foreground">
+            Data selecionada: {format(date, "PPP", { locale: ptBR })}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
