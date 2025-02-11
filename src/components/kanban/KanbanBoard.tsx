@@ -118,10 +118,34 @@ export function KanbanBoard() {
         .eq('id', activityId)
         .single()
 
-      if (fetchError) throw fetchError
-      if (!activityData) throw new Error('Activity not found')
+      if (fetchError) {
+        console.error('Error fetching activity:', fetchError)
+        throw fetchError
+      }
+      if (!activityData) {
+        console.error('Activity not found')
+        throw new Error('Activity not found')
+      }
 
-      // Inserir o registro na tabela deleted_activities para auditoria
+      console.log('Activity data before deletion:', activityData)
+
+      // Primeiro fazer o soft delete
+      const { error: updateError } = await supabase
+        .from('client_activities')
+        .update({ 
+          is_deleted: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', activityId)
+
+      if (updateError) {
+        console.error('Error updating activity:', updateError)
+        throw updateError
+      }
+
+      console.log('Activity marked as deleted')
+
+      // Depois inserir o registro de auditoria
       const { error: insertError } = await supabase
         .from('deleted_activities')
         .insert({
@@ -136,16 +160,14 @@ export function KanbanBoard() {
           deleted_by: session.session.user.id
         })
 
-      if (insertError) throw insertError
+      if (insertError) {
+        console.error('Error inserting deleted activity:', insertError)
+        throw insertError
+      }
 
-      // Marcar a atividade como excluída (soft delete)
-      const { error: updateError } = await supabase
-        .from('client_activities')
-        .update({ is_deleted: true })
-        .eq('id', activityId)
+      console.log('Audit record created')
 
-      if (updateError) throw updateError
-
+      // Invalidar a query para atualizar os dados
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       toast({
@@ -153,7 +175,7 @@ export function KanbanBoard() {
         description: "A atividade foi excluída com sucesso",
       })
     } catch (error) {
-      console.error('Error deleting activity:', error)
+      console.error('Error in handleDeleteActivity:', error)
       toast({
         variant: "destructive",
         title: "Erro ao excluir atividade",
