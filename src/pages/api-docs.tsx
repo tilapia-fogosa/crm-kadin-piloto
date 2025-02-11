@@ -1,4 +1,3 @@
-
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -16,7 +15,6 @@ const ApiDocsPage = () => {
     })
   }
 
-  // Exemplo atualizado removendo campos que não existem na tabela leads
   const webhookExample = {
     name: "João Silva",
     phone_number: "+5511999999999",
@@ -82,6 +80,18 @@ const ApiDocsPage = () => {
                   <CopyIcon className="h-4 w-4" />
                 </Button>
               </div>
+            </div>
+
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold mb-2">Fluxo do Lead</h3>
+              <p className="text-muted-foreground">
+                Quando um lead é recebido via webhook:
+              </p>
+              <ol className="list-decimal pl-6 space-y-2 mt-2">
+                <li>O lead é registrado na tabela <code>leads</code></li>
+                <li>Automaticamente, um registro é criado na tabela <code>clients</code></li>
+                <li>O cliente é marcado com status <code>novo-cadastro</code></li>
+              </ol>
             </div>
           </div>
         </TabsContent>
