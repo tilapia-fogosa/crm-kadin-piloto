@@ -1,3 +1,4 @@
+
 import { KanbanCard } from "./KanbanCard"
 import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType } from "./types"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -86,9 +87,14 @@ export function KanbanColumn({
     setActivityToDelete(null)
   }
 
+  const handleRegisterAttempt = async (attempt: ContactAttempt) => {
+    await onRegisterAttempt(attempt)
+    setSelectedCard(null) // Fecha a tela após registrar a tentativa
+  }
+
   const handleEffectiveContact = async (contact: EffectiveContact) => {
     await onRegisterEffectiveContact(contact)
-    setSelectedCard(null) // Fecha a tela após registrar
+    setSelectedCard(null) // Fecha a tela após registrar o contato efetivo
   }
 
   const activities = [
@@ -215,7 +221,7 @@ export function KanbanColumn({
                   <h3 className="font-semibold mb-2">Detalhes da Atividade</h3>
                   {selectedActivity === 'Tentativa de Contato' ? (
                     <ContactAttemptForm
-                      onSubmit={onRegisterAttempt}
+                      onSubmit={handleRegisterAttempt}
                       cardId={card.id}
                     />
                   ) : selectedActivity === 'Contato Efetivo' ? (
