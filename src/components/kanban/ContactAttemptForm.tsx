@@ -103,7 +103,13 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
             selected={date}
             onSelect={setDate}
             locale={ptBR}
-            disabled={(date) => date < new Date()}
+            disabled={(date) => {
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+              const compareDate = new Date(date)
+              compareDate.setHours(0, 0, 0, 0)
+              return compareDate < today
+            }}
             initialFocus
             className="w-full"
             classNames={{
