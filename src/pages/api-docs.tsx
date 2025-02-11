@@ -1,3 +1,4 @@
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -19,7 +20,7 @@ const ApiDocsPage = () => {
     name: "João Silva",
     phone_number: "+5511999999999",
     email: "joao@email.com",
-    lead_source: "website",
+    lead_source: "fb", // Pode ser 'fb' ou 'ig', será normalizado automaticamente
     observations: "Cliente interessado no curso de inglês"
   }
 
@@ -52,7 +53,7 @@ const ApiDocsPage = () => {
             <h3 className="text-xl font-semibold mt-6">Campos Opcionais</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li><code>email</code> - Email do cliente</li>
-              <li><code>lead_source</code> - Origem do lead</li>
+              <li><code>lead_source</code> - Origem do lead (ex: 'fb' para Facebook, 'ig' para Instagram)</li>
               <li><code>observations</code> - Observações adicionais</li>
             </ul>
 
@@ -83,11 +84,24 @@ const ApiDocsPage = () => {
             </div>
 
             <div className="mt-6">
+              <h3 className="text-xl font-semibold mb-2">Normalização de Origem</h3>
+              <p className="text-muted-foreground">
+                O sistema normaliza automaticamente as origens do lead:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 mt-2">
+                <li><code>fb</code> → <code>facebook</code></li>
+                <li><code>ig</code> → <code>instagram</code></li>
+                <li>Outras origens desconhecidas serão marcadas como <code>outros</code></li>
+              </ul>
+            </div>
+
+            <div className="mt-6">
               <h3 className="text-xl font-semibold mb-2">Fluxo do Lead</h3>
               <p className="text-muted-foreground">
                 Quando um lead é recebido via webhook:
               </p>
               <ol className="list-decimal pl-6 space-y-2 mt-2">
+                <li>A origem do lead é normalizada (ex: 'fb' → 'facebook')</li>
                 <li>O lead é registrado na tabela <code>leads</code></li>
                 <li>Automaticamente, um registro é criado na tabela <code>clients</code></li>
                 <li>O cliente é marcado com status <code>novo-cadastro</code></li>
