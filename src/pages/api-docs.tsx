@@ -18,8 +18,8 @@ const ApiDocsPage = () => {
 
   const webhookExample = {
     name: "João Silva",
-    email: "joao@email.com",
     phone_number: "+5511999999999",
+    email: "joao@email.com",
     lead_source: "website",
     observations: "Cliente interessado no curso de inglês"
   }
@@ -47,12 +47,12 @@ const ApiDocsPage = () => {
             <h3 className="text-xl font-semibold">Campos Obrigatórios</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li><code>name</code> - Nome do cliente</li>
-              <li><code>email</code> - Email do cliente</li>
               <li><code>phone_number</code> - Telefone do cliente</li>
             </ul>
 
             <h3 className="text-xl font-semibold mt-6">Campos Opcionais</h3>
             <ul className="list-disc pl-6 space-y-2">
+              <li><code>email</code> - Email do cliente</li>
               <li><code>lead_source</code> - Origem do lead</li>
               <li><code>observations</code> - Observações adicionais</li>
             </ul>
