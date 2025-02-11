@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Phone, MessageSquare } from "lucide-react"
@@ -12,11 +13,11 @@ interface KanbanCardProps {
 export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) {
   return (
     <Card className="cursor-pointer hover:bg-accent/5" onClick={onClick}>
-      <CardHeader className="p-4">
+      <CardHeader className="p-2 pb-0">
         <CardTitle className="text-base">{card.clientName}</CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <div className="space-y-2">
+      <CardContent className="p-2">
+        <div className="space-y-1">
           <p className="text-sm text-muted-foreground">
             Origem: {card.leadSource}
           </p>
@@ -33,7 +34,7 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
             <span className="text-sm">{card.phoneNumber}</span>
           </div>
           {card.activities && (
-            <div className="mt-2">
+            <div className="mt-1">
               <p className="text-xs font-medium text-muted-foreground">
                 Última atividade:
               </p>
@@ -43,7 +44,7 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
             </div>
           )}
           {card.labels && (
-            <div className="mt-2 flex flex-wrap gap-1">
+            <div className="mt-1 flex flex-wrap gap-1">
               {card.labels.map((label) => (
                 <span
                   key={label}
