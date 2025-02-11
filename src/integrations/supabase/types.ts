@@ -20,6 +20,7 @@ export type Database = {
           notes: string | null
           tipo_atividade: string
           tipo_contato: string
+          updated_at: string | null
         }
         Insert: {
           client_id: string
@@ -31,6 +32,7 @@ export type Database = {
           notes?: string | null
           tipo_atividade: string
           tipo_contato: string
+          updated_at?: string | null
         }
         Update: {
           client_id?: string
@@ -42,6 +44,7 @@ export type Database = {
           notes?: string | null
           tipo_atividade?: string
           tipo_contato?: string
+          updated_at?: string | null
         }
         Relationships: [
           {

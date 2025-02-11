@@ -132,10 +132,7 @@ export function KanbanBoard() {
       // Primeiro fazer o soft delete
       const { error: updateError } = await supabase
         .from('client_activities')
-        .update({ 
-          is_deleted: true,
-          updated_at: new Date().toISOString()
-        })
+        .update({ is_deleted: true })
         .eq('id', activityId)
 
       if (updateError) {
