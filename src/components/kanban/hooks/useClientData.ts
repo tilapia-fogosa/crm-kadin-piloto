@@ -33,14 +33,17 @@ export function useClientData() {
         throw error
       }
 
-      // Mapear as atividades diretamente, sem filtro de is_deleted
+      // Mapear as atividades diretamente
       const clientsWithActivities = data?.map(client => ({
         ...client,
-        client_activities: client.client_activities
-          ?.map(activity => {
-            console.log('Processing activity:', activity)
-            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
-          }) || []
+        client_activities: client.client_activities?.map(activity => {
+          console.log('Processing activity:', activity)
+          if (!activity.id || !activity.tipo_atividade || !activity.tipo_contato || !activity.created_at) {
+            console.error('Invalid activity data:', activity)
+            return null
+          }
+          return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
+        }).filter(Boolean) || []
       }))
 
       console.log('Fetched clients data:', clientsWithActivities)
