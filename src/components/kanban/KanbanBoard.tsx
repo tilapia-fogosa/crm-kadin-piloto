@@ -110,6 +110,8 @@ export function KanbanBoard() {
 
   const handleDeleteActivity = async (activityId: string, clientId: string) => {
     try {
+      console.log('Deleting activity:', { activityId, clientId })
+      
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
