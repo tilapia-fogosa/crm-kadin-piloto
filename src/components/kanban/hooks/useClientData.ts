@@ -38,7 +38,10 @@ export function useClientData() {
       const clientsWithFilteredActivities = data?.map(client => ({
         ...client,
         client_activities: client.client_activities
-          ?.filter(activity => !activity.is_deleted)
+          ?.filter(activity => {
+            console.log('Activity before filter:', activity)
+            return activity && !activity.is_deleted
+          })
           ?.map(activity => {
             console.log('Processing activity:', activity)
             // Formatando a atividade no formato esperado pelo componente

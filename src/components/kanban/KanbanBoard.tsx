@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
@@ -129,10 +130,13 @@ export function KanbanBoard() {
 
       console.log('Activity data before deletion:', activityData)
 
-      // Primeiro fazer o soft delete
+      // Fazer o soft delete primeiro
       const { error: updateError } = await supabase
         .from('client_activities')
-        .update({ is_deleted: true })
+        .update({ 
+          is_deleted: true,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', activityId)
 
       if (updateError) {
