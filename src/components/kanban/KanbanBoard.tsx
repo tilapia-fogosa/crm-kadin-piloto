@@ -4,7 +4,6 @@ import { KanbanColumn } from "./KanbanColumn"
 import { useClientData } from "./hooks/useClientData"
 import { useActivityOperations } from "./hooks/useActivityOperations"
 import { useWhatsApp } from "./hooks/useWhatsApp"
-import { useCalendarState } from "./hooks/useCalendarState"
 import { transformClientsToColumnData } from "./utils/columnUtils"
 import { useState } from "react"
 import { startOfDay, isAfter } from "date-fns"
@@ -13,9 +12,8 @@ export function KanbanBoard() {
   const { data: clients, isLoading } = useClientData()
   const { registerAttempt, registerEffectiveContact, deleteActivity } = useActivityOperations()
   const { handleWhatsAppClick } = useWhatsApp()
-  const { selectedDate, isCalendarOpen, setIsCalendarOpen, handleDateSelect } = useCalendarState()
-  // Iniciando com o filtro ligado (true)
-  const [showPendingOnly, setShowPendingOnly] = useState(true)
+  // Iniciando com o filtro desligado (false)
+  const [showPendingOnly, setShowPendingOnly] = useState(false)
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-full">Carregando...</div>
@@ -23,7 +21,10 @@ export function KanbanBoard() {
 
   const filterClients = (clients: any[] | null) => {
     if (!clients) return null
-    if (!showPendingOnly) return clients
+    if (!showPendingOnly) {
+      console.log('Filter is OFF, showing all clients:', clients.length)
+      return clients
+    }
 
     const today = startOfDay(new Date())
     console.log('Filtering clients with showPendingOnly:', showPendingOnly)
@@ -60,10 +61,6 @@ export function KanbanBoard() {
   return (
     <div className="flex h-full w-full flex-col gap-4 p-4">
       <BoardHeader 
-        selectedDate={selectedDate}
-        isCalendarOpen={isCalendarOpen}
-        setIsCalendarOpen={setIsCalendarOpen}
-        handleDateSelect={handleDateSelect}
         showPendingOnly={showPendingOnly}
         setShowPendingOnly={setShowPendingOnly}
       />
