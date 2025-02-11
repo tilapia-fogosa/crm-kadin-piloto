@@ -133,6 +133,8 @@ export default function ClientsPage() {
       return;
     }
 
+    await queryClient.invalidateQueries({ queryKey: ['all-clients'] })
+
     toast({
       title: "Cliente atualizado",
       description: "As informações do cliente foram atualizadas com sucesso.",
