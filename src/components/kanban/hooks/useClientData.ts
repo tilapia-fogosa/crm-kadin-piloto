@@ -1,8 +1,37 @@
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { RealtimePostgresInsertPayload } from "@supabase/supabase-js"
 
 export function useClientData() {
+  const queryClient = useQueryClient()
+
+  // Enable realtime subscription when the hook is mounted
+  React.useEffect(() => {
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'clients'
+        },
+        (payload: RealtimePostgresInsertPayload<any>) => {
+          console.log('New client inserted:', payload)
+          // Invalidate and refetch data when a new client is inserted
+          queryClient.invalidateQueries({ queryKey: ['clients'] })
+        }
+      )
+      .subscribe()
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [queryClient])
+
   return useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
@@ -27,7 +56,7 @@ export function useClientData() {
           )
         `)
         .order('created_at', { ascending: false })
-        .is('deleted_at', null) // Mudamos para buscar apenas registros onde deleted_at é null
+        .is('deleted_at', null)
 
       if (error) {
         console.error('Error fetching clients:', error)
