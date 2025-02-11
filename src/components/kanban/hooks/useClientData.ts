@@ -18,7 +18,7 @@ export function useClientData() {
           lead_source,
           observations,
           status,
-          client_activities!inner (
+          client_activities (
             id,
             tipo_contato,
             tipo_atividade,
@@ -26,7 +26,6 @@ export function useClientData() {
             created_at
           )
         `)
-        .eq('client_activities.is_deleted', false)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -34,8 +33,14 @@ export function useClientData() {
         throw error
       }
 
-      console.log('Fetched clients data:', data)
-      return data
+      // Filtrar as atividades não excluídas para cada cliente
+      const clientsWithFilteredActivities = data?.map(client => ({
+        ...client,
+        client_activities: client.client_activities?.filter(activity => !activity.is_deleted) || []
+      }))
+
+      console.log('Fetched clients data:', clientsWithFilteredActivities)
+      return clientsWithFilteredActivities
     }
   })
 }
