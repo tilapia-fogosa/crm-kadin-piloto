@@ -53,7 +53,8 @@ export function useClientData() {
             tipo_contato,
             tipo_atividade,
             notes,
-            created_at
+            created_at,
+            next_contact_date
           )
         `)
         .order('created_at', { ascending: false })
@@ -64,14 +65,14 @@ export function useClientData() {
         throw error
       }
 
-      // Mapear as atividades diretamente
+      // Mapear as atividades incluindo next_contact_date
       const clientsWithActivities = data?.map(client => {
         console.log('Processing client:', client.name, 'Activities:', client.client_activities)
         return {
           ...client,
           client_activities: client.client_activities?.map(activity => {
             console.log('Processing activity for client', client.name, ':', activity)
-            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
+            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}`
           }) || []
         }
       })
