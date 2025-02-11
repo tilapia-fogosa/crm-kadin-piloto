@@ -18,7 +18,7 @@ export function useClientData() {
           lead_source,
           observations,
           status,
-          client_activities (
+          client_activities!inner (
             id,
             tipo_contato,
             tipo_atividade,
@@ -26,6 +26,7 @@ export function useClientData() {
             created_at
           )
         `)
+        .eq('client_activities.is_deleted', false)
         .order('created_at', { ascending: false })
 
       if (error) {

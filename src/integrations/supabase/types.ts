@@ -15,6 +15,7 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          is_deleted: boolean
           next_contact_date: string | null
           notes: string | null
           tipo_atividade: string
@@ -25,6 +26,7 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          is_deleted?: boolean
           next_contact_date?: string | null
           notes?: string | null
           tipo_atividade: string
@@ -35,6 +37,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          is_deleted?: boolean
           next_contact_date?: string | null
           notes?: string | null
           tipo_atividade?: string

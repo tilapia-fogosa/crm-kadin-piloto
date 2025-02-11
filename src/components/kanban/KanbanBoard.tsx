@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
@@ -34,19 +33,18 @@ export function KanbanBoard() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      // Insert the activity - the trigger will handle the status update
       const { error: activityError } = await supabase
         .from('client_activities')
         .insert({
           client_id: attempt.cardId,
           tipo_contato: attempt.type,
           tipo_atividade: 'Tentativa de Contato',
-          created_by: session.session.user.id
+          created_by: session.session.user.id,
+          is_deleted: false
         })
 
       if (activityError) throw activityError
 
-      // Invalidate the query to refresh the data
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       toast({
@@ -70,7 +68,6 @@ export function KanbanBoard() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      // Insert the activity - the trigger will handle the status update
       const { error: activityError } = await supabase
         .from('client_activities')
         .insert({
@@ -78,12 +75,12 @@ export function KanbanBoard() {
           tipo_contato: contact.type,
           tipo_atividade: 'Contato Efetivo',
           notes: contact.notes,
-          created_by: session.session.user.id
+          created_by: session.session.user.id,
+          is_deleted: false
         })
 
       if (activityError) throw activityError
 
-      // Update client observations separately
       const { error: clientError } = await supabase
         .from('clients')
         .update({ observations: contact.observations })
@@ -91,7 +88,6 @@ export function KanbanBoard() {
 
       if (clientError) throw clientError
 
-      // Invalidate the query to refresh the data
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       toast({
@@ -125,7 +121,7 @@ export function KanbanBoard() {
       if (fetchError) throw fetchError
       if (!activityData) throw new Error('Activity not found')
 
-      // Inserir o registro na tabela deleted_activities
+      // Inserir o registro na tabela deleted_activities para auditoria
       const { error: insertError } = await supabase
         .from('deleted_activities')
         .insert({
@@ -142,15 +138,14 @@ export function KanbanBoard() {
 
       if (insertError) throw insertError
 
-      // Depois de registrar a exclusão, deletar a atividade original
-      const { error: deleteError } = await supabase
+      // Marcar a atividade como excluída (soft delete)
+      const { error: updateError } = await supabase
         .from('client_activities')
-        .delete()
+        .update({ is_deleted: true })
         .eq('id', activityId)
 
-      if (deleteError) throw deleteError
+      if (updateError) throw updateError
 
-      // Invalidate the query to refresh the data
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       toast({
