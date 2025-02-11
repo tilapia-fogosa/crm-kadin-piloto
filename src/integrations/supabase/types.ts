@@ -269,15 +269,7 @@ export type Database = {
           phone_number?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "leads_lead_source_fkey"
-            columns: ["lead_source"]
-            isOneToOne: false
-            referencedRelation: "lead_sources"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
