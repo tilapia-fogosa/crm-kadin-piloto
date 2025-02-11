@@ -27,6 +27,7 @@ export function useClientData() {
           )
         `)
         .order('created_at', { ascending: false })
+        .not('deleted_at', 'is', null) // Adiciona esta linha para filtrar registros deletados
 
       if (error) {
         console.error('Error fetching clients:', error)
@@ -40,7 +41,6 @@ export function useClientData() {
           ...client,
           client_activities: client.client_activities?.map(activity => {
             console.log('Processing activity for client', client.name, ':', activity)
-            // Remova a validação que estava causando problemas
             return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
           }) || []
         }
