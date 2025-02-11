@@ -21,8 +21,7 @@ export function useActivityOperations() {
           client_id: attempt.cardId,
           tipo_contato: attempt.type,
           tipo_atividade: 'Tentativa de Contato',
-          created_by: session.session.user.id,
-          is_deleted: false
+          created_by: session.session.user.id
         })
 
       if (activityError) throw activityError
@@ -57,8 +56,7 @@ export function useActivityOperations() {
           tipo_contato: contact.type,
           tipo_atividade: 'Contato Efetivo',
           notes: contact.notes,
-          created_by: session.session.user.id,
-          is_deleted: false
+          created_by: session.session.user.id
         })
 
       if (activityError) throw activityError
@@ -93,58 +91,16 @@ export function useActivityOperations() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      const { data: activityData, error: fetchError } = await supabase
+      // Excluir diretamente a atividade - o trigger se encarregará de mover para deleted_activities
+      const { error: deleteError } = await supabase
         .from('client_activities')
-        .select('*')
-        .eq('id', activityId)
-        .single()
-
-      if (fetchError) {
-        console.error('Error fetching activity:', fetchError)
-        throw fetchError
-      }
-      if (!activityData) {
-        console.error('Activity not found')
-        throw new Error('Activity not found')
-      }
-
-      console.log('Activity data before deletion:', activityData)
-
-      const { error: updateError } = await supabase
-        .from('client_activities')
-        .update({ 
-          is_deleted: true,
-          updated_at: new Date().toISOString()
-        })
+        .delete()
         .eq('id', activityId)
 
-      if (updateError) {
-        console.error('Error updating activity:', updateError)
-        throw updateError
+      if (deleteError) {
+        console.error('Error deleting activity:', deleteError)
+        throw deleteError
       }
-
-      console.log('Activity marked as deleted')
-
-      const { error: insertError } = await supabase
-        .from('deleted_activities')
-        .insert({
-          client_activity_id: activityData.id,
-          client_id: activityData.client_id,
-          tipo_atividade: activityData.tipo_atividade,
-          tipo_contato: activityData.tipo_contato,
-          notes: activityData.notes,
-          next_contact_date: activityData.next_contact_date,
-          original_created_at: activityData.created_at,
-          original_created_by: activityData.created_by,
-          deleted_by: session.session.user.id
-        })
-
-      if (insertError) {
-        console.error('Error inserting deleted activity:', insertError)
-        throw insertError
-      }
-
-      console.log('Audit record created')
 
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
@@ -153,7 +109,7 @@ export function useActivityOperations() {
         description: "A atividade foi excluída com sucesso",
       })
     } catch (error) {
-      console.error('Error in handleDeleteActivity:', error)
+      console.error('Error in deleteActivity:', error)
       toast({
         variant: "destructive",
         title: "Erro ao excluir atividade",

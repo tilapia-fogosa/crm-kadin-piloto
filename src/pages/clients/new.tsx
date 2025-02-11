@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
@@ -34,7 +35,7 @@ export default function NewClient() {
         throw new Error('Not authenticated');
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('clients')
         .insert([{
           name: values.name,
@@ -46,9 +47,13 @@ export default function NewClient() {
           original_ad: values.originalAd,
           created_by: session.session.user.id,
           status: 'novo-cadastro'
-        }]);
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      console.log("New client created:", data);
       
       toast({
         title: "Lead cadastrado com sucesso!",
