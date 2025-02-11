@@ -16,6 +16,7 @@ const ApiDocsPage = () => {
     })
   }
 
+  // Exemplo atualizado removendo campos que não existem na tabela leads
   const webhookExample = {
     name: "João Silva",
     phone_number: "+5511999999999",
@@ -47,7 +48,7 @@ const ApiDocsPage = () => {
             <h3 className="text-xl font-semibold">Campos Obrigatórios</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li><code>name</code> - Nome do cliente</li>
-              <li><code>phone_number</code> - Telefone do cliente</li>
+              <li><code>phone_number</code> - Telefone do cliente (formato +5511999999999)</li>
             </ul>
 
             <h3 className="text-xl font-semibold mt-6">Campos Opcionais</h3>
