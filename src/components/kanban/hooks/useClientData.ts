@@ -77,7 +77,9 @@ export function useClientData() {
           id: client.id,
           name: client.name,
           next_contact_date: client.next_contact_date,
-          status: client.status
+          status: client.status,
+          activities_count: client.client_activities?.length || 0,
+          latest_activity_next_contact: client.client_activities?.[0]?.next_contact_date
         })
       })
 
@@ -85,7 +87,7 @@ export function useClientData() {
         return {
           ...client,
           client_activities: client.client_activities?.map(activity => {
-            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
+            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}`
           }) || []
         }
       })
