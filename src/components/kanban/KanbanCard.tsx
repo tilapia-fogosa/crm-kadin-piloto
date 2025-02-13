@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Phone, MessageSquare, Clock, Calendar } from "lucide-react"
 import { KanbanCard as KanbanCardType } from "./types"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import {
   Tooltip,
   TooltipContent,
@@ -36,7 +36,7 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
     ? lastActivity 
     : null
 
-  const createdAtDate = new Date(card.createdAt)
+  const createdAtDate = parseISO(card.createdAt)
   const isValidDate = !isNaN(createdAtDate.getTime())
 
   return (

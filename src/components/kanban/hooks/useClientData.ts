@@ -49,6 +49,7 @@ export function useClientData() {
           observations,
           status,
           next_contact_date,
+          created_at,
           client_activities (
             id,
             tipo_contato,
@@ -65,8 +66,10 @@ export function useClientData() {
         throw error
       }
 
+      console.log('Raw client data:', data)
+
       const clientsWithActivities = data?.map(client => {
-        console.log('Processing client:', client.name, 'Activities:', client.client_activities)
+        console.log('Processing client:', client.name, 'Created at:', client.created_at)
         return {
           ...client,
           client_activities: client.client_activities?.map(activity => {
