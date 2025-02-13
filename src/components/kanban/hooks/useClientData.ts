@@ -69,7 +69,7 @@ export function useClientData() {
       console.log('Raw client data:', data)
 
       const clientsWithActivities = data?.map(client => {
-        console.log('Processing client:', client.name, 'Created at:', client.created_at)
+        console.log('Processing client:', client.name, 'Created at:', client.created_at, 'Next contact:', client.next_contact_date)
         return {
           ...client,
           client_activities: client.client_activities?.map(activity => {
