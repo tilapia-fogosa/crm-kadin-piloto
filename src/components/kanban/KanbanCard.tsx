@@ -36,6 +36,9 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
     ? lastActivity 
     : null
 
+  const createdAtDate = new Date(card.createdAt)
+  const isValidDate = !isNaN(createdAtDate.getTime())
+
   return (
     <Card className="cursor-pointer hover:bg-accent/5" onClick={onClick}>
       <CardHeader className="p-2 pb-0">
@@ -48,7 +51,7 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
                     <span>
-                      {format(new Date(card.createdAt), 'dd-MM-yy HH:mm')}
+                      {isValidDate ? format(createdAtDate, 'dd-MM-yy HH:mm') : 'Data inválida'}
                     </span>
                   </div>
                 </TooltipTrigger>
