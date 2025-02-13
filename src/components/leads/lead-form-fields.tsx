@@ -1,3 +1,4 @@
+
 import {
   FormControl,
   FormField,
@@ -13,9 +14,15 @@ import { LeadSourceSelect } from "./lead-source-select";
 
 interface LeadFormFieldsProps {
   form: UseFormReturn<LeadFormData>;
+  isEditing?: boolean;
+  clientData?: {
+    meta_id?: string | null;
+    age_range?: string | null;
+    original_adset?: string | null;
+  };
 }
 
-export function LeadFormFields({ form }: LeadFormFieldsProps) {
+export function LeadFormFields({ form, isEditing = false, clientData }: LeadFormFieldsProps) {
   return (
     <div className="space-y-6">
       <FormField
@@ -73,47 +80,47 @@ export function LeadFormFields({ form }: LeadFormFieldsProps) {
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="ageRange"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Faixa Etária</FormLabel>
-            <FormControl>
-              <Input placeholder="Digite a faixa etária" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {isEditing && clientData?.meta_id && (
+        <FormItem>
+          <FormLabel>ID Meta</FormLabel>
+          <FormControl>
+            <Input 
+              value={clientData.meta_id || ''} 
+              readOnly 
+              disabled
+              className="bg-muted"
+            />
+          </FormControl>
+        </FormItem>
+      )}
 
-      <FormField
-        control={form.control}
-        name="metaId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>ID Meta</FormLabel>
-            <FormControl>
-              <Input placeholder="Digite o ID da Meta" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {isEditing && clientData?.age_range && (
+        <FormItem>
+          <FormLabel>Faixa Etária</FormLabel>
+          <FormControl>
+            <Input 
+              value={clientData.age_range || ''} 
+              readOnly 
+              disabled
+              className="bg-muted"
+            />
+          </FormControl>
+        </FormItem>
+      )}
 
-      <FormField
-        control={form.control}
-        name="originalAd"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Anúncio de Origem</FormLabel>
-            <FormControl>
-              <Input placeholder="Digite o anúncio de origem" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {isEditing && clientData?.original_adset && (
+        <FormItem>
+          <FormLabel>Segmentação</FormLabel>
+          <FormControl>
+            <Input 
+              value={clientData.original_adset || ''} 
+              readOnly 
+              disabled
+              className="bg-muted"
+            />
+          </FormControl>
+        </FormItem>
+      )}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 
 export const phoneRegex = /^\d{10,11}$/;
@@ -13,6 +14,7 @@ export const leadFormSchema = z.object({
   ageRange: z.string().optional(),
   metaId: z.string().optional(),
   originalAd: z.string().optional(),
+  originalAdset: z.string().optional(),
 });
 
 export type LeadFormData = z.infer<typeof leadFormSchema>;

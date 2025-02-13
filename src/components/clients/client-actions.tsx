@@ -67,7 +67,15 @@ export function ClientActions({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <LeadFormFields form={form} />
+              <LeadFormFields 
+                form={form} 
+                isEditing={true}
+                clientData={{
+                  meta_id: client.meta_id,
+                  age_range: client.age_range,
+                  original_adset: client.original_adset,
+                }}
+              />
               <Button type="submit">Salvar Alterações</Button>
             </form>
           </Form>
