@@ -70,20 +70,50 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
           <ul className="list-disc pl-6 space-y-2 mt-2">
             <li><code>fb</code> → <code>facebook</code></li>
             <li><code>ig</code> → <code>instagram</code></li>
+            <li><code>website</code> → <code>website</code></li>
+            <li><code>whatsapp</code> → <code>whatsapp</code></li>
+            <li><code>webhook</code> → <code>webhook</code></li>
+            <li><code>indicacao</code> → <code>indicacao</code></li>
             <li>Outras origens desconhecidas serão marcadas como <code>outros</code></li>
           </ul>
         </div>
 
         <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-2">Dados do Meta Ads</h3>
-          <p className="text-muted-foreground">
-            Para melhor rastreamento das campanhas, você pode enviar:
-          </p>
-          <ul className="list-disc pl-6 space-y-2 mt-2">
-            <li><code>meta_id</code> - Identificador único da campanha/anúncio</li>
-            <li><code>original_ad</code> - Nome do anúncio que gerou o lead</li>
-            <li><code>original_adset</code> - Nome do conjunto de anúncios (útil para identificar a segmentação)</li>
-          </ul>
+          <h3 className="text-xl font-semibold mb-2">Respostas da API</h3>
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium">Sucesso (200 OK)</h4>
+              <pre className="bg-secondary p-4 rounded-lg mt-2">
+{JSON.stringify({
+  success: true,
+  message: 'Lead registrado com sucesso',
+  normalized_source: 'facebook'
+}, null, 2)}
+              </pre>
+            </div>
+            
+            <div>
+              <h4 className="font-medium">Erro - Campo Obrigatório Ausente (400 Bad Request)</h4>
+              <pre className="bg-secondary p-4 rounded-lg mt-2">
+{JSON.stringify({
+  error: 'Campo obrigatório ausente: name',
+  received_payload: {
+    phone_number: '+5511999999999'
+  }
+}, null, 2)}
+              </pre>
+            </div>
+
+            <div>
+              <h4 className="font-medium">Erro do Servidor (500 Internal Server Error)</h4>
+              <pre className="bg-secondary p-4 rounded-lg mt-2">
+{JSON.stringify({
+  error: 'Erro ao inserir lead no banco de dados',
+  details: 'Detalhes do erro específico'
+}, null, 2)}
+              </pre>
+            </div>
+          </div>
         </div>
 
         <div className="mt-6">
@@ -92,9 +122,10 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
             Quando um lead é recebido via webhook:
           </p>
           <ol className="list-decimal pl-6 space-y-2 mt-2">
+            <li>A requisição é validada para garantir que todos os campos obrigatórios estão presentes</li>
             <li>A origem do lead é normalizada (ex: 'fb' → 'facebook')</li>
             <li>O lead é registrado na tabela <code>leads</code></li>
-            <li>Automaticamente, um registro é criado na tabela <code>clients</code></li>
+            <li>Um trigger automático cria um registro na tabela <code>clients</code></li>
             <li>O cliente é marcado com status <code>novo-cadastro</code></li>
             <li>Os dados de campanha (meta_id, original_ad, original_adset) são preservados</li>
           </ol>
