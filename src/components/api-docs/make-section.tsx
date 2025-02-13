@@ -43,14 +43,14 @@ export function MakeSection({ onCopy }: MakeSectionProps) {
               No módulo HTTP:
             </p>
             <ol className="list-disc pl-6 space-y-2 mt-2">
-              <li>Em "Authentication", selecione "Bearer Token"</li>
-              <li>Token: <code className="bg-secondary px-2 py-1 rounded break-all">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4</code></li>
+              <li>Em "Headers", adicione o seguinte header de autenticação:</li>
+              <li><code className="bg-secondary px-2 py-1 rounded break-all">Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4</code></li>
             </ol>
           </li>
           <li>
-            <p className="font-medium">Headers da requisição</p>
+            <p className="font-medium">Headers adicionais da requisição</p>
             <p className="text-muted-foreground">
-              Configure os seguintes headers:
+              Configure também estes headers:
             </p>
             <pre className="bg-secondary p-4 rounded-lg mt-2">
 {`Content-Type: application/json
@@ -90,7 +90,7 @@ Prefer: return=minimal`}
         <div className="mt-6">
           <h3 className="text-xl font-semibold mb-2">Solução de Problemas</h3>
           <ul className="list-disc pl-6 space-y-2">
-            <li>Se receber erro 401 (Unauthorized), verifique se o Bearer token foi configurado corretamente</li>
+            <li>Se receber erro 401 (Unauthorized), verifique se o header Authorization foi configurado corretamente com o prefixo "Bearer"</li>
             <li>Se receber erro 400 (Bad Request), verifique se o JSON do payload está correto e contém os campos obrigatórios</li>
             <li>Confirme que está usando o método POST e não GET ou outro método</li>
           </ul>
