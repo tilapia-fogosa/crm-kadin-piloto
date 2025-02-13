@@ -22,7 +22,7 @@ export function useActivityOperations() {
           tipo_contato: attempt.type,
           tipo_atividade: 'Tentativa de Contato',
           created_by: session.session.user.id,
-          next_contact_date: attempt.nextContactDate
+          next_contact_date: attempt.nextContactDate.toISOString()
         })
 
       if (activityError) throw activityError
@@ -59,7 +59,7 @@ export function useActivityOperations() {
           tipo_atividade: 'Contato Efetivo',
           notes: contact.notes,
           created_by: session.session.user.id,
-          next_contact_date: contact.nextContactDate
+          next_contact_date: contact.nextContactDate?.toISOString()
         })
 
       if (activityError) throw activityError
@@ -69,7 +69,7 @@ export function useActivityOperations() {
         const { error: clientError } = await supabase
           .from('clients')
           .update({ 
-            next_contact_date: contact.nextContactDate,
+            next_contact_date: contact.nextContactDate.toISOString(),
             observations: contact.observations 
           })
           .eq('id', contact.cardId)
