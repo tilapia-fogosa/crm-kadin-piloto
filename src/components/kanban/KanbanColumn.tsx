@@ -1,13 +1,13 @@
 
 import { KanbanCard } from "./KanbanCard"
-import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType } from "./types"
+import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType, ContactAttempt, EffectiveContact, Scheduling } from "./types"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { ContactAttempt, EffectiveContact } from "./types"
 import { useState } from "react"
 import { ActivityHistory } from "./ActivityHistory"
 import { ActivitySelector } from "./ActivitySelector"
 import { ActivityDetails } from "./ActivityDetails"
 import { DeleteActivityDialog } from "./DeleteActivityDialog"
+import { useActivityOperations } from "./hooks/useActivityOperations"
 
 interface KanbanColumnProps {
   column: KanbanColumnType
@@ -27,6 +27,7 @@ export function KanbanColumn({
   const [selectedCard, setSelectedCard] = useState<KanbanCardType | null>(null)
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
   const [activityToDelete, setActivityToDelete] = useState<{id: string, clientId: string} | null>(null)
+  const { registerScheduling } = useActivityOperations()
 
   const handleDeleteActivity = (id: string, clientId: string) => {
     if (!id || !clientId) {
@@ -54,6 +55,11 @@ export function KanbanColumn({
   const handleEffectiveContact = async (contact: EffectiveContact) => {
     await onRegisterEffectiveContact(contact)
     setSelectedCard(null) // Fecha a tela após registrar o contato efetivo
+  }
+
+  const handleScheduling = async (scheduling: Scheduling) => {
+    await registerScheduling(scheduling)
+    setSelectedCard(null) // Fecha a tela após registrar o agendamento
   }
 
   return (
@@ -95,6 +101,7 @@ export function KanbanColumn({
                   cardId={card.id}
                   onRegisterAttempt={handleRegisterAttempt}
                   onRegisterEffectiveContact={handleEffectiveContact}
+                  onRegisterScheduling={handleScheduling}
                 />
               </div>
             </SheetContent>
