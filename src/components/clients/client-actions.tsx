@@ -32,6 +32,7 @@ interface ClientActionsProps {
   onDelete: (clientId: string) => void
   setSelectedClient: (client: any) => void
   setClientToDelete: (client: any) => void
+  onSubmit: (values: LeadFormData) => Promise<void>
 }
 
 export function ClientActions({
@@ -43,12 +44,8 @@ export function ClientActions({
   onDelete,
   setSelectedClient,
   setClientToDelete,
+  onSubmit,
 }: ClientActionsProps) {
-  const handleSubmit = async (data: LeadFormData) => {
-    // This will be handled by the parent component through onEdit
-    console.log('Form submitted:', data);
-  };
-
   return (
     <div className="space-x-2">
       <Dialog 
@@ -69,7 +66,7 @@ export function ClientActions({
             <DialogTitle>Editar Cliente</DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <LeadFormFields form={form} />
               <Button type="submit">Salvar Alterações</Button>
             </form>
