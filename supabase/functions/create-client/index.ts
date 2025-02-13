@@ -102,8 +102,7 @@ serve(async (req) => {
       original_ad: payload.original_ad,
       original_adset: payload.original_adset,
       age_range: payload.age_range,
-      status: 'novo-cadastro',
-      created_by: '00000000-0000-0000-0000-000000000000' // sistema
+      status: 'novo-cadastro'
     }
 
     console.log('Tentando inserir cliente:', client)

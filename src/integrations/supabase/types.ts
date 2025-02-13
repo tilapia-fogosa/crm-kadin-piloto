@@ -60,7 +60,7 @@ export type Database = {
         Row: {
           age_range: string | null
           created_at: string
-          created_by: string
+          created_by: string | null
           deleted_at: string | null
           id: string
           lead_source: string
@@ -78,7 +78,7 @@ export type Database = {
         Insert: {
           age_range?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
           deleted_at?: string | null
           id?: string
           lead_source: string
@@ -96,7 +96,7 @@ export type Database = {
         Update: {
           age_range?: string | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           deleted_at?: string | null
           id?: string
           lead_source?: string
