@@ -35,4 +35,5 @@ export type Scheduling = {
   scheduledDate: Date
   notes: string
   cardId: string
+  valorizacaoDiaAnterior: boolean
 }

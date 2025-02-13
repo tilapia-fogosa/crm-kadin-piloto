@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { ptBR } from "date-fns/locale"
-import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface SchedulingFormProps {
   onSubmit: (scheduling: Scheduling) => void
@@ -17,38 +17,35 @@ interface SchedulingFormProps {
 
 export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
   const [date, setDate] = useState<Date>()
-  const [time, setTime] = useState("")
   const [notes, setNotes] = useState("")
+  const [valorizacaoDiaAnterior, setValorizacaoDiaAnterior] = useState(false)
   const { toast } = useToast()
 
   const handleSubmit = () => {
-    if (!date || !time) {
+    if (!date) {
       toast({
         title: "Erro",
-        description: "Selecione a data e hora do agendamento",
+        description: "Selecione a data do agendamento",
         variant: "destructive",
       })
       return
     }
 
-    const [hours, minutes] = time.split(":")
-    const scheduledDate = new Date(date)
-    scheduledDate.setHours(parseInt(hours), parseInt(minutes))
-
-    // Verifica se a data/hora é futura
-    if (scheduledDate <= new Date()) {
+    // Verifica se a data é futura
+    if (date <= new Date()) {
       toast({
         title: "Erro",
-        description: "A data e hora do agendamento deve ser futura",
+        description: "A data do agendamento deve ser futura",
         variant: "destructive",
       })
       return
     }
 
     onSubmit({
-      scheduledDate,
+      scheduledDate: date,
       notes,
-      cardId
+      cardId,
+      valorizacaoDiaAnterior
     })
   }
 
@@ -100,16 +97,6 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label>Hora do Agendamento</Label>
-        <Input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          className="w-full"
-        />
-      </div>
-
-      <div className="space-y-2">
         <Label>Descritivo</Label>
         <Textarea
           value={notes}
@@ -118,11 +105,20 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
         />
       </div>
 
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="valorizacao"
+          checked={valorizacaoDiaAnterior}
+          onCheckedChange={(checked) => setValorizacaoDiaAnterior(checked as boolean)}
+        />
+        <Label htmlFor="valorizacao">Valorização Dia Anterior?</Label>
+      </div>
+
       <Button 
         onClick={handleSubmit}
         className="w-full bg-orange-500 hover:bg-orange-600"
       >
-        Confirmar Agendamento
+        Registrar Agendamento
       </Button>
     </div>
   )
