@@ -64,7 +64,7 @@ export function ClientActions({
             <DialogTitle>Editar Cliente</DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(form.handleSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit((data) => form.handleSubmit(data))} className="space-y-6">
               <LeadFormFields form={form} />
               <Button type="submit">Salvar Alterações</Button>
             </form>
