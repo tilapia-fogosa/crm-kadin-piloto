@@ -14,7 +14,7 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
       <Alert>
         <AlertTitle>Endpoint do Webhook</AlertTitle>
         <AlertDescription>
-          POST https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/normalize-lead-source
+          POST https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/create-client
         </AlertDescription>
       </Alert>
 
@@ -86,7 +86,7 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
               <pre className="bg-secondary p-4 rounded-lg mt-2">
 {JSON.stringify({
   success: true,
-  message: 'Lead registrado com sucesso',
+  message: 'Cliente registrado com sucesso',
   normalized_source: 'facebook'
 }, null, 2)}
               </pre>
@@ -108,7 +108,7 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
               <h4 className="font-medium">Erro do Servidor (500 Internal Server Error)</h4>
               <pre className="bg-secondary p-4 rounded-lg mt-2">
 {JSON.stringify({
-  error: 'Erro ao inserir lead no banco de dados',
+  error: 'Erro ao inserir cliente no banco de dados',
   details: 'Detalhes do erro específico'
 }, null, 2)}
               </pre>
@@ -117,15 +117,14 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
         </div>
 
         <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-2">Fluxo do Lead</h3>
+          <h3 className="text-xl font-semibold mb-2">Fluxo do Cliente</h3>
           <p className="text-muted-foreground">
-            Quando um lead é recebido via webhook:
+            Quando um cliente é recebido via webhook:
           </p>
           <ol className="list-decimal pl-6 space-y-2 mt-2">
             <li>A requisição é validada para garantir que todos os campos obrigatórios estão presentes</li>
-            <li>A origem do lead é normalizada (ex: 'fb' → 'facebook')</li>
-            <li>O lead é registrado na tabela <code>leads</code></li>
-            <li>Um trigger automático cria um registro na tabela <code>clients</code></li>
+            <li>A origem do cliente é normalizada (ex: 'fb' → 'facebook')</li>
+            <li>O cliente é registrado diretamente na tabela <code>clients</code></li>
             <li>O cliente é marcado com status <code>novo-cadastro</code></li>
             <li>Os dados de campanha (meta_id, original_ad, original_adset) são preservados</li>
           </ol>
