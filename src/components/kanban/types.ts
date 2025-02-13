@@ -28,5 +28,11 @@ export type EffectiveContact = {
   notes: string
   observations: string
   cardId: string
-  nextContactDate?: Date // Novo campo adicionado
+  nextContactDate?: Date
+}
+
+export type Scheduling = {
+  scheduledDate: Date
+  notes: string
+  cardId: string
 }
