@@ -1,6 +1,6 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
+import { Pool } from 'https://deno.land/x/postgres@v0.17.0/mod.ts'
 
 console.log("Create Client Function initialized")
 
@@ -35,36 +35,31 @@ async function checkBasicAuth(req: Request): Promise<boolean> {
   const credentials = atob(base64Credentials)
   const [username, password] = credentials.split(':')
 
-  // Usar a função do banco para verificar as credenciais
-  const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
-  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  // Conectar diretamente ao banco usando a URL do banco
+  const pool = new Pool(Deno.env.get('SUPABASE_DB_URL') ?? '', 1)
   
   try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/verify_webhook_credentials`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'apikey': SUPABASE_SERVICE_ROLE_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({
-        p_username: username,
-        p_password: password
-      })
-    })
-
-    if (!response.ok) {
-      console.error('Erro ao verificar credenciais:', await response.text())
-      return false
+    const client = await pool.connect()
+    try {
+      const result = await client.queryObject<{ exists: boolean }>(
+        `SELECT EXISTS (
+          SELECT 1 
+          FROM webhook_credentials 
+          WHERE username = $1 
+          AND password_hash = crypt($2, password_hash)
+          AND active = true
+        )`,
+        [username, password]
+      )
+      return result.rows[0]?.exists ?? false
+    } finally {
+      client.release()
     }
-
-    const result = await response.json()
-    return result === true
-
   } catch (error) {
     console.error('Erro ao verificar credenciais:', error)
     return false
+  } finally {
+    await pool.end()
   }
 }
 
