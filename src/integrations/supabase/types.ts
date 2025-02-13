@@ -66,6 +66,7 @@ export type Database = {
           next_contact_date: string | null
           observations: string | null
           original_ad: string | null
+          original_adset: string | null
           phone_number: string
           status: string
           updated_at: string
@@ -82,6 +83,7 @@ export type Database = {
           next_contact_date?: string | null
           observations?: string | null
           original_ad?: string | null
+          original_adset?: string | null
           phone_number: string
           status?: string
           updated_at?: string
@@ -98,6 +100,7 @@ export type Database = {
           next_contact_date?: string | null
           observations?: string | null
           original_ad?: string | null
+          original_adset?: string | null
           phone_number?: string
           status?: string
           updated_at?: string
@@ -173,6 +176,7 @@ export type Database = {
           name: string
           observations: string | null
           original_ad: string | null
+          original_adset: string | null
           original_created_at: string
           original_created_by: string
           phone_number: string
@@ -191,6 +195,7 @@ export type Database = {
           name: string
           observations?: string | null
           original_ad?: string | null
+          original_adset?: string | null
           original_created_at: string
           original_created_by: string
           phone_number: string
@@ -209,6 +214,7 @@ export type Database = {
           name?: string
           observations?: string | null
           original_ad?: string | null
+          original_adset?: string | null
           original_created_at?: string
           original_created_by?: string
           phone_number?: string
@@ -249,6 +255,7 @@ export type Database = {
           lead_source: string | null
           name: string
           observations: string | null
+          original_adset: string | null
           phone_number: string
           updated_at: string
         }
@@ -259,6 +266,7 @@ export type Database = {
           lead_source?: string | null
           name: string
           observations?: string | null
+          original_adset?: string | null
           phone_number: string
           updated_at?: string
         }
@@ -269,6 +277,7 @@ export type Database = {
           lead_source?: string | null
           name?: string
           observations?: string | null
+          original_adset?: string | null
           phone_number?: string
           updated_at?: string
         }

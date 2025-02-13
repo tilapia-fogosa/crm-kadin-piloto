@@ -21,7 +21,10 @@ const ApiDocsPage = () => {
     phone_number: "+5511999999999",
     email: "joao@email.com",
     lead_source: "fb", // Pode ser 'fb' ou 'ig', será normalizado automaticamente
-    observations: "Cliente interessado no curso de inglês"
+    observations: "Cliente interessado no curso de inglês",
+    meta_id: "123456789", // ID da campanha/anúncio do Meta
+    original_ad: "Anúncio Principal - Curso de Inglês", // Nome do anúncio
+    original_adset: "Segmentação - 25-35 anos - São Paulo" // Nome do conjunto de anúncios
   }
 
   return (
@@ -55,6 +58,9 @@ const ApiDocsPage = () => {
               <li><code>email</code> - Email do cliente</li>
               <li><code>lead_source</code> - Origem do lead (ex: 'fb' para Facebook, 'ig' para Instagram)</li>
               <li><code>observations</code> - Observações adicionais</li>
+              <li><code>meta_id</code> - ID da campanha/anúncio do Meta</li>
+              <li><code>original_ad</code> - Nome do anúncio original</li>
+              <li><code>original_adset</code> - Nome do conjunto de anúncios (segmentação)</li>
             </ul>
 
             <div className="mt-6">
@@ -96,6 +102,18 @@ const ApiDocsPage = () => {
             </div>
 
             <div className="mt-6">
+              <h3 className="text-xl font-semibold mb-2">Dados do Meta Ads</h3>
+              <p className="text-muted-foreground">
+                Para melhor rastreamento das campanhas, você pode enviar:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 mt-2">
+                <li><code>meta_id</code> - Identificador único da campanha/anúncio</li>
+                <li><code>original_ad</code> - Nome do anúncio que gerou o lead</li>
+                <li><code>original_adset</code> - Nome do conjunto de anúncios (útil para identificar a segmentação)</li>
+              </ul>
+            </div>
+
+            <div className="mt-6">
               <h3 className="text-xl font-semibold mb-2">Fluxo do Lead</h3>
               <p className="text-muted-foreground">
                 Quando um lead é recebido via webhook:
@@ -105,6 +123,7 @@ const ApiDocsPage = () => {
                 <li>O lead é registrado na tabela <code>leads</code></li>
                 <li>Automaticamente, um registro é criado na tabela <code>clients</code></li>
                 <li>O cliente é marcado com status <code>novo-cadastro</code></li>
+                <li>Os dados de campanha (meta_id, original_ad, original_adset) são preservados</li>
               </ol>
             </div>
           </div>
