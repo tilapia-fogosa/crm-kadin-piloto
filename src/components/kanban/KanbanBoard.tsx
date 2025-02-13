@@ -21,6 +21,12 @@ export function KanbanBoard() {
   const filterClients = (clients: any[] | null) => {
     if (!clients) return null
     
+    // Se o filtro estiver desligado, retorna todos os clientes
+    if (!showPendingOnly) {
+      console.log('Filter is OFF, showing all clients')
+      return clients
+    }
+    
     const today = startOfDay(new Date())
     console.log('Filtering clients with showPendingOnly:', showPendingOnly)
 
@@ -28,21 +34,14 @@ export function KanbanBoard() {
       // Se não tem data de próximo contato
       if (!client.next_contact_date) {
         console.log('Client with no next contact date:', client.name)
-        return showPendingOnly // Se o filtro estiver ligado, mostra. Se estiver desligado, não mostra
+        return true // Mostra clientes sem data de próximo contato quando o filtro está ligado
       }
 
       const nextContactDate = startOfDay(new Date(client.next_contact_date))
-      
-      if (showPendingOnly) {
-        // Se o filtro estiver ligado, mostra apenas os que têm data menor ou igual a hoje
-        const shouldShow = isBefore(nextContactDate, today) || isEqual(nextContactDate, today)
-        console.log('Client:', client.name, 'Next contact:', nextContactDate, 'Should show (pending only):', shouldShow)
-        return shouldShow
-      } else {
-        // Se o filtro estiver desligado, mostra todos os clientes
-        console.log('Filter is OFF, showing client:', client.name)
-        return true
-      }
+      // Mostra apenas os que têm data menor ou igual a hoje
+      const shouldShow = isBefore(nextContactDate, today) || isEqual(nextContactDate, today)
+      console.log('Client:', client.name, 'Next contact:', nextContactDate, 'Should show:', shouldShow)
+      return shouldShow
     })
   }
 
