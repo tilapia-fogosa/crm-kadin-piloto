@@ -73,23 +73,21 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>Data do Agendamento</Label>
-        <div className="border rounded-md p-2">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={setDate}
-            locale={ptBR}
-            disabled={(date) => {
-              const today = new Date()
-              today.setHours(0, 0, 0, 0)
-              const compareDate = new Date(date)
-              compareDate.setHours(0, 0, 0, 0)
-              return compareDate < today
-            }}
-            initialFocus
-            className="w-full"
-          />
-        </div>
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={setDate}
+          locale={ptBR}
+          disabled={(date) => {
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            const compareDate = new Date(date)
+            compareDate.setHours(0, 0, 0, 0)
+            return compareDate < today
+          }}
+          initialFocus
+          className="w-[300px] mx-auto"
+        />
         {date && (
           <p className="text-sm text-muted-foreground">
             Data selecionada: {format(date, "PPP", { locale: ptBR })}
