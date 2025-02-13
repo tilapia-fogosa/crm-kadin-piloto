@@ -28,4 +28,5 @@ export type EffectiveContact = {
   notes: string
   observations: string
   cardId: string
+  nextContactDate?: Date // Novo campo adicionado
 }

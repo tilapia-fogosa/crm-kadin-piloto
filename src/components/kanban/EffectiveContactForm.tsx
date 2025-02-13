@@ -6,6 +6,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { EffectiveContact } from "./types"
 import { useToast } from "@/components/ui/use-toast"
+import { format } from "date-fns"
+import { Calendar } from "@/components/ui/calendar"
+import { ptBR } from "date-fns/locale"
+import { Input } from "@/components/ui/input"
 
 interface EffectiveContactFormProps {
   onSubmit: (contact: EffectiveContact) => void
@@ -15,6 +19,8 @@ interface EffectiveContactFormProps {
 export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormProps) {
   const [contactType, setContactType] = useState<'phone' | 'whatsapp' | 'whatsapp-call' | undefined>(undefined)
   const [notes, setNotes] = useState("")
+  const [date, setDate] = useState<Date>()
+  const [time, setTime] = useState("")
   const { toast } = useToast()
 
   const handleSubmit = () => {
@@ -27,12 +33,31 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
       return
     }
 
+    // Validação da data e hora do próximo contato
+    let nextContactDate: Date | undefined = undefined
+    if (date && time) {
+      const [hours, minutes] = time.split(":")
+      nextContactDate = new Date(date)
+      nextContactDate.setHours(parseInt(hours), parseInt(minutes))
+
+      // Verifica se a data/hora é futura
+      if (nextContactDate <= new Date()) {
+        toast({
+          title: "Erro",
+          description: "A data e hora do próximo contato deve ser futura",
+          variant: "destructive",
+        })
+        return
+      }
+    }
+
     onSubmit({
       type: contactType,
       contactDate: new Date(),
       notes,
       observations: "", // Mantendo vazio já que não será mais usado
-      cardId
+      cardId,
+      nextContactDate // Novo campo adicionado
     })
   }
 
@@ -59,6 +84,43 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
           </div>
         </RadioGroup>
       </div>
+
+      <div className="space-y-2">
+        <Label>Data do Próximo Contato</Label>
+        <div className="border rounded-md p-2">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            locale={ptBR}
+            disabled={(date) => {
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+              const compareDate = new Date(date)
+              compareDate.setHours(0, 0, 0, 0)
+              return compareDate < today
+            }}
+            initialFocus
+            className="w-full"
+          />
+        </div>
+        {date && (
+          <p className="text-sm text-muted-foreground">
+            Data selecionada: {format(date, "PPP", { locale: ptBR })}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label>Hora do Próximo Contato</Label>
+        <Input
+          type="time"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          className="w-full"
+        />
+      </div>
+
       <div className="space-y-2">
         <Label>Descritivo</Label>
         <Textarea
@@ -67,6 +129,7 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
           placeholder="Digite o descritivo do contato"
         />
       </div>
+
       <Button 
         onClick={handleSubmit}
         className="w-full bg-orange-500 hover:bg-orange-600"

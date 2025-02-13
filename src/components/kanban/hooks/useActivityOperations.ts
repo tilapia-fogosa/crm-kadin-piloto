@@ -21,7 +21,8 @@ export function useActivityOperations() {
           client_id: attempt.cardId,
           tipo_contato: attempt.type,
           tipo_atividade: 'Tentativa de Contato',
-          created_by: session.session.user.id
+          created_by: session.session.user.id,
+          next_contact_date: attempt.nextContactDate
         })
 
       if (activityError) throw activityError
@@ -49,6 +50,7 @@ export function useActivityOperations() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
+      // Primeiro registra a atividade
       const { error: activityError } = await supabase
         .from('client_activities')
         .insert({
@@ -56,17 +58,24 @@ export function useActivityOperations() {
           tipo_contato: contact.type,
           tipo_atividade: 'Contato Efetivo',
           notes: contact.notes,
-          created_by: session.session.user.id
+          created_by: session.session.user.id,
+          next_contact_date: contact.nextContactDate
         })
 
       if (activityError) throw activityError
 
-      const { error: clientError } = await supabase
-        .from('clients')
-        .update({ observations: contact.observations })
-        .eq('id', contact.cardId)
+      // Atualiza o cliente diretamente com a nova data de contato
+      if (contact.nextContactDate) {
+        const { error: clientError } = await supabase
+          .from('clients')
+          .update({ 
+            next_contact_date: contact.nextContactDate,
+            observations: contact.observations 
+          })
+          .eq('id', contact.cardId)
 
-      if (clientError) throw clientError
+        if (clientError) throw clientError
+      }
 
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
@@ -116,7 +125,7 @@ export function useActivityOperations() {
         title: "Erro ao excluir atividade",
         description: "Ocorreu um erro ao tentar excluir a atividade.",
       })
-      throw error // Re-throw para que o componente possa lidar com o erro se necessário
+      throw error
     }
   }
 
