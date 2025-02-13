@@ -71,6 +71,7 @@ export type Database = {
           original_ad: string | null
           original_adset: string | null
           phone_number: string
+          scheduled_date: string | null
           status: string
           updated_at: string
         }
@@ -88,6 +89,7 @@ export type Database = {
           original_ad?: string | null
           original_adset?: string | null
           phone_number: string
+          scheduled_date?: string | null
           status?: string
           updated_at?: string
         }
@@ -105,6 +107,7 @@ export type Database = {
           original_ad?: string | null
           original_adset?: string | null
           phone_number?: string
+          scheduled_date?: string | null
           status?: string
           updated_at?: string
         }

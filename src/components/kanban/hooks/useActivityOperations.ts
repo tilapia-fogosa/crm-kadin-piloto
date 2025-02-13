@@ -1,4 +1,3 @@
-
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -109,10 +108,21 @@ export function useActivityOperations() {
           tipo_contato: 'phone', // Valor padrão necessário
           created_by: session.session.user.id,
           scheduled_date: scheduling.scheduledDate.toISOString(),
-          next_contact_date: scheduling.scheduledDate.toISOString() // Atualiza também o próximo contato
+          next_contact_date: scheduling.nextContactDate?.toISOString() // Será undefined se valorizacaoDiaAnterior for false
         })
 
       if (activityError) throw activityError
+
+      // Atualiza o scheduled_date do cliente
+      const { error: clientError } = await supabase
+        .from('clients')
+        .update({ 
+          scheduled_date: scheduling.scheduledDate.toISOString(),
+          next_contact_date: scheduling.nextContactDate?.toISOString() // Atualiza apenas se valorizacaoDiaAnterior for true
+        })
+        .eq('id', scheduling.cardId)
+
+      if (clientError) throw clientError
 
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 

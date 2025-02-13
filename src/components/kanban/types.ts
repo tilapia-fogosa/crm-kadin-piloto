@@ -1,4 +1,3 @@
-
 export type KanbanColumn = {
   id: string
   title: string
@@ -36,4 +35,5 @@ export type Scheduling = {
   notes: string
   cardId: string
   valorizacaoDiaAnterior: boolean
+  nextContactDate?: Date
 }
