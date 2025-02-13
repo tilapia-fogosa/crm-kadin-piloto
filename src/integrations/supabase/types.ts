@@ -255,34 +255,43 @@ export type Database = {
       }
       leads: {
         Row: {
+          age_range: string | null
           created_at: string
           email: string | null
           id: string
           lead_source: string | null
+          meta_id: string | null
           name: string
           observations: string | null
+          original_ad: string | null
           original_adset: string | null
           phone_number: string
           updated_at: string
         }
         Insert: {
+          age_range?: string | null
           created_at?: string
           email?: string | null
           id?: string
           lead_source?: string | null
+          meta_id?: string | null
           name: string
           observations?: string | null
+          original_ad?: string | null
           original_adset?: string | null
           phone_number: string
           updated_at?: string
         }
         Update: {
+          age_range?: string | null
           created_at?: string
           email?: string | null
           id?: string
           lead_source?: string | null
+          meta_id?: string | null
           name?: string
           observations?: string | null
+          original_ad?: string | null
           original_adset?: string | null
           phone_number?: string
           updated_at?: string
