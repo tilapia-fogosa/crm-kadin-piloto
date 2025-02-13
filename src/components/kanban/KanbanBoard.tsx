@@ -9,7 +9,7 @@ import { useState } from "react"
 import { startOfDay, isAfter, isBefore, isEqual } from "date-fns"
 
 export function KanbanBoard() {
-  const { data: clients, isLoading } = useClientData()
+  const { data: clients, isLoading, refetch } = useClientData()
   const { registerAttempt, registerEffectiveContact, deleteActivity } = useActivityOperations()
   const { handleWhatsAppClick } = useWhatsApp()
   const [showPendingOnly, setShowPendingOnly] = useState(false)
@@ -54,6 +54,7 @@ export function KanbanBoard() {
       <BoardHeader 
         showPendingOnly={showPendingOnly}
         setShowPendingOnly={setShowPendingOnly}
+        onRefresh={() => refetch()}
       />
 
       <div className="flex h-full gap-4 overflow-x-auto pb-4">
