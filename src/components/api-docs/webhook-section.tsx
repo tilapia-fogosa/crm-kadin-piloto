@@ -14,7 +14,7 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
       <Alert>
         <AlertTitle>Endpoint do Webhook</AlertTitle>
         <AlertDescription>
-          POST https://hkvjdxxndapxpslovrlc.supabase.co/rest/v1/leads
+          POST https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/normalize-lead-source
         </AlertDescription>
       </Alert>
 
@@ -33,6 +33,7 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
           <li><code>meta_id</code> - ID da campanha/anúncio do Meta</li>
           <li><code>original_ad</code> - Nome do anúncio original</li>
           <li><code>original_adset</code> - Nome do conjunto de anúncios (segmentação)</li>
+          <li><code>age_range</code> - Faixa etária do cliente</li>
         </ul>
 
         <div className="mt-6">
