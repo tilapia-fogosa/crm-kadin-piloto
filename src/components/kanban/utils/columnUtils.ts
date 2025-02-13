@@ -20,6 +20,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
           createdAt: client.created_at,
+          nextContactDate: client.next_contact_date,
           activities: client.client_activities || []
         })) || [],
     },
@@ -38,6 +39,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
           createdAt: client.created_at,
+          nextContactDate: client.next_contact_date,
           activities: client.client_activities || []
         })) || [],
     },
@@ -56,6 +58,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
           createdAt: client.created_at,
+          nextContactDate: client.next_contact_date,
           activities: client.client_activities || []
         })) || [],
     },
@@ -74,6 +77,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
           createdAt: client.created_at,
+          nextContactDate: client.next_contact_date,
           activities: client.client_activities || []
         })) || [],
     },
@@ -92,6 +96,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           leadSource: client.lead_source,
           phoneNumber: client.phone_number,
           createdAt: client.created_at,
+          nextContactDate: client.next_contact_date,
           activities: client.client_activities || []
         })) || [],
     },
