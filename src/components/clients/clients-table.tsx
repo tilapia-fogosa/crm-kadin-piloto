@@ -21,6 +21,7 @@ interface ClientsTableProps {
   onDelete: (clientId: string) => void
   setSelectedClient: (client: any) => void
   setClientToDelete: (client: any) => void
+  onSubmit: (values: LeadFormData) => Promise<void>
 }
 
 export function ClientsTable({
@@ -32,6 +33,7 @@ export function ClientsTable({
   onDelete,
   setSelectedClient,
   setClientToDelete,
+  onSubmit,
 }: ClientsTableProps) {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-'
@@ -74,6 +76,7 @@ export function ClientsTable({
                   onDelete={onDelete}
                   setSelectedClient={setSelectedClient}
                   setClientToDelete={setClientToDelete}
+                  onSubmit={onSubmit}
                 />
               </TableCell>
             </TableRow>
