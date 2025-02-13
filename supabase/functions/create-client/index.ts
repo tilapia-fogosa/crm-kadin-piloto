@@ -27,7 +27,7 @@ const leadSourceMapping: Record<string, string> = {
 }
 
 // Função para verificar Basic Auth
-function checkBasicAuth(req: Request): boolean {
+async function checkBasicAuth(req: Request): Promise<boolean> {
   const authHeader = req.headers.get('authorization')
   if (!authHeader?.startsWith('Basic ')) return false
 
@@ -35,7 +35,39 @@ function checkBasicAuth(req: Request): boolean {
   const credentials = atob(base64Credentials)
   const [username, password] = credentials.split(':')
 
-  return username === 'webhook_user' && password === 'Wh@2024#Make'
+  // Usar a função do banco para verificar as credenciais
+  const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
+  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+
+  const query = `SELECT verify_webhook_credentials('${username}', '${password}') as valid`
+  
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/verify_webhook_credentials`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        p_username: username,
+        p_password: password
+      })
+    })
+
+    if (!response.ok) {
+      console.error('Erro ao verificar credenciais:', await response.text())
+      return false
+    }
+
+    const result = await response.json()
+    return result === true
+
+  } catch (error) {
+    console.error('Erro ao verificar credenciais:', error)
+    return false
+  }
 }
 
 serve(async (req) => {
@@ -52,7 +84,8 @@ serve(async (req) => {
     const apiKey = req.headers.get('apikey')
     
     // Se não tiver Basic Auth válido, verifica se tem Bearer token válido
-    if (!checkBasicAuth(req) && (!authHeader?.startsWith('Bearer ') || !apiKey)) {
+    const isBasicAuthValid = await checkBasicAuth(req)
+    if (!isBasicAuthValid && (!authHeader?.startsWith('Bearer ') || !apiKey)) {
       console.error('Erro de autenticação')
       return new Response(
         JSON.stringify({ 

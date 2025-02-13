@@ -322,12 +322,48 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_credentials: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          description: string | null
+          id: string
+          password_hash: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          password_hash: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          password_hash?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      verify_webhook_credentials: {
+        Args: {
+          p_username: string
+          p_password: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
