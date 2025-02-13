@@ -26,6 +26,18 @@ const leadSourceMapping: Record<string, string> = {
   'outros': 'outros'
 }
 
+// Função para verificar Basic Auth
+function checkBasicAuth(req: Request): boolean {
+  const authHeader = req.headers.get('authorization')
+  if (!authHeader?.startsWith('Basic ')) return false
+
+  const base64Credentials = authHeader.split(' ')[1]
+  const credentials = atob(base64Credentials)
+  const [username, password] = credentials.split(':')
+
+  return username === 'webhook_user' && password === 'Wh@2024#Make'
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -34,6 +46,29 @@ serve(async (req) => {
 
   try {
     console.log('Recebendo nova requisição POST')
+    
+    // Verificar autenticação - aceita tanto Basic Auth quanto Bearer token
+    const authHeader = req.headers.get('authorization')
+    const apiKey = req.headers.get('apikey')
+    
+    // Se não tiver Basic Auth válido, verifica se tem Bearer token válido
+    if (!checkBasicAuth(req) && (!authHeader?.startsWith('Bearer ') || !apiKey)) {
+      console.error('Erro de autenticação')
+      return new Response(
+        JSON.stringify({ 
+          error: 'Não autorizado',
+          message: 'Credenciais inválidas'
+        }),
+        { 
+          status: 401,
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    }
+
     const payload = await req.json()
     console.log('Payload recebido:', payload)
 
