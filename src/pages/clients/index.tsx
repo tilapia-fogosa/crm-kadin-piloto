@@ -24,7 +24,8 @@ export default function ClientsPage() {
           phone_number,
           lead_source,
           observations,
-          status
+          status,
+          created_at
         `)
         .order('created_at', { ascending: false });
 

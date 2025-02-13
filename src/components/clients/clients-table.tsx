@@ -33,6 +33,16 @@ export function ClientsTable({
   setSelectedClient,
   setClientToDelete,
 }: ClientsTableProps) {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '-'
+    try {
+      return format(new Date(dateString), 'dd-MM-yy HH:mm')
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error)
+      return '-'
+    }
+  }
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -53,9 +63,7 @@ export function ClientsTable({
               <TableCell>{client.phone_number}</TableCell>
               <TableCell>{client.lead_source}</TableCell>
               <TableCell>{client.status}</TableCell>
-              <TableCell>
-                {format(new Date(client.created_at), 'dd-MM-yy HH:mm')}
-              </TableCell>
+              <TableCell>{formatDate(client.created_at)}</TableCell>
               <TableCell className="text-right">
                 <ClientActions
                   client={client}
