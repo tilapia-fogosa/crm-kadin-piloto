@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 import { Pool } from 'https://deno.land/x/postgres@v0.17.0/mod.ts'
@@ -72,14 +73,25 @@ serve(async (req) => {
   try {
     console.log('Recebendo nova requisição POST')
     
-    // Verificar autenticação - aceita tanto Basic Auth quanto Bearer token
+    // Verificar autenticação
     const authHeader = req.headers.get('authorization')
     const apiKey = req.headers.get('apikey')
-    
-    // Se não tiver Basic Auth válido, verifica se tem Bearer token válido
+
+    // Primeiro tenta Basic Auth
     const isBasicAuthValid = await checkBasicAuth(req)
-    if (!isBasicAuthValid && (!authHeader?.startsWith('Bearer ') || !apiKey)) {
+    
+    // Se Basic Auth falhar, verifica se tem Bearer token válido
+    const hasBearerToken = authHeader?.startsWith('Bearer ')
+    const isValidBearerAuth = hasBearerToken && apiKey === Deno.env.get('SUPABASE_ANON_KEY')
+
+    // Se ambas as autenticações falharem, retorna erro
+    if (!isBasicAuthValid && !isValidBearerAuth) {
       console.error('Erro de autenticação')
+      console.log('Basic Auth válido:', isBasicAuthValid)
+      console.log('Bearer Token válido:', isValidBearerAuth)
+      console.log('Auth Header:', authHeader)
+      console.log('API Key:', apiKey)
+      
       return new Response(
         JSON.stringify({ 
           error: 'Não autorizado',
