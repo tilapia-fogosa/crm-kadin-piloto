@@ -30,37 +30,55 @@ const leadSourceMapping: Record<string, string> = {
 // Função para verificar Basic Auth
 async function checkBasicAuth(req: Request): Promise<boolean> {
   const authHeader = req.headers.get('authorization')
-  if (!authHeader?.startsWith('Basic ')) return false
-
-  const base64Credentials = authHeader.split(' ')[1]
-  const credentials = atob(base64Credentials)
-  const [username, password] = credentials.split(':')
-
-  // Conectar diretamente ao banco usando a URL do banco
-  const pool = new Pool(Deno.env.get('SUPABASE_DB_URL') ?? '', 1)
   
+  // Se não houver header de autorização, retorna falso
+  if (!authHeader) return false
+  
+  // Verifica se é Basic Auth
+  const match = authHeader.match(/^Basic (.+)$/)
+  if (!match) return false
+
   try {
-    const client = await pool.connect()
+    const credentials = atob(match[1])
+    const [username, password] = credentials.split(':')
+
+    if (!username || !password) return false
+
+    // Conectar ao banco usando a URL do banco
+    const pool = new Pool(Deno.env.get('SUPABASE_DB_URL') ?? '', 1)
+    
     try {
-      const result = await client.queryObject<{ exists: boolean }>(
-        `SELECT EXISTS (
-          SELECT 1 
-          FROM webhook_credentials 
-          WHERE username = $1 
-          AND password_hash = crypt($2, password_hash)
-          AND active = true
-        )`,
-        [username, password]
-      )
-      return result.rows[0]?.exists ?? false
+      const client = await pool.connect()
+      try {
+        console.log('Verificando credenciais para usuário:', username)
+        
+        const result = await client.queryObject<{ exists: boolean }>(
+          `SELECT EXISTS (
+            SELECT 1 
+            FROM webhook_credentials 
+            WHERE username = $1 
+            AND password_hash = crypt($2, password_hash)
+            AND active = true
+          )`,
+          [username, password]
+        )
+        
+        const isValid = result.rows[0]?.exists ?? false
+        console.log('Credenciais válidas:', isValid)
+        
+        return isValid
+      } finally {
+        client.release()
+      }
+    } catch (error) {
+      console.error('Erro ao verificar credenciais:', error)
+      return false
     } finally {
-      client.release()
+      await pool.end()
     }
   } catch (error) {
-    console.error('Erro ao verificar credenciais:', error)
+    console.error('Erro ao decodificar credenciais:', error)
     return false
-  } finally {
-    await pool.end()
   }
 }
 
@@ -77,6 +95,8 @@ serve(async (req) => {
     const authHeader = req.headers.get('authorization')
     const apiKey = req.headers.get('apikey')
 
+    console.log('Auth Header recebido:', authHeader)
+    
     // Primeiro tenta Basic Auth
     const isBasicAuthValid = await checkBasicAuth(req)
     
@@ -84,14 +104,13 @@ serve(async (req) => {
     const hasBearerToken = authHeader?.startsWith('Bearer ')
     const isValidBearerAuth = hasBearerToken && apiKey === Deno.env.get('SUPABASE_ANON_KEY')
 
+    console.log('Resultado da autenticação:')
+    console.log('- Basic Auth válido:', isBasicAuthValid)
+    console.log('- Bearer token válido:', isValidBearerAuth)
+
     // Se ambas as autenticações falharem, retorna erro
     if (!isBasicAuthValid && !isValidBearerAuth) {
-      console.error('Erro de autenticação')
-      console.log('Basic Auth válido:', isBasicAuthValid)
-      console.log('Bearer Token válido:', isValidBearerAuth)
-      console.log('Auth Header:', authHeader)
-      console.log('API Key:', apiKey)
-      
+      console.error('Erro de autenticação - nenhum método válido')
       return new Response(
         JSON.stringify({ 
           error: 'Não autorizado',
