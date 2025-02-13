@@ -17,7 +17,7 @@ interface EffectiveContactFormProps {
 }
 
 export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormProps) {
-  const [contactType, setContactType] = useState<'phone' | 'whatsapp' | 'whatsapp-call' | undefined>(undefined)
+  const [contactType, setContactType] = useState<'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial' | undefined>(undefined)
   const [notes, setNotes] = useState("")
   const [date, setDate] = useState<Date>()
   const [time, setTime] = useState("")
@@ -67,7 +67,7 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
         <Label>Tipo de Contato</Label>
         <RadioGroup
           value={contactType}
-          onValueChange={(value: 'phone' | 'whatsapp' | 'whatsapp-call') => setContactType(value)}
+          onValueChange={(value: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial') => setContactType(value)}
           className="flex flex-col space-y-2"
         >
           <div className="flex items-center space-x-2">
@@ -82,47 +82,30 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
             <RadioGroupItem value="whatsapp-call" id="whatsapp-call" />
             <Label htmlFor="whatsapp-call">Ligação WhatsApp</Label>
           </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="presencial" id="presencial" />
+            <Label htmlFor="presencial">Presencial</Label>
+          </div>
         </RadioGroup>
       </div>
 
       <div className="space-y-2">
         <Label>Data do Próximo Contato</Label>
-        <div className="border rounded-md p-2">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={setDate}
-            locale={ptBR}
-            disabled={(date) => {
-              const today = new Date()
-              today.setHours(0, 0, 0, 0)
-              const compareDate = new Date(date)
-              compareDate.setHours(0, 0, 0, 0)
-              return compareDate < today
-            }}
-            initialFocus
-            className="w-full"
-            classNames={{
-              months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-              month: "space-y-4",
-              caption: "flex justify-center pt-1 relative items-center text-sm",
-              caption_label: "text-sm font-medium",
-              nav: "space-x-1 flex items-center",
-              table: "w-full border-collapse space-y-1",
-              head_row: "flex",
-              head_cell: "text-muted-foreground rounded-md w-7 font-normal text-[0.8rem]",
-              row: "flex w-full mt-2",
-              cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-              day: "h-7 w-7 p-0 font-normal aria-selected:opacity-100",
-              day_range_end: "day-range-end",
-              day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-              day_today: "bg-accent text-accent-foreground",
-              day_outside: "text-muted-foreground opacity-50",
-              day_disabled: "text-muted-foreground opacity-50",
-              day_hidden: "invisible",
-            }}
-          />
-        </div>
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={setDate}
+          locale={ptBR}
+          disabled={(date) => {
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            const compareDate = new Date(date)
+            compareDate.setHours(0, 0, 0, 0)
+            return compareDate < today
+          }}
+          initialFocus
+          className="w-[300px] mx-auto"
+        />
         {date && (
           <p className="text-sm text-muted-foreground">
             Data selecionada: {format(date, "PPP", { locale: ptBR })}

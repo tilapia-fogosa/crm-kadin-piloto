@@ -105,10 +105,10 @@ export function useActivityOperations() {
           client_id: scheduling.cardId,
           tipo_atividade: 'Agendamento',
           notes: scheduling.notes,
-          tipo_contato: 'phone', // Valor padrão necessário
+          tipo_contato: scheduling.type,
           created_by: session.session.user.id,
           scheduled_date: scheduling.scheduledDate.toISOString(),
-          next_contact_date: scheduling.nextContactDate?.toISOString() // Será undefined se valorizacaoDiaAnterior for false
+          next_contact_date: scheduling.nextContactDate?.toISOString()
         })
 
       if (activityError) throw activityError
@@ -118,7 +118,7 @@ export function useActivityOperations() {
         .from('clients')
         .update({ 
           scheduled_date: scheduling.scheduledDate.toISOString(),
-          next_contact_date: scheduling.nextContactDate?.toISOString() // Atualiza apenas se valorizacaoDiaAnterior for true
+          next_contact_date: scheduling.nextContactDate?.toISOString()
         })
         .eq('id', scheduling.cardId)
 

@@ -1,3 +1,4 @@
+
 export type KanbanColumn = {
   id: string
   title: string
@@ -22,7 +23,7 @@ export type ContactAttempt = {
 }
 
 export type EffectiveContact = {
-  type: 'phone' | 'whatsapp' | 'whatsapp-call'
+  type: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial'
   contactDate: Date
   notes: string
   observations: string
@@ -36,4 +37,5 @@ export type Scheduling = {
   cardId: string
   valorizacaoDiaAnterior: boolean
   nextContactDate?: Date
+  type: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial'
 }

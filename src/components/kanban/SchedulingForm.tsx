@@ -10,6 +10,7 @@ import { format, subDays } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { ptBR } from "date-fns/locale"
 import { Checkbox } from "@/components/ui/checkbox"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 interface SchedulingFormProps {
   onSubmit: (scheduling: Scheduling) => void
@@ -21,6 +22,7 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
   const [time, setTime] = useState("")
   const [notes, setNotes] = useState("")
   const [valorizacaoDiaAnterior, setValorizacaoDiaAnterior] = useState(false)
+  const [contactType, setContactType] = useState<'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial' | undefined>(undefined)
   const { toast } = useToast()
 
   const handleSubmit = () => {
@@ -37,6 +39,15 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
       toast({
         title: "Erro",
         description: "Selecione o horário do agendamento",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!contactType) {
+      toast({
+        title: "Erro",
+        description: "Selecione o tipo de contato",
         variant: "destructive",
       })
       return
@@ -65,12 +76,39 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
       notes,
       cardId,
       valorizacaoDiaAnterior,
-      nextContactDate
+      nextContactDate,
+      type: contactType
     })
   }
 
   return (
     <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Tipo de Contato</Label>
+        <RadioGroup
+          value={contactType}
+          onValueChange={(value: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial') => setContactType(value)}
+          className="flex flex-col space-y-2"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="phone" id="phone" />
+            <Label htmlFor="phone">Ligação Telefônica</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="whatsapp" id="whatsapp" />
+            <Label htmlFor="whatsapp">Mensagem WhatsApp</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="whatsapp-call" id="whatsapp-call" />
+            <Label htmlFor="whatsapp-call">Ligação WhatsApp</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="presencial" id="presencial" />
+            <Label htmlFor="presencial">Presencial</Label>
+          </div>
+        </RadioGroup>
+      </div>
+
       <div className="space-y-2">
         <Label>Data do Agendamento</Label>
         <Calendar
