@@ -6,13 +6,12 @@ import { useActivityOperations } from "./hooks/useActivityOperations"
 import { useWhatsApp } from "./hooks/useWhatsApp"
 import { transformClientsToColumnData } from "./utils/columnUtils"
 import { useState } from "react"
-import { startOfDay, isAfter } from "date-fns"
+import { startOfDay, isAfter, isBefore, isEqual } from "date-fns"
 
 export function KanbanBoard() {
   const { data: clients, isLoading } = useClientData()
   const { registerAttempt, registerEffectiveContact, deleteActivity } = useActivityOperations()
   const { handleWhatsAppClick } = useWhatsApp()
-  // Iniciando com o filtro desligado (false)
   const [showPendingOnly, setShowPendingOnly] = useState(false)
 
   if (isLoading) {
@@ -21,25 +20,29 @@ export function KanbanBoard() {
 
   const filterClients = (clients: any[] | null) => {
     if (!clients) return null
-    if (!showPendingOnly) {
-      console.log('Filter is OFF, showing all clients:', clients.length)
-      return clients
-    }
-
+    
     const today = startOfDay(new Date())
     console.log('Filtering clients with showPendingOnly:', showPendingOnly)
 
     return clients.filter(client => {
-      // Se não tem data de próximo contato, mostra o cliente
+      // Se não tem data de próximo contato
       if (!client.next_contact_date) {
         console.log('Client with no next contact date:', client.name)
-        return true
+        return showPendingOnly // Se o filtro estiver ligado, mostra. Se estiver desligado, não mostra
       }
 
-      const nextContactDate = new Date(client.next_contact_date)
-      const shouldShow = !isAfter(nextContactDate, today)
-      console.log('Client:', client.name, 'Next contact:', nextContactDate, 'Should show:', shouldShow)
-      return shouldShow
+      const nextContactDate = startOfDay(new Date(client.next_contact_date))
+      
+      if (showPendingOnly) {
+        // Se o filtro estiver ligado, mostra apenas os que têm data menor ou igual a hoje
+        const shouldShow = isBefore(nextContactDate, today) || isEqual(nextContactDate, today)
+        console.log('Client:', client.name, 'Next contact:', nextContactDate, 'Should show (pending only):', shouldShow)
+        return shouldShow
+      } else {
+        // Se o filtro estiver desligado, mostra todos os clientes
+        console.log('Filter is OFF, showing client:', client.name)
+        return true
+      }
     })
   }
 
