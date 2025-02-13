@@ -10,6 +10,7 @@ import {
 import { ClientActions } from "./client-actions"
 import { UseFormReturn } from "react-hook-form"
 import { LeadFormData } from "@/types/lead-form"
+import { format } from "date-fns"
 
 interface ClientsTableProps {
   clients: any[]
@@ -41,6 +42,7 @@ export function ClientsTable({
             <TableHead>Telefone</TableHead>
             <TableHead>Origem do Lead</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Data de Cadastro</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -51,6 +53,9 @@ export function ClientsTable({
               <TableCell>{client.phone_number}</TableCell>
               <TableCell>{client.lead_source}</TableCell>
               <TableCell>{client.status}</TableCell>
+              <TableCell>
+                {format(new Date(client.created_at), 'dd-MM-yy HH:mm')}
+              </TableCell>
               <TableCell className="text-right">
                 <ClientActions
                   client={client}
