@@ -130,6 +130,7 @@ export default function ClientsPage() {
         onDelete={handleDelete}
         setSelectedClient={setSelectedClient}
         setClientToDelete={setClientToDelete}
+        onSubmit={onSubmit}
       />
     </div>
   )
