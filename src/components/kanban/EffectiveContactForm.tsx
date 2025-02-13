@@ -101,7 +101,7 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
               return compareDate < today
             }}
             initialFocus
-            className="w-full"
+            className="w-full scale-75 origin-top"
           />
         </div>
         {date && (
