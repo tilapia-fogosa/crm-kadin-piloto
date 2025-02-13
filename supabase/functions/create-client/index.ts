@@ -38,8 +38,6 @@ async function checkBasicAuth(req: Request): Promise<boolean> {
   // Usar a função do banco para verificar as credenciais
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-
-  const query = `SELECT verify_webhook_credentials('${username}', '${password}') as valid`
   
   try {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/verify_webhook_credentials`, {
