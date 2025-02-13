@@ -17,6 +17,7 @@ export type Database = {
           id: string
           next_contact_date: string | null
           notes: string | null
+          scheduled_date: string | null
           tipo_atividade: string
           tipo_contato: string
           updated_at: string | null
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           next_contact_date?: string | null
           notes?: string | null
+          scheduled_date?: string | null
           tipo_atividade: string
           tipo_contato: string
           updated_at?: string | null
@@ -39,6 +41,7 @@ export type Database = {
           id?: string
           next_contact_date?: string | null
           notes?: string | null
+          scheduled_date?: string | null
           tipo_atividade?: string
           tipo_contato?: string
           updated_at?: string | null

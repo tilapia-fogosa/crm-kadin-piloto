@@ -108,7 +108,8 @@ export function useActivityOperations() {
           notes: scheduling.notes,
           tipo_contato: 'phone', // Valor padrão necessário
           created_by: session.session.user.id,
-          next_contact_date: scheduling.scheduledDate.toISOString()
+          scheduled_date: scheduling.scheduledDate.toISOString(),
+          next_contact_date: scheduling.scheduledDate.toISOString() // Atualiza também o próximo contato
         })
 
       if (activityError) throw activityError
