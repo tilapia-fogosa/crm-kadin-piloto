@@ -57,7 +57,8 @@ export function useClientData() {
             tipo_contato,
             tipo_atividade,
             notes,
-            created_at
+            created_at,
+            next_contact_date
           )
         `)
         .order('created_at', { ascending: false })
@@ -69,33 +70,21 @@ export function useClientData() {
       }
 
       console.log('Total clients received from database:', data?.length)
-      console.log('Raw client data:', data)
-
-      // Log específico para o cliente mencionado
-      const specificClient = data?.find(client => client.id === '7f8a4cad-6558-48d4-ae7e-ef650492ae0c')
-      if (specificClient) {
-        console.log('Found specific client (Teste 3):', {
-          name: specificClient.name,
-          next_contact_date: specificClient.next_contact_date,
-          status: specificClient.status
-        })
-      } else {
-        console.log('Specific client (Teste 3) not found in database response')
-      }
-
-      const clientsWithActivities = data?.map(client => {
-        console.log('Processing client:', {
-          name: client.name,
+      
+      // Log all clients with their next_contact_date for debugging
+      data?.forEach(client => {
+        console.log('Client data:', {
           id: client.id,
-          created_at: client.created_at,
+          name: client.name,
           next_contact_date: client.next_contact_date,
           status: client.status
         })
-        
+      })
+
+      const clientsWithActivities = data?.map(client => {
         return {
           ...client,
           client_activities: client.client_activities?.map(activity => {
-            console.log('Processing activity for client', client.name, ':', activity)
             return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}`
           }) || []
         }
