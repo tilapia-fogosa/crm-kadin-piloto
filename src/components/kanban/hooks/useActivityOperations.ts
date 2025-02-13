@@ -106,8 +106,9 @@ export function useActivityOperations() {
           client_id: scheduling.cardId,
           tipo_atividade: 'Agendamento',
           notes: scheduling.notes,
+          tipo_contato: 'phone', // Valor padrão necessário
           created_by: session.session.user.id,
-          scheduled_date: scheduling.scheduledDate.toISOString()
+          next_contact_date: scheduling.scheduledDate.toISOString()
         })
 
       if (activityError) throw activityError
