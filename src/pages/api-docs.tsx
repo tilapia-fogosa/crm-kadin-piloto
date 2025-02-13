@@ -1,9 +1,9 @@
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
-import { CopyIcon } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { WebhookSection } from "@/components/api-docs/webhook-section"
+import { MakeSection } from "@/components/api-docs/make-section"
+import { ApiSection } from "@/components/api-docs/api-section"
 
 const ApiDocsPage = () => {
   const { toast } = useToast()
@@ -14,17 +14,6 @@ const ApiDocsPage = () => {
       title: "Copiado!",
       description: "O exemplo foi copiado para sua área de transferência.",
     })
-  }
-
-  const webhookExample = {
-    name: "João Silva",
-    phone_number: "+5511999999999",
-    email: "joao@email.com",
-    lead_source: "fb", // Pode ser 'fb' ou 'ig', será normalizado automaticamente
-    observations: "Cliente interessado no curso de inglês",
-    meta_id: "123456789", // ID da campanha/anúncio do Meta
-    original_ad: "Anúncio Principal - Curso de Inglês", // Nome do anúncio
-    original_adset: "Segmentação - 25-35 anos - São Paulo" // Nome do conjunto de anúncios
   }
 
   return (
@@ -38,208 +27,16 @@ const ApiDocsPage = () => {
           <TabsTrigger value="api">API REST</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="webhook" className="space-y-6">
-          <Alert>
-            <AlertTitle>Endpoint do Webhook</AlertTitle>
-            <AlertDescription>
-              POST https://hkvjdxxndapxpslovrlc.supabase.co/rest/v1/leads
-            </AlertDescription>
-          </Alert>
-
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Campos Obrigatórios</h3>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><code>name</code> - Nome do cliente</li>
-              <li><code>phone_number</code> - Telefone do cliente (formato +5511999999999)</li>
-            </ul>
-
-            <h3 className="text-xl font-semibold mt-6">Campos Opcionais</h3>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><code>email</code> - Email do cliente</li>
-              <li><code>lead_source</code> - Origem do lead (ex: 'fb' para Facebook, 'ig' para Instagram)</li>
-              <li><code>observations</code> - Observações adicionais</li>
-              <li><code>meta_id</code> - ID da campanha/anúncio do Meta</li>
-              <li><code>original_ad</code> - Nome do anúncio original</li>
-              <li><code>original_adset</code> - Nome do conjunto de anúncios (segmentação)</li>
-            </ul>
-
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold mb-2">Headers Necessários</h3>
-              <ul className="list-disc pl-6 space-y-2">
-                <li><code>apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4</code></li>
-                <li><code>Content-Type: application/json</code></li>
-                <li><code>Prefer: return=minimal</code></li>
-              </ul>
-            </div>
-
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold mb-2">Exemplo de Payload</h3>
-              <div className="relative">
-                <pre className="bg-secondary p-4 rounded-lg">
-                  {JSON.stringify(webhookExample, null, 2)}
-                </pre>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute top-2 right-2"
-                  onClick={() => copyToClipboard(JSON.stringify(webhookExample, null, 2))}
-                >
-                  <CopyIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold mb-2">Normalização de Origem</h3>
-              <p className="text-muted-foreground">
-                O sistema normaliza automaticamente as origens do lead:
-              </p>
-              <ul className="list-disc pl-6 space-y-2 mt-2">
-                <li><code>fb</code> → <code>facebook</code></li>
-                <li><code>ig</code> → <code>instagram</code></li>
-                <li>Outras origens desconhecidas serão marcadas como <code>outros</code></li>
-              </ul>
-            </div>
-
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold mb-2">Dados do Meta Ads</h3>
-              <p className="text-muted-foreground">
-                Para melhor rastreamento das campanhas, você pode enviar:
-              </p>
-              <ul className="list-disc pl-6 space-y-2 mt-2">
-                <li><code>meta_id</code> - Identificador único da campanha/anúncio</li>
-                <li><code>original_ad</code> - Nome do anúncio que gerou o lead</li>
-                <li><code>original_adset</code> - Nome do conjunto de anúncios (útil para identificar a segmentação)</li>
-              </ul>
-            </div>
-
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold mb-2">Fluxo do Lead</h3>
-              <p className="text-muted-foreground">
-                Quando um lead é recebido via webhook:
-              </p>
-              <ol className="list-decimal pl-6 space-y-2 mt-2">
-                <li>A origem do lead é normalizada (ex: 'fb' → 'facebook')</li>
-                <li>O lead é registrado na tabela <code>leads</code></li>
-                <li>Automaticamente, um registro é criado na tabela <code>clients</code></li>
-                <li>O cliente é marcado com status <code>novo-cadastro</code></li>
-                <li>Os dados de campanha (meta_id, original_ad, original_adset) são preservados</li>
-              </ol>
-            </div>
-          </div>
+        <TabsContent value="webhook">
+          <WebhookSection onCopy={copyToClipboard} />
         </TabsContent>
 
-        <TabsContent value="make" className="space-y-6">
-          <Alert>
-            <AlertTitle>Configurando o Make (Integromat)</AlertTitle>
-            <AlertDescription>
-              Siga os passos abaixo para configurar um cenário no Make que envia dados para nosso webhook
-            </AlertDescription>
-          </Alert>
-
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Passo a Passo</h3>
-            <ol className="list-decimal pl-6 space-y-4">
-              <li>
-                <p className="font-medium">Criar um novo cenário no Make</p>
-                <p className="text-muted-foreground">
-                  Acesse o Make e crie um novo cenário. Escolha o trigger adequado para sua necessidade 
-                  (por exemplo, um formulário ou planilha).
-                </p>
-              </li>
-              <li>
-                <p className="font-medium">Adicionar módulo HTTP</p>
-                <p className="text-muted-foreground">
-                  Adicione um novo módulo HTTP e configure como POST request para o endpoint:
-                  <code className="block bg-secondary p-2 rounded mt-2">
-                    https://hkvjdxxndapxpslovrlc.supabase.co/rest/v1/leads
-                  </code>
-                </p>
-              </li>
-              <li>
-                <p className="font-medium">Headers da requisição</p>
-                <p className="text-muted-foreground">
-                  Configure os seguintes headers:
-                </p>
-                <pre className="bg-secondary p-4 rounded-lg mt-2">
-{`apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4
-Content-Type: application/json
-Prefer: return=minimal`}
-                </pre>
-              </li>
-              <li>
-                <p className="font-medium">Configurar o payload</p>
-                <p className="text-muted-foreground">
-                  No corpo da requisição, configure um JSON com os campos necessários mapeados do seu trigger:
-                </p>
-                <div className="relative mt-2">
-                  <pre className="bg-secondary p-4 rounded-lg">
-                    {JSON.stringify(webhookExample, null, 2)}
-                  </pre>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="absolute top-2 right-2"
-                    onClick={() => copyToClipboard(JSON.stringify(webhookExample, null, 2))}
-                  >
-                    <CopyIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-              </li>
-            </ol>
-
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold mb-2">Testando a Integração</h3>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Use o botão "Test" no módulo HTTP para verificar se a conexão está funcionando</li>
-                <li>Confira se o status code retornado é 201 (Created)</li>
-                <li>Verifique se os dados aparecem na tabela de leads do seu projeto</li>
-              </ul>
-            </div>
-
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold mb-2">Dicas Importantes</h3>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Teste o cenário com dados reais antes de ativar</li>
-                <li>Configure tratamento de erros no Make para ser notificado em caso de falhas</li>
-                <li>Monitore os logs do webhook para garantir que os dados estão chegando corretamente</li>
-              </ul>
-            </div>
-          </div>
+        <TabsContent value="make">
+          <MakeSection onCopy={copyToClipboard} />
         </TabsContent>
 
-        <TabsContent value="api" className="space-y-6">
-          <Alert>
-            <AlertTitle>Base URL da API</AlertTitle>
-            <AlertDescription>
-              https://hkvjdxxndapxpslovrlc.supabase.co/rest/v1
-            </AlertDescription>
-          </Alert>
-
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Autenticação</h3>
-            <p>
-              Todas as requisições precisam incluir os seguintes headers:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><code>apikey</code> - A chave anônima do projeto Supabase</li>
-              <li><code>Authorization: Bearer token</code> - Token JWT para autenticação (opcional para endpoints públicos)</li>
-            </ul>
-
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold mb-2">Endpoints Disponíveis</h3>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium">GET /leads</h4>
-                  <p className="text-muted-foreground">Lista todos os leads (requer autenticação)</p>
-                </div>
-                <div>
-                  <h4 className="font-medium">POST /leads</h4>
-                  <p className="text-muted-foreground">Cria um novo lead (endpoint público)</p>
-                </div>
-              </div>
-            </div>
-          </div>
+        <TabsContent value="api">
+          <ApiSection />
         </TabsContent>
       </Tabs>
     </div>
