@@ -40,20 +40,21 @@ export function MakeSection({ onCopy }: MakeSectionProps) {
           <li>
             <p className="font-medium">Configurar autenticação</p>
             <p className="text-muted-foreground">
-              No módulo HTTP:
+              No módulo HTTP, selecione "Basic Auth" e use as seguintes credenciais:
             </p>
             <ol className="list-disc pl-6 space-y-2 mt-2">
-              <li>Em "Headers", adicione o seguinte header de autenticação:</li>
-              <li><code className="bg-secondary px-2 py-1 rounded break-all">Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4</code></li>
+              <li>Username: <code className="bg-secondary px-2 py-1 rounded">webhook_user</code></li>
+              <li>Password: <code className="bg-secondary px-2 py-1 rounded">Wh@2024#Make</code></li>
             </ol>
           </li>
           <li>
-            <p className="font-medium">Headers adicionais da requisição</p>
+            <p className="font-medium">Headers da requisição</p>
             <p className="text-muted-foreground">
-              Configure também estes headers:
+              Configure os seguintes headers:
             </p>
             <pre className="bg-secondary p-4 rounded-lg mt-2">
-{`Content-Type: application/json
+{`apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4
+Content-Type: application/json
 Prefer: return=minimal`}
             </pre>
           </li>
@@ -90,7 +91,7 @@ Prefer: return=minimal`}
         <div className="mt-6">
           <h3 className="text-xl font-semibold mb-2">Solução de Problemas</h3>
           <ul className="list-disc pl-6 space-y-2">
-            <li>Se receber erro 401 (Unauthorized), verifique se o header Authorization foi configurado corretamente com o prefixo "Bearer"</li>
+            <li>Se receber erro 401 (Unauthorized), verifique se o usuário e senha foram configurados corretamente</li>
             <li>Se receber erro 400 (Bad Request), verifique se o JSON do payload está correto e contém os campos obrigatórios</li>
             <li>Confirme que está usando o método POST e não GET ou outro método</li>
           </ul>
@@ -102,6 +103,7 @@ Prefer: return=minimal`}
             <li>Teste o cenário com dados reais antes de ativar</li>
             <li>Configure tratamento de erros no Make para ser notificado em caso de falhas</li>
             <li>Monitore os logs do webhook para garantir que os dados estão chegando corretamente</li>
+            <li>Mantenha as credenciais em local seguro e não as compartilhe</li>
           </ul>
         </div>
       </div>
