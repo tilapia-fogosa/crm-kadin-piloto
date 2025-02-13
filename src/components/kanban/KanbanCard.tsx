@@ -48,7 +48,7 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
                     <span>
-                      {format(new Date(), 'dd-MM-yy HH:mm')}
+                      {format(new Date(card.createdAt), 'dd-MM-yy HH:mm')}
                     </span>
                   </div>
                 </TooltipTrigger>
