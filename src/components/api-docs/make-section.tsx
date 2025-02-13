@@ -38,27 +38,24 @@ export function MakeSection({ onCopy }: MakeSectionProps) {
             </p>
           </li>
           <li>
-            <p className="font-medium">Configurar autenticação básica</p>
+            <p className="font-medium">Configurar usuário e senha</p>
             <p className="text-muted-foreground">
               No módulo HTTP:
             </p>
             <ol className="list-disc pl-6 space-y-2 mt-2">
               <li>Em "Authentication", selecione "Basic Auth"</li>
-              <li>Username: deixe em branco</li>
-              <li>Password: cole a apikey abaixo
-                <pre className="bg-secondary p-2 rounded mt-1 break-all">
-                  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4
-                </pre>
-              </li>
+              <li>Username: <code className="bg-secondary px-2 py-1 rounded">moreano@gmail.com</code></li>
+              <li>Password: <code className="bg-secondary px-2 py-1 rounded">B@aldie1</code></li>
             </ol>
           </li>
           <li>
             <p className="font-medium">Headers da requisição</p>
             <p className="text-muted-foreground">
-              Configure apenas os seguintes headers:
+              Configure os seguintes headers:
             </p>
             <pre className="bg-secondary p-4 rounded-lg mt-2">
-{`Content-Type: application/json
+{`apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4
+Content-Type: application/json
 Prefer: return=minimal`}
             </pre>
           </li>
@@ -95,7 +92,7 @@ Prefer: return=minimal`}
         <div className="mt-6">
           <h3 className="text-xl font-semibold mb-2">Solução de Problemas</h3>
           <ul className="list-disc pl-6 space-y-2">
-            <li>Se receber erro 401 (Unauthorized), verifique se a apikey foi corretamente configurada na autenticação básica</li>
+            <li>Se receber erro 401 (Unauthorized), verifique se as credenciais e apikey foram corretamente configuradas</li>
             <li>Se receber erro 400 (Bad Request), verifique se o JSON do payload está correto e contém os campos obrigatórios</li>
             <li>Confirme que está usando o método POST e não GET ou outro método</li>
           </ul>
