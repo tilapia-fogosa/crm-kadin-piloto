@@ -2,7 +2,7 @@
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { ContactAttempt, EffectiveContact } from "../types"
+import { ContactAttempt, EffectiveContact, Scheduling } from "../types"
 
 export function useActivityOperations() {
   const { toast } = useToast()
@@ -93,6 +93,41 @@ export function useActivityOperations() {
     }
   }
 
+  const registerScheduling = async (scheduling: Scheduling) => {
+    try {
+      console.log("Registering scheduling:", scheduling)
+      
+      const { data: session } = await supabase.auth.getSession()
+      if (!session.session) throw new Error('Not authenticated')
+
+      const { error: activityError } = await supabase
+        .from('client_activities')
+        .insert({
+          client_id: scheduling.cardId,
+          tipo_atividade: 'Agendamento',
+          notes: scheduling.notes,
+          created_by: session.session.user.id,
+          scheduled_date: scheduling.scheduledDate.toISOString()
+        })
+
+      if (activityError) throw activityError
+
+      await queryClient.invalidateQueries({ queryKey: ['clients'] })
+
+      toast({
+        title: "Agendamento registrado",
+        description: "O agendamento foi registrado com sucesso",
+      })
+    } catch (error) {
+      console.error('Error registering scheduling:', error)
+      toast({
+        variant: "destructive",
+        title: "Erro ao registrar agendamento",
+        description: "Ocorreu um erro ao tentar registrar o agendamento.",
+      })
+    }
+  }
+
   const deleteActivity = async (activityId: string, clientId: string) => {
     try {
       console.log('Deleting activity:', { activityId, clientId })
@@ -132,6 +167,7 @@ export function useActivityOperations() {
   return {
     registerAttempt,
     registerEffectiveContact,
+    registerScheduling,
     deleteActivity
   }
 }
