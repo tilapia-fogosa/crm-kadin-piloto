@@ -1,9 +1,15 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Phone, MessageSquare, Clock } from "lucide-react"
+import { Phone, MessageSquare, Clock, Calendar } from "lucide-react"
 import { KanbanCard as KanbanCardType } from "./types"
 import { format } from "date-fns"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface KanbanCardProps {
   card: KanbanCardType
@@ -33,8 +39,25 @@ export function KanbanCard({ card, onClick, onWhatsAppClick }: KanbanCardProps) 
   return (
     <Card className="cursor-pointer hover:bg-accent/5" onClick={onClick}>
       <CardHeader className="p-2 pb-0">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-base">{card.clientName}</CardTitle>
+        <div className="flex justify-between items-start">
+          <div className="space-y-1">
+            <CardTitle className="text-base -mt-1">{card.clientName}</CardTitle>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    <span>
+                      {format(new Date(), 'dd-MM-yy HH:mm')}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Data de cadastro do cliente</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           {nextContactInfo && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
