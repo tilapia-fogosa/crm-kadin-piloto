@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -181,20 +182,22 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
         if (roleError) throw roleError;
 
         // Create unit-user relationships
-        const unitUserPromises = selectedUnits.map(unitId => 
-          supabase
-            .from('unit_users')
-            .insert({
-              user_id: authData.user.id,
-              unit_id: unitId,
-            })
-        );
+        if (selectedUnits.length > 0) {
+          const unitUserPromises = selectedUnits.map(unitId => 
+            supabase
+              .from('unit_users')
+              .insert({
+                user_id: authData.user.id,
+                unit_id: unitId,
+              })
+          );
 
-        const results = await Promise.all(unitUserPromises);
-        const hasErrors = results.some(result => result.error);
+          const results = await Promise.all(unitUserPromises);
+          const hasErrors = results.some(result => result.error);
 
-        if (hasErrors) {
-          throw new Error('Erro ao vincular usuário às unidades');
+          if (hasErrors) {
+            throw new Error('Erro ao vincular usuário às unidades');
+          }
         }
       }
 
