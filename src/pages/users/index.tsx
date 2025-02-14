@@ -11,7 +11,7 @@ export default function UsersPage() {
         .from('unit_users')
         .select(`
           *,
-          user:profiles!unit_users_user_id_fkey(full_name, avatar_url),
+          profiles(full_name, avatar_url),
           units(name)
         `);
 
