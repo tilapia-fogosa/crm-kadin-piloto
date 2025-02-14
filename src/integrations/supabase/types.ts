@@ -9,35 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      access_permissions: {
-        Row: {
-          created_at: string
-          id: string
-          page_id: string | null
-          profile: Database["public"]["Enums"]["access_profile"]
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          page_id?: string | null
-          profile: Database["public"]["Enums"]["access_profile"]
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          page_id?: string | null
-          profile?: Database["public"]["Enums"]["access_profile"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "access_permissions_page_id_fkey"
-            columns: ["page_id"]
-            isOneToOne: false
-            referencedRelation: "system_pages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       client_activities: {
         Row: {
           client_id: string
@@ -354,33 +325,6 @@ export type Database = {
           },
         ]
       }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          email: string | null
-          full_name: string | null
-          id: string
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id: string
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       system_pages: {
         Row: {
           created_at: string
@@ -404,45 +348,6 @@ export type Database = {
           path?: string
         }
         Relationships: []
-      }
-      unit_users: {
-        Row: {
-          created_at: string
-          id: string
-          unit_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          unit_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          unit_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "unit_users_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "unit_users_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       units: {
         Row: {
@@ -492,38 +397,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_roles_profile_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       webhook_credentials: {
         Row: {
           active: boolean | null
@@ -559,18 +432,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          requested_role: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: boolean
-      }
-      is_admin: {
-        Args: {
-          user_uid: string
-        }
-        Returns: boolean
-      }
       verify_unit_api_key: {
         Args: {
           p_api_key: string
@@ -587,7 +448,6 @@ export type Database = {
     }
     Enums: {
       access_profile: "admin" | "consultor" | "franqueado"
-      app_role: "admin" | "franqueado" | "consultor"
       user_role: "consultor" | "franqueado"
     }
     CompositeTypes: {
