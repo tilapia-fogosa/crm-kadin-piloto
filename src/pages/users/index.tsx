@@ -22,6 +22,7 @@ export default function UsersPage() {
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['unit-users'],
     queryFn: async () => {
+      // Modificando a query para usar a relação correta
       const { data, error } = await supabase
         .from('unit_users')
         .select(`
@@ -30,7 +31,7 @@ export default function UsersPage() {
           profiles!unit_users_user_id_fkey (
             full_name,
             avatar_url,
-            user_roles (
+            user_roles!user_roles_user_id_fkey (
               role
             )
           ),
@@ -39,7 +40,11 @@ export default function UsersPage() {
           )
         `);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
+      
       return data as User[];
     }
   });
