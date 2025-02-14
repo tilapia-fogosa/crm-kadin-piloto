@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -220,17 +221,31 @@ export function ActivityDashboard() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-center p-2">Data</TableHead>
-                <TableHead className="text-center p-2">Novos Clientes</TableHead>
-                <TableHead className="text-center p-2">Tentativas de Contato</TableHead>
-                <TableHead className="text-center p-2">Contatos Efetivos</TableHead>
-                <TableHead className="text-center p-2">% CE</TableHead>
-                <TableHead className="text-center p-2">Visitas Agendadas</TableHead>
-                <TableHead className="text-center p-2">% AG</TableHead>
-                <TableHead className="text-center p-2">Visitas Aguardadas</TableHead>
-                <TableHead className="text-center p-2">Visitas Realizadas</TableHead>
-                <TableHead className="text-center p-2">% AT</TableHead>
-                <TableHead className="text-center p-2">Matrículas</TableHead>
+                <TableHead className="text-center p-2 bg-[#FEC6A1]">Data</TableHead>
+                <TableHead className="text-center p-2 whitespace-pre-line">
+                  {"Novos\nClientes"}
+                </TableHead>
+                <TableHead className="text-center p-2 whitespace-pre-line">
+                  {"Tentativa\nde Contato"}
+                </TableHead>
+                <TableHead className="text-center p-2 whitespace-pre-line">
+                  {"Contatos\nEfetivos"}
+                </TableHead>
+                <TableHead className="text-center p-2 bg-[#FEC6A1]">% CE</TableHead>
+                <TableHead className="text-center p-2 whitespace-pre-line">
+                  {"Visitas\nAgendadas"}
+                </TableHead>
+                <TableHead className="text-center p-2 bg-[#FEC6A1]">% AG</TableHead>
+                <TableHead className="text-center p-2 whitespace-pre-line">
+                  {"Visitas\nAguardadas"}
+                </TableHead>
+                <TableHead className="text-center p-2 whitespace-pre-line">
+                  {"Visitas\nRealizadas"}
+                </TableHead>
+                <TableHead className="text-center p-2 bg-[#FEC6A1]">% AT</TableHead>
+                <TableHead className="text-center p-2 whitespace-pre-line">
+                  {"Matrí-\nculas"}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -241,18 +256,18 @@ export function ActivityDashboard() {
               ) : (
                 stats?.map((day) => (
                   <TableRow key={day.date.toISOString()} className="hover:bg-muted/50">
-                    <TableCell className="text-center p-2">
+                    <TableCell className="text-center p-2 bg-[#FEC6A1]">
                       {format(day.date, 'dd/MM/yyyy', { locale: ptBR })}
                     </TableCell>
                     <TableCell className="text-center p-2">{day.newClients}</TableCell>
                     <TableCell className="text-center p-2">{day.contactAttempts}</TableCell>
                     <TableCell className="text-center p-2">{day.effectiveContacts}</TableCell>
-                    <TableCell className="text-center p-2">{day.ceConversionRate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-center p-2 bg-[#FEC6A1]">{day.ceConversionRate.toFixed(1)}%</TableCell>
                     <TableCell className="text-center p-2">{day.scheduledVisits}</TableCell>
-                    <TableCell className="text-center p-2">{day.agConversionRate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-center p-2 bg-[#FEC6A1]">{day.agConversionRate.toFixed(1)}%</TableCell>
                     <TableCell className="text-center p-2">{day.awaitingVisits}</TableCell>
                     <TableCell className="text-center p-2">{day.completedVisits}</TableCell>
-                    <TableCell className="text-center p-2">{day.atConversionRate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-center p-2 bg-[#FEC6A1]">{day.atConversionRate.toFixed(1)}%</TableCell>
                     <TableCell className="text-center p-2">{day.enrollments}</TableCell>
                   </TableRow>
                 ))
