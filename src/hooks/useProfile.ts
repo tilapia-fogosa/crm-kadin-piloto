@@ -26,9 +26,10 @@ export function useProfile() {
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
+      if (!profile) return null;
 
       // Verificar se é admin usando a função is_admin
       const { data: isAdmin, error: isAdminError } = await supabase
