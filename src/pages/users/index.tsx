@@ -1,8 +1,10 @@
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/useProfile";
+import { UserDialog } from "@/components/users/user-dialog";
 
 interface User {
   id: string;
@@ -15,6 +17,8 @@ interface User {
 
 export default function UsersPage() {
   const { data: profile } = useProfile();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | undefined>();
   
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
@@ -43,7 +47,12 @@ export default function UsersPage() {
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Usuários</h1>
-        <Button>Adicionar Usuário</Button>
+        <Button onClick={() => {
+          setEditingUser(undefined);
+          setIsDialogOpen(true);
+        }}>
+          Adicionar Usuário
+        </Button>
       </div>
 
       <div className="rounded-md border">
@@ -77,7 +86,14 @@ export default function UsersPage() {
                   {user.user_roles?.[0]?.role || "Sem perfil"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setEditingUser(user);
+                      setIsDialogOpen(true);
+                    }}
+                  >
                     Editar
                   </Button>
                 </td>
@@ -86,6 +102,15 @@ export default function UsersPage() {
           </tbody>
         </table>
       </div>
+
+      <UserDialog 
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) setEditingUser(undefined);
+        }}
+        user={editingUser}
+      />
     </div>
   );
 }
