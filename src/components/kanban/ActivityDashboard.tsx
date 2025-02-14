@@ -171,79 +171,88 @@ export function ActivityDashboard() {
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="space-y-4">
-          <DialogTitle className="flex items-center gap-2">
-            <LineChart className="h-5 w-5" />
+          <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
+            <LineChart className="h-6 w-6" />
             Painel de Atividades
           </DialogTitle>
-          <div className="flex flex-wrap gap-4">
-            <Select value={selectedSource} onValueChange={setSelectedSource}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Origem" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                {leadSources?.map(source => (
-                  <SelectItem key={source.id} value={source.id}>
-                    {source.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-wrap gap-4 justify-start">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Origem:</span>
+              <Select value={selectedSource} onValueChange={setSelectedSource}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Origem" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  {leadSources?.map(source => (
+                    <SelectItem key={source.id} value={source.id}>
+                      {source.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Mês" />
-              </SelectTrigger>
-              <SelectContent>
-                {MONTHS.map(month => (
-                  <SelectItem key={month.value} value={month.value}>
-                    {month.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Mês:</span>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map(month => (
+                    <SelectItem key={month.value} value={month.value}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Ano" />
-              </SelectTrigger>
-              <SelectContent>
-                {YEARS.map(year => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Ano:</span>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  {YEARS.map(year => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </DialogHeader>
         <div className="mt-4">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-center p-2 bg-[#FEC6A1]">Data</TableHead>
-                <TableHead className="text-center p-2 whitespace-pre-line">
+                <TableHead className="text-center p-2 bg-[#FEC6A1] text-xs font-semibold">Data</TableHead>
+                <TableHead className="text-center p-2 whitespace-pre-line text-xs font-semibold">
                   {"Novos\nClientes"}
                 </TableHead>
-                <TableHead className="text-center p-2 whitespace-pre-line">
+                <TableHead className="text-center p-2 whitespace-pre-line text-xs font-semibold">
                   {"Tentativa\nde Contato"}
                 </TableHead>
-                <TableHead className="text-center p-2 whitespace-pre-line">
+                <TableHead className="text-center p-2 whitespace-pre-line text-xs font-semibold">
                   {"Contatos\nEfetivos"}
                 </TableHead>
-                <TableHead className="text-center p-2 bg-[#FEC6A1]">% CE</TableHead>
-                <TableHead className="text-center p-2 whitespace-pre-line">
+                <TableHead className="text-center p-2 bg-[#FEC6A1] text-xs font-semibold">% CE</TableHead>
+                <TableHead className="text-center p-2 whitespace-pre-line text-xs font-semibold">
                   {"Visitas\nAgendadas"}
                 </TableHead>
-                <TableHead className="text-center p-2 bg-[#FEC6A1]">% AG</TableHead>
-                <TableHead className="text-center p-2 whitespace-pre-line">
+                <TableHead className="text-center p-2 bg-[#FEC6A1] text-xs font-semibold">% AG</TableHead>
+                <TableHead className="text-center p-2 whitespace-pre-line text-xs font-semibold">
                   {"Visitas\nAguardadas"}
                 </TableHead>
-                <TableHead className="text-center p-2 whitespace-pre-line">
+                <TableHead className="text-center p-2 whitespace-pre-line text-xs font-semibold">
                   {"Visitas\nRealizadas"}
                 </TableHead>
-                <TableHead className="text-center p-2 bg-[#FEC6A1]">% AT</TableHead>
-                <TableHead className="text-center p-2 whitespace-pre-line">
+                <TableHead className="text-center p-2 bg-[#FEC6A1] text-xs font-semibold">% AT</TableHead>
+                <TableHead className="text-center p-2 whitespace-pre-line text-xs font-semibold">
                   {"Matrí-\nculas"}
                 </TableHead>
               </TableRow>
@@ -251,24 +260,24 @@ export function ActivityDashboard() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center">Carregando...</TableCell>
+                  <TableCell colSpan={11} className="text-center text-xs">Carregando...</TableCell>
                 </TableRow>
               ) : (
                 stats?.map((day) => (
                   <TableRow key={day.date.toISOString()} className="hover:bg-muted/50">
-                    <TableCell className="text-center p-2 bg-[#FEC6A1]">
+                    <TableCell className="text-center p-2 bg-[#FEC6A1] text-xs">
                       {format(day.date, 'dd/MM/yyyy', { locale: ptBR })}
                     </TableCell>
-                    <TableCell className="text-center p-2">{day.newClients}</TableCell>
-                    <TableCell className="text-center p-2">{day.contactAttempts}</TableCell>
-                    <TableCell className="text-center p-2">{day.effectiveContacts}</TableCell>
-                    <TableCell className="text-center p-2 bg-[#FEC6A1]">{day.ceConversionRate.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center p-2">{day.scheduledVisits}</TableCell>
-                    <TableCell className="text-center p-2 bg-[#FEC6A1]">{day.agConversionRate.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center p-2">{day.awaitingVisits}</TableCell>
-                    <TableCell className="text-center p-2">{day.completedVisits}</TableCell>
-                    <TableCell className="text-center p-2 bg-[#FEC6A1]">{day.atConversionRate.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center p-2">{day.enrollments}</TableCell>
+                    <TableCell className="text-center p-2 text-xs">{day.newClients}</TableCell>
+                    <TableCell className="text-center p-2 text-xs">{day.contactAttempts}</TableCell>
+                    <TableCell className="text-center p-2 text-xs">{day.effectiveContacts}</TableCell>
+                    <TableCell className="text-center p-2 bg-[#FEC6A1] text-xs">{day.ceConversionRate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-center p-2 text-xs">{day.scheduledVisits}</TableCell>
+                    <TableCell className="text-center p-2 bg-[#FEC6A1] text-xs">{day.agConversionRate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-center p-2 text-xs">{day.awaitingVisits}</TableCell>
+                    <TableCell className="text-center p-2 text-xs">{day.completedVisits}</TableCell>
+                    <TableCell className="text-center p-2 bg-[#FEC6A1] text-xs">{day.atConversionRate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-center p-2 text-xs">{day.enrollments}</TableCell>
                   </TableRow>
                 ))
               )}
