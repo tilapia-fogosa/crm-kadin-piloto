@@ -2,6 +2,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UsersList } from "@/components/users/users-list";
+import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/hooks/useProfile";
 
 interface User {
   id: string;
@@ -20,16 +22,18 @@ interface User {
 }
 
 export default function UsersPage() {
+  const { toast } = useToast();
+  const { data: profile } = useProfile();
+
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['unit-users'],
     queryFn: async () => {
-      // Primeiro verificamos se o usuário atual é admin
-      const { data: currentUserRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .single();
-
-      if (!currentUserRole || currentUserRole.role !== 'admin') {
+      if (!profile?.role || profile.role !== 'admin') {
+        toast({
+          variant: "destructive",
+          title: "Acesso não autorizado",
+          description: "Você não tem permissão para acessar esta página.",
+        });
         throw new Error('Acesso não autorizado');
       }
 
