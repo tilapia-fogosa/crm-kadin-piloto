@@ -9,10 +9,10 @@ interface User {
   profiles: {
     full_name: string | null;
     avatar_url: string | null;
-    user_roles: {
-      role: 'admin' | 'consultor' | 'franqueado';
-    }[];
   };
+  user_roles: {
+    role: 'admin' | 'consultor' | 'franqueado';
+  }[];
   units: {
     name: string;
   };
@@ -22,7 +22,6 @@ export default function UsersPage() {
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['unit-users'],
     queryFn: async () => {
-      // Modificando a query para usar a relação correta
       const { data, error } = await supabase
         .from('unit_users')
         .select(`
@@ -30,10 +29,10 @@ export default function UsersPage() {
           user_id,
           profiles!unit_users_user_id_fkey (
             full_name,
-            avatar_url,
-            user_roles!user_roles_user_id_fkey (
-              role
-            )
+            avatar_url
+          ),
+          user_roles!inner (
+            role
           ),
           units (
             name
