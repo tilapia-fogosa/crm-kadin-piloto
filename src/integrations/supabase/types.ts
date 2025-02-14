@@ -9,35 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      access_permissions: {
-        Row: {
-          created_at: string
-          id: string
-          page_id: string | null
-          profile: Database["public"]["Enums"]["access_profile"]
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          page_id?: string | null
-          profile: Database["public"]["Enums"]["access_profile"]
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          page_id?: string | null
-          profile?: Database["public"]["Enums"]["access_profile"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "access_permissions_page_id_fkey"
-            columns: ["page_id"]
-            isOneToOne: false
-            referencedRelation: "system_pages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       client_activities: {
         Row: {
           client_id: string

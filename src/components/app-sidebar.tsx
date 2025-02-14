@@ -28,7 +28,6 @@ import {
   ArrowRight,
   Building2,
   UserCog,
-  Shield
 } from "lucide-react"
 
 export function AppSidebar() {
@@ -101,11 +100,6 @@ export function AppSidebar() {
       title: "Usuários",
       icon: UserCog,
       path: "/users",
-    },
-    {
-      title: "Perfis de Acesso",
-      icon: Shield,
-      path: "/access-profiles",
     },
   ]
 
