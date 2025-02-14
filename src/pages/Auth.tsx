@@ -29,7 +29,12 @@ export default function Auth() {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message === "Invalid login credentials") {
+          throw new Error("Email ou senha incorretos. Por favor, verifique suas credenciais.");
+        }
+        throw error;
+      }
 
       toast({
         title: "Login realizado com sucesso!",
