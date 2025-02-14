@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { format } from "date-fns"
+import { format, getDaysInMonth, startOfMonth, getDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
 interface ScheduledLead {
@@ -31,15 +31,26 @@ export function CalendarDashboard() {
   const currentDate = new Date()
   const currentMonth = format(currentDate, 'MMM', { locale: ptBR }).toUpperCase()
   const currentYear = currentDate.getFullYear()
+  const daysInMonth = getDaysInMonth(currentDate)
+  const firstDayOfMonth = startOfMonth(currentDate)
+  const startingDayIndex = getDay(firstDayOfMonth) // 0 = Domingo, 1 = Segunda, etc.
 
-  const getDayLeads = (day: number) => {
+  const getDayLeads = (dayNumber: number) => {
+    if (dayNumber <= 0 || dayNumber > daysInMonth) return []
+    
     return scheduledLeads?.filter(lead => {
       const leadDate = new Date(lead.scheduled_date)
-      return leadDate.getDate() === day &&
+      return leadDate.getDate() === dayNumber &&
              leadDate.getMonth() === currentDate.getMonth() &&
              leadDate.getFullYear() === currentDate.getFullYear()
     }).sort((a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime())
   }
+
+  // Criar array com dias vazios no início + dias do mês
+  const calendarDays = [
+    ...Array(startingDayIndex).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1)
+  ]
 
   return (
     <Dialog>
@@ -51,55 +62,59 @@ export function CalendarDashboard() {
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
+        <DialogHeader className="text-center mb-6">
+          <DialogTitle className="flex flex-col items-center gap-4">
             <div className="flex items-center gap-2 text-2xl font-bold">
               <Calendar className="h-6 w-6" />
               Agenda de Leads
             </div>
-            <div className="bg-emerald-600 text-white px-3 py-1 rounded-full text-sm">
+            <div className="bg-emerald-600 text-white px-6 py-2 rounded-full text-lg font-semibold">
               {currentMonth} {currentYear}
             </div>
           </DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-7 gap-0.5 mt-4 text-sm">
-          <div className="text-center font-semibold p-2">DOM.</div>
-          <div className="text-center font-semibold p-2">SEG.</div>
-          <div className="text-center font-semibold p-2">TER.</div>
-          <div className="text-center font-semibold p-2">QUA.</div>
-          <div className="text-center font-semibold p-2">QUI.</div>
-          <div className="text-center font-semibold p-2">SEX.</div>
-          <div className="text-center font-semibold p-2">SÁB.</div>
+          <div className="text-center font-semibold p-2">DOM</div>
+          <div className="text-center font-semibold p-2">SEG</div>
+          <div className="text-center font-semibold p-2">TER</div>
+          <div className="text-center font-semibold p-2">QUA</div>
+          <div className="text-center font-semibold p-2">QUI</div>
+          <div className="text-center font-semibold p-2">SEX</div>
+          <div className="text-center font-semibold p-2">SÁB</div>
 
           {/* Calendar grid */}
-          {Array.from({ length: 35 }).map((_, index) => {
-            const day = index + 1
-            const leads = getDayLeads(day)
+          {calendarDays.map((day, index) => {
+            const leads = day ? getDayLeads(day) : []
             const isCurrentDay = day === currentDate.getDate()
 
             return (
               <div 
                 key={index}
                 className={`border min-h-[100px] p-2 ${
+                  !day ? 'bg-gray-50' : 
                   isCurrentDay ? 'bg-emerald-50' : 'bg-white'
                 }`}
               >
-                <div className={`text-right mb-1 ${
-                  isCurrentDay ? 'text-emerald-600 font-bold' : ''
-                }`}>
-                  {day}
-                </div>
-                <div className="space-y-1">
-                  {leads?.map(lead => (
-                    <div 
-                      key={lead.id}
-                      className="text-xs p-1 bg-gray-100 rounded"
-                    >
-                      {format(new Date(lead.scheduled_date), 'HH:mm')} - {lead.name}
+                {day && (
+                  <>
+                    <div className={`text-right mb-1 ${
+                      isCurrentDay ? 'text-emerald-600 font-bold' : ''
+                    }`}>
+                      {day}
                     </div>
-                  ))}
-                </div>
+                    <div className="space-y-1">
+                      {leads?.map(lead => (
+                        <div 
+                          key={lead.id}
+                          className="text-xs p-1 bg-gray-100 rounded"
+                        >
+                          {format(new Date(lead.scheduled_date), 'HH:mm')} - {lead.name}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             )
           })}
