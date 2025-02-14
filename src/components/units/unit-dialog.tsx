@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,26 +36,33 @@ export function UnitDialog({ open, onOpenChange, unit }: UnitDialogProps) {
   
   const form = useForm<UnitFormData>({
     resolver: zodResolver(unitSchema),
-    defaultValues: unit ? {
-      name: unit.name,
-      street: unit.street,
-      number: unit.number,
-      complement: unit.complement,
-      neighborhood: unit.neighborhood,
-      city: unit.city,
-      state: unit.state,
-      postal_code: unit.postal_code,
-    } : {
-      name: "",
-      street: "",
-      number: "",
-      complement: "",
-      neighborhood: "",
-      city: "",
-      state: "",
-      postal_code: "",
+    defaultValues: {
+      name: unit?.name || "",
+      street: unit?.street || "",
+      number: unit?.number || "",
+      complement: unit?.complement || "",
+      neighborhood: unit?.neighborhood || "",
+      city: unit?.city || "",
+      state: unit?.state || "",
+      postal_code: unit?.postal_code || "",
     }
   })
+
+  // Reset form when unit changes or dialog opens/closes
+  React.useEffect(() => {
+    if (open) {
+      form.reset({
+        name: unit?.name || "",
+        street: unit?.street || "",
+        number: unit?.number || "",
+        complement: unit?.complement || "",
+        neighborhood: unit?.neighborhood || "",
+        city: unit?.city || "",
+        state: unit?.state || "",
+        postal_code: unit?.postal_code || "",
+      })
+    }
+  }, [open, unit, form.reset])
 
   const onSubmit = async (data: UnitFormData) => {
     try {
@@ -79,7 +87,6 @@ export function UnitDialog({ open, onOpenChange, unit }: UnitDialogProps) {
           title: "Unidade atualizada com sucesso",
         })
       } else {
-        const { data: user } = await supabase.auth.getUser()
         const { error } = await supabase
           .from('units')
           .insert({
@@ -90,8 +97,7 @@ export function UnitDialog({ open, onOpenChange, unit }: UnitDialogProps) {
             neighborhood: data.neighborhood,
             city: data.city,
             state: data.state,
-            postal_code: data.postal_code,
-            created_by: user.user?.id
+            postal_code: data.postal_code
           })
 
         if (error) throw error
