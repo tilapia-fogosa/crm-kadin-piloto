@@ -1,99 +1,38 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { UsersList } from "@/components/users/users-list";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/useProfile";
 
 interface User {
   id: string;
-  user_id: string;
-  profiles: {
-    full_name: string | null;
-    avatar_url: string | null;
-  };
+  email: string;
+  full_name: string | null;
   user_roles: {
     role: 'admin' | 'consultor' | 'franqueado';
-  }[];
-  units: {
-    id: string;
-    name: string;
   }[];
 }
 
 export default function UsersPage() {
-  const { toast } = useToast();
   const { data: profile } = useProfile();
-
-  const { data: users, isLoading } = useQuery<User[]>({
-    queryKey: ['unit-users'],
+  
+  const { data: users, isLoading } = useQuery({
+    queryKey: ['users'],
     queryFn: async () => {
-      if (!profile?.role || profile.role !== 'admin') {
-        toast({
-          variant: "destructive",
-          title: "Acesso não autorizado",
-          description: "Você não tem permissão para acessar esta página.",
-        });
-        throw new Error('Acesso não autorizado');
-      }
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          email,
+          full_name,
+          user_roles (
+            role
+          )
+        `);
 
-      // Buscamos todos os usuários únicos
-      const { data: uniqueUserIds, error: userIdsError } = await supabase
-        .from('unit_users')
-        .select('user_id')
-        .order('user_id');
-
-      if (userIdsError) throw userIdsError;
-
-      // Filtramos para ter IDs únicos
-      const uniqueIds = [...new Set(uniqueUserIds.map(u => u.user_id))];
-
-      // Para cada ID único, buscamos todas as informações
-      const usersWithDetails = await Promise.all(
-        uniqueIds.map(async (userId) => {
-          // Buscar perfil
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single();
-
-          // Buscar papéis
-          const { data: roles } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', userId);
-
-          // Buscar unidades
-          const { data: userUnits } = await supabase
-            .from('unit_users')
-            .select(`
-              id,
-              units (
-                id,
-                name
-              )
-            `)
-            .eq('user_id', userId);
-
-          // Garantir que units é sempre um array
-          const units = userUnits?.map(unit => ({
-            id: unit.units.id,
-            name: unit.units.name
-          })) || [];
-
-          return {
-            id: userUnits?.[0]?.id || '',
-            user_id: userId,
-            profiles: profileData || { full_name: null, avatar_url: null },
-            user_roles: roles || [],
-            units
-          };
-        })
-      );
-
-      return usersWithDetails;
-    }
+      if (error) throw error;
+      return profiles as User[];
+    },
   });
 
   if (isLoading) {
@@ -102,8 +41,51 @@ export default function UsersPage() {
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">Gestão de Usuários</h1>
-      <UsersList users={users || []} />
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Usuários</h1>
+        <Button>Adicionar Usuário</Button>
+      </div>
+
+      <div className="rounded-md border">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Nome
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Perfil
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Ações
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {users?.map((user) => (
+              <tr key={user.id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {user.full_name || "Sem nome"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {user.email}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap capitalize">
+                  {user.user_roles?.[0]?.role || "Sem perfil"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <Button variant="outline" size="sm">
+                    Editar
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
