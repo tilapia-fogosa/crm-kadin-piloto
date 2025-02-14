@@ -27,6 +27,7 @@ interface User {
     role: 'admin' | 'consultor' | 'franqueado';
   }[];
   units: {
+    id: string;
     name: string;
   }[];
 }
