@@ -11,7 +11,7 @@ export function useUserOperations(onSuccess: () => void) {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
-  const [role, setRole] = useState<UserRole>('');
+  const [role, setRole] = useState<UserRole | ''>('');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -48,6 +48,8 @@ export function useUserOperations(onSuccess: () => void) {
   };
 
   const handleUpdateUser = async (userId: string) => {
+    if (!role) return; // Early return if no role selected
+
     // Verificar se a role já existe para o usuário
     const { data: existingRole } = await supabase
       .from('user_roles')
@@ -106,6 +108,8 @@ export function useUserOperations(onSuccess: () => void) {
   };
 
   const handleCreateUser = async () => {
+    if (!role) return; // Early return if no role selected
+
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -140,7 +144,7 @@ export function useUserOperations(onSuccess: () => void) {
       .from('user_roles')
       .insert({
         user_id: authData.user.id,
-        role: role
+        role: role as UserRole
       });
 
     if (roleError) throw roleError;

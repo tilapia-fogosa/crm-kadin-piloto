@@ -18,4 +18,4 @@ export interface UserDialogProps {
   } | null;
 }
 
-export type UserRole = 'admin' | 'consultor' | 'franqueado' | '';
+export type UserRole = 'admin' | 'consultor' | 'franqueado';

@@ -19,8 +19,8 @@ interface UserFormFieldsProps {
   setEmail: (email: string) => void;
   password: string;
   setPassword: (password: string) => void;
-  role: UserRole;
-  setRole: (role: UserRole) => void;
+  role: UserRole | '';
+  setRole: (role: UserRole | '') => void;
   selectedUnits: string[];
   setSelectedUnits: (units: string[]) => void;
   isEditing: boolean;
@@ -109,12 +109,11 @@ export function UserFormFields({
               variant={selectedUnits.includes(unit.id) ? "default" : "outline"}
               className="w-full"
               onClick={() => {
-                setSelectedUnits(prev => {
-                  if (prev.includes(unit.id)) {
-                    return prev.filter(id => id !== unit.id);
-                  }
-                  return [...prev, unit.id];
-                });
+                setSelectedUnits(
+                  selectedUnits.includes(unit.id)
+                    ? selectedUnits.filter(id => id !== unit.id)
+                    : [...selectedUnits, unit.id]
+                );
               }}
             >
               {unit.name}
