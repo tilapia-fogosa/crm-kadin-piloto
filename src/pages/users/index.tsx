@@ -14,7 +14,7 @@ interface User {
     role: 'admin' | 'consultor' | 'franqueado';
   }[];
   unit_users: {
-    unit: {
+    units: {
       id: string;
       name: string;
     };
@@ -39,7 +39,7 @@ export default function UsersPage() {
             role
           ),
           unit_users (
-            unit!inner (
+            units!inner (
               id,
               name
             )
@@ -101,7 +101,7 @@ export default function UsersPage() {
                   {user.user_roles?.[0]?.role || "Sem perfil"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {user.unit_users?.map(u => u.unit.name).join(", ") || "Sem unidades"}
+                  {user.unit_users?.map(u => u.units.name).join(", ") || "Sem unidades"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <Button 
