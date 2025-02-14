@@ -23,6 +23,16 @@ export default function UsersPage() {
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['unit-users'],
     queryFn: async () => {
+      // Primeiro verificamos se o usuário atual é admin
+      const { data: currentUserRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .single();
+
+      if (!currentUserRole || currentUserRole.role !== 'admin') {
+        throw new Error('Acesso não autorizado');
+      }
+
       // Buscamos todos os usuários únicos
       const { data: uniqueUserIds, error: userIdsError } = await supabase
         .from('unit_users')
