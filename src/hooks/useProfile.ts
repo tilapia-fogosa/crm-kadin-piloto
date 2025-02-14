@@ -38,10 +38,16 @@ export function useProfile() {
 
       if (rolesError) throw rolesError;
 
-      // Retornar o perfil com a primeira role encontrada
+      // Verificar se é admin usando a função is_admin
+      const { data: isAdmin, error: isAdminError } = await supabase
+        .rpc('is_admin', { user_uid: session.user.id });
+
+      if (isAdminError) throw isAdminError;
+
+      // Se é admin, retornar role como admin, senão usar a primeira role encontrada
       return {
         ...profile,
-        role: userRoles?.[0]?.role as UserRole
+        role: isAdmin ? 'admin' : (userRoles?.[0]?.role as UserRole)
       };
     }
   });
