@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
@@ -52,6 +51,7 @@ function App() {
                             <Route path="/clients" element={<ClientsPage />} />
                             <Route path="/clients/sources" element={<LeadSourcesPage />} />
                             <Route path="/api-docs" element={<ApiDocsPage />} />
+                            <Route path="/units" element={<UnitsPage />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                           <Toaster />
