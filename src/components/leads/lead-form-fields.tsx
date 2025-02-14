@@ -6,11 +6,19 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UseFormReturn } from "react-hook-form";
 import { LeadFormData } from "@/types/lead-form";
 import { LeadSourceSelect } from "./lead-source-select";
+import { useUnits } from "@/hooks/useUnits";
 
 interface LeadFormFieldsProps {
   form: UseFormReturn<LeadFormData>;
@@ -23,6 +31,8 @@ interface LeadFormFieldsProps {
 }
 
 export function LeadFormFields({ form, isEditing = false, clientData }: LeadFormFieldsProps) {
+  const { data: units } = useUnits();
+
   return (
     <div className="space-y-6">
       <FormField
@@ -56,6 +66,31 @@ export function LeadFormFields({ form, isEditing = false, clientData }: LeadForm
                 maxLength={11}
               />
             </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="unitId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Unidade *</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a unidade" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {units?.map((unit) => (
+                  <SelectItem key={unit.id} value={unit.id}>
+                    {unit.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}
