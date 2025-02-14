@@ -73,8 +73,6 @@ export type Database = {
           phone_number: string
           scheduled_date: string | null
           status: string
-          unit_api_key: string | null
-          unit_id: string
           updated_at: string
         }
         Insert: {
@@ -93,8 +91,6 @@ export type Database = {
           phone_number: string
           scheduled_date?: string | null
           status?: string
-          unit_api_key?: string | null
-          unit_id: string
           updated_at?: string
         }
         Update: {
@@ -113,8 +109,6 @@ export type Database = {
           phone_number?: string
           scheduled_date?: string | null
           status?: string
-          unit_api_key?: string | null
-          unit_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -123,13 +117,6 @@ export type Database = {
             columns: ["lead_source"]
             isOneToOne: false
             referencedRelation: "lead_sources"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "clients_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -279,8 +266,6 @@ export type Database = {
           original_ad: string | null
           original_adset: string | null
           phone_number: string
-          unit_api_key: string | null
-          unit_id: string | null
           updated_at: string
         }
         Insert: {
@@ -295,8 +280,6 @@ export type Database = {
           original_ad?: string | null
           original_adset?: string | null
           phone_number: string
-          unit_api_key?: string | null
-          unit_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -311,25 +294,14 @@ export type Database = {
           original_ad?: string | null
           original_adset?: string | null
           phone_number?: string
-          unit_api_key?: string | null
-          unit_id?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "leads_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
-          email: string | null
           full_name: string | null
           id: string
           updated_at: string
@@ -337,7 +309,6 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
-          email?: string | null
           full_name?: string | null
           id: string
           updated_at?: string
@@ -345,155 +316,11 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
-          email?: string | null
           full_name?: string | null
           id?: string
           updated_at?: string
         }
         Relationships: []
-      }
-      system_pages: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          name: string
-          path: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          name: string
-          path: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          name?: string
-          path?: string
-        }
-        Relationships: []
-      }
-      unit_users: {
-        Row: {
-          created_at: string
-          id: string
-          unit_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          unit_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          unit_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "unit_users_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "unit_users_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      units: {
-        Row: {
-          api_key: string
-          city: string
-          complement: string | null
-          created_at: string
-          created_by: string | null
-          id: string
-          name: string
-          neighborhood: string
-          number: string
-          postal_code: string
-          state: string
-          street: string
-          updated_at: string
-        }
-        Insert: {
-          api_key?: string
-          city: string
-          complement?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          name: string
-          neighborhood: string
-          number: string
-          postal_code: string
-          state: string
-          street: string
-          updated_at?: string
-        }
-        Update: {
-          api_key?: string
-          city?: string
-          complement?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          name?: string
-          neighborhood?: string
-          number?: string
-          postal_code?: string
-          state?: string
-          street?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["access_profile"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["access_profile"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["access_profile"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_roles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       webhook_credentials: {
         Row: {
@@ -530,24 +357,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          requested_role: Database["public"]["Enums"]["access_profile"]
-        }
-        Returns: boolean
-      }
-      is_admin: {
-        Args: {
-          user_uid: string
-        }
-        Returns: boolean
-      }
-      verify_unit_api_key: {
-        Args: {
-          p_api_key: string
-        }
-        Returns: string
-      }
       verify_webhook_credentials: {
         Args: {
           p_username: string
@@ -557,8 +366,7 @@ export type Database = {
       }
     }
     Enums: {
-      access_profile: "admin" | "consultor" | "franqueado"
-      user_role: "consultor" | "franqueado"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never

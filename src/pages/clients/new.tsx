@@ -8,12 +8,10 @@ import { useNavigate } from "react-router-dom";
 import { LeadFormFields } from "@/components/leads/lead-form-fields";
 import { LeadFormData, leadFormSchema } from "@/types/lead-form";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfile } from "@/hooks/useProfile";
 
 export default function NewClient() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { data: profile } = useProfile();
   
   const form = useForm<LeadFormData>({
     resolver: zodResolver(leadFormSchema),
@@ -25,7 +23,6 @@ export default function NewClient() {
       ageRange: "",
       metaId: "",
       originalAd: "",
-      unitId: "",
     },
   });
 
@@ -40,7 +37,7 @@ export default function NewClient() {
 
       const { data, error } = await supabase
         .from('clients')
-        .insert({
+        .insert([{
           name: values.name,
           phone_number: values.phoneNumber,
           lead_source: values.leadSource,
@@ -49,9 +46,8 @@ export default function NewClient() {
           meta_id: values.metaId,
           original_ad: values.originalAd,
           created_by: session.session.user.id,
-          status: 'novo-cadastro',
-          unit_id: values.unitId
-        })
+          status: 'novo-cadastro'
+        }])
         .select()
         .single();
 

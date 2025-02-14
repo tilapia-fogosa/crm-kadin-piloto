@@ -5,8 +5,8 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -25,9 +25,7 @@ import {
   BarChart3,
   FileJson,
   ArrowLeft,
-  ArrowRight,
-  Building2,
-  UserCog,
+  ArrowRight
 } from "lucide-react"
 
 export function AppSidebar() {
@@ -54,6 +52,11 @@ export function AppSidebar() {
       title: "Eventos",
       icon: Calendar,
       path: "/events",
+    },
+    {
+      title: "Unidades",
+      icon: Home,
+      path: "/units",
     },
     {
       title: "Documentação API",
@@ -87,19 +90,6 @@ export function AppSidebar() {
       title: "Origem dos Clientes",
       icon: Target,
       path: "/clients/sources",
-    },
-  ]
-
-  const managementMenuItems = [
-    {
-      title: "Unidades",
-      icon: Building2,
-      path: "/units",
-    },
-    {
-      title: "Usuários",
-      icon: UserCog,
-      path: "/users",
     },
   ]
 
@@ -148,28 +138,6 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {clientMenuItems.map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === item.path}
-                    tooltip={item.title}
-                  >
-                    <Link to={item.path}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Gestão</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {managementMenuItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
                     asChild
