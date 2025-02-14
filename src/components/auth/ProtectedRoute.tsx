@@ -29,12 +29,12 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
       const { data: permissions } = await supabase
         .from('access_permissions')
-        .select('page_id')
+        .select(`
+          page_id,
+          system_pages!inner(path)
+        `)
         .eq('profile', profile.role)
-        .innerJoin('system_pages', {
-          'access_permissions.page_id': 'system_pages.id',
-          'path': location.pathname
-        });
+        .eq('system_pages.path', location.pathname);
 
       return permissions && permissions.length > 0;
     },
