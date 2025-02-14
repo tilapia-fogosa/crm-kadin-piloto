@@ -38,7 +38,6 @@ export default function NewUnit() {
         .from('units')
         .insert({
           name: values.name,
-          description: values.description,
           street: values.address,
           city: values.city,
           state: values.state,
@@ -46,6 +45,8 @@ export default function NewUnit() {
           phone: values.phone,
           email: values.email,
           created_by: session.session.user.id,
+          number: '0', // Campo obrigatório, mas não presente no form
+          neighborhood: 'N/A', // Campo obrigatório, mas não presente no form
         })
         .select()
         .single();
