@@ -15,6 +15,7 @@ import ClientsPage from "@/pages/clients";
 import LeadSourcesPage from "@/pages/clients/sources";
 import ApiDocsPage from "@/pages/api-docs";
 import UnitsPage from "@/pages/units";
+import UsersPage from "@/pages/users";
 import Auth from "@/pages/Auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -54,6 +55,7 @@ function App() {
                             <Route path="/clients/sources" element={<LeadSourcesPage />} />
                             <Route path="/api-docs" element={<ApiDocsPage />} />
                             <Route path="/units" element={<UnitsPage />} />
+                            <Route path="/users" element={<UsersPage />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                           <Toaster />

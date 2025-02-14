@@ -26,7 +26,8 @@ import {
   FileJson,
   ArrowLeft,
   ArrowRight,
-  Building2
+  Building2,
+  UserCog
 } from "lucide-react"
 
 export function AppSidebar() {
@@ -94,6 +95,11 @@ export function AppSidebar() {
       title: "Unidades",
       icon: Building2,
       path: "/units",
+    },
+    {
+      title: "Usuários",
+      icon: UserCog,
+      path: "/users",
     },
   ]
 
