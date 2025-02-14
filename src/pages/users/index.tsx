@@ -22,7 +22,7 @@ export default function UsersPage() {
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['unit-users'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: unitUsers, error: unitUsersError } = await supabase
         .from('unit_users')
         .select(`
           id,
@@ -31,20 +31,32 @@ export default function UsersPage() {
             full_name,
             avatar_url
           ),
-          user_roles!inner (
-            role
-          ),
           units (
             name
           )
         `);
 
-      if (error) {
-        console.error('Error fetching users:', error);
-        throw error;
+      if (unitUsersError) {
+        console.error('Error fetching unit users:', unitUsersError);
+        throw unitUsersError;
       }
+
+      // Buscar as roles separadamente para cada usuário
+      const usersWithRoles = await Promise.all(
+        unitUsers.map(async (user) => {
+          const { data: roles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.user_id);
+
+          return {
+            ...user,
+            user_roles: roles || []
+          };
+        })
+      );
       
-      return data as User[];
+      return usersWithRoles as User[];
     }
   });
 
