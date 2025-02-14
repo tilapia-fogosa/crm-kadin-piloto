@@ -32,9 +32,7 @@ export default function UsersPage() {
             avatar_url
           )
         `)
-        .select('user_id')
-        .select('profiles!unit_users_user_id_fkey(full_name, avatar_url)')
-        .groupBy('user_id');
+        .select('distinct:user_id,profiles!unit_users_user_id_fkey(full_name,avatar_url)');
 
       if (usersError) {
         console.error('Error fetching unique users:', usersError);
