@@ -166,9 +166,10 @@ export function ActivityDashboard() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-2">
           <LineChart className="h-4 w-4" />
-          Painel de Atividades
+          <span className="text-xs">Painel de</span>
+          <span className="text-xs">Atividades</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
