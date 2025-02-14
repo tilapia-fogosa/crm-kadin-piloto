@@ -63,6 +63,11 @@ export function useLeadsStats() {
         sixMonths,
         twelveMonths
       }
-    }
+    },
+    // Configurações para manter os dados atualizados
+    refetchInterval: 5000, // Revalidar a cada 5 segundos
+    refetchOnWindowFocus: true, // Revalidar quando a janela ganhar foco
+    refetchOnMount: true, // Revalidar quando o componente for montado
+    staleTime: 0 // Considerar os dados sempre obsoletos
   })
 }
