@@ -9,6 +9,35 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      access_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          page_id: string | null
+          profile: Database["public"]["Enums"]["access_profile"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_id?: string | null
+          profile: Database["public"]["Enums"]["access_profile"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_id?: string | null
+          profile?: Database["public"]["Enums"]["access_profile"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_permissions_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "system_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_activities: {
         Row: {
           client_id: string
@@ -349,6 +378,30 @@ export type Database = {
         }
         Relationships: []
       }
+      system_pages: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          path: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          path: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          path?: string
+        }
+        Relationships: []
+      }
       unit_users: {
         Row: {
           created_at: string
@@ -516,6 +569,7 @@ export type Database = {
       }
     }
     Enums: {
+      access_profile: "admin" | "consultor" | "franqueado"
       app_role: "admin" | "franqueado" | "consultor"
       user_role: "consultor" | "franqueado"
     }
