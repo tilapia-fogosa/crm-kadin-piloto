@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUnits } from "@/hooks/useUnits";
+import { useProfile } from "@/hooks/useProfile";
 import {
   Select,
   SelectContent,
@@ -47,8 +48,12 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
   const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
   const [role, setRole] = useState<'admin' | 'consultor' | 'franqueado' | ''>('');
   const { data: units } = useUnits();
+  const { data: profile } = useProfile();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Verificar se o usuário atual é admin
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
     if (editingUser) {
@@ -76,6 +81,16 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
       return;
     }
 
+    // Verificar se usuário não-admin está tentando criar um admin
+    if (!isAdmin && role === 'admin') {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Apenas administradores podem criar outros administradores.",
+      });
+      return;
+    }
+
     if (!editingUser && !isValidEmail(email)) {
       toast({
         variant: "destructive",
@@ -93,7 +108,7 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
           .select('role')
           .eq('user_id', editingUser.user_id)
           .eq('role', role)
-          .maybeSingle(); // Alterado de .single() para .maybeSingle()
+          .maybeSingle();
 
         if (!existingRole) {
           // Se a role atual é diferente, primeiro deletamos a antiga
@@ -285,7 +300,7 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
                 <SelectValue placeholder="Selecione um perfil" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
+                {isAdmin && <SelectItem value="admin">Admin</SelectItem>}
                 <SelectItem value="consultor">Consultor</SelectItem>
                 <SelectItem value="franqueado">Franqueado</SelectItem>
               </SelectContent>
