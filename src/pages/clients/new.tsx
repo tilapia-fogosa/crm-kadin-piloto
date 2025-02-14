@@ -9,6 +9,8 @@ import { LeadFormFields } from "@/components/leads/lead-form-fields";
 import { LeadFormData, leadFormSchema } from "@/types/lead-form";
 import { supabase } from "@/integrations/supabase/client";
 
+const DEFAULT_UNIT_ID = "0df79a04-444e-46ee-b218-59e4b1835f4a";
+
 export default function NewClient() {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -37,7 +39,7 @@ export default function NewClient() {
 
       const { data, error } = await supabase
         .from('clients')
-        .insert([{
+        .insert({
           name: values.name,
           phone_number: values.phoneNumber,
           lead_source: values.leadSource,
@@ -46,8 +48,9 @@ export default function NewClient() {
           meta_id: values.metaId,
           original_ad: values.originalAd,
           created_by: session.session.user.id,
-          status: 'novo-cadastro'
-        }])
+          status: 'novo-cadastro',
+          unit_id: DEFAULT_UNIT_ID
+        })
         .select()
         .single();
 
