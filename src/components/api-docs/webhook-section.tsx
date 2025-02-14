@@ -19,10 +19,19 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
       </Alert>
 
       <div className="space-y-4">
-        <h3 className="text-xl font-semibold">Campos Obrigatórios</h3>
+        <h3 className="text-xl font-semibold">Headers Necessários</h3>
+        <ul className="list-disc pl-6 space-y-2">
+          <li><code>apikey</code> - Chave da API da sua unidade</li>
+          <li><code>Authorization: Bearer</code> - A mesma chave da API da sua unidade</li>
+          <li><code>Content-Type: application/json</code></li>
+          <li><code>Prefer: return=minimal</code></li>
+        </ul>
+
+        <h3 className="text-xl font-semibold mt-6">Campos Obrigatórios</h3>
         <ul className="list-disc pl-6 space-y-2">
           <li><code>name</code> - Nome do cliente</li>
           <li><code>phone_number</code> - Telefone do cliente (formato +5511999999999)</li>
+          <li><code>unit_api_key</code> - Chave da API da sua unidade</li>
         </ul>
 
         <h3 className="text-xl font-semibold mt-6">Campos Opcionais</h3>
@@ -35,15 +44,6 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
           <li><code>original_adset</code> - Nome do conjunto de anúncios (segmentação)</li>
           <li><code>age_range</code> - Faixa etária do cliente</li>
         </ul>
-
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-2">Headers Necessários</h3>
-          <ul className="list-disc pl-6 space-y-2">
-            <li><code>apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4</code></li>
-            <li><code>Content-Type: application/json</code></li>
-            <li><code>Prefer: return=minimal</code></li>
-          </ul>
-        </div>
 
         <div className="mt-6">
           <h3 className="text-xl font-semibold mb-2">Exemplo de Payload</h3>
@@ -93,13 +93,21 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
             </div>
             
             <div>
+              <h4 className="font-medium">Erro - API Key Inválida (401 Unauthorized)</h4>
+              <pre className="bg-secondary p-4 rounded-lg mt-2">
+{JSON.stringify({
+  error: 'API key inválida',
+  details: 'A chave da API fornecida não é válida ou não está autorizada'
+}, null, 2)}
+              </pre>
+            </div>
+
+            <div>
               <h4 className="font-medium">Erro - Campo Obrigatório Ausente (400 Bad Request)</h4>
               <pre className="bg-secondary p-4 rounded-lg mt-2">
 {JSON.stringify({
-  error: 'Campo obrigatório ausente: name',
-  received_payload: {
-    phone_number: '+5511999999999'
-  }
+  error: 'Campo obrigatório ausente',
+  details: 'O campo unit_api_key é obrigatório'
 }, null, 2)}
               </pre>
             </div>
@@ -114,20 +122,6 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
               </pre>
             </div>
           </div>
-        </div>
-
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-2">Fluxo do Cliente</h3>
-          <p className="text-muted-foreground">
-            Quando um cliente é recebido via webhook:
-          </p>
-          <ol className="list-decimal pl-6 space-y-2 mt-2">
-            <li>A requisição é validada para garantir que todos os campos obrigatórios estão presentes</li>
-            <li>A origem do cliente é normalizada (ex: 'fb' → 'facebook')</li>
-            <li>O cliente é registrado diretamente na tabela <code>clients</code></li>
-            <li>O cliente é marcado com status <code>novo-cadastro</code></li>
-            <li>Os dados de campanha (meta_id, original_ad, original_adset) são preservados</li>
-          </ol>
         </div>
       </div>
     </div>
