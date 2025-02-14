@@ -21,11 +21,6 @@ interface UserDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-interface ProfileData {
-  id: string;
-  email: string;
-}
-
 export function UserDialog({ open, onOpenChange }: UserDialogProps) {
   const [email, setEmail] = useState("");
   const [unitId, setUnitId] = useState("");
@@ -37,13 +32,20 @@ export function UserDialog({ open, onOpenChange }: UserDialogProps) {
     e.preventDefault();
 
     // First, get the user's UUID from auth.users using their email
-    const { data: userData, error: userError } = await supabase
-      .from('profiles')
-      .select<'profiles', ProfileData>('id, email')
-      .eq('email', email)
-      .maybeSingle();
+    const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
+    
+    if (authError) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao buscar usuário.",
+      });
+      return;
+    }
 
-    if (userError || !userData) {
+    const user = authData.users.find(user => user.email === email);
+    
+    if (!user) {
       toast({
         variant: "destructive",
         title: "Erro",
@@ -56,7 +58,7 @@ export function UserDialog({ open, onOpenChange }: UserDialogProps) {
     const { error: linkError } = await supabase
       .from('unit_users')
       .insert({
-        user_id: userData.id,
+        user_id: user.id,
         unit_id: unitId,
       });
 
