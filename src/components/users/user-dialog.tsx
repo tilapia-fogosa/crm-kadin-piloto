@@ -23,74 +23,106 @@ interface UserDialogProps {
 
 export function UserDialog({ open, onOpenChange }: UserDialogProps) {
   const [email, setEmail] = useState("");
-  const [unitId, setUnitId] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
   const { data: units } = useUnits();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const handleUnitSelect = (unitId: string) => {
+    setSelectedUnits(prev => {
+      if (prev.includes(unitId)) {
+        return prev.filter(id => id !== unitId);
+      }
+      return [...prev, unitId];
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // First, try to get the user's session data
-    const { data: sessionData } = await supabase.auth.getUser(email);
-    
-    // If no user is found, show error
-    if (!sessionData?.user) {
+    if (selectedUnits.length === 0) {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Usuário não encontrado.",
+        description: "Selecione pelo menos uma unidade.",
       });
       return;
     }
 
-    // Add user-unit relationship
-    const { error: linkError } = await supabase
-      .from('unit_users')
-      .insert({
-        user_id: sessionData.user.id,
-        unit_id: unitId,
+    try {
+      // 1. Create user in auth
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          }
+        }
       });
 
-    if (linkError) {
-      // Check if it's a unique constraint violation
-      if (linkError.code === '23505') {
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Este usuário já está vinculado a esta unidade.",
-        });
-        return;
+      if (signUpError || !authData.user) {
+        throw signUpError || new Error('Erro ao criar usuário');
+      }
+
+      // 2. Create unit-user relationships
+      const unitUserPromises = selectedUnits.map(unitId => 
+        supabase
+          .from('unit_users')
+          .insert({
+            user_id: authData.user.id,
+            unit_id: unitId,
+          })
+      );
+
+      const results = await Promise.all(unitUserPromises);
+      const hasErrors = results.some(result => result.error);
+
+      if (hasErrors) {
+        throw new Error('Erro ao vincular usuário às unidades');
       }
 
       toast({
+        title: "Sucesso",
+        description: "Usuário criado e vinculado às unidades com sucesso.",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['unit-users'] });
+      setEmail("");
+      setName("");
+      setPassword("");
+      setSelectedUnits([]);
+      onOpenChange(false);
+
+    } catch (error) {
+      toast({
         variant: "destructive",
         title: "Erro",
-        description: "Não foi possível vincular o usuário à unidade.",
+        description: error instanceof Error ? error.message : "Erro ao criar usuário",
       });
-      return;
     }
-
-    toast({
-      title: "Sucesso",
-      description: "Usuário adicionado com sucesso.",
-    });
-
-    queryClient.invalidateQueries({ queryKey: ['unit-users'] });
-    setEmail("");
-    setUnitId("");
-    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Usuário</DialogTitle>
+          <DialogTitle>Criar Novo Usuário</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email do Usuário</Label>
+            <Label htmlFor="name">Nome Completo</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
@@ -100,22 +132,34 @@ export function UserDialog({ open, onOpenChange }: UserDialogProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="unit">Unidade</Label>
-            <Select value={unitId} onValueChange={setUnitId} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma unidade" />
-              </SelectTrigger>
-              <SelectContent>
-                {units?.map((unit) => (
-                  <SelectItem key={unit.id} value={unit.id}>
-                    {unit.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="password">Senha</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Unidades (selecione uma ou mais)</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {units?.map((unit) => (
+                <Button
+                  key={unit.id}
+                  type="button"
+                  variant={selectedUnits.includes(unit.id) ? "default" : "outline"}
+                  className="w-full"
+                  onClick={() => handleUnitSelect(unit.id)}
+                >
+                  {unit.name}
+                </Button>
+              ))}
+            </div>
           </div>
           <div className="flex justify-end">
-            <Button type="submit">Adicionar</Button>
+            <Button type="submit">Criar Usuário</Button>
           </div>
         </form>
       </DialogContent>
