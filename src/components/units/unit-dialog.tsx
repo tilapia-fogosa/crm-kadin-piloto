@@ -53,7 +53,16 @@ export function UnitDialog({ open, onOpenChange, unit }: UnitDialogProps) {
       if (unit) {
         const { error } = await supabase
           .from('units')
-          .update(data)
+          .update({
+            name: data.name,
+            street: data.street,
+            number: data.number,
+            complement: data.complement,
+            neighborhood: data.neighborhood,
+            city: data.city,
+            state: data.state,
+            postal_code: data.postal_code
+          })
           .eq('id', unit.id)
 
         if (error) throw error
@@ -62,9 +71,20 @@ export function UnitDialog({ open, onOpenChange, unit }: UnitDialogProps) {
           title: "Unidade atualizada com sucesso",
         })
       } else {
+        const { data: user } = await supabase.auth.getUser()
         const { error } = await supabase
           .from('units')
-          .insert([{ ...data, created_by: (await supabase.auth.getUser()).data.user?.id }])
+          .insert({
+            name: data.name,
+            street: data.street,
+            number: data.number,
+            complement: data.complement,
+            neighborhood: data.neighborhood,
+            city: data.city,
+            state: data.state,
+            postal_code: data.postal_code,
+            created_by: user.user?.id
+          })
 
         if (error) throw error
 
