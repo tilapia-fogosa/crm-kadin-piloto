@@ -28,7 +28,7 @@ interface User {
   }[];
   units: {
     name: string;
-  };
+  }[];
 }
 
 interface UsersListProps {
@@ -87,7 +87,7 @@ export function UsersList({ users }: UsersListProps) {
                 Email
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Unidade
+                Unidades
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Perfil
@@ -107,7 +107,7 @@ export function UsersList({ users }: UsersListProps) {
                   {user.user_id}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {user.units?.name}
+                  {user.units?.map(unit => unit.name).join(", ") || "Sem unidade"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap capitalize">
                   {user.user_roles?.[0]?.role || "Sem perfil"}

@@ -15,48 +15,59 @@ interface User {
   }[];
   units: {
     name: string;
-  };
+  }[];
 }
 
 export default function UsersPage() {
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['unit-users'],
     queryFn: async () => {
-      const { data: unitUsers, error: unitUsersError } = await supabase
+      // Primeiro, buscamos os usuários únicos com seus perfis
+      const { data: uniqueUsers, error: usersError } = await supabase
         .from('unit_users')
         .select(`
-          id,
           user_id,
           profiles!unit_users_user_id_fkey (
             full_name,
             avatar_url
-          ),
-          units (
-            name
           )
-        `);
+        `)
+        .distinct('user_id');
 
-      if (unitUsersError) {
-        console.error('Error fetching unit users:', unitUsersError);
-        throw unitUsersError;
+      if (usersError) {
+        console.error('Error fetching unique users:', usersError);
+        throw usersError;
       }
 
-      // Buscar as roles separadamente para cada usuário
-      const usersWithRoles = await Promise.all(
-        unitUsers.map(async (user) => {
+      // Para cada usuário único, buscamos todas as suas unidades
+      const usersWithUnits = await Promise.all(
+        uniqueUsers.map(async (user) => {
+          const { data: userUnits } = await supabase
+            .from('unit_users')
+            .select(`
+              id,
+              units (
+                name
+              )
+            `)
+            .eq('user_id', user.user_id);
+
           const { data: roles } = await supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', user.user_id);
 
           return {
-            ...user,
-            user_roles: roles || []
+            id: userUnits?.[0]?.id || '', // Usando o primeiro ID encontrado
+            user_id: user.user_id,
+            profiles: user.profiles,
+            user_roles: roles || [],
+            units: userUnits?.map(u => u.units) || []
           };
         })
       );
       
-      return usersWithRoles as User[];
+      return usersWithUnits as User[];
     }
   });
 
