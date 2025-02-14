@@ -11,13 +11,24 @@ export default function UsersPage() {
         .from('unit_users')
         .select(`
           *,
-          profiles(full_name, avatar_url),
+          profiles!unit_users_user_id_fkey(full_name, avatar_url),
           units(name),
-          user_roles(role)
+          profiles!unit_users_user_id_fkey(
+            user_roles(role)
+          )
         `);
 
       if (error) throw error;
-      return data;
+
+      // Transform the data to match the expected User type
+      const transformedData = data?.map(user => ({
+        ...user,
+        profiles: user.profiles,
+        units: user.units,
+        user_roles: user.profiles?.user_roles || []
+      }));
+
+      return transformedData;
     }
   });
 
