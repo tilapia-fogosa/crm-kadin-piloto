@@ -31,21 +31,11 @@ export function UserDialog({ open, onOpenChange }: UserDialogProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // First, get the user's UUID from auth.users using their email
-    const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
+    // First, try to get the user's session data
+    const { data: sessionData } = await supabase.auth.getUser(email);
     
-    if (authError) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Erro ao buscar usuário.",
-      });
-      return;
-    }
-
-    const user = authData.users.find(user => user.email === email);
-    
-    if (!user) {
+    // If no user is found, show error
+    if (!sessionData?.user) {
       toast({
         variant: "destructive",
         title: "Erro",
@@ -58,11 +48,21 @@ export function UserDialog({ open, onOpenChange }: UserDialogProps) {
     const { error: linkError } = await supabase
       .from('unit_users')
       .insert({
-        user_id: user.id,
+        user_id: sessionData.user.id,
         unit_id: unitId,
       });
 
     if (linkError) {
+      // Check if it's a unique constraint violation
+      if (linkError.code === '23505') {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Este usuário já está vinculado a esta unidade.",
+        });
+        return;
+      }
+
       toast({
         variant: "destructive",
         title: "Erro",
