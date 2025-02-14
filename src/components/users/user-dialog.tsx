@@ -151,7 +151,7 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
           options: {
             data: {
               full_name: name,
-              email: email, // Adicionado o email aos metadados
+              email: email,
             }
           }
         });
@@ -160,18 +160,21 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
           throw signUpError || new Error('Erro ao criar usuário');
         }
 
-        // Atualizar o perfil do usuário com o email
+        // Primeiro, garantimos que o perfil foi criado
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ 
+          .upsert({ 
+            id: authData.user.id,
             full_name: name,
             email: email
-          })
-          .eq('id', authData.user.id);
+          });
 
         if (profileError) throw profileError;
 
-        // Create user role
+        // Aguardamos um momento para garantir que o perfil foi criado
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Depois criamos a role do usuário
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
@@ -181,7 +184,7 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
 
         if (roleError) throw roleError;
 
-        // Create unit-user relationships
+        // Por fim, criamos as relações com as unidades
         if (selectedUnits.length > 0) {
           const unitUserPromises = selectedUnits.map(unitId => 
             supabase
@@ -217,6 +220,7 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
       onOpenChange(false);
 
     } catch (error) {
+      console.error('Erro detalhado:', error);
       toast({
         variant: "destructive",
         title: "Erro",
