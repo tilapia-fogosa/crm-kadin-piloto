@@ -17,10 +17,12 @@ export function BoardHeader({
   onRefresh,
 }: BoardHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Painel do Consultor</h1>
+    <div className="grid grid-cols-4 items-center mb-4">
+      <div className="col-span-1">
+        <h1 className="text-2xl font-semibold tracking-tight">Painel do Consultor</h1>
+      </div>
       
-      <div className="flex items-center space-x-4">
+      <div className="col-span-2 flex items-center space-x-4">
         <div className="flex items-center space-x-2">
           <Switch
             id="pending-mode"
@@ -37,6 +39,10 @@ export function BoardHeader({
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
+      </div>
+
+      <div className="col-span-1">
+        {/* Espaço reservado para futuros elementos */}
       </div>
     </div>
   )
