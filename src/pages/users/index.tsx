@@ -32,7 +32,9 @@ export default function UsersPage() {
             avatar_url
           )
         `)
-        .distinct('user_id');
+        .select('user_id')
+        .select('profiles!unit_users_user_id_fkey(full_name, avatar_url)')
+        .groupBy('user_id');
 
       if (usersError) {
         console.error('Error fetching unique users:', usersError);
@@ -57,12 +59,17 @@ export default function UsersPage() {
             .select('role')
             .eq('user_id', user.user_id);
 
+          // Garantimos que units é sempre um array
+          const units = userUnits?.map(unit => ({
+            name: unit.units.name
+          })) || [];
+
           return {
             id: userUnits?.[0]?.id || '', // Usando o primeiro ID encontrado
             user_id: user.user_id,
             profiles: user.profiles,
             user_roles: roles || [],
-            units: userUnits?.map(u => u.units) || []
+            units
           };
         })
       );
