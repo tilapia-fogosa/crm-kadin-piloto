@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { format, startOfMonth, endOfMonth, getYear, setYear, setMonth } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { ChartLineUp } from "lucide-react"
+import { LineChart } from "lucide-react"
 import { useState } from "react"
 
 interface DailyStats {
@@ -66,7 +66,6 @@ export function ActivityDashboard() {
       const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)))
       const endDate = endOfMonth(startDate)
 
-      // Buscar todos os clientes e atividades do período
       const [clientsResult, activitiesResult] = await Promise.all([
         supabase
           .from('clients')
@@ -89,7 +88,6 @@ export function ActivityDashboard() {
       const clients = clientsResult.data
       const activities = activitiesResult.data
 
-      // Criar array com todos os dias do mês
       const dailyStats: DailyStats[] = Array.from(
         { length: endDate.getDate() },
         (_, index) => {
@@ -98,34 +96,28 @@ export function ActivityDashboard() {
           const dayStart = new Date(date.setHours(0, 0, 0, 0))
           const dayEnd = new Date(date.setHours(23, 59, 59, 999))
 
-          // Novos clientes no dia
           const newClients = clients.filter(client => 
             new Date(client.created_at) >= dayStart && 
             new Date(client.created_at) <= dayEnd
           ).length
 
-          // Atividades do dia
           const dayActivities = activities.filter(activity => 
             new Date(activity.created_at) >= dayStart && 
             new Date(activity.created_at) <= dayEnd
           )
 
-          // Tentativas de contato (inclui todas as tentativas até agendamento)
           const contactAttempts = dayActivities.filter(activity => 
             ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
           ).length
 
-          // Contatos efetivos (contatos efetivos + agendamentos)
           const effectiveContacts = dayActivities.filter(activity => 
             ['Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
           ).length
 
-          // Agendamentos feitos no dia
           const scheduledVisits = dayActivities.filter(activity => 
             activity.tipo_atividade === 'Agendamento'
           ).length
 
-          // Visitas aguardadas (agendamentos para esta data)
           const awaitingVisits = activities.filter(activity => 
             activity.tipo_atividade === 'Agendamento' &&
             activity.scheduled_date &&
@@ -133,19 +125,16 @@ export function ActivityDashboard() {
             new Date(activity.scheduled_date) <= dayEnd
           ).length
 
-          // Visitas realizadas
           const completedVisits = dayActivities.filter(activity => 
             activity.tipo_atividade === 'Atendimento'
           ).length
 
-          // Matrículas
           const enrollments = clients.filter(client => 
             client.status === 'matricula' &&
             new Date(client.updated_at) >= dayStart &&
             new Date(client.updated_at) <= dayEnd
           ).length
 
-          // Cálculo das taxas de conversão
           const ceConversionRate = contactAttempts > 0 ? (effectiveContacts / contactAttempts) * 100 : 0
           const agConversionRate = effectiveContacts > 0 ? (scheduledVisits / effectiveContacts) * 100 : 0
           const atConversionRate = awaitingVisits > 0 ? (completedVisits / awaitingVisits) * 100 : 0
@@ -175,14 +164,14 @@ export function ActivityDashboard() {
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
-          <ChartLineUp className="h-4 w-4" />
+          <LineChart className="h-4 w-4" />
           Painel de Atividades
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="space-y-4">
           <DialogTitle className="flex items-center gap-2">
-            <ChartLineUp className="h-5 w-5" />
+            <LineChart className="h-5 w-5" />
             Painel de Atividades
           </DialogTitle>
           <div className="flex flex-wrap gap-4">
