@@ -37,7 +37,7 @@ export default function NewClient() {
 
       const { data, error } = await supabase
         .from('clients')
-        .insert([{
+        .insert({
           name: values.name,
           phone_number: values.phoneNumber,
           lead_source: values.leadSource,
@@ -47,7 +47,8 @@ export default function NewClient() {
           original_ad: values.originalAd,
           created_by: session.session.user.id,
           status: 'novo-cadastro'
-        }])
+          // unit_id será definido automaticamente pelo trigger set_default_unit
+        })
         .select()
         .single();
 
