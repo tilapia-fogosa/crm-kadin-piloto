@@ -21,35 +21,34 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     },
   });
 
-  // Verificar permissões de acesso à página atual
-  const { data: hasAccess, isLoading: permissionLoading } = useQuery({
-    queryKey: ['page-access', location.pathname, profile?.role],
+  // Verificar se é admin
+  const { data: isAdmin, isLoading: isAdminLoading } = useQuery({
+    queryKey: ['is_admin', profile?.id],
     queryFn: async () => {
-      if (!profile?.role) return false;
-
-      const { data: permissions } = await supabase
-        .from('access_permissions')
-        .select(`
-          page_id,
-          system_pages!inner(path)
-        `)
-        .eq('profile', profile.role)
-        .eq('system_pages.path', location.pathname);
-
-      return permissions && permissions.length > 0;
+      if (!profile?.id) return false;
+      const { data, error } = await supabase.rpc('is_admin', { user_uid: profile.id });
+      if (error) throw error;
+      return data;
     },
-    enabled: !!profile?.role && !!location.pathname,
+    enabled: !!profile?.id,
   });
 
   useEffect(() => {
-    if (sessionLoading || profileLoading || permissionLoading) return;
+    if (sessionLoading || profileLoading || isAdminLoading) return;
 
     if (!session) {
       navigate("/auth");
       return;
     }
 
-    if (profile?.role && !hasAccess) {
+    // Admins têm acesso a todas as páginas
+    if (isAdmin) {
+      return;
+    }
+
+    // Se não for admin, verificar rotas restritas
+    const restrictedRoutes = ['/units', '/users'];
+    if (restrictedRoutes.includes(location.pathname)) {
       toast({
         variant: "destructive",
         title: "Acesso negado",
@@ -58,13 +57,13 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       navigate("/");
       return;
     }
-  }, [session, sessionLoading, profile, profileLoading, hasAccess, permissionLoading, navigate, toast]);
+  }, [session, sessionLoading, profile, profileLoading, isAdmin, isAdminLoading, location.pathname, navigate, toast]);
 
-  if (sessionLoading || profileLoading || permissionLoading) {
+  if (sessionLoading || profileLoading || isAdminLoading) {
     return <div>Carregando...</div>;
   }
 
-  if (!session || (profile?.role && !hasAccess)) {
+  if (!session) {
     return null;
   }
 
