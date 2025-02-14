@@ -15,6 +15,7 @@ interface User {
   }[];
   unit_users: {
     unit: {
+      id: string;
       name: string;
     };
   }[];
@@ -34,11 +35,12 @@ export default function UsersPage() {
           id,
           email,
           full_name,
-          user_roles (
+          user_roles!inner (
             role
           ),
           unit_users (
-            unit (
+            unit!inner (
+              id,
               name
             )
           )
