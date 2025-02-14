@@ -31,29 +31,20 @@ export function MakeSection({ onCopy }: MakeSectionProps) {
           <li>
             <p className="font-medium">Adicionar módulo HTTP</p>
             <p className="text-muted-foreground">
-              Adicione um novo módulo HTTP e configure como POST request para o endpoint:
+              Adicione um novo módulo "HTTP Make a Request" e configure como POST request para o endpoint:
               <code className="block bg-secondary p-2 rounded mt-2">
                 https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/create-client
               </code>
             </p>
           </li>
           <li>
-            <p className="font-medium">Configurar autenticação</p>
+            <p className="font-medium">Configurar os headers</p>
             <p className="text-muted-foreground">
-              No módulo HTTP, selecione "Basic Auth" e use as seguintes credenciais:
+              No módulo HTTP, configure os seguintes headers:
             </p>
-            <ol className="list-disc pl-6 space-y-2 mt-2">
-              <li>Username: <code className="bg-secondary px-2 py-1 rounded">webhook_user</code></li>
-              <li>Password: <code className="bg-secondary px-2 py-1 rounded">Wh@2024#Make</code></li>
-            </ol>
-          </li>
-          <li>
-            <p className="font-medium">Headers da requisição</p>
-            <p className="text-muted-foreground">
-              Configure os seguintes headers:
-            </p>
-            <pre className="bg-secondary p-4 rounded-lg mt-2">
-{`apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4
+            <pre className="bg-secondary p-4 rounded-lg mt-2 overflow-x-auto">
+{`Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4
+apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrdmpkeHhuZGFweHBzbG92cmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2NzAxNzcsImV4cCI6MjA1NDI0NjE3N30.LntEpEZtnJ20ljHh_NKUUGK3yzivjEvFAGnFTa8DSV4
 Content-Type: application/json
 Prefer: return=minimal`}
             </pre>
@@ -91,9 +82,10 @@ Prefer: return=minimal`}
         <div className="mt-6">
           <h3 className="text-xl font-semibold mb-2">Solução de Problemas</h3>
           <ul className="list-disc pl-6 space-y-2">
-            <li>Se receber erro 401 (Unauthorized), verifique se o usuário e senha foram configurados corretamente</li>
+            <li>Se receber erro 401 (Unauthorized), verifique se os headers estão configurados corretamente, especialmente o Authorization e apikey</li>
             <li>Se receber erro 400 (Bad Request), verifique se o JSON do payload está correto e contém os campos obrigatórios</li>
-            <li>Confirme que está usando o método POST e não GET ou outro método</li>
+            <li>Confira se está usando o método POST e não GET ou outro método</li>
+            <li>Certifique-se de que a chave API está correta no header Authorization</li>
           </ul>
         </div>
 
@@ -103,7 +95,7 @@ Prefer: return=minimal`}
             <li>Teste o cenário com dados reais antes de ativar</li>
             <li>Configure tratamento de erros no Make para ser notificado em caso de falhas</li>
             <li>Monitore os logs do webhook para garantir que os dados estão chegando corretamente</li>
-            <li>Mantenha as credenciais em local seguro e não as compartilhe</li>
+            <li>Mantenha as chaves API em local seguro e não as compartilhe</li>
           </ul>
         </div>
       </div>
