@@ -21,6 +21,11 @@ interface UserDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface ProfileData {
+  id: string;
+  email: string;
+}
+
 export function UserDialog({ open, onOpenChange }: UserDialogProps) {
   const [email, setEmail] = useState("");
   const [unitId, setUnitId] = useState("");
@@ -34,7 +39,7 @@ export function UserDialog({ open, onOpenChange }: UserDialogProps) {
     // First, get the user's UUID from auth.users using their email
     const { data: userData, error: userError } = await supabase
       .from('profiles')
-      .select('id')
+      .select<'profiles', ProfileData>('id, email')
       .eq('email', email)
       .maybeSingle();
 
