@@ -26,13 +26,13 @@ export default function UsersPage() {
       const { data: uniqueUsers, error: usersError } = await supabase
         .from('unit_users')
         .select(`
+          distinct_on:user_id,
           user_id,
           profiles!unit_users_user_id_fkey (
             full_name,
             avatar_url
           )
-        `)
-        .select('distinct:user_id,profiles!unit_users_user_id_fkey(full_name,avatar_url)');
+        `);
 
       if (usersError) {
         console.error('Error fetching unique users:', usersError);
