@@ -2,30 +2,47 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type UserRole = 'consultor' | 'franqueado';
+export type UserRole = 'admin' | 'consultor' | 'franqueado';
 
 export interface Profile {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
-  role: UserRole;
+}
+
+interface ProfileWithRole extends Profile {
+  role?: UserRole;
 }
 
 export function useProfile() {
   return useQuery({
     queryKey: ['profile'],
-    queryFn: async (): Promise<Profile | null> => {
+    queryFn: async (): Promise<ProfileWithRole | null> => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
 
-      const { data, error } = await supabase
+      // Buscar o perfil básico
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
         .single();
 
-      if (error) throw error;
-      return data;
+      if (profileError) throw profileError;
+
+      // Buscar a role do usuário
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id);
+
+      if (rolesError) throw rolesError;
+
+      // Retornar o perfil com a primeira role encontrada
+      return {
+        ...profile,
+        role: userRoles?.[0]?.role as UserRole
+      };
     }
   });
 }
