@@ -73,15 +73,33 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
 
     try {
       if (editingUser) {
-        // Update user role
-        const { error: roleError } = await supabase
+        // Verificar se a role já existe para o usuário
+        const { data: existingRole } = await supabase
           .from('user_roles')
-          .upsert({
-            user_id: editingUser.user_id,
-            role: role
-          });
+          .select('role')
+          .eq('user_id', editingUser.user_id)
+          .eq('role', role)
+          .single();
 
-        if (roleError) throw roleError;
+        if (!existingRole) {
+          // Se a role atual é diferente, primeiro deletamos a antiga
+          const { error: deleteError } = await supabase
+            .from('user_roles')
+            .delete()
+            .eq('user_id', editingUser.user_id);
+
+          if (deleteError) throw deleteError;
+
+          // Depois inserimos a nova
+          const { error: roleError } = await supabase
+            .from('user_roles')
+            .insert({
+              user_id: editingUser.user_id,
+              role: role
+            });
+
+          if (roleError) throw roleError;
+        }
 
         // Update user units
         // Primeiro, removemos todas as unidades existentes
