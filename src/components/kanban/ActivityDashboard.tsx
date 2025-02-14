@@ -263,24 +263,24 @@ export function ActivityDashboard() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center text-xs">Carregando...</TableCell>
+                  <TableCell colSpan={11} className="text-center text-xs py-3">Carregando...</TableCell>
                 </TableRow>
               ) : (
                 stats?.map((day) => (
                   <TableRow key={day.date.toISOString()} className="hover:bg-muted/50">
-                    <TableCell className="text-center p-0 bg-[#FEC6A1] text-xs">
+                    <TableCell className="text-center py-3 bg-[#FEC6A1] text-xs">
                       {format(day.date, 'dd/MM/yyyy', { locale: ptBR })}
                     </TableCell>
-                    <TableCell className="text-center p-0 text-xs">{day.newClients}</TableCell>
-                    <TableCell className="text-center p-0 text-xs">{day.contactAttempts}</TableCell>
-                    <TableCell className="text-center p-0 text-xs">{day.effectiveContacts}</TableCell>
-                    <TableCell className="text-center p-0 bg-[#FEC6A1] text-xs">{day.ceConversionRate.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center p-0 text-xs">{day.scheduledVisits}</TableCell>
-                    <TableCell className="text-center p-0 bg-[#FEC6A1] text-xs">{day.agConversionRate.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center p-0 text-xs">{day.awaitingVisits}</TableCell>
-                    <TableCell className="text-center p-0 text-xs">{day.completedVisits}</TableCell>
-                    <TableCell className="text-center p-0 bg-[#FEC6A1] text-xs">{day.atConversionRate.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center p-0 text-xs">{day.enrollments}</TableCell>
+                    <TableCell className="text-center py-3 text-xs">{day.newClients}</TableCell>
+                    <TableCell className="text-center py-3 text-xs">{day.contactAttempts}</TableCell>
+                    <TableCell className="text-center py-3 text-xs">{day.effectiveContacts}</TableCell>
+                    <TableCell className="text-center py-3 bg-[#FEC6A1] text-xs">{day.ceConversionRate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-center py-3 text-xs">{day.scheduledVisits}</TableCell>
+                    <TableCell className="text-center py-3 bg-[#FEC6A1] text-xs">{day.agConversionRate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-center py-3 text-xs">{day.awaitingVisits}</TableCell>
+                    <TableCell className="text-center py-3 text-xs">{day.completedVisits}</TableCell>
+                    <TableCell className="text-center py-3 bg-[#FEC6A1] text-xs">{day.atConversionRate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-center py-3 text-xs">{day.enrollments}</TableCell>
                   </TableRow>
                 ))
               )}
