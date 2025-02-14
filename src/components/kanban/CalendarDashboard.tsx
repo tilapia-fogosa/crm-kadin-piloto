@@ -1,26 +1,42 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "lucide-react"
+import { Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { format, getDaysInMonth, startOfMonth, getDay } from "date-fns"
+import { format, getDaysInMonth, startOfMonth, getDay, addMonths, subMonths } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { useState } from "react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { MoreHorizontal } from "lucide-react"
 
 interface ScheduledLead {
   id: string
   name: string
   scheduled_date: string
+  status: string
 }
 
 export function CalendarDashboard() {
+  const [currentDate, setCurrentDate] = useState(new Date())
+
   const { data: scheduledLeads } = useQuery({
-    queryKey: ['scheduled-leads'],
+    queryKey: ['scheduled-leads', format(currentDate, 'yyyy-MM')],
     queryFn: async () => {
+      const startOfMonthDate = startOfMonth(currentDate)
+      const endOfMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+      
       const { data, error } = await supabase
         .from('clients')
-        .select('id, name, scheduled_date')
+        .select('id, name, scheduled_date, status')
         .not('scheduled_date', 'is', null)
+        .gte('scheduled_date', startOfMonthDate.toISOString())
+        .lte('scheduled_date', endOfMonthDate.toISOString())
         .order('scheduled_date')
 
       if (error) throw error
@@ -28,12 +44,19 @@ export function CalendarDashboard() {
     }
   })
 
-  const currentDate = new Date()
   const currentMonth = format(currentDate, 'MMM', { locale: ptBR }).toUpperCase()
   const currentYear = currentDate.getFullYear()
   const daysInMonth = getDaysInMonth(currentDate)
   const firstDayOfMonth = startOfMonth(currentDate)
-  const startingDayIndex = getDay(firstDayOfMonth) // 0 = Domingo, 1 = Segunda, etc.
+  const startingDayIndex = getDay(firstDayOfMonth)
+
+  const handlePreviousMonth = () => {
+    setCurrentDate(prevDate => subMonths(prevDate, 1))
+  }
+
+  const handleNextMonth = () => {
+    setCurrentDate(prevDate => addMonths(prevDate, 1))
+  }
 
   const getDayLeads = (dayNumber: number) => {
     if (dayNumber <= 0 || dayNumber > daysInMonth) return []
@@ -46,11 +69,25 @@ export function CalendarDashboard() {
     }).sort((a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime())
   }
 
-  // Criar array com dias vazios no início + dias do mês
   const calendarDays = [
     ...Array(startingDayIndex).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1)
   ]
+
+  const LeadActions = ({ lead }: { lead: ScheduledLead }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-4 w-4 p-0">
+          <MoreHorizontal className="h-3 w-3" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem>Remarcar</DropdownMenuItem>
+        <DropdownMenuItem>Confirmar Presença</DropdownMenuItem>
+        <DropdownMenuItem>Cancelar Agendamento</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 
   return (
     <Dialog>
@@ -68,8 +105,26 @@ export function CalendarDashboard() {
               <Calendar className="h-6 w-6" />
               Agenda de Leads
             </div>
-            <div className="bg-emerald-600 text-white px-6 py-2 rounded-full text-lg font-semibold">
-              {currentMonth} {currentYear}
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={handlePreviousMonth}
+                className="hover:bg-emerald-50"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="bg-emerald-600 text-white px-6 py-2 rounded-full text-lg font-semibold min-w-[200px]">
+                {currentMonth} {currentYear}
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={handleNextMonth}
+                className="hover:bg-emerald-50"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -83,10 +138,11 @@ export function CalendarDashboard() {
           <div className="text-center font-semibold p-2">SEX</div>
           <div className="text-center font-semibold p-2">SÁB</div>
 
-          {/* Calendar grid */}
           {calendarDays.map((day, index) => {
             const leads = day ? getDayLeads(day) : []
-            const isCurrentDay = day === currentDate.getDate()
+            const isCurrentDay = day === new Date().getDate() && 
+                               currentDate.getMonth() === new Date().getMonth() &&
+                               currentDate.getFullYear() === new Date().getFullYear()
 
             return (
               <div 
@@ -107,9 +163,14 @@ export function CalendarDashboard() {
                       {leads?.map(lead => (
                         <div 
                           key={lead.id}
-                          className="text-xs p-1 bg-gray-100 rounded"
+                          className="text-xs p-1 bg-gray-100 rounded flex items-center justify-between group"
                         >
-                          {format(new Date(lead.scheduled_date), 'HH:mm')} - {lead.name}
+                          <span>
+                            {format(new Date(lead.scheduled_date), 'HH:mm')} - {lead.name}
+                          </span>
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <LeadActions lead={lead} />
+                          </div>
                         </div>
                       ))}
                     </div>
