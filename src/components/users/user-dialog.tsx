@@ -79,7 +79,7 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
           .select('role')
           .eq('user_id', editingUser.user_id)
           .eq('role', role)
-          .single();
+          .maybeSingle(); // Alterado de .single() para .maybeSingle()
 
         if (!existingRole) {
           // Se a role atual é diferente, primeiro deletamos a antiga
