@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -35,6 +34,11 @@ interface UserDialogProps {
   } | null;
 }
 
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
 export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -67,6 +71,15 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
         variant: "destructive",
         title: "Erro",
         description: "Selecione um perfil de acesso.",
+      });
+      return;
+    }
+
+    if (!editingUser && !isValidEmail(email)) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Por favor, insira um email válido.",
       });
       return;
     }
@@ -137,6 +150,7 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
           options: {
             data: {
               full_name: name,
+              email: email, // Adicionado o email aos metadados
             }
           }
         });
@@ -144,6 +158,17 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
         if (signUpError || !authData.user) {
           throw signUpError || new Error('Erro ao criar usuário');
         }
+
+        // Atualizar o perfil do usuário com o email
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            full_name: name,
+            email: email
+          })
+          .eq('id', authData.user.id);
+
+        if (profileError) throw profileError;
 
         // Create user role
         const { error: roleError } = await supabase
