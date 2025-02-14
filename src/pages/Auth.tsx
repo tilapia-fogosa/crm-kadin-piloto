@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { WhatsappIcon } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -145,7 +145,7 @@ export default function Auth() {
         className="mt-4 text-white hover:text-white/80"
         onClick={() => window.open('https://wa.me/5544999245040', '_blank')}
       >
-        <WhatsappIcon className="w-4 h-4 mr-2" />
+        <MessageSquare className="w-4 h-4 mr-2" />
         Não tem usuário? Fale conosco
       </Button>
     </div>
