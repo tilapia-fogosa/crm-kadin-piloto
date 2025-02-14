@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, LineChart } from "lucide-react"
 import { ActivityDashboard } from "./ActivityDashboard"
+import { CalendarDashboard } from "./CalendarDashboard"
 
 interface BoardHeaderProps {
   showPendingOnly: boolean
@@ -34,6 +35,7 @@ export function BoardHeader({
 
         <div className="flex items-center space-x-2">
           <ActivityDashboard />
+          <CalendarDashboard />
           
           <Button variant="outline" size="icon" onClick={onRefresh}>
             <RefreshCw className="h-4 w-4" />
