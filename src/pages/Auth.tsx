@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { WhatsappIcon } from "lucide-react";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -76,7 +77,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#31264] p-4">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#31264] p-4">
       <Card className="w-full max-w-md bg-white">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center font-bold text-[#2C136C]">
@@ -127,7 +128,7 @@ export default function Auth() {
               Esqueceu sua senha?
             </Button>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col gap-4">
             <Button 
               className="w-full bg-[#2C136C] hover:bg-[#3D0C58] text-white" 
               type="submit" 
@@ -138,6 +139,15 @@ export default function Auth() {
           </CardFooter>
         </form>
       </Card>
+      
+      <Button
+        variant="ghost"
+        className="mt-4 text-white hover:text-white/80"
+        onClick={() => window.open('https://wa.me/5544999245040', '_blank')}
+      >
+        <WhatsappIcon className="w-4 h-4 mr-2" />
+        Não tem usuário? Fale conosco
+      </Button>
     </div>
   );
 }
