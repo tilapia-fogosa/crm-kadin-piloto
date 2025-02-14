@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -19,16 +19,40 @@ import {
 interface UserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  editingUser?: {
+    id: string;
+    user_id: string;
+    profiles: {
+      full_name: string | null;
+    };
+    user_roles: {
+      role: 'admin' | 'consultor' | 'franqueado';
+    }[];
+  } | null;
 }
 
-export function UserDialog({ open, onOpenChange }: UserDialogProps) {
+export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
+  const [role, setRole] = useState<'admin' | 'consultor' | 'franqueado' | ''>('');
   const { data: units } = useUnits();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (editingUser) {
+      setName(editingUser.profiles?.full_name || '');
+      setRole(editingUser.user_roles?.[0]?.role || '');
+    } else {
+      setName('');
+      setEmail('');
+      setPassword('');
+      setRole('');
+      setSelectedUnits([]);
+    }
+  }, [editingUser]);
 
   const handleUnitSelect = (unitId: string) => {
     setSelectedUnits(prev => {
@@ -42,7 +66,16 @@ export function UserDialog({ open, onOpenChange }: UserDialogProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (selectedUnits.length === 0) {
+    if (!role) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Selecione um perfil de acesso.",
+      });
+      return;
+    }
+
+    if (selectedUnits.length === 0 && !editingUser) {
       toast({
         variant: "destructive",
         title: "Erro",
@@ -52,41 +85,66 @@ export function UserDialog({ open, onOpenChange }: UserDialogProps) {
     }
 
     try {
-      // 1. Create user in auth
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
+      if (editingUser) {
+        // Update user role
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .upsert({
+            user_id: editingUser.user_id,
+            role: role
+          });
+
+        if (roleError) throw roleError;
+
+      } else {
+        // Create new user
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+            }
           }
+        });
+
+        if (signUpError || !authData.user) {
+          throw signUpError || new Error('Erro ao criar usuário');
         }
-      });
 
-      if (signUpError || !authData.user) {
-        throw signUpError || new Error('Erro ao criar usuário');
-      }
-
-      // 2. Create unit-user relationships
-      const unitUserPromises = selectedUnits.map(unitId => 
-        supabase
-          .from('unit_users')
+        // Create user role
+        const { error: roleError } = await supabase
+          .from('user_roles')
           .insert({
             user_id: authData.user.id,
-            unit_id: unitId,
-          })
-      );
+            role: role
+          });
 
-      const results = await Promise.all(unitUserPromises);
-      const hasErrors = results.some(result => result.error);
+        if (roleError) throw roleError;
 
-      if (hasErrors) {
-        throw new Error('Erro ao vincular usuário às unidades');
+        // Create unit-user relationships
+        const unitUserPromises = selectedUnits.map(unitId => 
+          supabase
+            .from('unit_users')
+            .insert({
+              user_id: authData.user.id,
+              unit_id: unitId,
+            })
+        );
+
+        const results = await Promise.all(unitUserPromises);
+        const hasErrors = results.some(result => result.error);
+
+        if (hasErrors) {
+          throw new Error('Erro ao vincular usuário às unidades');
+        }
       }
 
       toast({
         title: "Sucesso",
-        description: "Usuário criado e vinculado às unidades com sucesso.",
+        description: editingUser 
+          ? "Usuário atualizado com sucesso."
+          : "Usuário criado e vinculado às unidades com sucesso.",
       });
 
       queryClient.invalidateQueries({ queryKey: ['unit-users'] });
@@ -94,13 +152,14 @@ export function UserDialog({ open, onOpenChange }: UserDialogProps) {
       setName("");
       setPassword("");
       setSelectedUnits([]);
+      setRole('');
       onOpenChange(false);
 
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao criar usuário",
+        description: error instanceof Error ? error.message : "Erro ao processar usuário",
       });
     }
   };
@@ -109,7 +168,9 @@ export function UserDialog({ open, onOpenChange }: UserDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Criar Novo Usuário</DialogTitle>
+          <DialogTitle>
+            {editingUser ? 'Editar Usuário' : 'Criar Novo Usuário'}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -121,45 +182,74 @@ export function UserDialog({ open, onOpenChange }: UserDialogProps) {
               required
             />
           </div>
+          
+          {!editingUser && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+              </div>
+            </>
+          )}
+
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+            <Label htmlFor="role">Perfil de Acesso</Label>
+            <Select 
+              value={role} 
+              onValueChange={(value: 'admin' | 'consultor' | 'franqueado') => setRole(value)}
               required
-            />
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um perfil" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="consultor">Consultor</SelectItem>
+                <SelectItem value="franqueado">Franqueado</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Unidades (selecione uma ou mais)</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {units?.map((unit) => (
-                <Button
-                  key={unit.id}
-                  type="button"
-                  variant={selectedUnits.includes(unit.id) ? "default" : "outline"}
-                  className="w-full"
-                  onClick={() => handleUnitSelect(unit.id)}
-                >
-                  {unit.name}
-                </Button>
-              ))}
+
+          {!editingUser && (
+            <div className="space-y-2">
+              <Label>Unidades (selecione uma ou mais)</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {units?.map((unit) => (
+                  <Button
+                    key={unit.id}
+                    type="button"
+                    variant={selectedUnits.includes(unit.id) ? "default" : "outline"}
+                    className="w-full"
+                    onClick={() => handleUnitSelect(unit.id)}
+                  >
+                    {unit.name}
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
           <div className="flex justify-end">
-            <Button type="submit">Criar Usuário</Button>
+            <Button type="submit">
+              {editingUser ? 'Salvar Alterações' : 'Criar Usuário'}
+            </Button>
           </div>
         </form>
       </DialogContent>

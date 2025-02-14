@@ -26,6 +26,9 @@ interface User {
   units: {
     name: string;
   };
+  user_roles: {
+    role: 'admin' | 'consultor' | 'franqueado';
+  }[];
 }
 
 interface UsersListProps {
@@ -35,6 +38,7 @@ interface UsersListProps {
 export function UsersList({ users }: UsersListProps) {
   const [openDialog, setOpenDialog] = useState(false);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -80,7 +84,13 @@ export function UsersList({ users }: UsersListProps) {
                 Nome
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Unidade
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Perfil
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Ações
@@ -94,9 +104,22 @@ export function UsersList({ users }: UsersListProps) {
                   {user.profiles?.full_name || "Sem nome"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {user.units?.name}
+                  {user.user_id}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
+                  {user.units?.name}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap capitalize">
+                  {user.user_roles?.[0]?.role || "Sem perfil"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingUser(user)}
+                  >
+                    Editar
+                  </Button>
                   <Button
                     variant="destructive"
                     size="sm"
@@ -111,7 +134,14 @@ export function UsersList({ users }: UsersListProps) {
         </table>
       </div>
 
-      <UserDialog open={openDialog} onOpenChange={setOpenDialog} />
+      <UserDialog 
+        open={openDialog || !!editingUser} 
+        onOpenChange={(open) => {
+          setOpenDialog(open);
+          if (!open) setEditingUser(null);
+        }}
+        editingUser={editingUser}
+      />
 
       <AlertDialog open={!!deleteUser} onOpenChange={() => setDeleteUser(null)}>
         <AlertDialogContent>

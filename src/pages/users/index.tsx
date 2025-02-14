@@ -12,7 +12,8 @@ export default function UsersPage() {
         .select(`
           *,
           profiles(full_name, avatar_url),
-          units(name)
+          units(name),
+          user_roles(role)
         `);
 
       if (error) throw error;
