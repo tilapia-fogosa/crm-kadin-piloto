@@ -6,6 +6,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { subMonths, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+// Mapa de cores fixas para origens específicas
+const sourceColors: Record<string, string> = {
+  facebook: "#3b5998", // Azul do Facebook
+  instagram: "#e1306c", // Rosa do Instagram
+  indicacao: "#F97316", // Laranja para Indicação
+};
+
+// Função para gerar uma cor HSL aleatória para outras origens
+const getColorForSource = (source: string, index: number) => {
+  if (source.toLowerCase() in sourceColors) {
+    return sourceColors[source.toLowerCase()];
+  }
+  return `hsl(${index * 50}, 70%, 50%)`;
+};
+
 export function LeadsChart() {
   const { data, isLoading } = useQuery({
     queryKey: ['leads-by-month-and-source'],
@@ -100,7 +115,7 @@ export function LeadsChart() {
                 dataKey={source}
                 name={source.charAt(0).toUpperCase() + source.slice(1)}
                 stackId="a"
-                fill={`hsl(${index * 50}, 70%, 50%)`}
+                fill={getColorForSource(source, index)}
                 radius={[4, 4, 0, 0]}
               />
             ))}
