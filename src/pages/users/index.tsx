@@ -11,9 +11,7 @@ export default function UsersPage() {
         .from('unit_users')
         .select(`
           *,
-          user:auth.users(
-            profile:profiles(full_name, avatar_url)
-          ),
+          profiles(full_name, avatar_url),
           units(name)
         `);
 
