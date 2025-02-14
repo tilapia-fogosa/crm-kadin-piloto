@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { format, startOfMonth, endOfMonth, getYear, setYear, setMonth } from "date-fns"
+import { format, startOfMonth, endOfMonth, getYear, setYear, setMonth, isAfter, startOfDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { LineChart } from "lucide-react"
 import { useState } from "react"
@@ -89,7 +89,7 @@ export function ActivityDashboard() {
       const clients = clientsResult.data
       const activities = activitiesResult.data
 
-      const dailyStats: DailyStats[] = Array.from(
+      const dailyStats = Array.from(
         { length: endDate.getDate() },
         (_, index) => {
           const date = new Date(startDate)
@@ -156,7 +156,9 @@ export function ActivityDashboard() {
         }
       )
 
-      return dailyStats
+      // Filtra apenas as datas até hoje
+      const today = startOfDay(new Date())
+      return dailyStats.filter(day => !isAfter(startOfDay(day.date), today))
     },
     refetchInterval: 5000
   })
