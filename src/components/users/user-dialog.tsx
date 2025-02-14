@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,11 @@ interface UserDialogProps {
     user_roles: {
       role: 'admin' | 'consultor' | 'franqueado';
     }[];
+    unit_users: {
+      unit: {
+        name: string;
+      };
+    }[];
   };
 }
 
@@ -32,19 +38,8 @@ interface FormData {
 export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    defaultValues: user ? {
-      full_name: user.full_name || '',
-      email: user.email,
-      role: user.user_roles[0]?.role || 'consultor',
-      units: []
-    } : {
-      full_name: '',
-      email: '',
-      role: 'consultor',
-      units: []
-    }
-  });
+  
+  const { register, handleSubmit, reset, formState: { errors }, setValue } = useForm<FormData>();
 
   // Buscar unidades disponíveis
   const { data: units } = useQuery({
@@ -59,6 +54,49 @@ export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
       return data;
     },
   });
+
+  // Buscar unidades do usuário quando estiver editando
+  const { data: userUnits } = useQuery({
+    queryKey: ['user-units', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('unit_users')
+        .select('unit_id')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      return data.map(u => u.unit_id);
+    },
+    enabled: !!user?.id
+  });
+
+  // Atualizar form quando usuário mudar
+  useEffect(() => {
+    if (user) {
+      reset({
+        full_name: user.full_name || '',
+        email: user.email,
+        role: user.user_roles[0]?.role || 'consultor',
+        units: []
+      });
+    } else {
+      reset({
+        full_name: '',
+        email: '',
+        role: 'consultor',
+        units: []
+      });
+    }
+  }, [user, reset]);
+
+  // Atualizar unidades quando carregadas
+  useEffect(() => {
+    if (userUnits) {
+      setValue('units', userUnits);
+    }
+  }, [userUnits, setValue]);
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -129,10 +167,8 @@ export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
             <Label htmlFor="role">Perfil de Acesso</Label>
             <Select
               defaultValue={user?.user_roles[0]?.role || 'consultor'}
-              onValueChange={(value) => {
-                register("role").onChange({
-                  target: { value, name: "role" },
-                });
+              onValueChange={(value: 'admin' | 'consultor' | 'franqueado') => {
+                setValue("role", value);
               }}
             >
               <SelectTrigger>

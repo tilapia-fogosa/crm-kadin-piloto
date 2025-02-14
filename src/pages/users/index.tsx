@@ -13,6 +13,11 @@ interface User {
   user_roles: {
     role: 'admin' | 'consultor' | 'franqueado';
   }[];
+  unit_users: {
+    unit: {
+      name: string;
+    };
+  }[];
 }
 
 export default function UsersPage() {
@@ -31,6 +36,11 @@ export default function UsersPage() {
           full_name,
           user_roles (
             role
+          ),
+          unit_users (
+            unit (
+              name
+            )
           )
         `);
 
@@ -69,6 +79,9 @@ export default function UsersPage() {
                 Perfil
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Unidades
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Ações
               </th>
             </tr>
@@ -84,6 +97,9 @@ export default function UsersPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap capitalize">
                   {user.user_roles?.[0]?.role || "Sem perfil"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {user.unit_users?.map(u => u.unit.name).join(", ") || "Sem unidades"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <Button 
