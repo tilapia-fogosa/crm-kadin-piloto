@@ -3,32 +3,44 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UsersList } from "@/components/users/users-list";
 
+interface User {
+  id: string;
+  user_id: string;
+  profiles: {
+    full_name: string | null;
+    avatar_url: string | null;
+    user_roles: {
+      role: 'admin' | 'consultor' | 'franqueado';
+    }[];
+  };
+  units: {
+    name: string;
+  };
+}
+
 export default function UsersPage() {
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['unit-users'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('unit_users')
         .select(`
-          *,
-          profiles!unit_users_user_id_fkey(full_name, avatar_url),
-          units(name),
-          profiles!unit_users_user_id_fkey(
-            user_roles(role)
+          id,
+          user_id,
+          profiles!unit_users_user_id_fkey (
+            full_name,
+            avatar_url,
+            user_roles (
+              role
+            )
+          ),
+          units (
+            name
           )
         `);
 
       if (error) throw error;
-
-      // Transform the data to match the expected User type
-      const transformedData = data?.map(user => ({
-        ...user,
-        profiles: user.profiles,
-        units: user.units,
-        user_roles: user.profiles?.user_roles || []
-      }));
-
-      return transformedData;
+      return data as User[];
     }
   });
 

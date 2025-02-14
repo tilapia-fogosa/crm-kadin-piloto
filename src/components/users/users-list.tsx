@@ -22,13 +22,13 @@ interface User {
   profiles: {
     full_name: string | null;
     avatar_url: string | null;
+    user_roles: {
+      role: 'admin' | 'consultor' | 'franqueado';
+    }[];
   };
   units: {
     name: string;
   };
-  user_roles: {
-    role: 'admin' | 'consultor' | 'franqueado';
-  }[];
 }
 
 interface UsersListProps {
@@ -110,7 +110,7 @@ export function UsersList({ users }: UsersListProps) {
                   {user.units?.name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap capitalize">
-                  {user.user_roles?.[0]?.role || "Sem perfil"}
+                  {user.profiles?.user_roles?.[0]?.role || "Sem perfil"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap space-x-2">
                   <Button
