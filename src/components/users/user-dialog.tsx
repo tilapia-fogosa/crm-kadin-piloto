@@ -31,12 +31,12 @@ export function UserDialog({ open, onOpenChange }: UserDialogProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Primeiro, buscar o usuário pelo email
+    // First, get the user's UUID from auth.users using their email
     const { data: userData, error: userError } = await supabase
       .from('profiles')
       .select('id')
-      .eq('id', email)
-      .single();
+      .eq('email', email)
+      .maybeSingle();
 
     if (userError || !userData) {
       toast({
@@ -47,7 +47,7 @@ export function UserDialog({ open, onOpenChange }: UserDialogProps) {
       return;
     }
 
-    // Adicionar vínculo do usuário com a unidade
+    // Add user-unit relationship
     const { error: linkError } = await supabase
       .from('unit_users')
       .insert({
