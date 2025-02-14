@@ -28,6 +28,10 @@ interface UserDialogProps {
     user_roles: {
       role: 'admin' | 'consultor' | 'franqueado';
     }[];
+    units: {
+      id: string;
+      name: string;
+    }[];
   } | null;
 }
 
@@ -45,6 +49,7 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
     if (editingUser) {
       setName(editingUser.profiles?.full_name || '');
       setRole(editingUser.user_roles?.[0]?.role || '');
+      setSelectedUnits(editingUser.units?.map(unit => unit.id) || []);
     } else {
       setName('');
       setEmail('');
@@ -54,15 +59,6 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
     }
   }, [editingUser]);
 
-  const handleUnitSelect = (unitId: string) => {
-    setSelectedUnits(prev => {
-      if (prev.includes(unitId)) {
-        return prev.filter(id => id !== unitId);
-      }
-      return [...prev, unitId];
-    });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -71,15 +67,6 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
         variant: "destructive",
         title: "Erro",
         description: "Selecione um perfil de acesso.",
-      });
-      return;
-    }
-
-    if (selectedUnits.length === 0 && !editingUser) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Selecione pelo menos uma unidade.",
       });
       return;
     }
@@ -95,6 +82,34 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
           });
 
         if (roleError) throw roleError;
+
+        // Update user units
+        // Primeiro, removemos todas as unidades existentes
+        const { error: deleteError } = await supabase
+          .from('unit_users')
+          .delete()
+          .eq('user_id', editingUser.user_id);
+
+        if (deleteError) throw deleteError;
+
+        // Depois, adicionamos as novas unidades selecionadas
+        if (selectedUnits.length > 0) {
+          const unitUserPromises = selectedUnits.map(unitId => 
+            supabase
+              .from('unit_users')
+              .insert({
+                user_id: editingUser.user_id,
+                unit_id: unitId,
+              })
+          );
+
+          const results = await Promise.all(unitUserPromises);
+          const hasErrors = results.some(result => result.error);
+
+          if (hasErrors) {
+            throw new Error('Erro ao vincular usuário às unidades');
+          }
+        }
 
       } else {
         // Create new user
@@ -227,24 +242,29 @@ export function UserDialog({ open, onOpenChange, editingUser }: UserDialogProps)
             </Select>
           </div>
 
-          {!editingUser && (
-            <div className="space-y-2">
-              <Label>Unidades (selecione uma ou mais)</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {units?.map((unit) => (
-                  <Button
-                    key={unit.id}
-                    type="button"
-                    variant={selectedUnits.includes(unit.id) ? "default" : "outline"}
-                    className="w-full"
-                    onClick={() => handleUnitSelect(unit.id)}
-                  >
-                    {unit.name}
-                  </Button>
-                ))}
-              </div>
+          <div className="space-y-2">
+            <Label>Unidades (selecione uma ou mais)</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {units?.map((unit) => (
+                <Button
+                  key={unit.id}
+                  type="button"
+                  variant={selectedUnits.includes(unit.id) ? "default" : "outline"}
+                  className="w-full"
+                  onClick={() => {
+                    setSelectedUnits(prev => {
+                      if (prev.includes(unit.id)) {
+                        return prev.filter(id => id !== unit.id);
+                      }
+                      return [...prev, unit.id];
+                    });
+                  }}
+                >
+                  {unit.name}
+                </Button>
+              ))}
             </div>
-          )}
+          </div>
 
           <div className="flex justify-end">
             <Button type="submit">

@@ -14,6 +14,7 @@ interface User {
     role: 'admin' | 'consultor' | 'franqueado';
   }[];
   units: {
+    id: string;
     name: string;
   }[];
 }
@@ -22,57 +23,62 @@ export default function UsersPage() {
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['unit-users'],
     queryFn: async () => {
-      // Primeiro, buscamos os usuários únicos com seus perfis
-      const { data: uniqueUsers, error: usersError } = await supabase
+      // Buscamos todos os usuários únicos
+      const { data: uniqueUserIds, error: userIdsError } = await supabase
         .from('unit_users')
-        .select(`
-          distinct_on:user_id,
-          user_id,
-          profiles!unit_users_user_id_fkey (
-            full_name,
-            avatar_url
-          )
-        `);
+        .select('user_id')
+        .order('user_id');
 
-      if (usersError) {
-        console.error('Error fetching unique users:', usersError);
-        throw usersError;
-      }
+      if (userIdsError) throw userIdsError;
 
-      // Para cada usuário único, buscamos todas as suas unidades
-      const usersWithUnits = await Promise.all(
-        uniqueUsers.map(async (user) => {
+      // Filtramos para ter IDs únicos
+      const uniqueIds = [...new Set(uniqueUserIds.map(u => u.user_id))];
+
+      // Para cada ID único, buscamos todas as informações
+      const usersWithDetails = await Promise.all(
+        uniqueIds.map(async (userId) => {
+          // Buscar perfil
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+          // Buscar papéis
+          const { data: roles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', userId);
+
+          // Buscar unidades
           const { data: userUnits } = await supabase
             .from('unit_users')
             .select(`
               id,
               units (
+                id,
                 name
               )
             `)
-            .eq('user_id', user.user_id);
+            .eq('user_id', userId);
 
-          const { data: roles } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.user_id);
-
-          // Garantimos que units é sempre um array
+          // Garantir que units é sempre um array
           const units = userUnits?.map(unit => ({
+            id: unit.units.id,
             name: unit.units.name
           })) || [];
 
           return {
-            id: userUnits?.[0]?.id || '', // Usando o primeiro ID encontrado
-            user_id: user.user_id,
-            profiles: user.profiles,
+            id: userUnits?.[0]?.id || '',
+            user_id: userId,
+            profiles: profileData || { full_name: null, avatar_url: null },
             user_roles: roles || [],
             units
           };
         })
       );
-      
-      return usersWithUnits as User[];
+
+      return usersWithDetails;
     }
   });
 
