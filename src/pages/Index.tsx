@@ -1,9 +1,17 @@
-import { GraduationCap, Users, Phone, Target } from "lucide-react";
+
+import { UsersIcon } from "lucide-react";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { LeadsChart } from "@/components/dashboard/LeadsChart";
 import LeadsTable from "@/components/leads/LeadsTable";
+import { useLeadsStats } from "@/hooks/useLeadsStats";
 
 const Index = () => {
+  const { data: stats, isLoading } = useLeadsStats();
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-full">Carregando...</div>;
+  }
+
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -11,28 +19,32 @@ const Index = () => {
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title="Total de Leads"
-          value="2,350"
-          icon={Users}
-          description="↗️ 180 novos esta semana"
+          title="Mês Atual"
+          value={stats?.oneMonth.total || 0}
+          icon={UsersIcon}
+          comparison={stats?.oneMonth.comparison}
+          description="Comparado ao mesmo mês do ano anterior"
         />
         <StatsCard
-          title="Matrículas"
-          value="485"
-          icon={GraduationCap}
-          description="↗️ 40 novas este mês"
+          title="3 Meses"
+          value={stats?.threeMonths.total || 0}
+          icon={UsersIcon}
+          comparison={stats?.threeMonths.comparison}
+          description="Comparado aos mesmos 3 meses do ano anterior"
         />
         <StatsCard
-          title="Contatos Pendentes"
-          value="24"
-          icon={Phone}
-          description="↘️ 8 desde ontem"
+          title="6 Meses"
+          value={stats?.sixMonths.total || 0}
+          icon={UsersIcon}
+          comparison={stats?.sixMonths.comparison}
+          description="Comparado aos mesmos 6 meses do ano anterior"
         />
         <StatsCard
-          title="Taxa de Conversão"
-          value="18.5%"
-          icon={Target}
-          description="↗️ 2.1% este mês"
+          title="12 Meses"
+          value={stats?.twelveMonths.total || 0}
+          icon={UsersIcon}
+          comparison={stats?.twelveMonths.comparison}
+          description="Comparado aos 12 meses anteriores"
         />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
