@@ -232,30 +232,30 @@ export function ActivityDashboard() {
         <div className="mt-4">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="text-center p-0 bg-[#FEC6A1] text-xs font-semibold w-20">Data</TableHead>
-                <TableHead className="text-center p-0 whitespace-pre-line text-xs font-semibold w-14">
+              <TableRow className="hover:bg-transparent [&>th]:px-2.5">
+                <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[18px]">Data</TableHead>
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
                   {"Novos\nClientes"}
                 </TableHead>
-                <TableHead className="text-center p-0 whitespace-pre-line text-xs font-semibold w-16">
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[14.4px]">
                   {"Tentativa\nde Contato"}
                 </TableHead>
-                <TableHead className="text-center p-0 whitespace-pre-line text-xs font-semibold w-14">
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
                   {"Contatos\nEfetivos"}
                 </TableHead>
-                <TableHead className="text-center p-0 bg-[#FEC6A1] text-xs font-semibold w-12">% CE</TableHead>
-                <TableHead className="text-center p-0 whitespace-pre-line text-xs font-semibold w-14">
+                <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[10.8px]">% CE</TableHead>
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
                   {"Visitas\nAgendadas"}
                 </TableHead>
-                <TableHead className="text-center p-0 bg-[#FEC6A1] text-xs font-semibold w-12">% AG</TableHead>
-                <TableHead className="text-center p-0 whitespace-pre-line text-xs font-semibold w-14">
+                <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[10.8px]">% AG</TableHead>
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
                   {"Visitas\nAguardadas"}
                 </TableHead>
-                <TableHead className="text-center p-0 whitespace-pre-line text-xs font-semibold w-14">
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
                   {"Visitas\nRealizadas"}
                 </TableHead>
-                <TableHead className="text-center p-0 bg-[#FEC6A1] text-xs font-semibold w-12">% AT</TableHead>
-                <TableHead className="text-center p-0 whitespace-pre-line text-xs font-semibold w-14">
+                <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[10.8px]">% AT</TableHead>
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
                   {"Matrí-\nculas"}
                 </TableHead>
               </TableRow>
@@ -263,11 +263,11 @@ export function ActivityDashboard() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center text-xs py-3">Carregando...</TableCell>
+                  <TableCell colSpan={11} className="text-center text-xs py-3 px-2.5">Carregando...</TableCell>
                 </TableRow>
               ) : (
                 stats?.map((day) => (
-                  <TableRow key={day.date.toISOString()} className="hover:bg-muted/50">
+                  <TableRow key={day.date.toISOString()} className="hover:bg-muted/50 [&>td]:px-2.5">
                     <TableCell className="text-center py-3 bg-[#FEC6A1] text-xs">
                       {format(day.date, 'dd/MM/yyyy', { locale: ptBR })}
                     </TableCell>
