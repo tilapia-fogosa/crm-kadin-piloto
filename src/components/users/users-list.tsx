@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 interface User {
   id: string;
   user_id: string;
-  profiles: {
+  user: {
     full_name: string | null;
     avatar_url: string | null;
   };
@@ -91,7 +91,7 @@ export function UsersList({ users }: UsersListProps) {
             {users.map((user) => (
               <tr key={user.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {user.profiles?.full_name || "Sem nome"}
+                  {user.user?.full_name || "Sem nome"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {user.units?.name}
