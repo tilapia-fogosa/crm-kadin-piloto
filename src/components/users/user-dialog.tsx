@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -65,83 +64,17 @@ export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
     try {
       setIsLoading(true);
 
-      // Se for um novo usuário
-      if (!user) {
-        // 1. Criar usuário no auth
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email: data.email,
-          password: 'senha123', // Senha temporária
-          email_confirm: true,
-          user_metadata: {
-            full_name: data.full_name
+      const { error } = await supabase.functions.invoke('manage-user', {
+        body: {
+          method: user ? 'UPDATE' : 'CREATE',
+          userData: {
+            ...data,
+            id: user?.id
           }
-        });
+        }
+      });
 
-        if (authError) throw authError;
-
-        // 2. Adicionar role
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: authData.user.id,
-            role: data.role
-          });
-
-        if (roleError) throw roleError;
-
-        // 3. Vincular com unidade(s)
-        const { error: unitError } = await supabase
-          .from('unit_users')
-          .insert(
-            data.units.map(unitId => ({
-              user_id: authData.user.id,
-              unit_id: unitId
-            }))
-          );
-
-        if (unitError) throw unitError;
-      }
-      // Se for edição
-      else {
-        // 1. Atualizar profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ full_name: data.full_name })
-          .eq('id', user.id);
-
-        if (profileError) throw profileError;
-
-        // 2. Atualizar role
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .upsert({
-            user_id: user.id,
-            role: data.role
-          });
-
-        if (roleError) throw roleError;
-
-        // 3. Atualizar unidades
-        // Primeiro remove todas as unidades existentes
-        const { error: deleteError } = await supabase
-          .from('unit_users')
-          .delete()
-          .eq('user_id', user.id);
-
-        if (deleteError) throw deleteError;
-
-        // Depois adiciona as novas unidades
-        const { error: unitError } = await supabase
-          .from('unit_users')
-          .insert(
-            data.units.map(unitId => ({
-              user_id: user.id,
-              unit_id: unitId
-            }))
-          );
-
-        if (unitError) throw unitError;
-      }
+      if (error) throw error;
 
       toast({
         title: user ? "Usuário atualizado" : "Usuário criado",
