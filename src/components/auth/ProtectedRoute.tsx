@@ -1,16 +1,12 @@
 
 import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 
-// Rotas que requerem role de franqueado
-const FRANQUEADO_ROUTES = ['/units'];
-
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  const location = useLocation();
   const { data: profile, isLoading: profileLoading } = useProfile();
 
   const { data: session, isLoading: sessionLoading } = useQuery({
@@ -22,23 +18,12 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    // Verificar autenticação
+    // Verificar apenas autenticação, sem verificar roles
     if (!sessionLoading && !session) {
       navigate("/auth");
       return;
     }
-
-    // Verificar permissões baseadas em role
-    if (!profileLoading && profile) {
-      const isFranqueadoRoute = FRANQUEADO_ROUTES.some(route => 
-        location.pathname.startsWith(route)
-      );
-      
-      if (isFranqueadoRoute && profile.role !== 'franqueado') {
-        navigate("/"); // Redireciona para home se não tiver permissão
-      }
-    }
-  }, [session, sessionLoading, profile, profileLoading, navigate, location]);
+  }, [session, sessionLoading, navigate]);
 
   if (sessionLoading || profileLoading) {
     return <div>Carregando...</div>;
