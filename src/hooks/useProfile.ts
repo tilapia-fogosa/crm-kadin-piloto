@@ -30,24 +30,32 @@ export function useProfile() {
 
       if (profileError) throw profileError;
 
-      // Buscar a role do usuário
-      const { data: userRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id);
-
-      if (rolesError) throw rolesError;
-
       // Verificar se é admin usando a função is_admin
       const { data: isAdmin, error: isAdminError } = await supabase
         .rpc('is_admin', { user_uid: session.user.id });
 
       if (isAdminError) throw isAdminError;
 
-      // Se é admin, retornar role como admin, senão usar a primeira role encontrada
+      if (isAdmin) {
+        return {
+          ...profile,
+          role: 'admin'
+        };
+      }
+
+      // Se não é admin, buscar o primeiro papel do usuário
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .order('created_at')
+        .limit(1);
+
+      if (rolesError) throw rolesError;
+
       return {
         ...profile,
-        role: isAdmin ? 'admin' : (userRoles?.[0]?.role as UserRole)
+        role: userRoles?.[0]?.role as UserRole
       };
     }
   });
