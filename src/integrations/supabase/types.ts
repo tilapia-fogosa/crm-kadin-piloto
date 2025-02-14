@@ -74,7 +74,7 @@ export type Database = {
           scheduled_date: string | null
           status: string
           unit_api_key: string | null
-          unit_id: string | null
+          unit_id: string
           updated_at: string
         }
         Insert: {
@@ -94,7 +94,7 @@ export type Database = {
           scheduled_date?: string | null
           status?: string
           unit_api_key?: string | null
-          unit_id?: string | null
+          unit_id: string
           updated_at?: string
         }
         Update: {
@@ -114,7 +114,7 @@ export type Database = {
           scheduled_date?: string | null
           status?: string
           unit_api_key?: string | null
-          unit_id?: string | null
+          unit_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -331,6 +331,7 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
         Insert: {
@@ -338,6 +339,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
+          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
         Update: {
@@ -345,6 +347,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
         Relationships: []
@@ -479,7 +482,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "consultor" | "franqueado"
     }
     CompositeTypes: {
       [_ in never]: never
