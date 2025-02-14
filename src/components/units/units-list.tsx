@@ -38,7 +38,19 @@ export function UnitsList({ onEdit }: UnitsListProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('units')
-        .select('*')
+        .select(`
+          id,
+          name,
+          street,
+          number,
+          complement,
+          neighborhood,
+          city,
+          state,
+          postal_code,
+          created_at,
+          api_key
+        `)
         .order('name')
 
       if (error) throw error

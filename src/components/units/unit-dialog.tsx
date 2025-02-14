@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -36,7 +35,16 @@ export function UnitDialog({ open, onOpenChange, unit }: UnitDialogProps) {
   
   const form = useForm<UnitFormData>({
     resolver: zodResolver(unitSchema),
-    defaultValues: unit || {
+    defaultValues: unit ? {
+      name: unit.name,
+      street: unit.street,
+      number: unit.number,
+      complement: unit.complement,
+      neighborhood: unit.neighborhood,
+      city: unit.city,
+      state: unit.state,
+      postal_code: unit.postal_code,
+    } : {
       name: "",
       street: "",
       number: "",
