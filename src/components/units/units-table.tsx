@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UnitFormData, unitFormSchema } from "@/types/unit-form";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { UnitActions } from "./unit-actions";
 import { EditUnitDialog } from "./edit-unit-dialog";
 import { ConfirmationDialogs } from "./confirmation-dialogs";
@@ -31,6 +31,7 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
   const [unitToDelete, setUnitToDelete] = useState<any | null>(null);
   const [pendingValues, setPendingValues] = useState<UnitFormData | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: session } = useQuery({
     queryKey: ["session"],
@@ -50,7 +51,7 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
       name: unit.name,
       street: unit.street,
       number: unit.number,
-      neighborhood: unit.neighborhood, // Adicionando o bairro aqui
+      neighborhood: unit.neighborhood,
       city: unit.city,
       state: unit.state,
       postalCode: unit.postal_code,
@@ -76,13 +77,13 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
 
       if (error) throw error;
 
+      // Invalidar o cache para forçar uma nova busca
+      await queryClient.invalidateQueries({ queryKey: ["units"] });
+
       toast({
         title: "Unidade inativada com sucesso!",
         description: "A unidade foi inativada do sistema.",
       });
-
-      // Reload the page to refresh the data
-      window.location.reload();
     } catch (error) {
       console.error("Error deactivating unit:", error);
       toast({
@@ -111,7 +112,7 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
           name: pendingValues.name,
           street: pendingValues.street,
           number: pendingValues.number,
-          neighborhood: pendingValues.neighborhood, // Adicionando o bairro aqui
+          neighborhood: pendingValues.neighborhood,
           city: pendingValues.city,
           state: pendingValues.state,
           postal_code: pendingValues.postalCode,
@@ -122,13 +123,13 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
 
       if (error) throw error;
 
+      // Invalidar o cache para forçar uma nova busca
+      await queryClient.invalidateQueries({ queryKey: ["units"] });
+
       toast({
         title: "Unidade atualizada com sucesso!",
         description: "As alterações foram salvas.",
       });
-
-      // Reload the page to refresh the data
-      window.location.reload();
     } catch (error) {
       console.error("Error updating unit:", error);
       toast({

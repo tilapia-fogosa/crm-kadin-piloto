@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -29,6 +30,7 @@ import {
 
 export default function UnitsPage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingValues, setPendingValues] = useState<UnitFormData | null>(null);
@@ -41,6 +43,7 @@ export default function UnitsPage() {
       number: "",
       neighborhood: "",
       city: "",
+      state: "SP",
       postalCode: "",
       phone: "",
       email: "",
@@ -55,7 +58,7 @@ export default function UnitsPage() {
     },
   });
 
-  const { data: units, isLoading, error } = useQuery({
+  const { data: units, isLoading } = useQuery({
     queryKey: ["units"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -86,7 +89,6 @@ export default function UnitsPage() {
     if (!pendingValues || !session?.user) return;
 
     try {
-      // Primeiro, criar a unidade
       const { data: unitData, error: unitError } = await supabase
         .from("units")
         .insert({
@@ -106,7 +108,6 @@ export default function UnitsPage() {
 
       if (unitError) throw unitError;
 
-      // Depois, criar a relação unit_users
       const { error: relationError } = await supabase
         .from("unit_users")
         .insert({
@@ -115,6 +116,9 @@ export default function UnitsPage() {
         });
 
       if (relationError) throw relationError;
+
+      // Invalidar o cache para forçar uma nova busca
+      await queryClient.invalidateQueries({ queryKey: ["units"] });
 
       toast({
         title: "Unidade criada com sucesso!",
@@ -126,9 +130,6 @@ export default function UnitsPage() {
       setShowConfirmDialog(false);
       setShowNewDialog(false);
       setPendingValues(null);
-
-      // Reload the page to refresh the data
-      window.location.reload();
     } catch (error) {
       console.error("Error creating unit:", error);
       toast({
@@ -136,8 +137,6 @@ export default function UnitsPage() {
         title: "Erro ao criar unidade",
         description: "Ocorreu um erro ao criar a unidade. Tente novamente.",
       });
-    } finally {
-      // Cleanup code here
     }
   };
 
