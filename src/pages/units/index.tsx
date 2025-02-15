@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -42,7 +41,6 @@ export default function UnitsPage() {
       number: "",
       neighborhood: "",
       city: "",
-      state: "",
       postalCode: "",
       phone: "",
       email: "",
