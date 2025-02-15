@@ -55,7 +55,16 @@ export default function SystemUsersPage() {
       }
 
       const unitIds = userUnits.map(u => u.unit_id);
-      
+
+      // Primeiro, vamos buscar os IDs dos usuários que têm acesso às unidades
+      const { data: userIds, error: userIdsError } = await supabase
+        .from("system_user_units")
+        .select('user_id')
+        .in('unit_id', unitIds);
+
+      if (userIdsError) throw userIdsError;
+
+      // Agora vamos buscar os usuários usando os IDs obtidos
       let query = supabase
         .from("system_users")
         .select(`
@@ -68,10 +77,7 @@ export default function SystemUsersPage() {
           )
         `)
         .eq('active', true)
-        .in('id', supabase.from('system_user_units')
-          .select('user_id')
-          .in('unit_id', unitIds)
-        )
+        .in('id', userIds.map(u => u.user_id))
         .order('name');
 
       if (searchTerm) {
