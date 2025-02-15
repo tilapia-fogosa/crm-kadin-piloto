@@ -30,7 +30,7 @@ const formSchema = z.object({
   phone: z.string().optional(),
   units: z.array(z.object({
     unit_id: z.string().min(1, "Unidade é obrigatória"),
-    role: z.enum(["admin", "manager", "operator"], {
+    role: z.enum(["admin", "franqueador", "franqueado", "consultor"], {
       required_error: "Perfil é obrigatório",
     }),
   })).min(1, "Pelo menos uma unidade deve ser selecionada"),
@@ -56,7 +56,7 @@ export function SystemUserForm({ user, onSubmit }: SystemUserFormProps) {
       name: "",
       email: "",
       phone: "",
-      units: [{ unit_id: "", role: "operator" }],
+      units: [{ unit_id: "", role: "consultor" }],
     },
   });
 
@@ -149,7 +149,7 @@ export function SystemUserForm({ user, onSubmit }: SystemUserFormProps) {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => append({ unit_id: "", role: "operator" })}
+              onClick={() => append({ unit_id: "", role: "consultor" })}
             >
               <Plus className="h-4 w-4 mr-2" />
               Adicionar Unidade
@@ -203,8 +203,9 @@ export function SystemUserForm({ user, onSubmit }: SystemUserFormProps) {
                       </FormControl>
                       <SelectContent position="popper" className="z-[60]">
                         <SelectItem value="admin">Administrador</SelectItem>
-                        <SelectItem value="manager">Gerente</SelectItem>
-                        <SelectItem value="operator">Operador</SelectItem>
+                        <SelectItem value="franqueador">Franqueador</SelectItem>
+                        <SelectItem value="franqueado">Franqueado</SelectItem>
+                        <SelectItem value="consultor">Consultor</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

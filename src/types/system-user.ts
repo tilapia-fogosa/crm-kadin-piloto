@@ -1,5 +1,5 @@
 
-export type SystemUserRole = 'admin' | 'manager' | 'operator';
+export type SystemUserRole = 'admin' | 'franqueador' | 'franqueado' | 'consultor';
 
 export interface SystemUser {
   id: string;
