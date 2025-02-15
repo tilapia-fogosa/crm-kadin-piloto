@@ -422,10 +422,12 @@ export type Database = {
           complement: string | null
           created_at: string
           created_by: string | null
+          email: string | null
           id: string
           name: string
           neighborhood: string
           number: string
+          phone: string | null
           postal_code: string
           state: string
           street: string
@@ -437,10 +439,12 @@ export type Database = {
           complement?: string | null
           created_at?: string
           created_by?: string | null
+          email?: string | null
           id?: string
           name: string
           neighborhood: string
           number: string
+          phone?: string | null
           postal_code: string
           state: string
           street: string
@@ -452,10 +456,12 @@ export type Database = {
           complement?: string | null
           created_at?: string
           created_by?: string | null
+          email?: string | null
           id?: string
           name?: string
           neighborhood?: string
           number?: string
+          phone?: string | null
           postal_code?: string
           state?: string
           street?: string
