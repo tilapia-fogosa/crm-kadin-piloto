@@ -173,7 +173,7 @@ export function SystemUserForm({ user, onSubmit }: SystemUserFormProps) {
                           <SelectValue placeholder="Selecione uma unidade" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent position="popper" className="z-[60]">
                         {units?.map((unit) => (
                           <SelectItem key={unit.id} value={unit.id}>
                             {unit.name}
@@ -201,7 +201,7 @@ export function SystemUserForm({ user, onSubmit }: SystemUserFormProps) {
                           <SelectValue placeholder="Selecione um perfil" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent position="popper" className="z-[60]">
                         <SelectItem value="admin">Administrador</SelectItem>
                         <SelectItem value="manager">Gerente</SelectItem>
                         <SelectItem value="operator">Operador</SelectItem>

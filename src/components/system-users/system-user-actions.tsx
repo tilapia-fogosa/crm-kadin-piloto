@@ -130,7 +130,7 @@ export function SystemUserActions({ user }: SystemUserActionsProps) {
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="z-50">
           <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
             <Pencil className="mr-2 h-4 w-4" />
             Editar
@@ -146,8 +146,8 @@ export function SystemUserActions({ user }: SystemUserActionsProps) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-3xl">
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog} modal>
+        <DialogContent className="max-w-3xl z-50">
           <DialogHeader>
             <DialogTitle>Editar Usuário</DialogTitle>
           </DialogHeader>
@@ -156,7 +156,7 @@ export function SystemUserActions({ user }: SystemUserActionsProps) {
       </Dialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="z-50">
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>

@@ -129,7 +129,7 @@ export default function SystemUsersPage() {
 
       <SystemUsersTable users={users || []} isLoading={isLoading} />
 
-      <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
+      <Dialog open={showNewDialog} onOpenChange={setShowNewDialog} modal>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Novo Usuário</DialogTitle>
