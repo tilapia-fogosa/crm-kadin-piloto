@@ -59,6 +59,11 @@ export function AppSidebar() {
       path: "/units",
     },
     {
+      title: "Usuários",
+      icon: Users,
+      path: "/system-users",
+    },
+    {
       title: "Documentação API",
       icon: FileJson,
       path: "/api-docs",
