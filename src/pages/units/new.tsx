@@ -17,7 +17,6 @@ export default function NewUnit() {
     resolver: zodResolver(unitFormSchema),
     defaultValues: {
       name: "",
-      description: "",
       address: "",
       city: "",
       state: "",

@@ -1,7 +1,6 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { UseFormReturn } from "react-hook-form";
 import { UnitFormData } from "@/types/unit-form";
 
@@ -20,23 +19,6 @@ export function UnitFormFields({ form }: UnitFormFieldsProps) {
             <FormLabel>Nome da Unidade</FormLabel>
             <FormControl>
               <Input placeholder="Digite o nome da unidade" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="description"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Descrição</FormLabel>
-            <FormControl>
-              <Textarea 
-                placeholder="Digite uma descrição para a unidade" 
-                {...field} 
-              />
             </FormControl>
             <FormMessage />
           </FormItem>
