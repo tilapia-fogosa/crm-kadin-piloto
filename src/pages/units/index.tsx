@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -47,13 +48,21 @@ export default function UnitsPage() {
     },
   });
 
+  const { data: session } = useQuery({
+    queryKey: ["session"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    },
+  });
+
   const { data: units, isLoading, error } = useQuery({
     queryKey: ["units"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("units")
         .select("*")
-        .eq('active', true)  // Only fetch active units
+        .eq('active', true)
         .order("name");
 
       if (error) {
@@ -75,22 +84,38 @@ export default function UnitsPage() {
   };
 
   const confirmCreate = async () => {
-    if (!pendingValues) return;
+    if (!pendingValues || !session?.user) return;
 
     try {
-      const { error } = await supabase.from("units").insert({
-        name: pendingValues.name,
-        street: pendingValues.street,
-        number: pendingValues.number,
-        neighborhood: pendingValues.neighborhood,
-        city: pendingValues.city,
-        state: pendingValues.state,
-        postal_code: pendingValues.postalCode,
-        phone: pendingValues.phone,
-        email: pendingValues.email,
-      });
+      // Primeiro, criar a unidade
+      const { data: unitData, error: unitError } = await supabase
+        .from("units")
+        .insert({
+          name: pendingValues.name,
+          street: pendingValues.street,
+          number: pendingValues.number,
+          neighborhood: pendingValues.neighborhood,
+          city: pendingValues.city,
+          state: pendingValues.state,
+          postal_code: pendingValues.postalCode,
+          phone: pendingValues.phone,
+          email: pendingValues.email,
+          created_by: session.user.id,
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (unitError) throw unitError;
+
+      // Depois, criar a relação unit_users
+      const { error: relationError } = await supabase
+        .from("unit_users")
+        .insert({
+          unit_id: unitData.id,
+          user_id: session.user.id,
+        });
+
+      if (relationError) throw relationError;
 
       toast({
         title: "Unidade criada com sucesso!",

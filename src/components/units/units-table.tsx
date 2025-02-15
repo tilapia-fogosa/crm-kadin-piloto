@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -32,6 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useQuery } from "@tanstack/react-query";
 
 interface UnitsTableProps {
   units: any[];
@@ -46,6 +48,14 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
   const [unitToDelete, setUnitToDelete] = useState<any | null>(null);
   const [pendingValues, setPendingValues] = useState<UnitFormData | null>(null);
   const { toast } = useToast();
+
+  const { data: session } = useQuery({
+    queryKey: ["session"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    },
+  });
 
   const form = useForm<UnitFormData>({
     resolver: zodResolver(unitFormSchema),
@@ -72,7 +82,7 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
   };
 
   const confirmDelete = async () => {
-    if (!unitToDelete) return;
+    if (!unitToDelete || !session?.user) return;
 
     try {
       const { error } = await supabase
