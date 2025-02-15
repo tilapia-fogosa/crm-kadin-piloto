@@ -7,14 +7,37 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { UseFormReturn } from "react-hook-form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { UseFormReturn, useWatch } from "react-hook-form";
 import { UnitFormData } from "@/types/unit-form";
+import { estados, getCitiesByState } from "@/lib/location-data";
+import { useEffect, useState } from "react";
 
 interface UnitFormFieldsProps {
   form: UseFormReturn<UnitFormData>;
 }
 
 export function UnitFormFields({ form }: UnitFormFieldsProps) {
+  const [cities, setCities] = useState<{ value: string; label: string; }[]>([]);
+  const selectedState = useWatch({
+    control: form.control,
+    name: "state"
+  });
+
+  useEffect(() => {
+    if (selectedState) {
+      getCitiesByState(selectedState).then(setCities);
+    } else {
+      setCities([]);
+    }
+  }, [selectedState]);
+
   return (
     <div className="space-y-4">
       {/* Nome da unidade em linha única */}
@@ -91,7 +114,22 @@ export function UnitFormFields({ form }: UnitFormFieldsProps) {
               <FormItem>
                 <FormLabel>Cidade</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Select
+                    disabled={!selectedState}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a cidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cities.map((city) => (
+                        <SelectItem key={city.value} value={city.value}>
+                          {city.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -106,7 +144,18 @@ export function UnitFormFields({ form }: UnitFormFieldsProps) {
               <FormItem>
                 <FormLabel>Estado</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="UF" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {estados.map((estado) => (
+                        <SelectItem key={estado.value} value={estado.value}>
+                          {estado.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>
