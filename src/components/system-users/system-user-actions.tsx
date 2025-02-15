@@ -43,7 +43,8 @@ export function SystemUserActions({ user }: SystemUserActionsProps) {
 
   const handleEdit = async (data: SystemUserWithUnits) => {
     try {
-      const { error } = await supabase
+      // Atualiza os dados básicos do usuário
+      const { error: userError } = await supabase
         .from("system_users")
         .update({
           name: data.name,
@@ -52,7 +53,28 @@ export function SystemUserActions({ user }: SystemUserActionsProps) {
         })
         .eq("id", user.id);
 
-      if (error) throw error;
+      if (userError) throw userError;
+
+      // Remove todos os vínculos existentes
+      const { error: deleteError } = await supabase
+        .from("system_user_units")
+        .delete()
+        .eq("user_id", user.id);
+
+      if (deleteError) throw deleteError;
+
+      // Insere os novos vínculos
+      const { error: unitsError } = await supabase
+        .from("system_user_units")
+        .insert(
+          data.units.map(unit => ({
+            user_id: user.id,
+            unit_id: unit.unit_id,
+            role: unit.role,
+          }))
+        );
+
+      if (unitsError) throw unitsError;
 
       await queryClient.invalidateQueries({ queryKey: ["system-users"] });
 

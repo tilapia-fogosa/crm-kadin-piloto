@@ -1,5 +1,5 @@
 
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import {
 import { SystemUserWithUnits } from "@/types/system-user";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Plus, Trash } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -59,6 +60,11 @@ export function SystemUserForm({ user, onSubmit }: SystemUserFormProps) {
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "units",
+  });
+
   const { data: units } = useQuery({
     queryKey: ["units"],
     queryFn: async () => {
@@ -73,9 +79,27 @@ export function SystemUserForm({ user, onSubmit }: SystemUserFormProps) {
     },
   });
 
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+    const formattedData = {
+      ...data,
+      id: user?.id,
+      created_at: user?.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      active: true,
+      units: data.units.map(unit => ({
+        ...unit,
+        id: "",
+        user_id: user?.id || "",
+        active: true,
+      })),
+    } as SystemUserWithUnits;
+
+    onSubmit(formattedData);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
@@ -118,63 +142,90 @@ export function SystemUserForm({ user, onSubmit }: SystemUserFormProps) {
           )}
         />
 
-        {form.watch("units").map((_, index) => (
-          <div key={index} className="flex gap-4">
-            <FormField
-              control={form.control}
-              name={`units.${index}.unit_id`}
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>Unidade</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma unidade" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {units?.map((unit) => (
-                        <SelectItem key={unit.id} value={unit.id}>
-                          {unit.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name={`units.${index}.role`}
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>Perfil</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um perfil" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="admin">Administrador</SelectItem>
-                      <SelectItem value="manager">Gerente</SelectItem>
-                      <SelectItem value="operator">Operador</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium">Unidades</h3>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => append({ unit_id: "", role: "operator" })}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Unidade
+            </Button>
           </div>
-        ))}
+
+          {fields.map((field, index) => (
+            <div key={field.id} className="flex gap-4 items-start">
+              <FormField
+                control={form.control}
+                name={`units.${index}.unit_id`}
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Unidade</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma unidade" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {units?.map((unit) => (
+                          <SelectItem key={unit.id} value={unit.id}>
+                            {unit.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name={`units.${index}.role`}
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Perfil</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um perfil" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="admin">Administrador</SelectItem>
+                        <SelectItem value="manager">Gerente</SelectItem>
+                        <SelectItem value="operator">Operador</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {fields.length > 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="mt-8"
+                  onClick={() => remove(index)}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
 
         <div className="flex justify-end gap-4">
           <Button type="submit">

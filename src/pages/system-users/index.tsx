@@ -60,15 +60,31 @@ export default function SystemUsersPage() {
 
   const handleCreateUser = async (data: SystemUserWithUnits) => {
     try {
-      const { error: userError } = await supabase
+      // Primeiro insere o usuário
+      const { data: newUser, error: userError } = await supabase
         .from("system_users")
         .insert({
           name: data.name,
           email: data.email,
           phone: data.phone,
-        });
+        })
+        .select()
+        .single();
 
       if (userError) throw userError;
+
+      // Depois insere as unidades vinculadas
+      const { error: unitsError } = await supabase
+        .from("system_user_units")
+        .insert(
+          data.units.map(unit => ({
+            user_id: newUser.id,
+            unit_id: unit.unit_id,
+            role: unit.role,
+          }))
+        );
+
+      if (unitsError) throw unitsError;
 
       // Invalidar o cache para forçar uma nova busca
       await queryClient.invalidateQueries({ queryKey: ["system-users"] });
