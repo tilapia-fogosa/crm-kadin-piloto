@@ -15,7 +15,7 @@ export default function UnitsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("units")
-        .select("*, created_by(full_name)")
+        .select("*")
         .order("name");
 
       if (error) {
