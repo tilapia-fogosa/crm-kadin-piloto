@@ -48,13 +48,14 @@ export default function Auth() {
     console.log("Iniciando login para:", email);
     
     try {
+      console.log("Tentando fazer login com:", { email, password });
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error("Erro no login:", error);
+        console.error("Erro detalhado no login:", error);
         let errorMessage = "Erro ao fazer login";
         
         // Mensagens de erro mais amigáveis
