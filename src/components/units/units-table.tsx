@@ -31,7 +31,6 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
             <TableHead>Estado</TableHead>
             <TableHead>Telefone</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Criado por</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -43,7 +42,6 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
               <TableCell>{unit.state}</TableCell>
               <TableCell>{unit.phone}</TableCell>
               <TableCell>{unit.email}</TableCell>
-              <TableCell>{unit.created_by?.full_name}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
                   <Link to={`/units/${unit.id}/edit`}>
