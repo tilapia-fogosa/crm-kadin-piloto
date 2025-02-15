@@ -81,11 +81,9 @@ export function SystemUserActions({ user }: SystemUserActionsProps) {
           .select()
           .eq("user_id", user.id)
           .eq("unit_id", unit.unit_id)
-          .single();
+          .maybeSingle();
 
-        if (checkError && checkError.code !== 'PGRST116') {
-          throw checkError;
-        }
+        if (checkError) throw checkError;
 
         if (existingUnit) {
           // Atualiza o vínculo existente
