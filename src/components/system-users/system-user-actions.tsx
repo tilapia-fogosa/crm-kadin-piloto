@@ -41,6 +41,14 @@ export function SystemUserActions({ user }: SystemUserActionsProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const handleCloseEditDialog = () => {
+    setShowEditDialog(false);
+    // Força um pequeno delay para garantir que o overlay seja removido
+    setTimeout(() => {
+      document.body.style.pointerEvents = 'auto';
+    }, 100);
+  };
+
   const handleEdit = async (data: SystemUserWithUnits) => {
     try {
       // Primeiro atualizamos os dados básicos do usuário
@@ -112,7 +120,7 @@ export function SystemUserActions({ user }: SystemUserActionsProps) {
         description: "As alterações foram salvas.",
       });
 
-      setShowEditDialog(false);
+      handleCloseEditDialog();
     } catch (error: any) {
       console.error("Error updating user:", error);
       toast({
@@ -175,14 +183,16 @@ export function SystemUserActions({ user }: SystemUserActionsProps) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog} modal>
-        <DialogContent className="max-w-3xl z-50">
-          <DialogHeader>
-            <DialogTitle>Editar Usuário</DialogTitle>
-          </DialogHeader>
-          <SystemUserForm user={user} onSubmit={handleEdit} />
-        </DialogContent>
-      </Dialog>
+      {showEditDialog && (
+        <Dialog open={showEditDialog} onOpenChange={handleCloseEditDialog}>
+          <DialogContent className="max-w-3xl z-50" onInteractOutside={(e) => e.preventDefault()}>
+            <DialogHeader>
+              <DialogTitle>Editar Usuário</DialogTitle>
+            </DialogHeader>
+            <SystemUserForm user={user} onSubmit={handleEdit} />
+          </DialogContent>
+        </Dialog>
+      )}
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent className="z-50">
