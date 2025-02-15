@@ -7,6 +7,7 @@ export const unitFormSchema = z.object({
   number: z.string().min(1, "Número é obrigatório"),
   city: z.string().min(1, "Cidade é obrigatória"),
   state: z.string().min(1, "Estado é obrigatório"),
+  neighborhood: z.string().min(1, "Bairro é obrigatório"),
   postalCode: z.string().min(1, "CEP é obrigatório"),
   phone: z.string().min(1, "Telefone é obrigatório"),
   email: z.string().email("Email inválido").min(1, "Email é obrigatório"),

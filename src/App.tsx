@@ -14,7 +14,6 @@ import NewClient from "@/pages/clients/new";
 import ClientsPage from "@/pages/clients";
 import LeadSourcesPage from "@/pages/clients/sources";
 import UnitsPage from "@/pages/units";
-import NewUnit from "@/pages/units/new";
 import ApiDocsPage from "@/pages/api-docs";
 import Auth from "@/pages/Auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -54,7 +53,6 @@ function App() {
                             <Route path="/clients" element={<ClientsPage />} />
                             <Route path="/clients/sources" element={<LeadSourcesPage />} />
                             <Route path="/units" element={<UnitsPage />} />
-                            <Route path="/units/new" element={<NewUnit />} />
                             <Route path="/api-docs" element={<ApiDocsPage />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
