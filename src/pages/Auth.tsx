@@ -35,6 +35,15 @@ export default function Auth() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha email e senha.",
+      });
+      return;
+    }
+
     setLoading(true);
     console.log("Iniciando login para:", email);
     
@@ -44,7 +53,24 @@ export default function Auth() {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro no login:", error);
+        let errorMessage = "Erro ao fazer login";
+        
+        // Mensagens de erro mais amigáveis
+        if (error.message.includes("Invalid login credentials")) {
+          errorMessage = "Email ou senha incorretos";
+        } else if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Email ainda não confirmado";
+        }
+
+        toast({
+          variant: "destructive",
+          title: "Erro no login",
+          description: errorMessage,
+        });
+        return;
+      }
 
       console.log("Login bem sucedido:", data);
       
@@ -56,11 +82,11 @@ export default function Auth() {
       navigate("/dashboard");
 
     } catch (error: any) {
-      console.error("Erro no login:", error);
+      console.error("Erro inesperado no login:", error);
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
-        description: error.message,
+        description: "Ocorreu um erro inesperado. Tente novamente.",
       });
     } finally {
       setLoading(false);
@@ -69,6 +95,15 @@ export default function Auth() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha email e senha.",
+      });
+      return;
+    }
+
     setLoading(true);
     console.log("Iniciando cadastro para:", email);
 
@@ -78,7 +113,24 @@ export default function Auth() {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro no cadastro:", error);
+        let errorMessage = "Erro ao criar conta";
+        
+        // Mensagens de erro mais amigáveis
+        if (error.message.includes("User already registered")) {
+          errorMessage = "Este email já está cadastrado";
+        } else if (error.message.includes("Password")) {
+          errorMessage = "A senha deve ter pelo menos 6 caracteres";
+        }
+
+        toast({
+          variant: "destructive",
+          title: "Erro no cadastro",
+          description: errorMessage,
+        });
+        return;
+      }
 
       console.log("Cadastro bem sucedido:", data);
       
@@ -86,12 +138,16 @@ export default function Auth() {
         title: "Cadastro realizado com sucesso!",
         description: "Verifique seu email para confirmar o cadastro.",
       });
+      
+      // Limpa os campos após o cadastro
+      setEmail("");
+      setPassword("");
     } catch (error: any) {
-      console.error("Erro no cadastro:", error);
+      console.error("Erro inesperado no cadastro:", error);
       toast({
         variant: "destructive",
         title: "Erro ao criar conta",
-        description: error.message,
+        description: "Ocorreu um erro inesperado. Tente novamente.",
       });
     } finally {
       setLoading(false);
