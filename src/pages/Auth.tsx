@@ -109,19 +109,19 @@ export default function Auth() {
     console.log("Iniciando cadastro para:", email);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      // Primeiro, cria o usuário na autenticação
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
       });
 
-      if (error) {
-        console.error("Erro no cadastro:", error);
+      if (authError) {
+        console.error("Erro no cadastro:", authError);
         let errorMessage = "Erro ao criar conta";
         
-        // Mensagens de erro mais amigáveis
-        if (error.message.includes("User already registered")) {
+        if (authError.message.includes("User already registered")) {
           errorMessage = "Este email já está cadastrado";
-        } else if (error.message.includes("Password")) {
+        } else if (authError.message.includes("Password")) {
           errorMessage = "A senha deve ter pelo menos 6 caracteres";
         }
 
@@ -133,7 +133,26 @@ export default function Auth() {
         return;
       }
 
-      console.log("Cadastro bem sucedido:", data);
+      // Se o usuário foi criado com sucesso, cria o registro na tabela system_users
+      if (authData.user) {
+        const { error: systemUserError } = await supabase
+          .from('system_users')
+          .insert([
+            {
+              id: authData.user.id,
+              email: email,
+              name: email.split('@')[0], // Usa a parte do email antes do @ como nome provisório
+              active: true
+            }
+          ]);
+
+        if (systemUserError) {
+          console.error("Erro ao criar system user:", systemUserError);
+          // Não exibimos este erro para o usuário, pois o cadastro principal já foi feito
+        }
+      }
+
+      console.log("Cadastro bem sucedido:", authData);
       
       toast({
         title: "Cadastro realizado com sucesso!",
