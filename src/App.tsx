@@ -1,7 +1,7 @@
 
 import React from "react";
 import { BrowserRouter } from "react-router-dom";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { AppSidebar } from "./components/app-sidebar";
 import { SidebarProvider, SidebarInset } from "./components/ui/sidebar";
@@ -38,7 +38,17 @@ function App() {
           <SidebarProvider>
             <div className="flex min-h-screen w-full">
               <Routes>
+                {/* Rota de autenticação */}
                 <Route path="/auth" element={<Auth />} />
+                
+                {/* Redireciona a raiz para o dashboard se autenticado */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Navigate to="/dashboard" replace />
+                  </ProtectedRoute>
+                } />
+
+                {/* Todas as outras rotas protegidas */}
                 <Route
                   path="*"
                   element={
@@ -47,7 +57,7 @@ function App() {
                         <AppSidebar />
                         <SidebarInset>
                           <Routes>
-                            <Route path="/" element={<Index />} />
+                            <Route path="/dashboard" element={<Index />} />
                             <Route path="/kanban" element={<Kanban />} />
                             <Route path="/agenda" element={<Agenda />} />
                             <Route path="/clients/new" element={<NewClient />} />

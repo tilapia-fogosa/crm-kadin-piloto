@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -14,6 +16,22 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Verifica se o usuário já está autenticado
+  const { data: session } = useQuery({
+    queryKey: ['session'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    },
+  });
+
+  // Se já estiver autenticado, redireciona para o dashboard
+  useEffect(() => {
+    if (session) {
+      navigate("/dashboard");
+    }
+  }, [session, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,13 +50,10 @@ export default function Auth() {
       
       toast({
         title: "Login realizado com sucesso!",
-        description: "Redirecionando para a página inicial...",
+        description: "Redirecionando para o dashboard...",
       });
 
-      // Pequeno delay para garantir que o toast seja visto
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
+      navigate("/dashboard");
 
     } catch (error: any) {
       console.error("Erro no login:", error);
