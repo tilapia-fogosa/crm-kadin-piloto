@@ -22,9 +22,40 @@ export default function SystemUsersPage() {
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: users, isLoading } = useQuery({
-    queryKey: ["system-users", searchTerm],
+  // Primeiro, vamos buscar as unidades do usuário atual para usar como filtro
+  const { data: userUnits, isLoading: isLoadingUnits } = useQuery({
+    queryKey: ["user-units"],
     queryFn: async () => {
+      const { data: userUnits, error } = await supabase
+        .from("system_user_units")
+        .select("unit_id")
+        .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+        .eq("active", true);
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao carregar unidades",
+          description: "Ocorreu um erro ao carregar suas unidades. Tente novamente.",
+        });
+        throw error;
+      }
+
+      return userUnits;
+    },
+  });
+
+  // Agora vamos buscar os usuários apenas das unidades que o usuário atual tem acesso
+  const { data: users, isLoading: isLoadingUsers } = useQuery({
+    queryKey: ["system-users", searchTerm, userUnits],
+    enabled: !!userUnits, // Só executa a query quando tivermos as unidades do usuário
+    queryFn: async () => {
+      if (!userUnits?.length) {
+        return [];
+      }
+
+      const unitIds = userUnits.map(u => u.unit_id);
+      
       let query = supabase
         .from("system_users")
         .select(`
@@ -37,6 +68,10 @@ export default function SystemUsersPage() {
           )
         `)
         .eq('active', true)
+        .in('id', supabase.from('system_user_units')
+          .select('user_id')
+          .in('unit_id', unitIds)
+        )
         .order('name');
 
       if (searchTerm) {
@@ -105,6 +140,8 @@ export default function SystemUsersPage() {
     }
   };
 
+  const isLoading = isLoadingUnits || isLoadingUsers;
+
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-8">
@@ -129,7 +166,7 @@ export default function SystemUsersPage() {
 
       <SystemUsersTable users={users || []} isLoading={isLoading} />
 
-      <Dialog open={showNewDialog} onOpenChange={setShowNewDialog} modal>
+      <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Novo Usuário</DialogTitle>
