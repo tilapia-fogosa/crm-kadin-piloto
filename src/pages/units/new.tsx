@@ -17,7 +17,8 @@ export default function NewUnit() {
     resolver: zodResolver(unitFormSchema),
     defaultValues: {
       name: "",
-      address: "",
+      street: "",
+      number: "",
       city: "",
       state: "",
       postalCode: "",
@@ -33,22 +34,18 @@ export default function NewUnit() {
         throw new Error('Not authenticated');
       }
 
-      // Extrair o número do endereço usando regex
-      const numberMatch = values.address.match(/\d+/);
-      const number = numberMatch ? numberMatch[0] : '0';
-
       const { data, error } = await supabase
         .from('units')
         .insert({
           name: values.name,
-          street: values.address,
+          street: values.street,
+          number: values.number,
           city: values.city,
           state: values.state,
           postal_code: values.postalCode,
           phone: values.phone,
           email: values.email,
           created_by: session.session.user.id,
-          number: number,
           neighborhood: 'Centro', // Valor padrão para o bairro
         })
         .select()

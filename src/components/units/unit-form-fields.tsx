@@ -25,19 +25,35 @@ export function UnitFormFields({ form }: UnitFormFieldsProps) {
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="address"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Endereço</FormLabel>
-            <FormControl>
-              <Input placeholder="Digite o endereço" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-4 gap-4">
+        <FormField
+          control={form.control}
+          name="street"
+          render={({ field }) => (
+            <FormItem className="col-span-3">
+              <FormLabel>Endereço</FormLabel>
+              <FormControl>
+                <Input placeholder="Digite o endereço" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="number"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Número</FormLabel>
+              <FormControl>
+                <Input placeholder="Nº" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         <FormField
