@@ -34,10 +34,15 @@ export default function NewUnit() {
         throw new Error('Not authenticated');
       }
 
+      // Extrair o número do endereço usando regex
+      const numberMatch = values.address.match(/\d+/);
+      const number = numberMatch ? numberMatch[0] : '0';
+
       const { data, error } = await supabase
         .from('units')
         .insert({
           name: values.name,
+          description: values.description,
           street: values.address,
           city: values.city,
           state: values.state,
@@ -45,8 +50,8 @@ export default function NewUnit() {
           phone: values.phone,
           email: values.email,
           created_by: session.session.user.id,
-          number: '0', // Campo obrigatório, mas não presente no form
-          neighborhood: 'N/A', // Campo obrigatório, mas não presente no form
+          number: number,
+          neighborhood: 'Centro', // Valor padrão para o bairro
         })
         .select()
         .single();
