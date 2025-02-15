@@ -1,5 +1,5 @@
 
-import { Link, useLocation } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import {
   Sidebar,
@@ -25,12 +25,34 @@ import {
   BarChart3,
   FileJson,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  LogOut
 } from "lucide-react"
+import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/components/ui/use-toast"
 
 export function AppSidebar() {
   const location = useLocation()
   const { state } = useSidebar()
+  const navigate = useNavigate()
+  const { toast } = useToast()
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut()
+      toast({
+        title: "Logout realizado com sucesso",
+        description: "Redirecionando para a tela de login...",
+      })
+      navigate("/auth")
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao fazer logout",
+        description: error.message,
+      })
+    }
+  }
 
   const mainMenuItems = [
     {
@@ -76,7 +98,7 @@ export function AppSidebar() {
     {
       title: "Dashboard",
       icon: LayoutDashboard,
-      path: "/",
+      path: "/dashboard",
     },
   ]
 
@@ -100,7 +122,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarContent>
+      <SidebarContent className="flex flex-col h-full">
         <div className="flex items-center justify-between px-2 py-2">
           <span className={cn(
             "text-lg font-semibold text-sidebar-foreground transition-opacity duration-200",
@@ -116,6 +138,8 @@ export function AppSidebar() {
             )}
           </SidebarTrigger>
         </div>
+
+        {/* Menu Principal */}
         <SidebarGroup>
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -138,6 +162,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* Menu de Clientes */}
         <SidebarGroup>
           <SidebarGroupLabel>Clientes</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -159,6 +184,25 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Botão de Logout */}
+        <div className="mt-auto border-t border-border">
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={handleLogout}
+                    tooltip="Sair do sistema"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sair</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </div>
       </SidebarContent>
     </Sidebar>
   )
