@@ -43,7 +43,7 @@ export function SystemUserActions({ user }: SystemUserActionsProps) {
 
   const handleEdit = async (data: SystemUserWithUnits) => {
     try {
-      // Atualiza os dados básicos do usuário
+      // Primeiro atualizamos os dados básicos do usuário
       const { error: userError } = await supabase
         .from("system_users")
         .update({
@@ -55,26 +55,55 @@ export function SystemUserActions({ user }: SystemUserActionsProps) {
 
       if (userError) throw userError;
 
-      // Remove todos os vínculos existentes
-      const { error: deleteError } = await supabase
+      // Desativa as unidades que não estão mais presentes
+      const newUnitIds = data.units.map(u => u.unit_id);
+      const { error: deactivateError } = await supabase
         .from("system_user_units")
-        .delete()
-        .eq("user_id", user.id);
+        .update({ active: false })
+        .eq("user_id", user.id)
+        .not("unit_id", "in", `(${newUnitIds.join(",")})`);
 
-      if (deleteError) throw deleteError;
+      if (deactivateError) throw deactivateError;
 
-      // Insere os novos vínculos
-      const { error: unitsError } = await supabase
-        .from("system_user_units")
-        .insert(
-          data.units.map(unit => ({
-            user_id: user.id,
-            unit_id: unit.unit_id,
-            role: unit.role,
-          }))
-        );
+      // Para cada unidade no formulário
+      for (const unit of data.units) {
+        // Verifica se já existe um vínculo
+        const { data: existingUnit, error: checkError } = await supabase
+          .from("system_user_units")
+          .select()
+          .eq("user_id", user.id)
+          .eq("unit_id", unit.unit_id)
+          .single();
 
-      if (unitsError) throw unitsError;
+        if (checkError && checkError.code !== 'PGRST116') {
+          throw checkError;
+        }
+
+        if (existingUnit) {
+          // Atualiza o vínculo existente
+          const { error: updateError } = await supabase
+            .from("system_user_units")
+            .update({
+              role: unit.role,
+              active: true
+            })
+            .eq("id", existingUnit.id);
+
+          if (updateError) throw updateError;
+        } else {
+          // Cria um novo vínculo
+          const { error: insertError } = await supabase
+            .from("system_user_units")
+            .insert({
+              user_id: user.id,
+              unit_id: unit.unit_id,
+              role: unit.role,
+              active: true
+            });
+
+          if (insertError) throw insertError;
+        }
+      }
 
       await queryClient.invalidateQueries({ queryKey: ["system-users"] });
 
