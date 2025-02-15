@@ -54,6 +54,7 @@ export default function UnitsPage() {
       const { data, error } = await supabase
         .from("units")
         .select("*")
+        .eq('active', true)  // Only fetch active units
         .order("name");
 
       if (error) {

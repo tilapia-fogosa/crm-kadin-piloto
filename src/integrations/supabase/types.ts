@@ -417,6 +417,7 @@ export type Database = {
       }
       units: {
         Row: {
+          active: boolean
           api_key: string
           city: string
           complement: string | null
@@ -434,6 +435,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          active?: boolean
           api_key?: string
           city: string
           complement?: string | null
@@ -451,6 +453,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          active?: boolean
           api_key?: string
           city?: string
           complement?: string | null

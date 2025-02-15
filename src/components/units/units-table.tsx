@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -8,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import {
   Dialog,
@@ -43,6 +42,8 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
   const [editingUnit, setEditingUnit] = useState<any | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [unitToDelete, setUnitToDelete] = useState<any | null>(null);
   const [pendingValues, setPendingValues] = useState<UnitFormData | null>(null);
   const { toast } = useToast();
 
@@ -63,6 +64,42 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
       email: unit.email || "",
     });
     setShowEditDialog(true);
+  };
+
+  const handleDelete = (unit: any) => {
+    setUnitToDelete(unit);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!unitToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("units")
+        .update({ active: false })
+        .eq("id", unitToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Unidade inativada com sucesso!",
+        description: "A unidade foi inativada do sistema.",
+      });
+
+      // Reload the page to refresh the data
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deactivating unit:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao inativar unidade",
+        description: "Ocorreu um erro ao inativar a unidade. Tente novamente.",
+      });
+    } finally {
+      setShowDeleteDialog(false);
+      setUnitToDelete(null);
+    }
   };
 
   const handleSubmit = async (values: UnitFormData) => {
@@ -143,8 +180,12 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(unit)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon">
-                      <Trash className="h-4 w-4" />
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleDelete(unit)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500 hover:text-red-700" />
                     </Button>
                   </div>
                 </TableCell>
@@ -186,6 +227,28 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setShowConfirmDialog(false)}>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={confirmUpdate}>Confirmar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar inativação</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja mesmo inativar a unidade {unitToDelete?.name}? Esta ação não poderá ser desfeita diretamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowDeleteDialog(false)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Inativar
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
