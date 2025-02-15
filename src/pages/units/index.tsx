@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -137,6 +136,8 @@ export default function UnitsPage() {
         title: "Erro ao criar unidade",
         description: "Ocorreu um erro ao criar a unidade. Tente novamente.",
       });
+    } finally {
+      // Cleanup code here
     }
   };
 

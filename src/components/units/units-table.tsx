@@ -50,6 +50,7 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
       name: unit.name,
       street: unit.street,
       number: unit.number,
+      neighborhood: unit.neighborhood, // Adicionando o bairro aqui
       city: unit.city,
       state: unit.state,
       postalCode: unit.postal_code,
@@ -110,6 +111,7 @@ export function UnitsTable({ units, isLoading }: UnitsTableProps) {
           name: pendingValues.name,
           street: pendingValues.street,
           number: pendingValues.number,
+          neighborhood: pendingValues.neighborhood, // Adicionando o bairro aqui
           city: pendingValues.city,
           state: pendingValues.state,
           postal_code: pendingValues.postalCode,
