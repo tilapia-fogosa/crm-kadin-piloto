@@ -42,7 +42,6 @@ export default function NewUnit() {
         .from('units')
         .insert({
           name: values.name,
-          description: values.description,
           street: values.address,
           city: values.city,
           state: values.state,
