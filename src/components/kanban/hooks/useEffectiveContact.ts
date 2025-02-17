@@ -3,12 +3,13 @@ import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { EffectiveContact } from "../types"
+import { useCallback } from "react"
 
 export function useEffectiveContact() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
-  const registerEffectiveContact = async (contact: EffectiveContact) => {
+  const registerEffectiveContact = useCallback(async (contact: EffectiveContact) => {
     try {
       console.log("Registering effective contact:", contact)
       
@@ -55,7 +56,7 @@ export function useEffectiveContact() {
         description: "Ocorreu um erro ao tentar registrar o contato efetivo.",
       })
     }
-  }
+  }, [toast, queryClient])
 
   return { registerEffectiveContact }
 }
