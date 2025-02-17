@@ -19,7 +19,7 @@ import { useSidebar } from "./ui/sidebar";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Kanban", href: "/kanban", icon: KanbanSquare },
+  { name: "Painel do Consultor", href: "/kanban", icon: KanbanSquare },
   { name: "Agenda", href: "/agenda", icon: Calendar },
   { 
     name: "Clientes", 
