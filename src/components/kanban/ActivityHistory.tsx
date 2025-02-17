@@ -17,16 +17,16 @@ export function ActivityHistory({ activities, onDeleteActivity, clientId }: Acti
       <h3 className="font-semibold mb-2">Histórico de Atividades</h3>
       <ScrollArea className="h-[600px] w-full rounded-md border p-4">
         {activities?.filter(activity => {
-          // Garante que apenas atividades ativas são exibidas
-          // As atividades inativas não são mais incluídas na query do useClientData
-          return activity.split('|').length >= 5;
+          const parts = activity.split('|')
+          // Verifica se a atividade tem todos os campos necessários e está ativa
+          if (parts.length < 7) {
+            console.error('Invalid activity format:', activity);
+            return false;
+          }
+          return parts[6] === 'true'; // Filtra apenas atividades ativas
         }).map((activity, index) => {
           try {
             const parts = activity.split('|')
-            if (parts.length < 5) {
-              console.error('Invalid activity format:', activity);
-              return null;
-            }
             const tipo_atividade = parts[0]
             const tipo_contato = parts[1]
             const date = new Date(parts[2])

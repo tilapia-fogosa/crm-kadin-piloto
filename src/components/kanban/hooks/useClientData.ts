@@ -58,7 +58,8 @@ export function useClientData() {
             tipo_atividade,
             notes,
             created_at,
-            next_contact_date
+            next_contact_date,
+            active
           )
         `)
         .eq('active', true) // Filtra apenas clientes ativos
@@ -88,7 +89,8 @@ export function useClientData() {
         return {
           ...client,
           client_activities: client.client_activities?.map(activity => {
-            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}`
+            // Inclui o status active na string da atividade
+            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}|${activity.active}`
           }) || []
         }
       })
