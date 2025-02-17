@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -5,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { EffectiveContact } from "./types"
 import { useToast } from "@/components/ui/use-toast"
-import { format } from "date-fns"
+import { format, setHours, setMinutes } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { ptBR } from "date-fns/locale"
 import { Input } from "@/components/ui/input"
