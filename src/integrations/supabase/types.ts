@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       client_activities: {
         Row: {
+          active: boolean
           client_id: string
           created_at: string
           created_by: string
@@ -23,6 +24,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          active?: boolean
           client_id: string
           created_at?: string
           created_by: string
@@ -35,6 +37,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          active?: boolean
           client_id?: string
           created_at?: string
           created_by?: string
@@ -136,54 +139,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      deleted_activities: {
-        Row: {
-          client_activity_id: string
-          client_id: string
-          created_at: string
-          deleted_at: string
-          deleted_by: string
-          id: string
-          next_contact_date: string | null
-          notes: string | null
-          original_created_at: string
-          original_created_by: string
-          tipo_atividade: string
-          tipo_contato: string
-          updated_at: string | null
-        }
-        Insert: {
-          client_activity_id: string
-          client_id: string
-          created_at?: string
-          deleted_at?: string
-          deleted_by: string
-          id?: string
-          next_contact_date?: string | null
-          notes?: string | null
-          original_created_at: string
-          original_created_by: string
-          tipo_atividade: string
-          tipo_contato: string
-          updated_at?: string | null
-        }
-        Update: {
-          client_activity_id?: string
-          client_id?: string
-          created_at?: string
-          deleted_at?: string
-          deleted_by?: string
-          id?: string
-          next_contact_date?: string | null
-          notes?: string | null
-          original_created_at?: string
-          original_created_by?: string
-          tipo_atividade?: string
-          tipo_contato?: string
-          updated_at?: string | null
-        }
-        Relationships: []
       }
       lead_sources: {
         Row: {

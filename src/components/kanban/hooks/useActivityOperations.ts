@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -21,7 +22,8 @@ export function useActivityOperations() {
           tipo_contato: attempt.type,
           tipo_atividade: 'Tentativa de Contato',
           created_by: session.session.user.id,
-          next_contact_date: attempt.nextContactDate.toISOString()
+          next_contact_date: attempt.nextContactDate.toISOString(),
+          active: true // Garante que a nova atividade é criada como ativa
         })
 
       if (activityError) throw activityError
@@ -58,7 +60,8 @@ export function useActivityOperations() {
           tipo_atividade: 'Contato Efetivo',
           notes: contact.notes,
           created_by: session.session.user.id,
-          next_contact_date: contact.nextContactDate?.toISOString()
+          next_contact_date: contact.nextContactDate?.toISOString(),
+          active: true // Garante que a nova atividade é criada como ativa
         })
 
       if (activityError) throw activityError
@@ -108,7 +111,8 @@ export function useActivityOperations() {
           tipo_contato: scheduling.type,
           created_by: session.session.user.id,
           scheduled_date: scheduling.scheduledDate.toISOString(),
-          next_contact_date: scheduling.nextContactDate?.toISOString()
+          next_contact_date: scheduling.nextContactDate?.toISOString(),
+          active: true // Garante que a nova atividade é criada como ativa
         })
 
       if (activityError) throw activityError
@@ -142,20 +146,20 @@ export function useActivityOperations() {
 
   const deleteActivity = async (activityId: string, clientId: string) => {
     try {
-      console.log('Deleting activity:', { activityId, clientId })
+      console.log('Inativando atividade:', { activityId, clientId })
       
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      // Excluir a atividade - o trigger se encarregará de mover para deleted_activities
-      const { error: deleteError } = await supabase
+      // Ao invés de excluir, apenas marca como inativa
+      const { error: updateError } = await supabase
         .from('client_activities')
-        .delete()
+        .update({ active: false })
         .eq('id', activityId)
 
-      if (deleteError) {
-        console.error('Error deleting activity:', deleteError)
-        throw deleteError
+      if (updateError) {
+        console.error('Error inactivating activity:', updateError)
+        throw updateError
       }
 
       // Atualizar a query cache para refletir a mudança

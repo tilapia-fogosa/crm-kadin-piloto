@@ -62,8 +62,8 @@ export function useClientData() {
           )
         `)
         .eq('active', true) // Filtra apenas clientes ativos
+        .eq('client_activities.active', true) // Filtra apenas atividades ativas
         .order('created_at', { ascending: false })
-        .is('deleted_at', null)
 
       if (error) {
         console.error('Error fetching clients:', error)
