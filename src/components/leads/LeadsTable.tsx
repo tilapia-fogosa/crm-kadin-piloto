@@ -1,17 +1,19 @@
+
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Table } from "@/components/ui/table";
-import { LeadStatus } from "@/types/lead";
 
-const statusVariants: Record<LeadStatus, "default" | "destructive" | "secondary" | "outline"> = {
+type ClientStatus = "active" | "inactive" | "pending" | "converted";
+
+const statusVariants: Record<ClientStatus, "default" | "destructive" | "secondary" | "outline"> = {
   active: "default",
   inactive: "destructive",
   pending: "secondary",
   converted: "outline"
 };
 
-const LeadsTable = ({ leads = [] }) => {
+const LeadsTable = ({ leads = [] }: { leads: Array<{ id: string; name: string; status: ClientStatus }> }) => {
   return (
     <Table>
       <thead>
