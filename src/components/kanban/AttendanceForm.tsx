@@ -24,10 +24,10 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2">
         <Button
           onClick={() => setSelectedResult('matriculado')}
-          className={`flex-1 bg-green-500 hover:bg-green-600 ${
+          className={`w-full bg-green-500 hover:bg-green-600 ${
             selectedResult === 'matriculado' ? 'ring-2 ring-green-700' : ''
           }`}
           variant="default"
@@ -37,7 +37,7 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
         
         <Button
           onClick={() => setSelectedResult('negociacao')}
-          className={`flex-1 bg-yellow-500 hover:bg-yellow-600 text-yellow-950 ${
+          className={`w-full bg-yellow-500 hover:bg-yellow-600 text-yellow-950 ${
             selectedResult === 'negociacao' ? 'ring-2 ring-yellow-700' : ''
           }`}
           variant="default"
@@ -47,7 +47,7 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
         
         <Button
           onClick={() => setSelectedResult('perdido')}
-          className={`flex-1 bg-red-500 hover:bg-red-600 ${
+          className={`w-full bg-red-500 hover:bg-red-600 ${
             selectedResult === 'perdido' ? 'ring-2 ring-red-700' : ''
           }`}
           variant="default"
