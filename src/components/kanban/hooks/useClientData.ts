@@ -41,7 +41,7 @@ export function useClientData() {
 
       console.log('Fetching clients data...')
       
-      // Alterada a estrutura da query para usar inner join e garantir apenas atividades ativas
+      // Alterada a query para usar left join e permitir clientes sem atividades
       const { data, error } = await supabase
         .from('clients')
         .select(`
@@ -53,7 +53,7 @@ export function useClientData() {
           status,
           next_contact_date,
           created_at,
-          client_activities!inner (
+          client_activities (
             id,
             tipo_contato,
             tipo_atividade,
@@ -63,8 +63,7 @@ export function useClientData() {
             active
           )
         `)
-        .eq('active', true)
-        .eq('client_activities.active', true)
+        .eq('active', true) // Filtra apenas clientes ativos
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -89,10 +88,12 @@ export function useClientData() {
       const clientsWithActivities = data?.map(client => {
         return {
           ...client,
-          client_activities: client.client_activities?.map(activity => {
-            // Inclui o status active na string da atividade
-            return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}|${activity.active}`
-          }) || []
+          // Filtra apenas atividades ativas antes de transformar em string
+          client_activities: (client.client_activities || [])
+            .filter(activity => activity.active)
+            .map(activity => {
+              return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}|${activity.active}`
+            })
         }
       })
 
