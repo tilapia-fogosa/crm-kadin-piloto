@@ -23,7 +23,7 @@ export function useActivityOperations() {
           tipo_atividade: 'Tentativa de Contato',
           created_by: session.session.user.id,
           next_contact_date: attempt.nextContactDate.toISOString(),
-          active: true // Garante que a nova atividade é criada como ativa
+          active: true
         })
 
       if (activityError) throw activityError
@@ -51,7 +51,6 @@ export function useActivityOperations() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      // Primeiro registra a atividade
       const { error: activityError } = await supabase
         .from('client_activities')
         .insert({
@@ -61,12 +60,11 @@ export function useActivityOperations() {
           notes: contact.notes,
           created_by: session.session.user.id,
           next_contact_date: contact.nextContactDate?.toISOString(),
-          active: true // Garante que a nova atividade é criada como ativa
+          active: true
         })
 
       if (activityError) throw activityError
 
-      // Atualiza o cliente diretamente com a nova data de contato
       if (contact.nextContactDate) {
         const { error: clientError } = await supabase
           .from('clients')
@@ -112,12 +110,11 @@ export function useActivityOperations() {
           created_by: session.session.user.id,
           scheduled_date: scheduling.scheduledDate.toISOString(),
           next_contact_date: scheduling.nextContactDate?.toISOString(),
-          active: true // Garante que a nova atividade é criada como ativa
+          active: true
         })
 
       if (activityError) throw activityError
 
-      // Atualiza o scheduled_date do cliente
       const { error: clientError } = await supabase
         .from('clients')
         .update({ 
@@ -148,7 +145,6 @@ export function useActivityOperations() {
     try {
       console.log('Iniciando processo de inativação:', { activityId, clientId });
       
-      // Primeiro verifica a autenticação
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) {
         console.error('Usuário não autenticado');
@@ -196,7 +192,6 @@ export function useActivityOperations() {
 
       console.log('Atividade inativada com sucesso:', updatedActivity);
 
-      // Invalidar o cache para forçar recarregamento dos dados
       await queryClient.invalidateQueries({ queryKey: ['clients'] });
 
       toast({
