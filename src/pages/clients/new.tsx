@@ -29,7 +29,6 @@ export default function NewClient() {
     },
   });
 
-  // Reset form when component mounts
   useEffect(() => {
     console.log("New Client form mounted, resetting form...")
     form.reset();

@@ -77,6 +77,7 @@ export type Database = {
           phone_number: string
           scheduled_date: string | null
           status: string
+          unit_id: string | null
           updated_at: string
         }
         Insert: {
@@ -96,6 +97,7 @@ export type Database = {
           phone_number: string
           scheduled_date?: string | null
           status?: string
+          unit_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -115,6 +117,7 @@ export type Database = {
           phone_number?: string
           scheduled_date?: string | null
           status?: string
+          unit_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -123,6 +126,13 @@ export type Database = {
             columns: ["lead_source"]
             isOneToOne: false
             referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -283,6 +293,27 @@ export type Database = {
           id?: string
           name?: string
           path?: string
+        }
+        Relationships: []
+      }
+      units: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
