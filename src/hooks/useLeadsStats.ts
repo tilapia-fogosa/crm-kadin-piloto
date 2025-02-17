@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { subMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns"
+import { subMonths, startOfMonth, endOfMonth } from "date-fns"
 
 interface PeriodStats {
   total: number
@@ -20,6 +20,7 @@ export function useLeadsStats() {
         const { data, error } = await supabase
           .from('clients')
           .select('created_at')
+          .eq('active', true) // Filtra apenas clientes ativos
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
 
@@ -64,10 +65,9 @@ export function useLeadsStats() {
         twelveMonths
       }
     },
-    // Configurações para manter os dados atualizados
-    refetchInterval: 5000, // Revalidar a cada 5 segundos
-    refetchOnWindowFocus: true, // Revalidar quando a janela ganhar foco
-    refetchOnMount: true, // Revalidar quando o componente for montado
-    staleTime: 0 // Considerar os dados sempre obsoletos
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0
   })
 }
