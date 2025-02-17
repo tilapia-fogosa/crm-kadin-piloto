@@ -14,6 +14,7 @@ import { formatDate } from "./utils/activityUtils";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ActivityDashboardProps {
   client: any;
@@ -26,6 +27,12 @@ export function ActivityDashboard({ client, onClose, refetchClient }: ActivityDa
   const [activities, setActivities] = useState<any[]>([]);
   const whatsApp = useWhatsApp();
   const activityDeletion = useActivityDeletion();
+  const { toast } = useToast();
+
+  // Add null check for client
+  if (!client || !client.id) {
+    return <div>Carregando dados do cliente...</div>;
+  }
 
   const { data: activitiesData, refetch: refetchActivities } = useQuery({
     queryKey: ['clientActivities', client.id],
@@ -38,7 +45,7 @@ export function ActivityDashboard({ client, onClose, refetchClient }: ActivityDa
 
       if (error) {
         console.error("Erro ao buscar atividades:", error);
-        whatsApp.toast({
+        toast({
           variant: "destructive",
           title: "Erro ao buscar atividades",
           description: "Ocorreu um erro ao buscar as atividades do cliente.",
@@ -65,7 +72,7 @@ export function ActivityDashboard({ client, onClose, refetchClient }: ActivityDa
         return (
           <ContactAttemptForm
             cardId={client.id}
-            onRegisterAttempt={async () => {
+            onSubmit={async () => {
               await refetchActivities();
               await refetchClient();
             }}
@@ -75,7 +82,7 @@ export function ActivityDashboard({ client, onClose, refetchClient }: ActivityDa
         return (
           <EffectiveContactForm
             cardId={client.id}
-            onRegisterEffectiveContact={async () => {
+            onSubmit={async () => {
               await refetchActivities();
               await refetchClient();
             }}
@@ -85,7 +92,7 @@ export function ActivityDashboard({ client, onClose, refetchClient }: ActivityDa
         return (
           <SchedulingForm
             cardId={client.id}
-            onRegisterScheduling={async () => {
+            onSubmit={async () => {
               await refetchActivities();
               await refetchClient();
             }}
@@ -118,7 +125,7 @@ export function ActivityDashboard({ client, onClose, refetchClient }: ActivityDa
 
       if (error) {
         console.error("Erro ao inativar atividade:", error);
-        activityDeletion.toast({
+        toast({
           variant: "destructive",
           title: "Erro ao inativar atividade",
           description: "Ocorreu um erro ao tentar inativar a atividade.",
@@ -126,7 +133,7 @@ export function ActivityDashboard({ client, onClose, refetchClient }: ActivityDa
         return;
       }
 
-      activityDeletion.toast({
+      toast({
         title: "Atividade removida!",
         description: "A atividade foi removida com sucesso.",
       });
@@ -135,7 +142,7 @@ export function ActivityDashboard({ client, onClose, refetchClient }: ActivityDa
       refetchClient();
     } catch (error) {
       console.error("Erro ao inativar atividade:", error);
-      activityDeletion.toast({
+      toast({
         variant: "destructive",
         title: "Erro ao inativar atividade",
         description: "Ocorreu um erro ao tentar inativar a atividade.",

@@ -1,15 +1,15 @@
 
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { RefreshCw, LineChart } from "lucide-react"
-import { ActivityDashboard } from "./ActivityDashboard"
-import { CalendarDashboard } from "./CalendarDashboard"
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, LineChart } from "lucide-react";
+import { ActivityDashboard } from "./ActivityDashboard";
+import { CalendarDashboard } from "./CalendarDashboard";
 
 interface BoardHeaderProps {
-  showPendingOnly: boolean
-  setShowPendingOnly: (value: boolean) => void
-  onRefresh: () => void
+  showPendingOnly: boolean;
+  setShowPendingOnly: (value: boolean) => void;
+  onRefresh: () => void;
 }
 
 export function BoardHeader({
@@ -34,8 +34,8 @@ export function BoardHeader({
         </div>
 
         <div className="flex items-center space-x-2">
-          <ActivityDashboard />
-          <CalendarDashboard />
+          {/* Removed ActivityDashboard from here since it requires props we don't have */}
+          <CalendarDashboard clientId={null} />
           
           <Button variant="outline" size="icon" onClick={onRefresh}>
             <RefreshCw className="h-4 w-4" />
@@ -44,8 +44,8 @@ export function BoardHeader({
       </div>
 
       <div className="col-span-1">
-        {/* Espaço reservado para futuros elementos */}
+        {/* Reserved space for future elements */}
       </div>
     </div>
-  )
+  );
 }
