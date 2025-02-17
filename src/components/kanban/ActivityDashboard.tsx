@@ -260,7 +260,7 @@ export function ActivityDashboard() {
                   {"Novos\nClientes"}
                 </TableHead>
                 <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[14.4px]">
-                  {"Tentativa\nde Contato"}
+                  {"Total de\nContatos"}
                 </TableHead>
                 <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
                   {"Contatos\nEfetivos"}
