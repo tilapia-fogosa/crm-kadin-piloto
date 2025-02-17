@@ -194,6 +194,87 @@ export type Database = {
         }
         Relationships: []
       }
+      sales: {
+        Row: {
+          active: boolean
+          attendance_activity_id: string
+          client_id: string
+          created_at: string
+          enrollment_amount: number
+          enrollment_installments: number
+          enrollment_payment_date: string
+          enrollment_payment_method: Database["public"]["Enums"]["payment_method"]
+          first_monthly_fee_date: string
+          id: string
+          important_info: string | null
+          material_amount: number
+          material_installments: number
+          material_payment_date: string
+          material_payment_method: Database["public"]["Enums"]["payment_method"]
+          monthly_fee_amount: number
+          monthly_fee_due_day: Database["public"]["Enums"]["due_day"] | null
+          monthly_fee_payment_method: Database["public"]["Enums"]["payment_method"]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          attendance_activity_id: string
+          client_id: string
+          created_at?: string
+          enrollment_amount: number
+          enrollment_installments: number
+          enrollment_payment_date: string
+          enrollment_payment_method: Database["public"]["Enums"]["payment_method"]
+          first_monthly_fee_date: string
+          id?: string
+          important_info?: string | null
+          material_amount: number
+          material_installments: number
+          material_payment_date: string
+          material_payment_method: Database["public"]["Enums"]["payment_method"]
+          monthly_fee_amount: number
+          monthly_fee_due_day?: Database["public"]["Enums"]["due_day"] | null
+          monthly_fee_payment_method: Database["public"]["Enums"]["payment_method"]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          attendance_activity_id?: string
+          client_id?: string
+          created_at?: string
+          enrollment_amount?: number
+          enrollment_installments?: number
+          enrollment_payment_date?: string
+          enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+          first_monthly_fee_date?: string
+          id?: string
+          important_info?: string | null
+          material_amount?: number
+          material_installments?: number
+          material_payment_date?: string
+          material_payment_method?: Database["public"]["Enums"]["payment_method"]
+          monthly_fee_amount?: number
+          monthly_fee_due_day?: Database["public"]["Enums"]["due_day"] | null
+          monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_attendance_activity_id_fkey"
+            columns: ["attendance_activity_id"]
+            isOneToOne: false
+            referencedRelation: "client_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_pages: {
         Row: {
           created_at: string
@@ -496,6 +577,14 @@ export type Database = {
     }
     Enums: {
       access_profile: "admin" | "consultor" | "franqueado"
+      due_day: "5" | "10" | "15" | "20" | "25"
+      payment_method:
+        | "dinheiro"
+        | "pix"
+        | "cartao_credito"
+        | "cartao_debito"
+        | "boleto"
+        | "recorrencia"
       user_access_level: "admin" | "franqueador" | "franqueado" | "consultor"
       user_role: "consultor" | "franqueado"
     }

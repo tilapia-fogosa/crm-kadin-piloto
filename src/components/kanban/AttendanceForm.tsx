@@ -1,7 +1,9 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Attendance } from "./types"
+import { Attendance, Sale } from "./types"
+import { SaleForm } from "./SaleForm"
+import { useSale } from "./hooks/useSale"
 
 interface AttendanceFormProps {
   onSubmit: (attendance: Attendance) => void
@@ -10,9 +12,14 @@ interface AttendanceFormProps {
 
 export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
   const [selectedResult, setSelectedResult] = useState<'matriculado' | 'negociacao' | 'perdido' | undefined>(undefined)
+  const [showSaleForm, setShowSaleForm] = useState(false)
+  const { registerSale, isLoading } = useSale()
 
-  const handleSubmit = () => {
-    if (!selectedResult) {
+  const handleSubmit = async () => {
+    if (!selectedResult) return
+
+    if (selectedResult === 'matriculado') {
+      setShowSaleForm(true)
       return
     }
 
@@ -20,6 +27,28 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
       result: selectedResult,
       cardId
     })
+  }
+
+  const handleSaleSubmit = async (sale: Sale) => {
+    try {
+      await registerSale(sale)
+      onSubmit({
+        result: 'matriculado',
+        cardId
+      })
+    } catch (error) {
+      console.error('Erro ao processar venda:', error)
+    }
+  }
+
+  if (showSaleForm) {
+    return (
+      <SaleForm
+        onSubmit={handleSaleSubmit}
+        clientId={cardId}
+        activityId="placeholder" // Isso será o ID da atividade de atendimento
+      />
+    )
   }
 
   return (
@@ -65,10 +94,11 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
       <Button 
         onClick={handleSubmit}
         className="w-full"
-        disabled={!selectedResult}
+        disabled={!selectedResult || isLoading}
       >
-        Cadastrar Atendimento
+        {isLoading ? "Processando..." : "Cadastrar Atendimento"}
       </Button>
     </div>
   )
 }
+
