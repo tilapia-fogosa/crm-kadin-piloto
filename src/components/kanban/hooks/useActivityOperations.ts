@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -145,36 +146,51 @@ export function useActivityOperations() {
 
   const deleteActivity = async (activityId: string, clientId: string) => {
     try {
-      console.log('Tentando inativar atividade:', { activityId, clientId })
+      console.log('Iniciando processo de inativação:', { activityId, clientId });
       
-      const { data: session } = await supabase.auth.getSession()
-      if (!session.session) throw new Error('Not authenticated')
+      // Verificar se a atividade existe antes de tentar inativar
+      const { data: existingActivity, error: checkError } = await supabase
+        .from('client_activities')
+        .select('id, active')
+        .eq('id', activityId)
+        .maybeSingle();
 
-      // Executa a atualização sem tentar retornar os dados
+      if (checkError) {
+        console.error('Erro ao verificar atividade:', checkError);
+        throw checkError;
+      }
+
+      if (!existingActivity) {
+        throw new Error('Atividade não encontrada');
+      }
+
+      console.log('Atividade encontrada:', existingActivity);
+
+      // Executa a atualização
       const { error: updateError } = await supabase
         .from('client_activities')
         .update({ 
           active: false,
           updated_at: new Date().toISOString()
         })
-        .eq('id', activityId)
+        .eq('id', activityId);
 
       if (updateError) {
-        console.error('Erro ao inativar atividade:', updateError)
-        throw updateError
+        console.error('Erro ao inativar atividade:', updateError);
+        throw updateError;
       }
 
-      console.log('Atividade inativada com sucesso')
+      console.log('Atividade inativada com sucesso');
 
       // Invalidar o cache para forçar recarregamento dos dados
-      await queryClient.invalidateQueries({ queryKey: ['clients'] })
+      await queryClient.invalidateQueries({ queryKey: ['clients'] });
 
       toast({
         title: "Atividade excluída",
         description: "A atividade foi inativada com sucesso",
       })
     } catch (error) {
-      console.error('Erro em deleteActivity:', error)
+      console.error('Erro em deleteActivity:', error);
       toast({
         variant: "destructive",
         title: "Erro ao excluir atividade",

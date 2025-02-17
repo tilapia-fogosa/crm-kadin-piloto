@@ -55,8 +55,8 @@ export function ActivityHistory({ activities, onDeleteActivity, clientId }: Acti
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    onClick={() => {
+                      console.log('Deletando atividade:', { id, clientId });
                       onDeleteActivity(id, clientId);
                     }}
                   >
