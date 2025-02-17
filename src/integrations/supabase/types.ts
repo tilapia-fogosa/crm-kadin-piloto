@@ -266,65 +266,6 @@ export type Database = {
         }
         Relationships: []
       }
-      leads: {
-        Row: {
-          age_range: string | null
-          created_at: string
-          email: string | null
-          id: string
-          lead_source: string | null
-          meta_id: string | null
-          name: string
-          observations: string | null
-          original_ad: string | null
-          original_adset: string | null
-          phone_number: string
-          unit_api_key: string | null
-          unit_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          age_range?: string | null
-          created_at?: string
-          email?: string | null
-          id?: string
-          lead_source?: string | null
-          meta_id?: string | null
-          name: string
-          observations?: string | null
-          original_ad?: string | null
-          original_adset?: string | null
-          phone_number: string
-          unit_api_key?: string | null
-          unit_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          age_range?: string | null
-          created_at?: string
-          email?: string | null
-          id?: string
-          lead_source?: string | null
-          meta_id?: string | null
-          name?: string
-          observations?: string | null
-          original_ad?: string | null
-          original_adset?: string | null
-          phone_number?: string
-          unit_api_key?: string | null
-          unit_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "leads_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           avatar_url: string | null
