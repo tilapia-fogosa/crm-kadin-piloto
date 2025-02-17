@@ -9,7 +9,11 @@ interface Lead {
   id: string;
   name: string;
   status: string;
-  last_activity: string | null;
+  created_at: string;
+  client_activities: {
+    created_at: string;
+  }[];
+  last_activity: string;
 }
 
 export default function LeadsTable() {
@@ -23,6 +27,7 @@ export default function LeadsTable() {
           id,
           name,
           status,
+          created_at,
           client_activities (
             created_at
           )
@@ -35,9 +40,7 @@ export default function LeadsTable() {
 
       // Processar os dados para obter a última atividade de cada lead
       return clients.map(client => ({
-        id: client.id,
-        name: client.name,
-        status: client.status,
+        ...client,
         last_activity: client.client_activities?.[0]?.created_at || client.created_at
       }));
     },
@@ -81,7 +84,7 @@ export default function LeadsTable() {
             <TableRow key={lead.id}>
               <TableCell>{lead.name}</TableCell>
               <TableCell>{formatStatus(lead.status)}</TableCell>
-              <TableCell>{formatTimeAgo(lead.last_activity!)}</TableCell>
+              <TableCell>{formatTimeAgo(lead.last_activity)}</TableCell>
             </TableRow>
           ))}
         </TableBody>
