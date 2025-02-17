@@ -66,6 +66,8 @@ export function useClientData() {
           status,
           next_contact_date,
           created_at,
+          original_ad,
+          original_adset,
           client_activities (
             id,
             tipo_contato,
@@ -91,10 +93,10 @@ export function useClientData() {
         console.log('Client data:', {
           id: client.id,
           name: client.name,
-          next_contact_date: client.next_contact_date,
+          original_ad: client.original_ad,
+          original_adset: client.original_adset,
           status: client.status,
-          activities_count: client.client_activities?.length || 0,
-          latest_activity_next_contact: client.client_activities?.[0]?.next_contact_date
+          activities_count: client.client_activities?.length || 0
         })
       })
 
