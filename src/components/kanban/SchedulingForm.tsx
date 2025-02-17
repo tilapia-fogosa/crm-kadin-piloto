@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -53,32 +52,47 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
       return
     }
 
-    // Combina a data selecionada com o horário
-    const [hours, minutes] = time.split(":")
-    const scheduledDate = new Date(date)
-    scheduledDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+    try {
+      // Cria uma nova data para evitar mutação
+      let scheduledDate = new Date(date.getTime())
+      
+      // Parse do horário
+      const [hours, minutes] = time.split(":").map(Number)
+      
+      // Usa funções do date-fns para manipular a data com segurança
+      scheduledDate = setHours(scheduledDate, hours)
+      scheduledDate = setMinutes(scheduledDate, minutes)
 
-    // Verifica se a data/hora é futura
-    if (scheduledDate <= new Date()) {
+      // Verifica se a data/hora é futura
+      if (scheduledDate <= new Date()) {
+        toast({
+          title: "Erro",
+          description: "A data e hora do agendamento devem ser futuras",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Se valorizacaoDiaAnterior está ativo, define next_contact_date como 24h antes
+      const nextContactDate = valorizacaoDiaAnterior 
+        ? new Date(scheduledDate.getTime() - 24 * 60 * 60 * 1000)
+        : undefined
+
+      onSubmit({
+        scheduledDate,
+        notes,
+        cardId,
+        valorizacaoDiaAnterior,
+        nextContactDate,
+        type: contactType
+      })
+    } catch (error) {
       toast({
         title: "Erro",
-        description: "A data e hora do agendamento devem ser futuras",
+        description: "Erro ao processar a data e hora selecionadas",
         variant: "destructive",
       })
-      return
     }
-
-    // Se valorizacaoDiaAnterior está ativo, define next_contact_date como 24h antes
-    const nextContactDate = valorizacaoDiaAnterior ? new Date(scheduledDate.getTime() - 24 * 60 * 60 * 1000) : undefined
-
-    onSubmit({
-      scheduledDate,
-      notes,
-      cardId,
-      valorizacaoDiaAnterior,
-      nextContactDate,
-      type: contactType
-    })
   }
 
   return (

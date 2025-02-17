@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { ContactAttempt } from "./types"
 import { useToast } from "@/components/ui/use-toast"
-import { format } from "date-fns"
+import { format, setHours, setMinutes } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { ptBR } from "date-fns/locale"
 import { Input } from "@/components/ui/input"
@@ -49,26 +49,39 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
       return
     }
 
-    // Combina a data selecionada com o horário informado
-    const [hours, minutes] = time.split(":")
-    const nextContactDate = new Date(date)
-    nextContactDate.setHours(parseInt(hours), parseInt(minutes))
+    try {
+      // Cria uma nova data para evitar mutação
+      let nextContactDate = new Date(date.getTime())
+      
+      // Parse do horário
+      const [hours, minutes] = time.split(":").map(Number)
+      
+      // Usa funções do date-fns para manipular a data com segurança
+      nextContactDate = setHours(nextContactDate, hours)
+      nextContactDate = setMinutes(nextContactDate, minutes)
 
-    // Verifica se a data/hora é futura
-    if (nextContactDate <= new Date()) {
+      // Verifica se a data/hora é futura
+      if (nextContactDate <= new Date()) {
+        toast({
+          title: "Erro",
+          description: "A data e hora do próximo contato deve ser futura",
+          variant: "destructive",
+        })
+        return
+      }
+
+      onSubmit({
+        type: contactType,
+        nextContactDate,
+        cardId
+      })
+    } catch (error) {
       toast({
         title: "Erro",
-        description: "A data e hora do próximo contato deve ser futura",
+        description: "Erro ao processar a data e hora selecionadas",
         variant: "destructive",
       })
-      return
     }
-
-    onSubmit({
-      type: contactType,
-      nextContactDate,
-      cardId
-    })
   }
 
   return (

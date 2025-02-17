@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -33,32 +32,46 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
       return
     }
 
-    // Validação da data e hora do próximo contato
-    let nextContactDate: Date | undefined = undefined
-    if (date && time) {
-      const [hours, minutes] = time.split(":")
-      nextContactDate = new Date(date)
-      nextContactDate.setHours(parseInt(hours), parseInt(minutes))
+    try {
+      // Validação da data e hora do próximo contato
+      let nextContactDate: Date | undefined = undefined
+      if (date && time) {
+        // Cria uma nova data para evitar mutação
+        nextContactDate = new Date(date.getTime())
+        
+        // Parse do horário
+        const [hours, minutes] = time.split(":").map(Number)
+        
+        // Usa funções do date-fns para manipular a data com segurança
+        nextContactDate = setHours(nextContactDate, hours)
+        nextContactDate = setMinutes(nextContactDate, minutes)
 
-      // Verifica se a data/hora é futura
-      if (nextContactDate <= new Date()) {
-        toast({
-          title: "Erro",
-          description: "A data e hora do próximo contato deve ser futura",
-          variant: "destructive",
-        })
-        return
+        // Verifica se a data/hora é futura
+        if (nextContactDate <= new Date()) {
+          toast({
+            title: "Erro",
+            description: "A data e hora do próximo contato deve ser futura",
+            variant: "destructive",
+          })
+          return
+        }
       }
-    }
 
-    onSubmit({
-      type: contactType,
-      contactDate: new Date(),
-      notes,
-      observations: "",
-      cardId,
-      nextContactDate
-    })
+      onSubmit({
+        type: contactType,
+        contactDate: new Date(),
+        notes,
+        observations: "",
+        cardId,
+        nextContactDate
+      })
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao processar a data e hora selecionadas",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
