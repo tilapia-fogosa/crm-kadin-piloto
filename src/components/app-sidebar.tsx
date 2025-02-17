@@ -11,6 +11,8 @@ import {
   Users,
   FileCode,
   Menu,
+  Plus,
+  Link2,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { useSidebar } from "./ui/sidebar";
@@ -19,7 +21,15 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Kanban", href: "/kanban", icon: KanbanSquare },
   { name: "Agenda", href: "/agenda", icon: Calendar },
-  { name: "Clientes", href: "/clients", icon: Users },
+  { 
+    name: "Clientes", 
+    href: "/clients", 
+    icon: Users,
+    subItems: [
+      { name: "Novo Cliente", href: "/clients/new", icon: Plus },
+      { name: "Origens", href: "/clients/sources", icon: Link2 }
+    ]
+  },
   { name: "API Docs", href: "/api-docs", icon: FileCode },
 ];
 
@@ -45,17 +55,36 @@ export function AppSidebar() {
         <div className="space-y-4 px-4">
           <div className="space-y-1">
             {navigation.map((item) => (
-              <Button
-                key={item.name}
-                variant={location.pathname === item.href ? "secondary" : "ghost"}
-                className={cn("w-full justify-start")}
-                asChild
-              >
-                <Link to={item.href}>
-                  <item.icon className="mr-2 h-5 w-5" />
-                  {item.name}
-                </Link>
-              </Button>
+              <div key={item.name}>
+                <Button
+                  variant={location.pathname === item.href ? "secondary" : "ghost"}
+                  className={cn("w-full justify-start")}
+                  asChild
+                >
+                  <Link to={item.href}>
+                    <item.icon className="mr-2 h-5 w-5" />
+                    {item.name}
+                  </Link>
+                </Button>
+                
+                {item.subItems && (
+                  <div className="ml-4 mt-1 space-y-1">
+                    {item.subItems.map((subItem) => (
+                      <Button
+                        key={subItem.name}
+                        variant={location.pathname === subItem.href ? "secondary" : "ghost"}
+                        className={cn("w-full justify-start text-sm")}
+                        asChild
+                      >
+                        <Link to={subItem.href}>
+                          <subItem.icon className="mr-2 h-4 w-4" />
+                          {subItem.name}
+                        </Link>
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
