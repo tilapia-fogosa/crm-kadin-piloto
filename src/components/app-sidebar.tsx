@@ -47,8 +47,8 @@ export function AppSidebar() {
       <div className="flex h-[60px] items-center px-6">
         <img
           className="h-8 w-auto"
-          src="/logo.png"
-          alt="Logo"
+          src="/lovable-uploads/c9bc0aec-0f40-468c-8c5e-24cb91ff0918.png"
+          alt="Kad Logo"
         />
       </div>
       <ScrollArea className="flex-1 overflow-hidden">
