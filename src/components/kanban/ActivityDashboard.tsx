@@ -71,25 +71,38 @@ export function ActivityDashboard() {
   const [selectedSource, setSelectedSource] = useState<string>("todos");
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().getMonth().toString());
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
-  const {
-    data: leadSources
-  } = useQuery({
+  const { data: leadSources } = useQuery({
     queryKey: ['lead-sources'],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('lead_sources').select('*').order('name');
+      const { data, error } = await supabase
+        .from('lead_sources')
+        .select('*')
+        .order('name');
       if (error) throw error;
       return data;
     }
   });
 
-  const {
-    data: stats,
-    isLoading
-  } = useQuery({
+  const { data: client } = useQuery({
+    queryKey: ['client', selectedClientId],
+    queryFn: async () => {
+      if (!selectedClientId) return null;
+      
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*, lead_sources(*)')
+        .eq('id', selectedClientId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedClientId
+  });
+
+  const { data: stats, isLoading } = useQuery({
     queryKey: ['activity-dashboard', selectedSource, selectedMonth, selectedYear],
     queryFn: async () => {
       const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
@@ -98,15 +111,15 @@ export function ActivityDashboard() {
       const [clientsResult, activitiesResult] = await Promise.all([
         supabase.from('clients')
           .select('*')
-          .eq('active', true) // Filtra apenas clientes ativos
+          .eq('active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
           .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
         
         supabase.from('client_activities')
           .select('*, clients!inner(*)')
-          .eq('active', true) // Filtra apenas atividades ativas
-          .eq('clients.active', true) // Filtra apenas clientes ativos
+          .eq('active', true)
+          .eq('clients.active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
           .eq(selectedSource !== 'todos' ? 'clients.lead_source' : '', selectedSource !== 'todos' ? selectedSource : '')
@@ -184,7 +197,6 @@ export function ActivityDashboard() {
         };
       });
 
-      // Filtra apenas as datas até hoje
       const today = startOfDay(new Date());
       return dailyStats.filter(day => !isAfter(startOfDay(day.date), today));
     },
@@ -202,7 +214,6 @@ export function ActivityDashboard() {
       awaitingVisits: acc.awaitingVisits + day.awaitingVisits,
       completedVisits: acc.completedVisits + day.completedVisits,
       enrollments: acc.enrollments + day.enrollments,
-      // Calcular as médias das taxas de conversão
       ceConversionRate: acc.contactAttempts > 0 ? (acc.effectiveContacts / acc.contactAttempts) * 100 : 0,
       agConversionRate: acc.effectiveContacts > 0 ? (acc.scheduledVisits / acc.effectiveContacts) * 100 : 0,
       atConversionRate: acc.awaitingVisits > 0 ? (acc.completedVisits / acc.awaitingVisits) * 100 : 0,
@@ -335,7 +346,6 @@ export function ActivityDashboard() {
                       <TableCell className="text-center text-xs py-[5px]">{day.enrollments}</TableCell>
                     </TableRow>)}
                     
-                    {/* Linha de totais */}
                     {totals && (
                       <TableRow className="hover:bg-muted/50 [&>td]:px-2.5 font-bold border-t-2">
                         <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">TOTAL</TableCell>
@@ -357,14 +367,15 @@ export function ActivityDashboard() {
           </Table>
         </div>
 
-        {/* Nova seção de Informações do Cliente */}
         <div className="mt-6 border rounded-lg p-4">
           <h3 className="text-lg font-semibold mb-4">Informações do Cliente</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="mb-3">
                 <span className="font-medium text-sm">Origem:</span>
-                <p className="text-sm mt-1">{leadSources?.find(s => s.id === selectedSource)?.name || selectedSource || "-"}</p>
+                <p className="text-sm mt-1">
+                  {client?.lead_sources?.name || "-"}
+                </p>
               </div>
               <div className="mb-3">
                 <span className="font-medium text-sm">Anúncio:</span>
