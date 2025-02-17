@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Scheduling } from "./types"
 import { useToast } from "@/components/ui/use-toast"
-import { format, subDays } from "date-fns"
+import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { ptBR } from "date-fns/locale"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -69,7 +69,7 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
     }
 
     // Se valorizacaoDiaAnterior está ativo, define next_contact_date como 24h antes
-    const nextContactDate = valorizacaoDiaAnterior ? subDays(scheduledDate, 1) : undefined
+    const nextContactDate = valorizacaoDiaAnterior ? new Date(scheduledDate.getTime() - 24 * 60 * 60 * 1000) : undefined
 
     onSubmit({
       scheduledDate,
@@ -124,7 +124,7 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
             return compareDate < today
           }}
           initialFocus
-          className="w-[300px] mx-auto"
+          className="w-[300px] mx-auto border rounded-md"
         />
         {date && (
           <p className="text-sm text-muted-foreground">
@@ -134,9 +134,8 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="time">Horário do Agendamento</Label>
+        <Label>Horário do Agendamento</Label>
         <Input
-          id="time"
           type="time"
           value={time}
           onChange={(e) => setTime(e.target.value)}

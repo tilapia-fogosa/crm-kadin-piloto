@@ -55,9 +55,9 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
       type: contactType,
       contactDate: new Date(),
       notes,
-      observations: "", // Mantendo vazio já que não será mais usado
+      observations: "",
       cardId,
-      nextContactDate // Novo campo adicionado
+      nextContactDate
     })
   }
 
@@ -104,7 +104,7 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
             return compareDate < today
           }}
           initialFocus
-          className="w-[300px] mx-auto"
+          className="w-[300px] mx-auto border rounded-md"
         />
         {date && (
           <p className="text-sm text-muted-foreground">
