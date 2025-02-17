@@ -108,11 +108,11 @@ export function KanbanColumn({
                       </div>
                       <div className="flex justify-between items-start">
                         <span className="text-sm text-muted-foreground">Anúncio:</span>
-                        <span className="text-sm font-medium text-right">{card.originalAd || "-"}</span>
+                        <span className="text-sm font-medium text-right">{card.original_ad || "-"}</span>
                       </div>
                       <div className="flex justify-between items-start">
                         <span className="text-sm text-muted-foreground">Segmentação:</span>
-                        <span className="text-sm font-medium text-right">{card.originalAdset || "-"}</span>
+                        <span className="text-sm font-medium text-right">{card.original_adset || "-"}</span>
                       </div>
                       <div className="flex justify-between items-start">
                         <span className="text-sm text-muted-foreground">Observações:</span>

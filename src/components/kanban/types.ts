@@ -14,6 +14,9 @@ export type KanbanCard = {
   nextContactDate?: string
   activities?: string[]
   labels?: string[]
+  original_ad?: string
+  original_adset?: string
+  observations?: string
 }
 
 export type ContactAttempt = {
