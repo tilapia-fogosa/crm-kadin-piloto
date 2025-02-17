@@ -8,6 +8,7 @@ import { ActivitySelector } from "./ActivitySelector"
 import { ActivityDetails } from "./ActivityDetails"
 import { DeleteActivityDialog } from "./DeleteActivityDialog"
 import { useActivityOperations } from "./hooks/useActivityOperations"
+import { Separator } from "@/components/ui/separator"
 
 interface KanbanColumnProps {
   column: KanbanColumnType
@@ -49,17 +50,17 @@ export function KanbanColumn({
 
   const handleRegisterAttempt = async (attempt: ContactAttempt) => {
     await onRegisterAttempt(attempt)
-    setSelectedCard(null) // Fecha a tela após registrar a tentativa
+    setSelectedCard(null)
   }
 
   const handleEffectiveContact = async (contact: EffectiveContact) => {
     await onRegisterEffectiveContact(contact)
-    setSelectedCard(null) // Fecha a tela após registrar o contato efetivo
+    setSelectedCard(null)
   }
 
   const handleScheduling = async (scheduling: Scheduling) => {
     await registerScheduling(scheduling)
-    setSelectedCard(null) // Fecha a tela após registrar o agendamento
+    setSelectedCard(null)
   }
 
   return (
@@ -92,10 +93,34 @@ export function KanbanColumn({
                   onDeleteActivity={handleDeleteActivity}
                   clientId={card.id}
                 />
-                <ActivitySelector
-                  selectedActivity={selectedActivity}
-                  onActivitySelect={setSelectedActivity}
-                />
+                <div className="space-y-6">
+                  <ActivitySelector
+                    selectedActivity={selectedActivity}
+                    onActivitySelect={setSelectedActivity}
+                  />
+                  <Separator className="my-4" />
+                  <div className="border rounded-md p-4">
+                    <h3 className="font-medium text-sm mb-4">Informações do Cliente</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm text-muted-foreground">Origem:</span>
+                        <span className="text-sm font-medium text-right">{card.leadSource || "-"}</span>
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm text-muted-foreground">Anúncio:</span>
+                        <span className="text-sm font-medium text-right">{card.originalAd || "-"}</span>
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm text-muted-foreground">Segmentação:</span>
+                        <span className="text-sm font-medium text-right">{card.originalAdset || "-"}</span>
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm text-muted-foreground">Observações:</span>
+                        <span className="text-sm font-medium text-right max-w-[60%] whitespace-pre-wrap">{card.observations || "-"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <ActivityDetails
                   selectedActivity={selectedActivity}
                   cardId={card.id}
