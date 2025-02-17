@@ -2,6 +2,7 @@
 import { useState } from "react"
 import { Sale } from "../types"
 import { supabase } from "@/integrations/supabase/client"
+import { format } from "date-fns"
 
 export function useSale() {
   const [isLoading, setIsLoading] = useState(false)
@@ -9,9 +10,16 @@ export function useSale() {
   const registerSale = async (sale: Sale) => {
     setIsLoading(true)
     try {
+      const saleData = {
+        ...sale,
+        enrollment_payment_date: format(sale.enrollment_payment_date, 'yyyy-MM-dd'),
+        material_payment_date: format(sale.material_payment_date, 'yyyy-MM-dd'),
+        first_monthly_fee_date: format(sale.first_monthly_fee_date, 'yyyy-MM-dd')
+      }
+
       const { error } = await supabase
         .from('sales')
-        .insert([sale])
+        .insert(saleData)
 
       if (error) throw error
 
@@ -29,4 +37,3 @@ export function useSale() {
     isLoading
   }
 }
-

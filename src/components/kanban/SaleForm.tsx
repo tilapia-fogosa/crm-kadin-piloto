@@ -5,9 +5,6 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -28,14 +25,9 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
   })
 
   const formatCurrency = (value: string) => {
-    // Remove todos os caracteres não numéricos
     const numbers = value.replace(/\D/g, '')
     const numberValue = parseInt(numbers)
-    
-    // Converte para centavos
     const cents = numberValue / 100
-    
-    // Formata como moeda brasileira
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
@@ -48,6 +40,43 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
     setSale(prev => ({
       ...prev,
       [field]: numberValue / 100
+    }))
+  }
+
+  const handleDateInput = (field: keyof Sale, value: string) => {
+    try {
+      const date = new Date(value)
+      setSale(prev => ({
+        ...prev,
+        [field]: date
+      }))
+    } catch (error) {
+      console.error('Data inválida:', error)
+    }
+  }
+
+  const handlePaymentMethodChange = (field: 'enrollment_payment_method' | 'material_payment_method' | 'monthly_fee_payment_method', value: PaymentMethod) => {
+    const updates: Partial<Sale> = {
+      [field]: value
+    }
+
+    // Reseta parcelas para 1 quando mudar forma de pagamento
+    if (field === 'enrollment_payment_method') {
+      updates.enrollment_installments = 1
+    } else if (field === 'material_payment_method') {
+      updates.material_installments = 1
+    }
+
+    setSale(prev => ({
+      ...prev,
+      ...updates
+    }))
+  }
+
+  const setTodayDate = (field: keyof Sale) => {
+    setSale(prev => ({
+      ...prev,
+      [field]: new Date()
     }))
   }
 
@@ -71,13 +100,11 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
       'first_monthly_fee_date'
     ]
 
-    // Verifica se todos os campos obrigatórios estão preenchidos
     const hasAllRequired = requiredFields.every(field => {
       const value = sale[field]
       return value !== undefined && value !== null && value !== ''
     })
 
-    // Verifica se o dia de vencimento está preenchido quando o método é recorrência
     const needsDueDay = sale.monthly_fee_payment_method === 'recorrencia'
     const hasDueDay = sale.monthly_fee_due_day !== undefined
 
@@ -112,7 +139,7 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
             <Label>Forma de Pagamento</Label>
             <Select
               value={sale.enrollment_payment_method}
-              onValueChange={value => setSale(prev => ({ ...prev, enrollment_payment_method: value as PaymentMethod }))}
+              onValueChange={value => handlePaymentMethodChange('enrollment_payment_method', value as PaymentMethod)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione" />
@@ -127,51 +154,41 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label>Número de Parcelas</Label>
-            <Select
-              value={String(sale.enrollment_installments)}
-              onValueChange={value => setSale(prev => ({ ...prev, enrollment_installments: parseInt(value) }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
-                  <SelectItem key={num} value={String(num)}>{num}x</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {sale.enrollment_payment_method === 'cartao_credito' && (
+            <div className="space-y-2">
+              <Label>Número de Parcelas</Label>
+              <Select
+                value={String(sale.enrollment_installments)}
+                onValueChange={value => setSale(prev => ({ ...prev, enrollment_installments: parseInt(value) }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
+                    <SelectItem key={num} value={String(num)}>{num}x</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Data do Pagamento</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !sale.enrollment_payment_date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {sale.enrollment_payment_date ? (
-                    format(sale.enrollment_payment_date, "PPP", { locale: ptBR })
-                  ) : (
-                    <span>Selecione uma data</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={sale.enrollment_payment_date}
-                  onSelect={date => setSale(prev => ({ ...prev, enrollment_payment_date: date }))}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={sale.enrollment_payment_date ? format(sale.enrollment_payment_date, "yyyy-MM-dd") : ''}
+                onChange={e => handleDateInput('enrollment_payment_date', e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                onClick={() => setTodayDate('enrollment_payment_date')}
+                className="bg-green-500 hover:bg-green-600 h-10 px-3"
+              >
+                Hoje
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -191,7 +208,7 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
             <Label>Forma de Pagamento</Label>
             <Select
               value={sale.material_payment_method}
-              onValueChange={value => setSale(prev => ({ ...prev, material_payment_method: value as PaymentMethod }))}
+              onValueChange={value => handlePaymentMethodChange('material_payment_method', value as PaymentMethod)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione" />
@@ -206,51 +223,41 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label>Número de Parcelas</Label>
-            <Select
-              value={String(sale.material_installments)}
-              onValueChange={value => setSale(prev => ({ ...prev, material_installments: parseInt(value) }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
-                  <SelectItem key={num} value={String(num)}>{num}x</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {(sale.material_payment_method === 'cartao_credito' || sale.material_payment_method === 'boleto') && (
+            <div className="space-y-2">
+              <Label>Número de Parcelas</Label>
+              <Select
+                value={String(sale.material_installments)}
+                onValueChange={value => setSale(prev => ({ ...prev, material_installments: parseInt(value) }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
+                    <SelectItem key={num} value={String(num)}>{num}x</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Data do Pagamento</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !sale.material_payment_date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {sale.material_payment_date ? (
-                    format(sale.material_payment_date, "PPP", { locale: ptBR })
-                  ) : (
-                    <span>Selecione uma data</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={sale.material_payment_date}
-                  onSelect={date => setSale(prev => ({ ...prev, material_payment_date: date }))}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={sale.material_payment_date ? format(sale.material_payment_date, "yyyy-MM-dd") : ''}
+                onChange={e => handleDateInput('material_payment_date', e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                onClick={() => setTodayDate('material_payment_date')}
+                className="bg-green-500 hover:bg-green-600 h-10 px-3"
+              >
+                Hoje
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -272,7 +279,7 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
             <Label>Forma de Pagamento</Label>
             <Select
               value={sale.monthly_fee_payment_method}
-              onValueChange={value => setSale(prev => ({ ...prev, monthly_fee_payment_method: value as PaymentMethod }))}
+              onValueChange={value => handlePaymentMethodChange('monthly_fee_payment_method', value as PaymentMethod)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione" />
@@ -290,32 +297,11 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
 
           <div className="space-y-2">
             <Label>Data da Primeira Mensalidade</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !sale.first_monthly_fee_date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {sale.first_monthly_fee_date ? (
-                    format(sale.first_monthly_fee_date, "PPP", { locale: ptBR })
-                  ) : (
-                    <span>Selecione uma data</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={sale.first_monthly_fee_date}
-                  onSelect={date => setSale(prev => ({ ...prev, first_monthly_fee_date: date }))}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <Input
+              type="date"
+              value={sale.first_monthly_fee_date ? format(sale.first_monthly_fee_date, "yyyy-MM-dd") : ''}
+              onChange={e => handleDateInput('first_monthly_fee_date', e.target.value)}
+            />
           </div>
 
           {sale.monthly_fee_payment_method === 'recorrencia' && (
@@ -351,4 +337,3 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
     </div>
   )
 }
-
