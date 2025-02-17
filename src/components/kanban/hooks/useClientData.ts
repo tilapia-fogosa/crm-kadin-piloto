@@ -41,6 +41,7 @@ export function useClientData() {
 
       console.log('Fetching clients data...')
       
+      // Alterada a estrutura da query para usar inner join e garantir apenas atividades ativas
       const { data, error } = await supabase
         .from('clients')
         .select(`
@@ -52,7 +53,7 @@ export function useClientData() {
           status,
           next_contact_date,
           created_at,
-          client_activities (
+          client_activities!inner (
             id,
             tipo_contato,
             tipo_atividade,
@@ -62,8 +63,8 @@ export function useClientData() {
             active
           )
         `)
-        .eq('active', true) // Filtra apenas clientes ativos
-        .eq('client_activities.active', true) // Filtra apenas atividades ativas
+        .eq('active', true)
+        .eq('client_activities.active', true)
         .order('created_at', { ascending: false })
 
       if (error) {
