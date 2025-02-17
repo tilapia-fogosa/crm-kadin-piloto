@@ -16,7 +16,11 @@ export function ActivityHistory({ activities, onDeleteActivity, clientId }: Acti
     <div className="flex flex-col gap-2">
       <h3 className="font-semibold mb-2">Histórico de Atividades</h3>
       <ScrollArea className="h-[600px] w-full rounded-md border p-4">
-        {activities?.map((activity, index) => {
+        {activities?.filter(activity => {
+          // Garante que apenas atividades ativas são exibidas
+          // As atividades inativas não são mais incluídas na query do useClientData
+          return activity.split('|').length >= 5;
+        }).map((activity, index) => {
           try {
             const parts = activity.split('|')
             if (parts.length < 5) {
