@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "@/components/ui/use-toast"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -7,13 +7,15 @@ import { LeadFormData, leadFormSchema } from "@/types/lead-form"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { ClientsTable } from "@/components/clients/clients-table"
+import { useLocation } from "react-router-dom"
 
 export default function ClientsPage() {
   const [selectedClient, setSelectedClient] = useState<any>(null)
   const [clientToDelete, setClientToDelete] = useState<any>(null)
   const queryClient = useQueryClient()
+  const location = useLocation()
 
-  const { data: clients, isLoading } = useQuery({
+  const { data: clients, isLoading, refetch } = useQuery({
     queryKey: ['all-clients'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -27,13 +29,19 @@ export default function ClientsPage() {
           status,
           created_at
         `)
-        .eq('active', true) // Filtra apenas clientes ativos
+        .eq('active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data;
     }
   });
+
+  // Refetch data when component mounts or route changes
+  useEffect(() => {
+    console.log("Clients page mounted or route changed, refetching data...")
+    refetch()
+  }, [location.pathname, refetch])
 
   const form = useForm<LeadFormData>({
     resolver: zodResolver(leadFormSchema),

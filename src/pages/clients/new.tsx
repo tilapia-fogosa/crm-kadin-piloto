@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { LeadFormFields } from "@/components/leads/lead-form-fields";
 import { LeadFormData, leadFormSchema } from "@/types/lead-form";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 const DEFAULT_UNIT_ID = "0df79a04-444e-46ee-b218-59e4b1835f4a";
 
@@ -27,6 +28,12 @@ export default function NewClient() {
       originalAd: "",
     },
   });
+
+  // Reset form when component mounts
+  useEffect(() => {
+    console.log("New Client form mounted, resetting form...")
+    form.reset();
+  }, [form]);
 
   const onSubmit = async (values: LeadFormData) => {
     try {
