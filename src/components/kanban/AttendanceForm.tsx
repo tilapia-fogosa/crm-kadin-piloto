@@ -27,8 +27,10 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
       <div className="flex flex-col gap-2">
         <Button
           onClick={() => setSelectedResult('matriculado')}
-          className={`w-full bg-green-500 hover:bg-green-600 ${
-            selectedResult === 'matriculado' ? 'ring-2 ring-green-700' : ''
+          className={`w-full ${
+            selectedResult === 'matriculado' 
+              ? 'bg-green-500 hover:bg-green-600 ring-2 ring-green-700' 
+              : 'bg-green-100 hover:bg-green-200 text-green-800'
           }`}
           variant="default"
         >
@@ -37,8 +39,10 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
         
         <Button
           onClick={() => setSelectedResult('negociacao')}
-          className={`w-full bg-yellow-500 hover:bg-yellow-600 text-yellow-950 ${
-            selectedResult === 'negociacao' ? 'ring-2 ring-yellow-700' : ''
+          className={`w-full ${
+            selectedResult === 'negociacao'
+              ? 'bg-yellow-500 hover:bg-yellow-600 ring-2 ring-yellow-700 text-yellow-950'
+              : 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800'
           }`}
           variant="default"
         >
@@ -47,8 +51,10 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
         
         <Button
           onClick={() => setSelectedResult('perdido')}
-          className={`w-full bg-red-500 hover:bg-red-600 ${
-            selectedResult === 'perdido' ? 'ring-2 ring-red-700' : ''
+          className={`w-full ${
+            selectedResult === 'perdido'
+              ? 'bg-red-500 hover:bg-red-600 ring-2 ring-red-700 text-white'
+              : 'bg-red-100 hover:bg-red-200 text-red-800'
           }`}
           variant="default"
         >
