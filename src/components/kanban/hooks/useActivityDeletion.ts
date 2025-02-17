@@ -16,29 +16,25 @@ export function useActivityDeletion() {
         console.error('Usuário não autenticado');
         throw new Error('Não autorizado: usuário não autenticado');
       }
-      
-      // Atualiza diretamente o status da atividade para inativo
-      const { data: updatedActivity, error: updateError } = await supabase
+
+      // Tenta inativar a atividade usando a função do banco de dados
+      const { data, error } = await supabase
         .from('client_activities')
         .update({ 
           active: false,
           updated_at: new Date().toISOString()
         })
         .eq('id', activityId)
-        .select()
-        .single();
+        .eq('active', true) // Adiciona condição para garantir que só atualiza se estiver ativa
 
-      if (updateError) {
-        console.error('Erro ao inativar atividade:', updateError);
-        throw updateError;
+      if (error) {
+        console.error('Erro ao inativar atividade:', error);
+        throw error;
       }
 
-      if (!updatedActivity) {
-        throw new Error('Falha ao inativar atividade: atividade não encontrada');
-      }
+      console.log('Resposta da atualização:', data);
 
-      console.log('Atividade inativada com sucesso:', updatedActivity);
-
+      // Força a revalidação dos dados do cliente
       await queryClient.invalidateQueries({ queryKey: ['clients'] });
 
       toast({
@@ -52,6 +48,7 @@ export function useActivityDeletion() {
         title: "Erro ao excluir atividade",
         description: error instanceof Error ? error.message : "Ocorreu um erro ao tentar inativar a atividade.",
       })
+      throw error; // Re-throw para que o erro possa ser tratado pelo chamador se necessário
     }
   }
 
