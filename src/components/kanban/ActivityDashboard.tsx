@@ -364,21 +364,21 @@ export function ActivityDashboard() {
             <div>
               <div className="mb-3">
                 <span className="font-medium text-sm">Origem:</span>
-                <p className="text-sm mt-1">{selectedSource === "todos" ? "Todos" : leadSources?.find(s => s.id === selectedSource)?.name || "-"}</p>
+                <p className="text-sm mt-1">{leadSources?.find(s => s.id === selectedSource)?.name || selectedSource || "-"}</p>
               </div>
               <div className="mb-3">
                 <span className="font-medium text-sm">Anúncio:</span>
-                <p className="text-sm mt-1">-</p>
+                <p className="text-sm mt-1">{client?.original_ad || "-"}</p>
               </div>
             </div>
             <div>
               <div className="mb-3">
                 <span className="font-medium text-sm">Segmentação:</span>
-                <p className="text-sm mt-1">-</p>
+                <p className="text-sm mt-1">{client?.original_adset || "-"}</p>
               </div>
               <div className="mb-3">
                 <span className="font-medium text-sm">Observações:</span>
-                <p className="text-sm mt-1">-</p>
+                <p className="text-sm mt-1 whitespace-pre-wrap">{client?.observations || "-"}</p>
               </div>
             </div>
           </div>
