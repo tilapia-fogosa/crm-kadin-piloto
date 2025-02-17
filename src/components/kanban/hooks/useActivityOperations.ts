@@ -156,7 +156,7 @@ export function useActivityOperations() {
         .from('client_activities')
         .select('*')
         .eq('id', activityId)
-        .single();
+        .maybeSingle();
 
       if (checkError) {
         console.error('Erro ao verificar atividade:', checkError);
@@ -179,7 +179,7 @@ export function useActivityOperations() {
         })
         .eq('id', activityId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (updateError) {
         console.error('Erro ao inativar atividade:', updateError);
