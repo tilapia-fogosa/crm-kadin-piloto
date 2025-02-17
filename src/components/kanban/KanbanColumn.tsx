@@ -161,7 +161,7 @@ export function KanbanColumn({
                 />
 
                 <div className={`transition-all duration-300 ease-in-out ${!selectedActivity ? 'w-full' : ''}`}>
-                  {!selectedActivity && isHistoryExpanded && (
+                  {!selectedActivity && (
                     <div className="border rounded-md p-4">
                       <h3 className="font-medium text-sm mb-4">Informações do Cliente</h3>
                       <div className="space-y-3">
