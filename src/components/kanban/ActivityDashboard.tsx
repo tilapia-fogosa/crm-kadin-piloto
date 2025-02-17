@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -192,6 +191,37 @@ export function ActivityDashboard() {
     refetchInterval: 5000
   });
 
+  const calculateTotals = (stats: DailyStats[] | undefined) => {
+    if (!stats) return null;
+    
+    return stats.reduce((acc, day) => ({
+      newClients: acc.newClients + day.newClients,
+      contactAttempts: acc.contactAttempts + day.contactAttempts,
+      effectiveContacts: acc.effectiveContacts + day.effectiveContacts,
+      scheduledVisits: acc.scheduledVisits + day.scheduledVisits,
+      awaitingVisits: acc.awaitingVisits + day.awaitingVisits,
+      completedVisits: acc.completedVisits + day.completedVisits,
+      enrollments: acc.enrollments + day.enrollments,
+      // Calcular as médias das taxas de conversão
+      ceConversionRate: acc.contactAttempts > 0 ? (acc.effectiveContacts / acc.contactAttempts) * 100 : 0,
+      agConversionRate: acc.effectiveContacts > 0 ? (acc.scheduledVisits / acc.effectiveContacts) * 100 : 0,
+      atConversionRate: acc.awaitingVisits > 0 ? (acc.completedVisits / acc.awaitingVisits) * 100 : 0,
+    }), {
+      newClients: 0,
+      contactAttempts: 0,
+      effectiveContacts: 0,
+      scheduledVisits: 0,
+      awaitingVisits: 0,
+      completedVisits: 0,
+      enrollments: 0,
+      ceConversionRate: 0,
+      agConversionRate: 0,
+      atConversionRate: 0,
+    });
+  };
+
+  const totals = calculateTotals(stats);
+
   return <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-2">
@@ -285,23 +315,44 @@ export function ActivityDashboard() {
             <TableBody>
               {isLoading ? <TableRow>
                   <TableCell colSpan={11} className="text-center text-xs py-3 px-2.5">Carregando...</TableCell>
-                </TableRow> : stats?.map(day => <TableRow key={day.date.toISOString()} className="hover:bg-muted/50 [&>td]:px-2.5">
-                    <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
-                      {format(day.date, 'dd/MM/yyyy', {
-                  locale: ptBR
-                })}
-                    </TableCell>
-                    <TableCell className="text-center text-xs py-0">{day.newClients}</TableCell>
-                    <TableCell className="text-center text-xs py-0">{day.contactAttempts}</TableCell>
-                    <TableCell className="text-center text-xs py-0">{day.effectiveContacts}</TableCell>
-                    <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.ceConversionRate.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center text-xs py-0">{day.scheduledVisits}</TableCell>
-                    <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.agConversionRate.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center text-xs py-0">{day.awaitingVisits}</TableCell>
-                    <TableCell className="text-center text-xs py-0">{day.completedVisits}</TableCell>
-                    <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.atConversionRate.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center text-xs py-[5px]">{day.enrollments}</TableCell>
-                  </TableRow>)}
+                </TableRow> : (
+                  <>
+                    {stats?.map(day => <TableRow key={day.date.toISOString()} className="hover:bg-muted/50 [&>td]:px-2.5">
+                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
+                        {format(day.date, 'dd/MM/yyyy', {
+                          locale: ptBR
+                        })}
+                      </TableCell>
+                      <TableCell className="text-center text-xs py-0">{day.newClients}</TableCell>
+                      <TableCell className="text-center text-xs py-0">{day.contactAttempts}</TableCell>
+                      <TableCell className="text-center text-xs py-0">{day.effectiveContacts}</TableCell>
+                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.ceConversionRate.toFixed(1)}%</TableCell>
+                      <TableCell className="text-center text-xs py-0">{day.scheduledVisits}</TableCell>
+                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.agConversionRate.toFixed(1)}%</TableCell>
+                      <TableCell className="text-center text-xs py-0">{day.awaitingVisits}</TableCell>
+                      <TableCell className="text-center text-xs py-0">{day.completedVisits}</TableCell>
+                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.atConversionRate.toFixed(1)}%</TableCell>
+                      <TableCell className="text-center text-xs py-[5px]">{day.enrollments}</TableCell>
+                    </TableRow>)}
+                    
+                    {/* Linha de totais */}
+                    {totals && (
+                      <TableRow className="hover:bg-muted/50 [&>td]:px-2.5 font-bold border-t-2">
+                        <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">TOTAL</TableCell>
+                        <TableCell className="text-center text-xs py-0">{totals.newClients}</TableCell>
+                        <TableCell className="text-center text-xs py-0">{totals.contactAttempts}</TableCell>
+                        <TableCell className="text-center text-xs py-0">{totals.effectiveContacts}</TableCell>
+                        <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.ceConversionRate.toFixed(1)}%</TableCell>
+                        <TableCell className="text-center text-xs py-0">{totals.scheduledVisits}</TableCell>
+                        <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.agConversionRate.toFixed(1)}%</TableCell>
+                        <TableCell className="text-center text-xs py-0">{totals.awaitingVisits}</TableCell>
+                        <TableCell className="text-center text-xs py-0">{totals.completedVisits}</TableCell>
+                        <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.atConversionRate.toFixed(1)}%</TableCell>
+                        <TableCell className="text-center text-xs py-[5px]">{totals.enrollments}</TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                )}
             </TableBody>
           </Table>
         </div>
