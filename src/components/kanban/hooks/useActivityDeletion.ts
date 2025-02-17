@@ -17,45 +17,27 @@ export function useActivityDeletion() {
         throw new Error('Não autorizado: usuário não autenticado');
       }
       
-      // Verificar se a atividade existe e está ativa
-      const { data: existingActivity, error: checkError } = await supabase
+      // Atualiza diretamente o status da atividade para inativo
+      const { data: updatedActivity, error: updateError } = await supabase
         .from('client_activities')
-        .select('*')
+        .update({ 
+          active: false,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', activityId)
+        .select()
         .single();
 
-      if (checkError) {
-        if (checkError.code === 'PGRST116') {
-          console.error('Atividade não encontrada:', activityId);
-          throw new Error('Atividade não encontrada');
-        }
-        console.error('Erro ao verificar atividade:', checkError);
-        throw checkError;
+      if (updateError) {
+        console.error('Erro ao inativar atividade:', updateError);
+        throw updateError;
       }
 
-      if (!existingActivity) {
-        console.error('Atividade não encontrada:', activityId);
-        throw new Error('Atividade não encontrada');
+      if (!updatedActivity) {
+        throw new Error('Falha ao inativar atividade: atividade não encontrada');
       }
 
-      console.log('Atividade encontrada:', existingActivity);
-
-      // Executa a função de inativação diretamente usando a função do banco
-      const { data: result, error: inactivateError } = await supabase
-        .rpc('inactivate_activity', {
-          activity_id: activityId
-        });
-
-      if (inactivateError) {
-        console.error('Erro ao inativar atividade:', inactivateError);
-        throw inactivateError;
-      }
-
-      if (!result) {
-        throw new Error('Falha ao inativar atividade: operação não realizada');
-      }
-
-      console.log('Atividade inativada com sucesso');
+      console.log('Atividade inativada com sucesso:', updatedActivity);
 
       await queryClient.invalidateQueries({ queryKey: ['clients'] });
 
