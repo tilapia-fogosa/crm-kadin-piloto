@@ -21,7 +21,10 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           createdAt: client.created_at,
           nextContactDate: client.next_contact_date,
-          activities: client.client_activities || []
+          activities: client.client_activities || [],
+          original_ad: client.original_ad,
+          original_adset: client.original_adset,
+          observations: client.observations
         })) || [],
     },
     {
@@ -40,7 +43,10 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           createdAt: client.created_at,
           nextContactDate: client.next_contact_date,
-          activities: client.client_activities || []
+          activities: client.client_activities || [],
+          original_ad: client.original_ad,
+          original_adset: client.original_adset,
+          observations: client.observations
         })) || [],
     },
     {
@@ -59,7 +65,10 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           createdAt: client.created_at,
           nextContactDate: client.next_contact_date,
-          activities: client.client_activities || []
+          activities: client.client_activities || [],
+          original_ad: client.original_ad,
+          original_adset: client.original_adset,
+          observations: client.observations
         })) || [],
     },
     {
@@ -78,7 +87,10 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           createdAt: client.created_at,
           nextContactDate: client.next_contact_date,
-          activities: client.client_activities || []
+          activities: client.client_activities || [],
+          original_ad: client.original_ad,
+          original_adset: client.original_adset,
+          observations: client.observations
         })) || [],
     },
     {
@@ -97,7 +109,10 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
           phoneNumber: client.phone_number,
           createdAt: client.created_at,
           nextContactDate: client.next_contact_date,
-          activities: client.client_activities || []
+          activities: client.client_activities || [],
+          original_ad: client.original_ad,
+          original_adset: client.original_adset,
+          observations: client.observations
         })) || [],
     },
   ]
