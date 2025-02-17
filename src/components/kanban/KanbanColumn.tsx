@@ -1,6 +1,6 @@
 
 import { KanbanCard } from "./KanbanCard"
-import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType, ContactAttempt, EffectiveContact, Scheduling } from "./types"
+import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType, ContactAttempt, EffectiveContact, Scheduling, Attendance } from "./types"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useState } from "react"
 import { ActivityHistory } from "./ActivityHistory"
@@ -28,7 +28,7 @@ export function KanbanColumn({
   const [selectedCard, setSelectedCard] = useState<KanbanCardType | null>(null)
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
   const [activityToDelete, setActivityToDelete] = useState<{id: string, clientId: string} | null>(null)
-  const { registerScheduling } = useActivityOperations()
+  const { registerScheduling, registerAttendance } = useActivityOperations()
 
   const handleDeleteActivity = (id: string, clientId: string) => {
     if (!id || !clientId) {
@@ -60,6 +60,11 @@ export function KanbanColumn({
 
   const handleScheduling = async (scheduling: Scheduling) => {
     await registerScheduling(scheduling)
+    setSelectedCard(null)
+  }
+
+  const handleAttendance = async (attendance: Attendance) => {
+    await registerAttendance(attendance)
     setSelectedCard(null)
   }
 
@@ -127,6 +132,7 @@ export function KanbanColumn({
                   onRegisterAttempt={handleRegisterAttempt}
                   onRegisterEffectiveContact={handleEffectiveContact}
                   onRegisterScheduling={handleScheduling}
+                  onRegisterAttendance={handleAttendance}
                 />
               </div>
             </SheetContent>
