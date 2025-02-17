@@ -1,46 +1,91 @@
 
-import React from "react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Table } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-type ClientStatus = "active" | "inactive" | "pending" | "converted";
+interface Lead {
+  id: string;
+  name: string;
+  status: string;
+  last_activity: string | null;
+}
 
-const statusVariants: Record<ClientStatus, "default" | "destructive" | "secondary" | "outline"> = {
-  active: "default",
-  inactive: "destructive",
-  pending: "secondary",
-  converted: "outline"
-};
+export default function LeadsTable() {
+  const { data: leads, isLoading } = useQuery({
+    queryKey: ['recent-leads'],
+    queryFn: async () => {
+      // Buscar os 10 leads mais recentes que estão ativos
+      const { data: clients, error: clientsError } = await supabase
+        .from('clients')
+        .select(`
+          id,
+          name,
+          status,
+          client_activities (
+            created_at
+          )
+        `)
+        .eq('active', true)
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-const LeadsTable = ({ leads = [] }: { leads: Array<{ id: string; name: string; status: ClientStatus }> }) => {
+      if (clientsError) throw clientsError;
+
+      // Processar os dados para obter a última atividade de cada lead
+      return clients.map(client => ({
+        id: client.id,
+        name: client.name,
+        status: client.status,
+        last_activity: client.client_activities?.[0]?.created_at || client.created_at
+      }));
+    },
+    refetchInterval: 5000
+  });
+
+  if (isLoading) {
+    return <div>Carregando...</div>;
+  }
+
+  const formatStatus = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'novo-cadastro': 'Novo Cadastro',
+      'tentativa-contato': 'Tentativa de Contato',
+      'contato-efetivo': 'Contato Efetivo',
+      'atendimento-agendado': 'Atendimento Agendado',
+      'atendimento-realizado': 'Atendimento Realizado'
+    };
+    return statusMap[status] || status;
+  };
+
+  const formatTimeAgo = (date: string) => {
+    return formatDistanceToNow(new Date(date), {
+      addSuffix: true,
+      locale: ptBR
+    });
+  };
+
   return (
-    <Table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {leads.map((lead) => (
-          <tr key={lead.id}>
-            <td>{lead.name}</td>
-            <td>
-              <Button variant={statusVariants[lead.status]}>
-                {lead.status}
-              </Button>
-            </td>
-            <td>
-              <Button variant="outline">Edit</Button>
-              <Button variant="destructive">Delete</Button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </Table>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Último Contato</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {leads?.map((lead) => (
+            <TableRow key={lead.id}>
+              <TableCell>{lead.name}</TableCell>
+              <TableCell>{formatStatus(lead.status)}</TableCell>
+              <TableCell>{formatTimeAgo(lead.last_activity!)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
-};
-
-export default LeadsTable;
+}
