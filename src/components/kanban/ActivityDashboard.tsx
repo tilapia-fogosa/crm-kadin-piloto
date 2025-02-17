@@ -1,3 +1,4 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useActivityDeletion } from "./hooks/useActivityDeletion";
 import { useWhatsApp } from "./hooks/useWhatsApp";
@@ -14,23 +15,21 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export function ActivityDashboard({
-  client,
-  onClose,
-  refetchClient
-}: {
+interface ActivityDashboardProps {
   client: any;
   onClose: () => void;
   refetchClient: () => void;
-}) {
+}
+
+export function ActivityDashboard({ client, onClose, refetchClient }: ActivityDashboardProps) {
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
   const [activities, setActivities] = useState<any[]>([]);
-  const { toast } = useWhatsApp();
-  const { toast: toastDeletion } = useActivityDeletion();
+  const whatsApp = useWhatsApp();
+  const activityDeletion = useActivityDeletion();
 
-  const { data: activitiesData, refetch: refetchActivities } = useQuery(
-    ['clientActivities', client.id],
-    async () => {
+  const { data: activitiesData, refetch: refetchActivities } = useQuery({
+    queryKey: ['clientActivities', client.id],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('client_activities')
         .select('*')
@@ -39,7 +38,7 @@ export function ActivityDashboard({
 
       if (error) {
         console.error("Erro ao buscar atividades:", error);
-        toast({
+        whatsApp.toast({
           variant: "destructive",
           title: "Erro ao buscar atividades",
           description: "Ocorreu um erro ao buscar as atividades do cliente.",
@@ -47,15 +46,12 @@ export function ActivityDashboard({
         return [];
       }
       return data;
-    },
-    {
-      enabled: !!client?.id,
     }
-  );
+  });
 
   useEffect(() => {
     if (activitiesData) {
-      setActivities(activitiesData);
+      setActivities(activitiesData as any[]);
     }
   }, [activitiesData]);
 
@@ -68,28 +64,31 @@ export function ActivityDashboard({
       case "tentativa-de-contato":
         return (
           <ContactAttemptForm
-            client={client}
-            onClose={onClose}
-            refetchClient={refetchClient}
-            refetchActivities={refetchActivities}
+            cardId={client.id}
+            onRegisterAttempt={async () => {
+              await refetchActivities();
+              await refetchClient();
+            }}
           />
         );
       case "contato-efetivo":
         return (
           <EffectiveContactForm
-            client={client}
-            onClose={onClose}
-            refetchClient={refetchClient}
-            refetchActivities={refetchActivities}
+            cardId={client.id}
+            onRegisterEffectiveContact={async () => {
+              await refetchActivities();
+              await refetchClient();
+            }}
           />
         );
       case "agendamento":
         return (
           <SchedulingForm
-            client={client}
-            onClose={onClose}
-            refetchClient={refetchClient}
-            refetchActivities={refetchActivities}
+            cardId={client.id}
+            onRegisterScheduling={async () => {
+              await refetchActivities();
+              await refetchClient();
+            }}
           />
         );
       default:
@@ -119,7 +118,7 @@ export function ActivityDashboard({
 
       if (error) {
         console.error("Erro ao inativar atividade:", error);
-        toastDeletion({
+        activityDeletion.toast({
           variant: "destructive",
           title: "Erro ao inativar atividade",
           description: "Ocorreu um erro ao tentar inativar a atividade.",
@@ -127,7 +126,7 @@ export function ActivityDashboard({
         return;
       }
 
-      toastDeletion({
+      activityDeletion.toast({
         title: "Atividade removida!",
         description: "A atividade foi removida com sucesso.",
       });
@@ -136,7 +135,7 @@ export function ActivityDashboard({
       refetchClient();
     } catch (error) {
       console.error("Erro ao inativar atividade:", error);
-      toastDeletion({
+      activityDeletion.toast({
         variant: "destructive",
         title: "Erro ao inativar atividade",
         description: "Ocorreu um erro ao tentar inativar a atividade.",
@@ -178,8 +177,8 @@ export function ActivityDashboard({
           </CardHeader>
           <CardContent>
             <ActivitySelector
-              onSelect={handleActivitySelection}
               selectedActivity={selectedActivity}
+              onActivitySelect={handleActivitySelection}
             />
           </CardContent>
         </Card>
@@ -233,7 +232,7 @@ export function ActivityDashboard({
             <CardTitle className="text-lg">Calendário</CardTitle>
           </CardHeader>
           <CardContent>
-            <CalendarDashboard client={client} />
+            <CalendarDashboard clientId={client.id} />
           </CardContent>
         </Card>
 
@@ -245,7 +244,8 @@ export function ActivityDashboard({
             <ScrollArea className="h-[calc(100%-32px)] pr-4">
               <ActivityHistory
                 activities={activities}
-                onDelete={handleActivityDeletion}
+                onDeleteActivity={handleActivityDeletion}
+                clientId={client.id}
               />
             </ScrollArea>
           </CardContent>

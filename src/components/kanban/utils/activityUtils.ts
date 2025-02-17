@@ -1,4 +1,12 @@
 
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+export const formatDate = (date: string | Date) => {
+  if (!date) return '-';
+  return format(new Date(date), 'dd/MM/yyyy', { locale: ptBR });
+};
+
 export const getActivityBadge = (tipo_atividade: string) => {
   switch (tipo_atividade) {
     case 'Tentativa de Contato':
@@ -28,8 +36,8 @@ export const getContactType = (tipo_contato: string) => {
 }
 
 export const activities = [
-  { id: 'Tentativa de Contato', label: 'Tentativa de Contato', badge: 'TE' },
-  { id: 'Contato Efetivo', label: 'Contato Efetivo', badge: 'CE' },
-  { id: 'Agendamento', label: 'Agendamento', badge: 'AG' },
-  { id: 'Atendimento', label: 'Atendimento', badge: 'AT' },
+  { id: 'tentativa-de-contato', label: 'Tentativa de Contato', badge: 'TE' },
+  { id: 'contato-efetivo', label: 'Contato Efetivo', badge: 'CE' },
+  { id: 'agendamento', label: 'Agendamento', badge: 'AG' },
+  { id: 'atendimento', label: 'Atendimento', badge: 'AT' },
 ]
