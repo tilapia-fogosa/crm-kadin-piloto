@@ -148,7 +148,14 @@ export function useActivityOperations() {
     try {
       console.log('Iniciando processo de inativação:', { activityId, clientId });
       
-      // Verificar se a atividade existe antes de tentar inativar
+      // Primeiro verifica a autenticação
+      const { data: session } = await supabase.auth.getSession()
+      if (!session.session) {
+        console.error('Usuário não autenticado');
+        throw new Error('Não autorizado: usuário não autenticado');
+      }
+      
+      // Verificar se a atividade existe e está ativa
       const { data: existingActivity, error: checkError } = await supabase
         .from('client_activities')
         .select('id, active')
@@ -161,26 +168,35 @@ export function useActivityOperations() {
       }
 
       if (!existingActivity) {
+        console.error('Atividade não encontrada:', activityId);
         throw new Error('Atividade não encontrada');
       }
 
       console.log('Atividade encontrada:', existingActivity);
 
       // Executa a atualização
-      const { error: updateError } = await supabase
+      const { data: updatedActivity, error: updateError } = await supabase
         .from('client_activities')
         .update({ 
           active: false,
           updated_at: new Date().toISOString()
         })
-        .eq('id', activityId);
+        .eq('id', activityId)
+        .select('id, active')
+        .single();
 
       if (updateError) {
         console.error('Erro ao inativar atividade:', updateError);
         throw updateError;
       }
 
-      console.log('Atividade inativada com sucesso');
+      // Verifica se a atualização foi bem sucedida
+      if (!updatedActivity || updatedActivity.active !== false) {
+        console.error('Falha na atualização:', updatedActivity);
+        throw new Error('Falha ao inativar atividade: status não foi atualizado');
+      }
+
+      console.log('Atividade inativada com sucesso:', updatedActivity);
 
       // Invalidar o cache para forçar recarregamento dos dados
       await queryClient.invalidateQueries({ queryKey: ['clients'] });
