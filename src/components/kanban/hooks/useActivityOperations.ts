@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -159,11 +160,15 @@ export function useActivityOperations() {
         })
         .eq('id', activityId)
         .select()
-        .single()
+        .maybeSingle()
 
       if (updateError) {
         console.error('Erro ao inativar atividade:', updateError)
         throw updateError
+      }
+
+      if (!updatedActivity) {
+        throw new Error('Atividade não encontrada')
       }
 
       console.log('Atividade inativada com sucesso:', updatedActivity)
