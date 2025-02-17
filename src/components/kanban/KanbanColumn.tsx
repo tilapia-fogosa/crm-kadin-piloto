@@ -53,7 +53,13 @@ export function KanbanColumn({
             key={card.id}
             card={card}
             isOpen={selectedCard?.id === card.id}
-            onOpenChange={(open) => !open && setSelectedCard(null)}
+            onOpenChange={(open) => {
+              if (open) {
+                setSelectedCard(card)
+              } else {
+                setSelectedCard(null)
+              }
+            }}
             onWhatsAppClick={(e) => onWhatsAppClick(e, card.phoneNumber)}
             onDeleteActivity={handleDeleteActivity}
             onRegisterAttempt={async (attempt) => {
