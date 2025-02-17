@@ -1,4 +1,3 @@
-
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -160,7 +159,7 @@ export function useActivityOperations() {
         .from('client_activities')
         .select('*')
         .eq('id', activityId)
-        .maybeSingle();
+        .single();
 
       if (checkError) {
         console.error('Erro ao verificar atividade:', checkError);
@@ -174,38 +173,21 @@ export function useActivityOperations() {
 
       console.log('Atividade encontrada:', existingActivity);
 
-      // Executa a atualização
-      const { error: updateError } = await supabase
-        .from('client_activities')
-        .update({ 
-          active: false,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', activityId);
+      // Executa a atualização usando RPC para garantir que a operação seja atômica
+      const { data: updateResult, error: updateError } = await supabase.rpc('inactivate_activity', {
+        activity_id: activityId
+      });
 
       if (updateError) {
         console.error('Erro ao inativar atividade:', updateError);
         throw updateError;
       }
 
-      // Verifica se a atualização foi bem sucedida fazendo uma nova consulta
-      const { data: verifyUpdate, error: verifyError } = await supabase
-        .from('client_activities')
-        .select('*')
-        .eq('id', activityId)
-        .maybeSingle();
-
-      if (verifyError) {
-        console.error('Erro ao verificar atualização:', verifyError);
-        throw verifyError;
+      if (!updateResult) {
+        throw new Error('Falha ao inativar atividade: nenhuma linha atualizada');
       }
 
-      if (!verifyUpdate || verifyUpdate.active !== false) {
-        console.error('Falha na atualização - verificação:', verifyUpdate);
-        throw new Error('Falha ao inativar atividade: status não foi atualizado');
-      }
-
-      console.log('Atividade inativada com sucesso:', verifyUpdate);
+      console.log('Resultado da inativação:', updateResult);
 
       // Invalidar o cache para forçar recarregamento dos dados
       await queryClient.invalidateQueries({ queryKey: ['clients'] });
