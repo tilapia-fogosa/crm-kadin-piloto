@@ -110,7 +110,7 @@ export function ActivityDashboard() {
 
       const [clientsResult, activitiesResult] = await Promise.all([
         supabase.from('clients')
-          .select('*')
+          .select('*, lead_sources(*)')
           .eq('active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
@@ -139,10 +139,10 @@ export function ActivityDashboard() {
         const dayStart = new Date(date.setHours(0, 0, 0, 0));
         const dayEnd = new Date(date.setHours(23, 59, 59, 999));
 
-        const newClients = clients.filter(client => 
+        const dayClients = clients.filter(client => 
           new Date(client.created_at) >= dayStart && 
           new Date(client.created_at) <= dayEnd
-        ).length;
+        );
 
         const dayActivities = activities.filter(activity => 
           new Date(activity.created_at) >= dayStart && 
@@ -182,9 +182,15 @@ export function ActivityDashboard() {
         const agConversionRate = effectiveContacts > 0 ? scheduledVisits / effectiveContacts * 100 : 0;
         const atConversionRate = awaitingVisits > 0 ? completedVisits / awaitingVisits * 100 : 0;
 
+        // Retornar o primeiro cliente do dia, se houver
+        const firstClientOfDay = dayClients[0];
+        if (firstClientOfDay) {
+          setSelectedClientId(firstClientOfDay.id);
+        }
+
         return {
           date,
-          newClients,
+          newClients: dayClients.length,
           contactAttempts,
           effectiveContacts,
           ceConversionRate,
@@ -193,7 +199,8 @@ export function ActivityDashboard() {
           awaitingVisits,
           completedVisits,
           atConversionRate,
-          enrollments
+          enrollments,
+          clientId: firstClientOfDay?.id
         };
       });
 
@@ -328,23 +335,29 @@ export function ActivityDashboard() {
                   <TableCell colSpan={11} className="text-center text-xs py-3 px-2.5">Carregando...</TableCell>
                 </TableRow> : (
                   <>
-                    {stats?.map(day => <TableRow key={day.date.toISOString()} className="hover:bg-muted/50 [&>td]:px-2.5">
-                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
-                        {format(day.date, 'dd/MM/yyyy', {
-                          locale: ptBR
-                        })}
-                      </TableCell>
-                      <TableCell className="text-center text-xs py-0">{day.newClients}</TableCell>
-                      <TableCell className="text-center text-xs py-0">{day.contactAttempts}</TableCell>
-                      <TableCell className="text-center text-xs py-0">{day.effectiveContacts}</TableCell>
-                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.ceConversionRate.toFixed(1)}%</TableCell>
-                      <TableCell className="text-center text-xs py-0">{day.scheduledVisits}</TableCell>
-                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.agConversionRate.toFixed(1)}%</TableCell>
-                      <TableCell className="text-center text-xs py-0">{day.awaitingVisits}</TableCell>
-                      <TableCell className="text-center text-xs py-0">{day.completedVisits}</TableCell>
-                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.atConversionRate.toFixed(1)}%</TableCell>
-                      <TableCell className="text-center text-xs py-[5px]">{day.enrollments}</TableCell>
-                    </TableRow>)}
+                    {stats?.map(day => (
+                      <TableRow 
+                        key={day.date.toISOString()} 
+                        className="hover:bg-muted/50 [&>td]:px-2.5 cursor-pointer"
+                        onClick={() => day.clientId && setSelectedClientId(day.clientId)}
+                      >
+                        <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
+                          {format(day.date, 'dd/MM/yyyy', {
+                            locale: ptBR
+                          })}
+                        </TableCell>
+                        <TableCell className="text-center text-xs py-0">{day.newClients}</TableCell>
+                        <TableCell className="text-center text-xs py-0">{day.contactAttempts}</TableCell>
+                        <TableCell className="text-center text-xs py-0">{day.effectiveContacts}</TableCell>
+                        <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.ceConversionRate.toFixed(1)}%</TableCell>
+                        <TableCell className="text-center text-xs py-0">{day.scheduledVisits}</TableCell>
+                        <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.agConversionRate.toFixed(1)}%</TableCell>
+                        <TableCell className="text-center text-xs py-0">{day.awaitingVisits}</TableCell>
+                        <TableCell className="text-center text-xs py-0">{day.completedVisits}</TableCell>
+                        <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.atConversionRate.toFixed(1)}%</TableCell>
+                        <TableCell className="text-center text-xs py-[5px]">{day.enrollments}</TableCell>
+                      </TableRow>
+                    ))}
                     
                     {totals && (
                       <TableRow className="hover:bg-muted/50 [&>td]:px-2.5 font-bold border-t-2">
