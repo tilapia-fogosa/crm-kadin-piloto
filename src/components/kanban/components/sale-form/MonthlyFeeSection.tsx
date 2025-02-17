@@ -2,17 +2,18 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { format } from "date-fns"
 import { PaymentMethod, DueDay } from "../../types"
 
 interface MonthlyFeeSectionProps {
   amount: number | undefined
   paymentMethod: PaymentMethod | undefined
   dueDay: DueDay | undefined
-  firstPaymentDate: string | undefined
+  firstPaymentDate: Date | undefined
   onAmountChange: (value: number) => void
   onPaymentMethodChange: (value: PaymentMethod) => void
   onDueDayChange: (value: DueDay) => void
-  onFirstPaymentDateChange: (value: string) => void
+  onFirstPaymentDateChange: (value: Date) => void
 }
 
 export function MonthlyFeeSection({
@@ -36,6 +37,12 @@ export function MonthlyFeeSection({
     const numbers = value.replace(/\D/g, '')
     const numberValue = parseInt(numbers)
     onAmountChange(numberValue / 100)
+  }
+
+  const handleDateChange = (dateString: string) => {
+    const [year, month, day] = dateString.split('-').map(Number)
+    const date = new Date(year, month - 1, day, 12, 0, 0)
+    onFirstPaymentDateChange(date)
   }
 
   return (
@@ -76,8 +83,8 @@ export function MonthlyFeeSection({
             <Label>Data da Primeira Mensalidade</Label>
             <Input
               type="date"
-              value={firstPaymentDate || ''}
-              onChange={e => onFirstPaymentDateChange(e.target.value)}
+              value={firstPaymentDate ? format(firstPaymentDate, "yyyy-MM-dd") : ''}
+              onChange={e => handleDateChange(e.target.value)}
             />
           </div>
 

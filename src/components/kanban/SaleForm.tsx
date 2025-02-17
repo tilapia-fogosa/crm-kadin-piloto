@@ -5,22 +5,19 @@ import { Sale, PaymentMethod, DueDay } from "./types"
 import { ImportantInfo } from "./components/sale-form/ImportantInfo"
 import { PaymentSection } from "./components/sale-form/PaymentSection"
 import { MonthlyFeeSection } from "./components/sale-form/MonthlyFeeSection"
-import { format } from "date-fns"
 
 interface SaleFormProps {
   onSubmit: (sale: Sale) => Promise<void>
   clientId: string
   activityId: string
-  initialData?: Sale
 }
 
-export function SaleForm({ onSubmit, clientId, activityId, initialData }: SaleFormProps) {
+export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
   const [sale, setSale] = useState<Partial<Sale>>({
     client_id: clientId,
     attendance_activity_id: activityId,
     enrollment_installments: 1,
-    material_installments: 1,
-    ...initialData,
+    material_installments: 1
   })
 
   const handlePaymentMethodChange = (field: 'enrollment_payment_method' | 'material_payment_method' | 'monthly_fee_payment_method', value: PaymentMethod) => {
@@ -43,7 +40,7 @@ export function SaleForm({ onSubmit, clientId, activityId, initialData }: SaleFo
   const setTodayDate = (field: keyof Sale) => {
     setSale(prev => ({
       ...prev,
-      [field]: format(new Date(), 'yyyy-MM-dd')
+      [field]: new Date()
     }))
   }
 
@@ -131,7 +128,7 @@ export function SaleForm({ onSubmit, clientId, activityId, initialData }: SaleFo
         className="w-full"
         disabled={!isFormValid()}
       >
-        {initialData ? 'Atualizar Venda' : 'Cadastrar Venda'}
+        Cadastrar Venda
       </Button>
     </div>
   )
