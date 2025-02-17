@@ -158,7 +158,7 @@ export function useActivityOperations() {
       // Verificar se a atividade existe e está ativa
       const { data: existingActivity, error: checkError } = await supabase
         .from('client_activities')
-        .select('id, active')
+        .select('*')
         .eq('id', activityId)
         .maybeSingle();
 
@@ -175,28 +175,37 @@ export function useActivityOperations() {
       console.log('Atividade encontrada:', existingActivity);
 
       // Executa a atualização
-      const { data: updatedActivity, error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from('client_activities')
         .update({ 
           active: false,
           updated_at: new Date().toISOString()
         })
-        .eq('id', activityId)
-        .select('id, active')
-        .maybeSingle();
+        .eq('id', activityId);
 
       if (updateError) {
         console.error('Erro ao inativar atividade:', updateError);
         throw updateError;
       }
 
-      // Verifica se a atualização foi bem sucedida
-      if (!updatedActivity || updatedActivity.active !== false) {
-        console.error('Falha na atualização:', updatedActivity);
+      // Verifica se a atualização foi bem sucedida fazendo uma nova consulta
+      const { data: verifyUpdate, error: verifyError } = await supabase
+        .from('client_activities')
+        .select('*')
+        .eq('id', activityId)
+        .maybeSingle();
+
+      if (verifyError) {
+        console.error('Erro ao verificar atualização:', verifyError);
+        throw verifyError;
+      }
+
+      if (!verifyUpdate || verifyUpdate.active !== false) {
+        console.error('Falha na atualização - verificação:', verifyUpdate);
         throw new Error('Falha ao inativar atividade: status não foi atualizado');
       }
 
-      console.log('Atividade inativada com sucesso:', updatedActivity);
+      console.log('Atividade inativada com sucesso:', verifyUpdate);
 
       // Invalidar o cache para forçar recarregamento dos dados
       await queryClient.invalidateQueries({ queryKey: ['clients'] });
