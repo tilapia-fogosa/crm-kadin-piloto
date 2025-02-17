@@ -22,9 +22,13 @@ export function useActivityDeletion() {
         .from('client_activities')
         .select('*')
         .eq('id', activityId)
-        .maybeSingle();
+        .single();
 
       if (checkError) {
+        if (checkError.code === 'PGRST116') {
+          console.error('Atividade não encontrada:', activityId);
+          throw new Error('Atividade não encontrada');
+        }
         console.error('Erro ao verificar atividade:', checkError);
         throw checkError;
       }
@@ -36,27 +40,22 @@ export function useActivityDeletion() {
 
       console.log('Atividade encontrada:', existingActivity);
 
-      // Executa a atualização diretamente
-      const { data: updatedActivity, error: updateError } = await supabase
-        .from('client_activities')
-        .update({ 
-          active: false,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', activityId)
-        .select()
-        .maybeSingle();
+      // Executa a função de inativação diretamente usando a função do banco
+      const { data: result, error: inactivateError } = await supabase
+        .rpc('inactivate_activity', {
+          activity_id: activityId
+        });
 
-      if (updateError) {
-        console.error('Erro ao inativar atividade:', updateError);
-        throw updateError;
+      if (inactivateError) {
+        console.error('Erro ao inativar atividade:', inactivateError);
+        throw inactivateError;
       }
 
-      if (!updatedActivity) {
-        throw new Error('Falha ao inativar atividade: nenhuma linha atualizada');
+      if (!result) {
+        throw new Error('Falha ao inativar atividade: operação não realizada');
       }
 
-      console.log('Atividade inativada com sucesso:', updatedActivity);
+      console.log('Atividade inativada com sucesso');
 
       await queryClient.invalidateQueries({ queryKey: ['clients'] });
 
