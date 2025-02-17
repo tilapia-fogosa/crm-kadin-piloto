@@ -183,7 +183,7 @@ export function useActivityOperations() {
         })
         .eq('id', activityId)
         .select('id, active')
-        .single();
+        .maybeSingle();
 
       if (updateError) {
         console.error('Erro ao inativar atividade:', updateError);
