@@ -48,6 +48,12 @@ export function PaymentSection({
     onAmountChange(numberValue / 100)
   }
 
+  const handleDateChange = (dateString: string) => {
+    const [year, month, day] = dateString.split('-').map(Number)
+    const date = new Date(year, month - 1, day, 12, 0, 0)
+    onPaymentDateChange(date)
+  }
+
   return (
     <div className="space-y-4">
       <h4 className="text-sm font-medium">{title}</h4>
@@ -105,7 +111,7 @@ export function PaymentSection({
             <Input
               type="date"
               value={paymentDate ? format(paymentDate, "yyyy-MM-dd") : ''}
-              onChange={e => onPaymentDateChange(new Date(e.target.value))}
+              onChange={e => handleDateChange(e.target.value)}
               className="flex-1"
             />
             <Button

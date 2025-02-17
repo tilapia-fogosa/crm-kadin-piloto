@@ -39,6 +39,12 @@ export function MonthlyFeeSection({
     onAmountChange(numberValue / 100)
   }
 
+  const handleDateChange = (dateString: string) => {
+    const [year, month, day] = dateString.split('-').map(Number)
+    const date = new Date(year, month - 1, day, 12, 0, 0)
+    onFirstPaymentDateChange(date)
+  }
+
   return (
     <div className="space-y-4">
       <h4 className="text-sm font-medium">Mensalidade</h4>
@@ -78,7 +84,7 @@ export function MonthlyFeeSection({
             <Input
               type="date"
               value={firstPaymentDate ? format(firstPaymentDate, "yyyy-MM-dd") : ''}
-              onChange={e => onFirstPaymentDateChange(new Date(e.target.value))}
+              onChange={e => handleDateChange(e.target.value)}
             />
           </div>
 
