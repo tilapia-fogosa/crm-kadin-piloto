@@ -3,6 +3,7 @@ import { SalesTable } from "@/components/sales/sales-table"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Sale } from "@/components/kanban/types"
+import { format } from "date-fns"
 
 export default function SalesPage() {
   const { data: sales, isLoading, refetch } = useQuery({
@@ -38,9 +39,17 @@ export default function SalesPage() {
   }
 
   const handleEdit = async (sale: Sale) => {
+    // Convertendo as datas de Date para string no formato yyyy-MM-dd
+    const saleToUpdate = {
+      ...sale,
+      enrollment_payment_date: sale.enrollment_payment_date,
+      material_payment_date: sale.material_payment_date,
+      first_monthly_fee_date: sale.first_monthly_fee_date
+    }
+
     const { error } = await supabase
       .from('sales')
-      .update(sale)
+      .update(saleToUpdate)
       .eq('id', sale.id)
 
     if (error) {

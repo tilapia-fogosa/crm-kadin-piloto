@@ -1,3 +1,4 @@
+
 export type KanbanColumn = {
   id: string
   title: string
@@ -51,19 +52,24 @@ export type PaymentMethod = 'dinheiro' | 'pix' | 'cartao_credito' | 'cartao_debi
 export type DueDay = '5' | '10' | '15' | '20' | '25';
 
 export type Sale = {
+  id?: string
   client_id: string
   attendance_activity_id: string
   important_info?: string
   enrollment_amount: number
   enrollment_payment_method: PaymentMethod
   enrollment_installments: number
-  enrollment_payment_date: Date
+  enrollment_payment_date: string
   material_amount: number
   material_payment_method: PaymentMethod
   material_installments: number
-  material_payment_date: Date
+  material_payment_date: string
   monthly_fee_amount: number
   monthly_fee_payment_method: PaymentMethod
-  first_monthly_fee_date: Date
+  first_monthly_fee_date: string
   monthly_fee_due_day?: DueDay
+  active?: boolean
+  created_at?: string
+  updated_at?: string
 }
+
