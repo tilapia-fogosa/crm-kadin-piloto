@@ -1,7 +1,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { RealtimePostgresInsertPayload } from "@supabase/supabase-js"
+import { RealtimePostgresInsertPayload, RealtimePostgresUpdatePayload } from "@supabase/supabase-js"
 import { useEffect } from "react"
 
 export function useClientData() {
@@ -22,6 +22,19 @@ export function useClientData() {
         (payload: RealtimePostgresInsertPayload<any>) => {
           console.log('New client inserted:', payload)
           // Invalidate and refetch data when a new client is inserted
+          queryClient.invalidateQueries({ queryKey: ['clients'] })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'clients'
+        },
+        (payload: RealtimePostgresUpdatePayload<any>) => {
+          console.log('Client updated:', payload)
+          // Invalidate and refetch data when a client is updated (including inactivation)
           queryClient.invalidateQueries({ queryKey: ['clients'] })
         }
       )
