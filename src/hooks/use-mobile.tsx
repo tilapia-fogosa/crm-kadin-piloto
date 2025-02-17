@@ -1,3 +1,6 @@
+
+"use client"
+
 import { useState, useEffect } from "react"
 
 const MOBILE_BREAKPOINT = 768
@@ -6,14 +9,14 @@ export function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
-    const checkMobile = () => {
+    function checkMobile() {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
 
-    // Initial check
+    // Verificação inicial
     checkMobile()
 
-    // Add event listener
+    // Adiciona event listener
     window.addEventListener('resize', checkMobile)
 
     // Cleanup
