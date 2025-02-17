@@ -27,6 +27,7 @@ export default function ClientsPage() {
           status,
           created_at
         `)
+        .eq('active', true) // Filtra apenas clientes ativos
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -40,33 +41,34 @@ export default function ClientsPage() {
 
   const handleDelete = async (clientId: string) => {
     try {
-      console.log('Deleting client:', clientId)
+      console.log('Inativando client:', clientId)
       
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      const { error: deleteError } = await supabase
+      // Ao invés de deletar, apenas marca como inativo
+      const { error: updateError } = await supabase
         .from('clients')
-        .delete()
+        .update({ active: false })
         .eq('id', clientId)
 
-      if (deleteError) {
-        console.error('Error deleting client:', deleteError)
-        throw deleteError
+      if (updateError) {
+        console.error('Error inactivating client:', updateError)
+        throw updateError
       }
 
       await queryClient.invalidateQueries({ queryKey: ['all-clients'] })
 
       toast({
-        title: "Cliente excluído",
-        description: "O cliente foi removido com sucesso.",
+        title: "Cliente inativado",
+        description: "O cliente foi inativado com sucesso.",
       })
     } catch (error) {
       console.error('Error in handleDelete:', error)
       toast({
         variant: "destructive",
-        title: "Erro ao excluir",
-        description: "Ocorreu um erro ao tentar excluir o cliente.",
+        title: "Erro ao inativar",
+        description: "Ocorreu um erro ao tentar inativar o cliente.",
       })
     } finally {
       setClientToDelete(null)

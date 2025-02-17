@@ -58,6 +58,7 @@ export type Database = {
       }
       clients: {
         Row: {
+          active: boolean
           age_range: string | null
           created_at: string
           created_by: string | null
@@ -78,6 +79,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          active?: boolean
           age_range?: string | null
           created_at?: string
           created_by?: string | null
@@ -98,6 +100,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          active?: boolean
           age_range?: string | null
           created_at?: string
           created_by?: string | null
@@ -178,66 +181,6 @@ export type Database = {
           original_created_by?: string
           tipo_atividade?: string
           tipo_contato?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      deleted_clients: {
-        Row: {
-          age_range: string | null
-          client_id: string
-          created_at: string
-          deleted_at: string
-          deleted_by: string
-          id: string
-          lead_source: string
-          meta_id: string | null
-          name: string
-          observations: string | null
-          original_ad: string | null
-          original_adset: string | null
-          original_created_at: string
-          original_created_by: string
-          phone_number: string
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          age_range?: string | null
-          client_id: string
-          created_at?: string
-          deleted_at?: string
-          deleted_by: string
-          id: string
-          lead_source: string
-          meta_id?: string | null
-          name: string
-          observations?: string | null
-          original_ad?: string | null
-          original_adset?: string | null
-          original_created_at: string
-          original_created_by: string
-          phone_number: string
-          status: string
-          updated_at?: string | null
-        }
-        Update: {
-          age_range?: string | null
-          client_id?: string
-          created_at?: string
-          deleted_at?: string
-          deleted_by?: string
-          id?: string
-          lead_source?: string
-          meta_id?: string | null
-          name?: string
-          observations?: string | null
-          original_ad?: string | null
-          original_adset?: string | null
-          original_created_at?: string
-          original_created_by?: string
-          phone_number?: string
-          status?: string
           updated_at?: string | null
         }
         Relationships: []

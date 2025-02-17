@@ -61,6 +61,7 @@ export function useClientData() {
             next_contact_date
           )
         `)
+        .eq('active', true) // Filtra apenas clientes ativos
         .order('created_at', { ascending: false })
         .is('deleted_at', null)
 
@@ -69,7 +70,7 @@ export function useClientData() {
         throw error
       }
 
-      console.log('Total clients received from database:', data?.length)
+      console.log('Total active clients received from database:', data?.length)
       
       // Log all clients with their next_contact_date for debugging
       data?.forEach(client => {
@@ -92,7 +93,7 @@ export function useClientData() {
         }
       })
 
-      console.log('Total processed clients:', clientsWithActivities?.length)
+      console.log('Total processed active clients:', clientsWithActivities?.length)
       return clientsWithActivities
     }
   })
