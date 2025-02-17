@@ -468,6 +468,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      inactivate_activity: {
+        Args: {
+          activity_id: string
+        }
+        Returns: boolean
+      }
       is_admin: {
         Args: {
           user_uid: string

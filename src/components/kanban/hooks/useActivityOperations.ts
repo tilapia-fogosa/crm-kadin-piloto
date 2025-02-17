@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -173,21 +174,27 @@ export function useActivityOperations() {
 
       console.log('Atividade encontrada:', existingActivity);
 
-      // Executa a atualização usando RPC para garantir que a operação seja atômica
-      const { data: updateResult, error: updateError } = await supabase.rpc('inactivate_activity', {
-        activity_id: activityId
-      });
+      // Executa a atualização diretamente
+      const { data: updatedActivity, error: updateError } = await supabase
+        .from('client_activities')
+        .update({ 
+          active: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', activityId)
+        .select()
+        .single();
 
       if (updateError) {
         console.error('Erro ao inativar atividade:', updateError);
         throw updateError;
       }
 
-      if (!updateResult) {
+      if (!updatedActivity) {
         throw new Error('Falha ao inativar atividade: nenhuma linha atualizada');
       }
 
-      console.log('Resultado da inativação:', updateResult);
+      console.log('Atividade inativada com sucesso:', updatedActivity);
 
       // Invalidar o cache para forçar recarregamento dos dados
       await queryClient.invalidateQueries({ queryKey: ['clients'] });
