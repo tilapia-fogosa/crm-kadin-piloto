@@ -56,13 +56,13 @@ export function CardSheet({
         <SheetHeader>
           <SheetTitle>Atividades - {card.clientName}</SheetTitle>
         </SheetHeader>
-        <div className="grid gap-4 mt-6 relative" style={{ 
+        <div className="grid gap-4 mt-6 relative h-[calc(90vh-80px)]" style={{ 
           gridTemplateColumns: isHistoryExpanded 
             ? '1fr 1fr 1fr' 
             : '50px minmax(200px, 1fr) minmax(300px, 2fr)' 
         }}>
           {/* Coluna do Histórico */}
-          <div className={`transition-all duration-300 ease-in-out h-[600px] ${isHistoryExpanded ? 'w-full' : 'w-[50px]'}`}>
+          <div className={`transition-all duration-300 ease-in-out h-full ${isHistoryExpanded ? 'w-full' : 'w-[50px]'}`}>
             {isHistoryExpanded ? (
               <ActivityHistory
                 activities={card.activities}
@@ -78,7 +78,7 @@ export function CardSheet({
           </div>
 
           {/* Coluna Central */}
-          <div className="space-y-4">
+          <div className="space-y-4 h-full overflow-y-auto">
             <div>
               <ActivitySelector
                 selectedActivity={selectedActivity}
@@ -92,7 +92,7 @@ export function CardSheet({
           </div>
 
           {/* Coluna dos Detalhes */}
-          <div className="h-[600px] overflow-y-auto">
+          <div className="h-full overflow-y-auto">
             <ActivityDetails
               selectedActivity={selectedActivity}
               cardId={card.id}
