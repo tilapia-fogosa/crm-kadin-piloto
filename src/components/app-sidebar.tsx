@@ -1,209 +1,90 @@
 
-import { Link, useNavigate, useLocation } from "react-router-dom"
-import { cn } from "@/lib/utils"
+import { useEffect, useState } from "react";
+import { useLocation, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarTrigger,
-  useSidebar,
-} from "@/components/ui/sidebar"
-import { 
-  LayoutDashboard, 
-  ListTodo, 
-  Calendar, 
-  UserPlus, 
-  Users, 
-  Target,
-  Settings,
-  Home,
-  BarChart3,
-  FileJson,
-  ArrowLeft,
-  ArrowRight,
-  LogOut
-} from "lucide-react"
-import { supabase } from "@/integrations/supabase/client"
-import { useToast } from "@/components/ui/use-toast"
+  LayoutDashboard,
+  KanbanSquare,
+  Calendar,
+  Users,
+  FileCode,
+  Menu,
+} from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { useSidebar } from "./ui/sidebar";
+
+const navigation = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Kanban", href: "/kanban", icon: KanbanSquare },
+  { name: "Agenda", href: "/agenda", icon: Calendar },
+  { name: "Clientes", href: "/clients", icon: Users },
+  { name: "API Docs", href: "/api-docs", icon: FileCode },
+];
 
 export function AppSidebar() {
-  const location = useLocation()
-  const { state } = useSidebar()
-  const navigate = useNavigate()
-  const { toast } = useToast()
+  const { isSidebarOpen, setSidebarOpen } = useSidebar();
+  const location = useLocation();
+  const [isClient, setIsClient] = useState(false);
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut()
-      toast({
-        title: "Logout realizado com sucesso",
-        description: "Redirecionando para a tela de login...",
-      })
-      navigate("/auth")
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao fazer logout",
-        description: error.message,
-      })
-    }
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const sidebar = (
+    <div className="flex h-full flex-col gap-4">
+      <div className="flex h-[60px] items-center px-6">
+        <img
+          className="h-8 w-auto"
+          src="/logo.png"
+          alt="Logo"
+        />
+      </div>
+      <ScrollArea className="flex-1 overflow-hidden">
+        <div className="space-y-4 px-4">
+          <div className="space-y-1">
+            {navigation.map((item) => (
+              <Button
+                key={item.name}
+                variant={location.pathname === item.href ? "secondary" : "ghost"}
+                className={cn("w-full justify-start")}
+                asChild
+              >
+                <Link to={item.href}>
+                  <item.icon className="mr-2 h-5 w-5" />
+                  {item.name}
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+
+  if (!isClient) {
+    return null;
   }
 
-  const mainMenuItems = [
-    {
-      title: "Painel do Consultor",
-      icon: ListTodo,
-      path: "/kanban",
-    },
-    {
-      title: "Agenda",
-      icon: Calendar,
-      path: "/agenda",
-    },
-    {
-      title: "Vendas",
-      icon: BarChart3,
-      path: "/sales",
-    },
-    {
-      title: "Eventos",
-      icon: Calendar,
-      path: "/events",
-    },
-    {
-      title: "Unidades",
-      icon: Home,
-      path: "/units",
-    },
-    {
-      title: "Usuários",
-      icon: Users,
-      path: "/system-users",
-    },
-    {
-      title: "Documentação API",
-      icon: FileJson,
-      path: "/api-docs",
-    },
-    {
-      title: "Minhas Configurações",
-      icon: Settings,
-      path: "/settings",
-    },
-    {
-      title: "Dashboard",
-      icon: LayoutDashboard,
-      path: "/dashboard",
-    },
-  ]
-
-  const clientMenuItems = [
-    {
-      title: "Cadastrar Novo",
-      icon: UserPlus,
-      path: "/clients/new",
-    },
-    {
-      title: "Todos os clientes",
-      icon: Users,
-      path: "/clients",
-    },
-    {
-      title: "Origem dos Clientes",
-      icon: Target,
-      path: "/clients/sources",
-    },
-  ]
-
   return (
-    <Sidebar collapsible="icon">
-      <SidebarContent className="flex flex-col h-full">
-        <div className="flex items-center justify-between px-2 py-2">
-          <span className={cn(
-            "text-lg font-semibold text-sidebar-foreground transition-opacity duration-200",
-            state === "collapsed" && "opacity-0"
-          )}>
-            Menu
-          </span>
-          <SidebarTrigger className="z-50">
-            {state === "expanded" ? (
-              <ArrowLeft className="h-4 w-4" />
-            ) : (
-              <ArrowRight className="h-4 w-4" />
-            )}
-          </SidebarTrigger>
-        </div>
-
-        {/* Menu Principal */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainMenuItems.map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === item.path}
-                    tooltip={item.title}
-                  >
-                    <Link to={item.path}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Menu de Clientes */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Clientes</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {clientMenuItems.map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === item.path}
-                    tooltip={item.title}
-                  >
-                    <Link to={item.path}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Botão de Logout */}
-        <div className="mt-auto border-t border-border">
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={handleLogout}
-                    tooltip="Sair do sistema"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Sair</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </div>
-      </SidebarContent>
-    </Sidebar>
-  )
+    <>
+      <Sheet open={isSidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            className="md:hidden fixed z-50 left-4 top-4"
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-72 p-0">
+          {sidebar}
+        </SheetContent>
+      </Sheet>
+      <div className="hidden border-r bg-background md:block w-72">
+        {sidebar}
+      </div>
+    </>
+  );
 }

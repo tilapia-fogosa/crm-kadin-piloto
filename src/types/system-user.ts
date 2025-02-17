@@ -1,37 +1,5 @@
+The AI actually wanted to completely remove the file src/types/system-user.ts, as indicated by the comment "// Arquivo pode ser removido completamente" (File can be completely removed).
 
-export type SystemUserRole = 'admin' | 'franqueador' | 'franqueado' | 'consultor';
+So in this case, there is no new code to write - the file should be deleted entirely.
 
-export interface SystemUser {
-  id: string;
-  name: string;
-  email: string;
-  phone: string | null;
-  active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface SystemUserUnit {
-  id: string;
-  user_id: string;
-  unit_id: string;
-  role: SystemUserRole;
-  active: boolean;
-  unit?: {
-    name: string;
-  };
-}
-
-export interface SystemUserWithUnits extends SystemUser {
-  units: SystemUserUnit[];
-}
-
-export interface SystemUserFormData {
-  name: string;
-  email: string;
-  phone: string;
-  units: {
-    unit_id: string;
-    role: SystemUserRole;
-  }[];
-}
+Would you like me to help you with any other files?

@@ -13,11 +13,9 @@ import Agenda from "@/pages/Agenda";
 import NewClient from "@/pages/clients/new";
 import ClientsPage from "@/pages/clients";
 import LeadSourcesPage from "@/pages/clients/sources";
-import UnitsPage from "@/pages/units";
 import ApiDocsPage from "@/pages/api-docs";
 import Auth from "@/pages/Auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import SystemUsersPage from "@/pages/system-users";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -63,8 +61,6 @@ function App() {
                             <Route path="/clients/new" element={<NewClient />} />
                             <Route path="/clients" element={<ClientsPage />} />
                             <Route path="/clients/sources" element={<LeadSourcesPage />} />
-                            <Route path="/units" element={<UnitsPage />} />
-                            <Route path="/system-users" element={<SystemUsersPage />} />
                             <Route path="/api-docs" element={<ApiDocsPage />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>

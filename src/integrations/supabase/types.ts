@@ -77,8 +77,6 @@ export type Database = {
           phone_number: string
           scheduled_date: string | null
           status: string
-          unit_api_key: string | null
-          unit_id: string
           updated_at: string
         }
         Insert: {
@@ -98,8 +96,6 @@ export type Database = {
           phone_number: string
           scheduled_date?: string | null
           status?: string
-          unit_api_key?: string | null
-          unit_id: string
           updated_at?: string
         }
         Update: {
@@ -119,8 +115,6 @@ export type Database = {
           phone_number?: string
           scheduled_date?: string | null
           status?: string
-          unit_api_key?: string | null
-          unit_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -129,13 +123,6 @@ export type Database = {
             columns: ["lead_source"]
             isOneToOne: false
             referencedRelation: "lead_sources"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "clients_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -299,215 +286,6 @@ export type Database = {
         }
         Relationships: []
       }
-      system_user_units: {
-        Row: {
-          active: boolean
-          created_at: string
-          created_by: string | null
-          id: string
-          role: Database["public"]["Enums"]["user_access_level"]
-          unit_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          role: Database["public"]["Enums"]["user_access_level"]
-          unit_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["user_access_level"]
-          unit_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "system_user_units_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "system_user_units_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "system_users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      system_users: {
-        Row: {
-          active: boolean
-          created_at: string
-          created_by: string | null
-          email: string
-          id: string
-          name: string
-          phone: string | null
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          created_by?: string | null
-          email: string
-          id?: string
-          name: string
-          phone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          created_by?: string | null
-          email?: string
-          id?: string
-          name?: string
-          phone?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      unit_users: {
-        Row: {
-          created_at: string
-          id: string
-          unit_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          unit_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          unit_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "unit_users_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "unit_users_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      units: {
-        Row: {
-          active: boolean
-          api_key: string
-          city: string
-          complement: string | null
-          created_at: string
-          created_by: string | null
-          email: string | null
-          id: string
-          name: string
-          neighborhood: string
-          number: string
-          phone: string | null
-          postal_code: string
-          state: string
-          street: string
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          api_key?: string
-          city: string
-          complement?: string | null
-          created_at?: string
-          created_by?: string | null
-          email?: string | null
-          id?: string
-          name: string
-          neighborhood: string
-          number: string
-          phone?: string | null
-          postal_code: string
-          state: string
-          street: string
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          api_key?: string
-          city?: string
-          complement?: string | null
-          created_at?: string
-          created_by?: string | null
-          email?: string | null
-          id?: string
-          name?: string
-          neighborhood?: string
-          number?: string
-          phone?: string | null
-          postal_code?: string
-          state?: string
-          street?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["access_profile"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["access_profile"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["access_profile"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_roles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       webhook_credentials: {
         Row: {
           active: boolean | null
@@ -543,29 +321,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          requested_role: Database["public"]["Enums"]["access_profile"]
-        }
-        Returns: boolean
-      }
       inactivate_activity: {
         Args: {
           activity_id: string
         }
         Returns: boolean
-      }
-      is_admin: {
-        Args: {
-          user_uid: string
-        }
-        Returns: boolean
-      }
-      verify_unit_api_key: {
-        Args: {
-          p_api_key: string
-        }
-        Returns: string
       }
       verify_webhook_credentials: {
         Args: {
@@ -576,7 +336,6 @@ export type Database = {
       }
     }
     Enums: {
-      access_profile: "admin" | "consultor" | "franqueado"
       due_day: "5" | "10" | "15" | "20" | "25"
       payment_method:
         | "dinheiro"
@@ -585,7 +344,6 @@ export type Database = {
         | "cartao_debito"
         | "boleto"
         | "recorrencia"
-      user_access_level: "admin" | "franqueador" | "franqueado" | "consultor"
       user_role: "consultor" | "franqueado"
     }
     CompositeTypes: {
