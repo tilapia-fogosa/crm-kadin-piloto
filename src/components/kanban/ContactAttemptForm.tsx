@@ -6,8 +6,6 @@ import { Label } from "@/components/ui/label"
 import { ContactAttempt } from "./types"
 import { useToast } from "@/components/ui/use-toast"
 import { format, setHours, setMinutes } from "date-fns"
-import { Calendar } from "@/components/ui/calendar"
-import { ptBR } from "date-fns/locale"
 import { Input } from "@/components/ui/input"
 
 interface ContactAttemptFormProps {
@@ -17,7 +15,7 @@ interface ContactAttemptFormProps {
 
 export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps) {
   const [contactType, setContactType] = useState<'phone' | 'whatsapp' | 'whatsapp-call' | undefined>(undefined)
-  const [date, setDate] = useState<Date>()
+  const [date, setDate] = useState("")
   const [time, setTime] = useState("")
   const { toast } = useToast()
 
@@ -50,15 +48,11 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
     }
 
     try {
-      // Cria uma nova data para evitar mutação
-      let nextContactDate = new Date(date.getTime())
-      
-      // Parse do horário
+      const [year, month, day] = date.split('-').map(Number)
       const [hours, minutes] = time.split(":").map(Number)
       
-      // Usa funções do date-fns para manipular a data com segurança
-      nextContactDate = setHours(nextContactDate, hours)
-      nextContactDate = setMinutes(nextContactDate, minutes)
+      const nextContactDate = new Date(year, month - 1, day)
+      nextContactDate.setHours(hours, minutes, 0, 0)
 
       // Verifica se a data/hora é futura
       if (nextContactDate <= new Date()) {
@@ -110,26 +104,13 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
 
       <div className="space-y-2">
         <Label>Data do Próximo Contato</Label>
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={setDate}
-          locale={ptBR}
-          disabled={(date) => {
-            const today = new Date()
-            today.setHours(0, 0, 0, 0)
-            const compareDate = new Date(date)
-            compareDate.setHours(0, 0, 0, 0)
-            return compareDate < today
-          }}
-          initialFocus
-          className="w-[300px] mx-auto border rounded-md"
+        <Input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="w-full"
+          placeholder="dd/mm/aaaa"
         />
-        {date && (
-          <p className="text-sm text-muted-foreground">
-            Data selecionada: {format(date, "PPP", { locale: ptBR })}
-          </p>
-        )}
       </div>
 
       <div className="space-y-2">

@@ -6,11 +6,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Scheduling } from "./types"
 import { useToast } from "@/components/ui/use-toast"
-import { format, setHours, setMinutes } from "date-fns"
-import { Calendar } from "@/components/ui/calendar"
-import { ptBR } from "date-fns/locale"
-import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface SchedulingFormProps {
   onSubmit: (scheduling: Scheduling) => void
@@ -18,7 +15,7 @@ interface SchedulingFormProps {
 }
 
 export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
-  const [date, setDate] = useState<Date>()
+  const [date, setDate] = useState("")
   const [time, setTime] = useState("")
   const [notes, setNotes] = useState("")
   const [valorizacaoDiaAnterior, setValorizacaoDiaAnterior] = useState(false)
@@ -54,15 +51,11 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
     }
 
     try {
-      // Cria uma nova data para evitar mutação
-      let scheduledDate = new Date(date.getTime())
-      
-      // Parse do horário
+      const [year, month, day] = date.split('-').map(Number)
       const [hours, minutes] = time.split(":").map(Number)
       
-      // Usa funções do date-fns para manipular a data com segurança
-      scheduledDate = setHours(scheduledDate, hours)
-      scheduledDate = setMinutes(scheduledDate, minutes)
+      const scheduledDate = new Date(year, month - 1, day)
+      scheduledDate.setHours(hours, minutes, 0, 0)
 
       // Verifica se a data/hora é futura
       if (scheduledDate <= new Date()) {
@@ -126,26 +119,13 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
 
       <div className="space-y-2">
         <Label>Data do Agendamento</Label>
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={setDate}
-          locale={ptBR}
-          disabled={(date) => {
-            const today = new Date()
-            today.setHours(0, 0, 0, 0)
-            const compareDate = new Date(date)
-            compareDate.setHours(0, 0, 0, 0)
-            return compareDate < today
-          }}
-          initialFocus
-          className="w-[300px] mx-auto border rounded-md"
+        <Input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="w-full"
+          placeholder="dd/mm/aaaa"
         />
-        {date && (
-          <p className="text-sm text-muted-foreground">
-            Data selecionada: {format(date, "PPP", { locale: ptBR })}
-          </p>
-        )}
       </div>
 
       <div className="space-y-2">
