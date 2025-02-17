@@ -1,263 +1,361 @@
-
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useActivityDeletion } from "./hooks/useActivityDeletion";
-import { useWhatsApp } from "./hooks/useWhatsApp";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { CalendarDashboard } from "./CalendarDashboard";
-import { ActivityHistory } from "./ActivityHistory";
-import { EffectiveContactForm } from "./EffectiveContactForm";
-import { SchedulingForm } from "./SchedulingForm";
-import { ContactAttemptForm } from "./ContactAttemptForm";
-import { ActivitySelector } from "./ActivitySelector";
-import { formatDate } from "./utils/activityUtils";
-import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { format, startOfMonth, endOfMonth, getYear, setYear, setMonth, isAfter, startOfDay } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { LineChart } from "lucide-react";
+import { useState } from "react";
 
-interface ActivityDashboardProps {
-  client: any;
-  onClose: () => void;
-  refetchClient: () => void;
+interface DailyStats {
+  date: Date;
+  newClients: number;
+  contactAttempts: number;
+  effectiveContacts: number;
+  ceConversionRate: number;
+  scheduledVisits: number;
+  agConversionRate: number;
+  awaitingVisits: number;
+  completedVisits: number;
+  atConversionRate: number;
+  enrollments: number;
+  leadSource?: string;
 }
 
-export function ActivityDashboard({ client, onClose, refetchClient }: ActivityDashboardProps) {
-  const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
-  const [activities, setActivities] = useState<any[]>([]);
-  const whatsApp = useWhatsApp();
-  const activityDeletion = useActivityDeletion();
-  const { toast } = useToast();
+const MONTHS = [{
+  value: "0",
+  label: "Janeiro"
+}, {
+  value: "1",
+  label: "Fevereiro"
+}, {
+  value: "2",
+  label: "Março"
+}, {
+  value: "3",
+  label: "Abril"
+}, {
+  value: "4",
+  label: "Maio"
+}, {
+  value: "5",
+  label: "Junho"
+}, {
+  value: "6",
+  label: "Julho"
+}, {
+  value: "7",
+  label: "Agosto"
+}, {
+  value: "8",
+  label: "Setembro"
+}, {
+  value: "9",
+  label: "Outubro"
+}, {
+  value: "10",
+  label: "Novembro"
+}, {
+  value: "11",
+  label: "Dezembro"
+}];
 
-  // Add null check for client
-  if (!client || !client.id) {
-    return <div>Carregando dados do cliente...</div>;
-  }
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({
+  length: 3
+}, (_, i) => currentYear - 1 + i);
 
-  const { data: activitiesData, refetch: refetchActivities } = useQuery({
-    queryKey: ['clientActivities', client.id],
+export function ActivityDashboard() {
+  const [selectedSource, setSelectedSource] = useState<string>("todos");
+  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().getMonth().toString());
+  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+
+  const {
+    data: leadSources
+  } = useQuery({
+    queryKey: ['lead-sources'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('client_activities')
-        .select('*')
-        .eq('client_id', client.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error("Erro ao buscar atividades:", error);
-        toast({
-          variant: "destructive",
-          title: "Erro ao buscar atividades",
-          description: "Ocorreu um erro ao buscar as atividades do cliente.",
-        });
-        return [];
-      }
+      const {
+        data,
+        error
+      } = await supabase.from('lead_sources').select('*').order('name');
+      if (error) throw error;
       return data;
     }
   });
 
-  useEffect(() => {
-    if (activitiesData) {
-      setActivities(activitiesData as any[]);
-    }
-  }, [activitiesData]);
+  const {
+    data: stats,
+    isLoading
+  } = useQuery({
+    queryKey: ['activity-dashboard', selectedSource, selectedMonth, selectedYear],
+    queryFn: async () => {
+      const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
+      const endDate = endOfMonth(startDate);
 
-  const handleActivitySelection = (activityType: string) => {
-    setSelectedActivity(activityType);
-  };
+      const [clientsResult, activitiesResult] = await Promise.all([
+        supabase.from('clients')
+          .select('*')
+          .eq('active', true) // Filtra apenas clientes ativos
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString())
+          .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
+        
+        supabase.from('client_activities')
+          .select('*, clients!inner(*)')
+          .eq('active', true) // Filtra apenas atividades ativas
+          .eq('clients.active', true) // Filtra apenas clientes ativos
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString())
+          .eq(selectedSource !== 'todos' ? 'clients.lead_source' : '', selectedSource !== 'todos' ? selectedSource : '')
+      ]);
 
-  const renderActivityForm = () => {
-    switch (selectedActivity) {
-      case "tentativa-de-contato":
-        return (
-          <ContactAttemptForm
-            cardId={client.id}
-            onSubmit={async () => {
-              await refetchActivities();
-              await refetchClient();
-            }}
-          />
+      if (clientsResult.error) throw clientsResult.error;
+      if (activitiesResult.error) throw activitiesResult.error;
+
+      const clients = clientsResult.data;
+      const activities = activitiesResult.data;
+
+      const dailyStats = Array.from({
+        length: endDate.getDate()
+      }, (_, index) => {
+        const date = new Date(startDate);
+        date.setDate(index + 1);
+        const dayStart = new Date(date.setHours(0, 0, 0, 0));
+        const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+
+        const newClients = clients.filter(client => 
+          new Date(client.created_at) >= dayStart && 
+          new Date(client.created_at) <= dayEnd
+        ).length;
+
+        const dayActivities = activities.filter(activity => 
+          new Date(activity.created_at) >= dayStart && 
+          new Date(activity.created_at) <= dayEnd
         );
-      case "contato-efetivo":
-        return (
-          <EffectiveContactForm
-            cardId={client.id}
-            onSubmit={async () => {
-              await refetchActivities();
-              await refetchClient();
-            }}
-          />
-        );
-      case "agendamento":
-        return (
-          <SchedulingForm
-            cardId={client.id}
-            onSubmit={async () => {
-              await refetchActivities();
-              await refetchClient();
-            }}
-          />
-        );
-      default:
-        return <p>Selecione um tipo de atividade.</p>;
-    }
-  };
 
-  const getActivityDescription = (activityType: string | null) => {
-    switch (activityType) {
-      case "tentativa-de-contato":
-        return "Registre uma nova tentativa de contato com o cliente.";
-      case "contato-efetivo":
-        return "Registre um contato efetivo com o cliente.";
-      case "agendamento":
-        return "Agende um atendimento com o cliente.";
-      default:
-        return "Selecione o tipo de atividade que deseja registrar.";
-    }
-  };
+        const contactAttempts = dayActivities.filter(activity => 
+          ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
+        ).length;
 
-  const handleActivityDeletion = async (activityId: string) => {
-    try {
-      const { error } = await supabase
-        .from('client_activities')
-        .update({ active: false })
-        .eq('id', activityId);
+        const effectiveContacts = dayActivities.filter(activity => 
+          ['Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
+        ).length;
 
-      if (error) {
-        console.error("Erro ao inativar atividade:", error);
-        toast({
-          variant: "destructive",
-          title: "Erro ao inativar atividade",
-          description: "Ocorreu um erro ao tentar inativar a atividade.",
-        });
-        return;
-      }
+        const scheduledVisits = dayActivities.filter(activity => 
+          activity.tipo_atividade === 'Agendamento'
+        ).length;
 
-      toast({
-        title: "Atividade removida!",
-        description: "A atividade foi removida com sucesso.",
+        const awaitingVisits = activities.filter(activity => 
+          activity.tipo_atividade === 'Agendamento' && 
+          activity.scheduled_date && 
+          new Date(activity.scheduled_date) >= dayStart && 
+          new Date(activity.scheduled_date) <= dayEnd
+        ).length;
+
+        const completedVisits = dayActivities.filter(activity => 
+          activity.tipo_atividade === 'Atendimento'
+        ).length;
+
+        const enrollments = clients.filter(client => 
+          client.status === 'matricula' && 
+          new Date(client.updated_at) >= dayStart && 
+          new Date(client.updated_at) <= dayEnd
+        ).length;
+
+        const ceConversionRate = contactAttempts > 0 ? effectiveContacts / contactAttempts * 100 : 0;
+        const agConversionRate = effectiveContacts > 0 ? scheduledVisits / effectiveContacts * 100 : 0;
+        const atConversionRate = awaitingVisits > 0 ? completedVisits / awaitingVisits * 100 : 0;
+
+        return {
+          date,
+          newClients,
+          contactAttempts,
+          effectiveContacts,
+          ceConversionRate,
+          scheduledVisits,
+          agConversionRate,
+          awaitingVisits,
+          completedVisits,
+          atConversionRate,
+          enrollments
+        };
       });
 
-      refetchActivities();
-      refetchClient();
-    } catch (error) {
-      console.error("Erro ao inativar atividade:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao inativar atividade",
-        description: "Ocorreu um erro ao tentar inativar a atividade.",
-      });
-    }
+      // Filtra apenas as datas até hoje
+      const today = startOfDay(new Date());
+      return dailyStats.filter(day => !isAfter(startOfDay(day.date), today));
+    },
+    refetchInterval: 5000
+  });
+
+  const calculateTotals = (stats: DailyStats[] | undefined) => {
+    if (!stats) return null;
+    
+    return stats.reduce((acc, day) => ({
+      newClients: acc.newClients + day.newClients,
+      contactAttempts: acc.contactAttempts + day.contactAttempts,
+      effectiveContacts: acc.effectiveContacts + day.effectiveContacts,
+      scheduledVisits: acc.scheduledVisits + day.scheduledVisits,
+      awaitingVisits: acc.awaitingVisits + day.awaitingVisits,
+      completedVisits: acc.completedVisits + day.completedVisits,
+      enrollments: acc.enrollments + day.enrollments,
+      // Calcular as médias das taxas de conversão
+      ceConversionRate: acc.contactAttempts > 0 ? (acc.effectiveContacts / acc.contactAttempts) * 100 : 0,
+      agConversionRate: acc.effectiveContacts > 0 ? (acc.scheduledVisits / acc.effectiveContacts) * 100 : 0,
+      atConversionRate: acc.awaitingVisits > 0 ? (acc.completedVisits / acc.awaitingVisits) * 100 : 0,
+    }), {
+      newClients: 0,
+      contactAttempts: 0,
+      effectiveContacts: 0,
+      scheduledVisits: 0,
+      awaitingVisits: 0,
+      completedVisits: 0,
+      enrollments: 0,
+      ceConversionRate: 0,
+      agConversionRate: 0,
+      atConversionRate: 0,
+    });
   };
 
-  return (
-    <div className="grid lg:grid-cols-3 gap-4 p-4 max-h-[80vh] overflow-hidden">
-      {/* Primeira coluna */}
-      <div className="space-y-4 h-full">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Dados do Cliente</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>Nome</Label>
-              <p className="text-sm">{client.name}</p>
-            </div>
-            <div>
-              <Label>Telefone</Label>
-              <p className="text-sm">{client.phone_number}</p>
-            </div>
-            <div>
-              <Label>Status</Label>
-              <p className="text-sm">{client.status}</p>
-            </div>
-            <div>
-              <Label>Data de Cadastro</Label>
-              <p className="text-sm">{formatDate(client.created_at)}</p>
-            </div>
-          </CardContent>
-        </Card>
+  const totals = calculateTotals(stats);
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Dashboard de Atividades</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ActivitySelector
-              selectedActivity={selectedActivity}
-              onActivitySelect={handleActivitySelection}
-            />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Coluna do meio */}
-      <div className="space-y-4 h-full">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Informações do Lead</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>Origem</Label>
-              <p className="text-sm">{client.lead_source}</p>
+  return <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-2">
+          <LineChart className="h-4 w-4" />
+          <span className="text-xs">Painel de</span>
+          <span className="text-xs">Atividades</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-4">
+          <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
+            <LineChart className="h-6 w-6" />
+            Painel de Atividades
+          </DialogTitle>
+          <div className="flex flex-wrap gap-4 justify-start">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Origem:</span>
+              <Select value={selectedSource} onValueChange={setSelectedSource}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Origem" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  {leadSources?.map(source => <SelectItem key={source.id} value={source.id}>
+                      {source.name}
+                    </SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <Label>Anúncio</Label>
-              <p className="text-sm">{client.original_ad || '-'}</p>
-            </div>
-            <div>
-              <Label>Segmentação</Label>
-              <p className="text-sm">{client.original_adset || '-'}</p>
-            </div>
-            <div>
-              <Label>Observações</Label>
-              <p className="text-sm whitespace-pre-wrap">{client.observations || '-'}</p>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="h-[calc(100%-280px)]">
-          <CardHeader>
-            <CardTitle className="text-lg">Atividade</CardTitle>
-            <CardDescription>
-              {getActivityDescription(selectedActivity)}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-full pr-4">
-              {renderActivityForm()}
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Mês:</span>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map(month => <SelectItem key={month.value} value={month.value}>
+                      {month.label}
+                    </SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
 
-      {/* Terceira coluna */}
-      <div className="space-y-4 h-full">
-        <Card className="h-[300px]">
-          <CardHeader>
-            <CardTitle className="text-lg">Calendário</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CalendarDashboard clientId={client.id} />
-          </CardContent>
-        </Card>
-
-        <Card className="h-[calc(100%-320px)]">
-          <CardHeader>
-            <CardTitle className="text-lg">Histórico</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[calc(100%-32px)] pr-4">
-              <ActivityHistory
-                activities={activities}
-                onDeleteActivity={handleActivityDeletion}
-                clientId={client.id}
-              />
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Ano:</span>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  {YEARS.map(year => <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </DialogHeader>
+        <div className="mt-4">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent [&>th]:px-2.5">
+                <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[18px]">Data</TableHead>
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
+                  {"Novos\nClientes"}
+                </TableHead>
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[14.4px]">
+                  {"Total de\nContatos"}
+                </TableHead>
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
+                  {"Contatos\nEfetivos"}
+                </TableHead>
+                <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[10.8px]">% CE</TableHead>
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
+                  {"Visitas\nAgendadas"}
+                </TableHead>
+                <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[10.8px]">% AG</TableHead>
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
+                  {"Visitas\nAguardadas"}
+                </TableHead>
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
+                  {"Visitas\nRealizadas"}
+                </TableHead>
+                <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[10.8px]">% AT</TableHead>
+                <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
+                  {"Matrí-\nculas"}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? <TableRow>
+                  <TableCell colSpan={11} className="text-center text-xs py-3 px-2.5">Carregando...</TableCell>
+                </TableRow> : (
+                  <>
+                    {stats?.map(day => <TableRow key={day.date.toISOString()} className="hover:bg-muted/50 [&>td]:px-2.5">
+                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
+                        {format(day.date, 'dd/MM/yyyy', {
+                          locale: ptBR
+                        })}
+                      </TableCell>
+                      <TableCell className="text-center text-xs py-0">{day.newClients}</TableCell>
+                      <TableCell className="text-center text-xs py-0">{day.contactAttempts}</TableCell>
+                      <TableCell className="text-center text-xs py-0">{day.effectiveContacts}</TableCell>
+                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.ceConversionRate.toFixed(1)}%</TableCell>
+                      <TableCell className="text-center text-xs py-0">{day.scheduledVisits}</TableCell>
+                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.agConversionRate.toFixed(1)}%</TableCell>
+                      <TableCell className="text-center text-xs py-0">{day.awaitingVisits}</TableCell>
+                      <TableCell className="text-center text-xs py-0">{day.completedVisits}</TableCell>
+                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.atConversionRate.toFixed(1)}%</TableCell>
+                      <TableCell className="text-center text-xs py-[5px]">{day.enrollments}</TableCell>
+                    </TableRow>)}
+                    
+                    {/* Linha de totais */}
+                    {totals && (
+                      <TableRow className="hover:bg-muted/50 [&>td]:px-2.5 font-bold border-t-2">
+                        <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">TOTAL</TableCell>
+                        <TableCell className="text-center text-xs py-0">{totals.newClients}</TableCell>
+                        <TableCell className="text-center text-xs py-0">{totals.contactAttempts}</TableCell>
+                        <TableCell className="text-center text-xs py-0">{totals.effectiveContacts}</TableCell>
+                        <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.ceConversionRate.toFixed(1)}%</TableCell>
+                        <TableCell className="text-center text-xs py-0">{totals.scheduledVisits}</TableCell>
+                        <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.agConversionRate.toFixed(1)}%</TableCell>
+                        <TableCell className="text-center text-xs py-0">{totals.awaitingVisits}</TableCell>
+                        <TableCell className="text-center text-xs py-0">{totals.completedVisits}</TableCell>
+                        <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.atConversionRate.toFixed(1)}%</TableCell>
+                        <TableCell className="text-center text-xs py-[5px]">{totals.enrollments}</TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                )}
+            </TableBody>
+          </Table>
+        </div>
+      </DialogContent>
+    </Dialog>;
 }
