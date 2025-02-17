@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { format, startOfMonth, endOfMonth, getYear, setYear, setMonth, isAfter, 
 import { ptBR } from "date-fns/locale";
 import { LineChart } from "lucide-react";
 import { useState } from "react";
+
 interface DailyStats {
   date: Date;
   newClients: number;
@@ -22,6 +24,7 @@ interface DailyStats {
   enrollments: number;
   leadSource?: string;
 }
+
 const MONTHS = [{
   value: "0",
   label: "Janeiro"
@@ -59,14 +62,17 @@ const MONTHS = [{
   value: "11",
   label: "Dezembro"
 }];
+
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({
   length: 3
 }, (_, i) => currentYear - 1 + i);
+
 export function ActivityDashboard() {
   const [selectedSource, setSelectedSource] = useState<string>("todos");
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().getMonth().toString());
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+
   const {
     data: leadSources
   } = useQuery({
@@ -80,6 +86,7 @@ export function ActivityDashboard() {
       return data;
     }
   });
+
   const {
     data: stats,
     isLoading
@@ -88,11 +95,30 @@ export function ActivityDashboard() {
     queryFn: async () => {
       const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
       const endDate = endOfMonth(startDate);
-      const [clientsResult, activitiesResult] = await Promise.all([supabase.from('clients').select('*').gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString()).eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''), supabase.from('client_activities').select('*, clients!inner(*)').gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString()).eq(selectedSource !== 'todos' ? 'clients.lead_source' : '', selectedSource !== 'todos' ? selectedSource : '')]);
+
+      const [clientsResult, activitiesResult] = await Promise.all([
+        supabase.from('clients')
+          .select('*')
+          .eq('active', true) // Filtra apenas clientes ativos
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString())
+          .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
+        
+        supabase.from('client_activities')
+          .select('*, clients!inner(*)')
+          .eq('active', true) // Filtra apenas atividades ativas
+          .eq('clients.active', true) // Filtra apenas clientes ativos
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString())
+          .eq(selectedSource !== 'todos' ? 'clients.lead_source' : '', selectedSource !== 'todos' ? selectedSource : '')
+      ]);
+
       if (clientsResult.error) throw clientsResult.error;
       if (activitiesResult.error) throw activitiesResult.error;
+
       const clients = clientsResult.data;
       const activities = activitiesResult.data;
+
       const dailyStats = Array.from({
         length: endDate.getDate()
       }, (_, index) => {
@@ -100,17 +126,50 @@ export function ActivityDashboard() {
         date.setDate(index + 1);
         const dayStart = new Date(date.setHours(0, 0, 0, 0));
         const dayEnd = new Date(date.setHours(23, 59, 59, 999));
-        const newClients = clients.filter(client => new Date(client.created_at) >= dayStart && new Date(client.created_at) <= dayEnd).length;
-        const dayActivities = activities.filter(activity => new Date(activity.created_at) >= dayStart && new Date(activity.created_at) <= dayEnd);
-        const contactAttempts = dayActivities.filter(activity => ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)).length;
-        const effectiveContacts = dayActivities.filter(activity => ['Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)).length;
-        const scheduledVisits = dayActivities.filter(activity => activity.tipo_atividade === 'Agendamento').length;
-        const awaitingVisits = activities.filter(activity => activity.tipo_atividade === 'Agendamento' && activity.scheduled_date && new Date(activity.scheduled_date) >= dayStart && new Date(activity.scheduled_date) <= dayEnd).length;
-        const completedVisits = dayActivities.filter(activity => activity.tipo_atividade === 'Atendimento').length;
-        const enrollments = clients.filter(client => client.status === 'matricula' && new Date(client.updated_at) >= dayStart && new Date(client.updated_at) <= dayEnd).length;
+
+        const newClients = clients.filter(client => 
+          new Date(client.created_at) >= dayStart && 
+          new Date(client.created_at) <= dayEnd
+        ).length;
+
+        const dayActivities = activities.filter(activity => 
+          new Date(activity.created_at) >= dayStart && 
+          new Date(activity.created_at) <= dayEnd
+        );
+
+        const contactAttempts = dayActivities.filter(activity => 
+          ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
+        ).length;
+
+        const effectiveContacts = dayActivities.filter(activity => 
+          ['Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
+        ).length;
+
+        const scheduledVisits = dayActivities.filter(activity => 
+          activity.tipo_atividade === 'Agendamento'
+        ).length;
+
+        const awaitingVisits = activities.filter(activity => 
+          activity.tipo_atividade === 'Agendamento' && 
+          activity.scheduled_date && 
+          new Date(activity.scheduled_date) >= dayStart && 
+          new Date(activity.scheduled_date) <= dayEnd
+        ).length;
+
+        const completedVisits = dayActivities.filter(activity => 
+          activity.tipo_atividade === 'Atendimento'
+        ).length;
+
+        const enrollments = clients.filter(client => 
+          client.status === 'matricula' && 
+          new Date(client.updated_at) >= dayStart && 
+          new Date(client.updated_at) <= dayEnd
+        ).length;
+
         const ceConversionRate = contactAttempts > 0 ? effectiveContacts / contactAttempts * 100 : 0;
         const agConversionRate = effectiveContacts > 0 ? scheduledVisits / effectiveContacts * 100 : 0;
         const atConversionRate = awaitingVisits > 0 ? completedVisits / awaitingVisits * 100 : 0;
+
         return {
           date,
           newClients,
@@ -132,6 +191,7 @@ export function ActivityDashboard() {
     },
     refetchInterval: 5000
   });
+
   return <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-2">
