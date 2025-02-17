@@ -1,4 +1,3 @@
-
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -146,53 +145,42 @@ export function useActivityOperations() {
 
   const deleteActivity = async (activityId: string, clientId: string) => {
     try {
-      console.log('Inativando atividade:', { activityId, clientId })
+      console.log('Tentando inativar atividade:', { activityId, clientId })
       
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      // Verifica se já está inativa antes de tentar atualizar
-      const { data: currentActivity } = await supabase
-        .from('client_activities')
-        .select('active')
-        .eq('id', activityId)
-        .single()
-
-      if (!currentActivity) {
-        throw new Error('Atividade não encontrada')
-      }
-
-      if (!currentActivity.active) {
-        throw new Error('Atividade já está inativa')
-      }
-
-      // Atualiza a atividade para inativa
-      const { error: updateError } = await supabase
+      // Executa a atualização diretamente
+      const { error: updateError, data: updatedActivity } = await supabase
         .from('client_activities')
         .update({ 
           active: false,
-          updated_at: new Date().toISOString() // Garante que o updated_at seja atualizado
+          updated_at: new Date().toISOString()
         })
         .eq('id', activityId)
+        .select()
+        .single()
 
       if (updateError) {
-        console.error('Error inactivating activity:', updateError)
+        console.error('Erro ao inativar atividade:', updateError)
         throw updateError
       }
+
+      console.log('Atividade inativada com sucesso:', updatedActivity)
 
       // Invalidar o cache para forçar recarregamento dos dados
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       toast({
         title: "Atividade excluída",
-        description: "A atividade foi excluída com sucesso",
+        description: "A atividade foi inativada com sucesso",
       })
     } catch (error) {
-      console.error('Error in deleteActivity:', error)
+      console.error('Erro em deleteActivity:', error)
       toast({
         variant: "destructive",
         title: "Erro ao excluir atividade",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao tentar excluir a atividade.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao tentar inativar a atividade.",
       })
     }
   }
