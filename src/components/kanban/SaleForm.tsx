@@ -119,6 +119,7 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
           value={sale.important_info || ''}
           onChange={e => setSale(prev => ({ ...prev, important_info: e.target.value }))}
           className="min-h-[100px]"
+          placeholder="Coloque aqui o máximo de informações pertinentes sobre o seu atendimento: idade, reclamação principal, hobbies, informações de família, histórias e detalhes que sejam pertinentes para a equipe pedagógica"
         />
       </div>
 
@@ -126,68 +127,70 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
         <div className="space-y-4">
           <h4 className="text-sm font-medium">Matrícula</h4>
           
-          <div className="space-y-2">
-            <Label>Valor</Label>
-            <Input
-              value={sale.enrollment_amount ? formatCurrency(String(sale.enrollment_amount * 100)) : ''}
-              onChange={e => handleCurrencyInput('enrollment_amount', e.target.value)}
-              placeholder="R$ 0,00"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Forma de Pagamento</Label>
-            <Select
-              value={sale.enrollment_payment_method}
-              onValueChange={value => handlePaymentMethodChange('enrollment_payment_method', value as PaymentMethod)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                <SelectItem value="pix">PIX</SelectItem>
-                <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
-                <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
-                <SelectItem value="boleto">Boleto</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {sale.enrollment_payment_method === 'cartao_credito' && (
+          <div className="border rounded-lg p-4 space-y-4">
             <div className="space-y-2">
-              <Label>Número de Parcelas</Label>
+              <Label>Valor</Label>
+              <Input
+                value={sale.enrollment_amount ? formatCurrency(String(sale.enrollment_amount * 100)) : ''}
+                onChange={e => handleCurrencyInput('enrollment_amount', e.target.value)}
+                placeholder="R$ 0,00"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Forma de Pagamento</Label>
               <Select
-                value={String(sale.enrollment_installments)}
-                onValueChange={value => setSale(prev => ({ ...prev, enrollment_installments: parseInt(value) }))}
+                value={sale.enrollment_payment_method}
+                onValueChange={value => handlePaymentMethodChange('enrollment_payment_method', value as PaymentMethod)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
-                    <SelectItem key={num} value={String(num)}>{num}x</SelectItem>
-                  ))}
+                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
+                  <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
+                  <SelectItem value="boleto">Boleto</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          )}
 
-          <div className="space-y-2">
-            <Label>Data do Pagamento</Label>
-            <div className="flex gap-2">
-              <Input
-                type="date"
-                value={sale.enrollment_payment_date ? format(sale.enrollment_payment_date, "yyyy-MM-dd") : ''}
-                onChange={e => handleDateInput('enrollment_payment_date', e.target.value)}
-                className="flex-1"
-              />
-              <Button
-                onClick={() => setTodayDate('enrollment_payment_date')}
-                className="bg-green-500 hover:bg-green-600 h-10 px-3"
-              >
-                Hoje
-              </Button>
+            {sale.enrollment_payment_method === 'cartao_credito' && (
+              <div className="space-y-2">
+                <Label>Número de Parcelas</Label>
+                <Select
+                  value={String(sale.enrollment_installments)}
+                  onValueChange={value => setSale(prev => ({ ...prev, enrollment_installments: parseInt(value) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
+                      <SelectItem key={num} value={String(num)}>{num} vezes</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Data do Pagamento</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  value={sale.enrollment_payment_date ? format(sale.enrollment_payment_date, "yyyy-MM-dd") : ''}
+                  onChange={e => handleDateInput('enrollment_payment_date', e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={() => setTodayDate('enrollment_payment_date')}
+                  className="bg-green-500 hover:bg-green-600 h-10 px-3"
+                >
+                  Hoje
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -195,68 +198,70 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
         <div className="space-y-4">
           <h4 className="text-sm font-medium">Material Didático</h4>
           
-          <div className="space-y-2">
-            <Label>Valor</Label>
-            <Input
-              value={sale.material_amount ? formatCurrency(String(sale.material_amount * 100)) : ''}
-              onChange={e => handleCurrencyInput('material_amount', e.target.value)}
-              placeholder="R$ 0,00"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Forma de Pagamento</Label>
-            <Select
-              value={sale.material_payment_method}
-              onValueChange={value => handlePaymentMethodChange('material_payment_method', value as PaymentMethod)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                <SelectItem value="pix">PIX</SelectItem>
-                <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
-                <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
-                <SelectItem value="boleto">Boleto</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {(sale.material_payment_method === 'cartao_credito' || sale.material_payment_method === 'boleto') && (
+          <div className="border rounded-lg p-4 space-y-4">
             <div className="space-y-2">
-              <Label>Número de Parcelas</Label>
+              <Label>Valor</Label>
+              <Input
+                value={sale.material_amount ? formatCurrency(String(sale.material_amount * 100)) : ''}
+                onChange={e => handleCurrencyInput('material_amount', e.target.value)}
+                placeholder="R$ 0,00"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Forma de Pagamento</Label>
               <Select
-                value={String(sale.material_installments)}
-                onValueChange={value => setSale(prev => ({ ...prev, material_installments: parseInt(value) }))}
+                value={sale.material_payment_method}
+                onValueChange={value => handlePaymentMethodChange('material_payment_method', value as PaymentMethod)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
-                    <SelectItem key={num} value={String(num)}>{num}x</SelectItem>
-                  ))}
+                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
+                  <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
+                  <SelectItem value="boleto">Boleto</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          )}
 
-          <div className="space-y-2">
-            <Label>Data do Pagamento</Label>
-            <div className="flex gap-2">
-              <Input
-                type="date"
-                value={sale.material_payment_date ? format(sale.material_payment_date, "yyyy-MM-dd") : ''}
-                onChange={e => handleDateInput('material_payment_date', e.target.value)}
-                className="flex-1"
-              />
-              <Button
-                onClick={() => setTodayDate('material_payment_date')}
-                className="bg-green-500 hover:bg-green-600 h-10 px-3"
-              >
-                Hoje
-              </Button>
+            {(sale.material_payment_method === 'cartao_credito' || sale.material_payment_method === 'boleto') && (
+              <div className="space-y-2">
+                <Label>Número de Parcelas</Label>
+                <Select
+                  value={String(sale.material_installments)}
+                  onValueChange={value => setSale(prev => ({ ...prev, material_installments: parseInt(value) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
+                      <SelectItem key={num} value={String(num)}>{num} vezes</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Data do Pagamento</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  value={sale.material_payment_date ? format(sale.material_payment_date, "yyyy-MM-dd") : ''}
+                  onChange={e => handleDateInput('material_payment_date', e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={() => setTodayDate('material_payment_date')}
+                  className="bg-green-500 hover:bg-green-600 h-10 px-3"
+                >
+                  Hoje
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -265,65 +270,67 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
       <div className="space-y-4">
         <h4 className="text-sm font-medium">Mensalidade</h4>
         
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Valor</Label>
-            <Input
-              value={sale.monthly_fee_amount ? formatCurrency(String(sale.monthly_fee_amount * 100)) : ''}
-              onChange={e => handleCurrencyInput('monthly_fee_amount', e.target.value)}
-              placeholder="R$ 0,00"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Forma de Pagamento</Label>
-            <Select
-              value={sale.monthly_fee_payment_method}
-              onValueChange={value => handlePaymentMethodChange('monthly_fee_payment_method', value as PaymentMethod)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                <SelectItem value="pix">PIX</SelectItem>
-                <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
-                <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
-                <SelectItem value="boleto">Boleto</SelectItem>
-                <SelectItem value="recorrencia">Recorrência</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Data da Primeira Mensalidade</Label>
-            <Input
-              type="date"
-              value={sale.first_monthly_fee_date ? format(sale.first_monthly_fee_date, "yyyy-MM-dd") : ''}
-              onChange={e => handleDateInput('first_monthly_fee_date', e.target.value)}
-            />
-          </div>
-
-          {sale.monthly_fee_payment_method === 'recorrencia' && (
+        <div className="border rounded-lg p-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Dia de Vencimento</Label>
+              <Label>Valor</Label>
+              <Input
+                value={sale.monthly_fee_amount ? formatCurrency(String(sale.monthly_fee_amount * 100)) : ''}
+                onChange={e => handleCurrencyInput('monthly_fee_amount', e.target.value)}
+                placeholder="R$ 0,00"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Forma de Pagamento</Label>
               <Select
-                value={sale.monthly_fee_due_day}
-                onValueChange={value => setSale(prev => ({ ...prev, monthly_fee_due_day: value as DueDay }))}
+                value={sale.monthly_fee_payment_method}
+                onValueChange={value => handlePaymentMethodChange('monthly_fee_payment_method', value as PaymentMethod)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="5">Dia 5</SelectItem>
-                  <SelectItem value="10">Dia 10</SelectItem>
-                  <SelectItem value="15">Dia 15</SelectItem>
-                  <SelectItem value="20">Dia 20</SelectItem>
-                  <SelectItem value="25">Dia 25</SelectItem>
+                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
+                  <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
+                  <SelectItem value="boleto">Boleto</SelectItem>
+                  <SelectItem value="recorrencia">Recorrência</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          )}
+
+            <div className="space-y-2">
+              <Label>Data da Primeira Mensalidade</Label>
+              <Input
+                type="date"
+                value={sale.first_monthly_fee_date ? format(sale.first_monthly_fee_date, "yyyy-MM-dd") : ''}
+                onChange={e => handleDateInput('first_monthly_fee_date', e.target.value)}
+              />
+            </div>
+
+            {sale.monthly_fee_payment_method === 'recorrencia' && (
+              <div className="space-y-2">
+                <Label>Dia de Vencimento</Label>
+                <Select
+                  value={sale.monthly_fee_due_day}
+                  onValueChange={value => setSale(prev => ({ ...prev, monthly_fee_due_day: value as DueDay }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">Dia 5</SelectItem>
+                    <SelectItem value="10">Dia 10</SelectItem>
+                    <SelectItem value="15">Dia 15</SelectItem>
+                    <SelectItem value="20">Dia 20</SelectItem>
+                    <SelectItem value="25">Dia 25</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
