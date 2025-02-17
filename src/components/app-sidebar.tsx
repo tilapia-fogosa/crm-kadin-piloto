@@ -24,7 +24,7 @@ const navigation = [
 ];
 
 export function AppSidebar() {
-  const { isSidebarOpen, setSidebarOpen } = useSidebar();
+  const { openMobile, setOpenMobile } = useSidebar();
   const location = useLocation();
   const [isClient, setIsClient] = useState(false);
 
@@ -69,7 +69,7 @@ export function AppSidebar() {
 
   return (
     <>
-      <Sheet open={isSidebarOpen} onOpenChange={setSidebarOpen}>
+      <Sheet open={openMobile} onOpenChange={setOpenMobile}>
         <SheetTrigger asChild>
           <Button
             variant="ghost"
