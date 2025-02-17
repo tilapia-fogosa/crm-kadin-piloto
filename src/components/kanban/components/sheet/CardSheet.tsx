@@ -56,12 +56,9 @@ export function CardSheet({
         <SheetHeader>
           <SheetTitle>Atividades - {card.clientName}</SheetTitle>
         </SheetHeader>
-        <div className="grid gap-4 mt-6 relative" style={{ 
-          gridTemplateColumns: isHistoryExpanded 
-            ? '1fr 1fr 1fr' 
-            : 'minmax(50px, auto) minmax(200px, 1fr) minmax(300px, 2fr)' 
-        }}>
-          <div className={`transition-all duration-300 ease-in-out ${isHistoryExpanded ? 'w-full' : 'w-[50px]'}`}>
+        <div className="grid grid-cols-3 gap-4 mt-6">
+          {/* Coluna do Histórico */}
+          <div className={`transition-all duration-300 ease-in-out ${isHistoryExpanded ? 'block' : 'w-[50px]'}`}>
             {isHistoryExpanded ? (
               <ActivityHistory
                 activities={card.activities}
@@ -76,14 +73,21 @@ export function CardSheet({
             )}
           </div>
 
-          <ActivitySelector
-            selectedActivity={selectedActivity}
-            onActivitySelect={handleActivitySelect}
-          />
+          {/* Coluna Central - Nova Atividade */}
+          <div>
+            <ActivitySelector
+              selectedActivity={selectedActivity}
+              onActivitySelect={handleActivitySelect}
+            />
+            {!selectedActivity && (
+              <div className="mt-4">
+                <ClientInformation card={card} />
+              </div>
+            )}
+          </div>
 
-          <div className={`transition-all duration-300 ease-in-out ${!selectedActivity ? 'w-full' : ''}`}>
-            {!selectedActivity && <ClientInformation card={card} />}
-            
+          {/* Coluna dos Detalhes */}
+          <div>
             <ActivityDetails
               selectedActivity={selectedActivity}
               cardId={card.id}
