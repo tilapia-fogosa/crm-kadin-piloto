@@ -5,14 +5,22 @@ import { useClientData } from "./hooks/useClientData"
 import { useActivityOperations } from "./hooks/useActivityOperations"
 import { useWhatsApp } from "./hooks/useWhatsApp"
 import { transformClientsToColumnData } from "./utils/columnUtils"
-import { useState } from "react"
-import { startOfDay, isAfter, isBefore, isEqual } from "date-fns"
+import { useState, useEffect } from "react"
+import { startOfDay, isBefore, isEqual } from "date-fns"
+import { useLocation } from "react-router-dom"
 
 export function KanbanBoard() {
   const { data: clients, isLoading, refetch } = useClientData()
   const { registerAttempt, registerEffectiveContact, deleteActivity } = useActivityOperations()
   const { handleWhatsAppClick } = useWhatsApp()
   const [showPendingOnly, setShowPendingOnly] = useState(false)
+  const location = useLocation()
+
+  // Refetch data when component mounts or when route changes to /kanban
+  useEffect(() => {
+    console.log("Kanban Board mounted or route changed, refetching data...")
+    refetch()
+  }, [location.pathname, refetch])
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-full">Carregando...</div>
