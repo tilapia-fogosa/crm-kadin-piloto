@@ -11,11 +11,11 @@ interface PaymentSectionProps {
   amount: number | undefined
   paymentMethod: PaymentMethod | undefined
   installments: number
-  paymentDate: Date | undefined
+  paymentDate: string | undefined
   onAmountChange: (value: number) => void
   onPaymentMethodChange: (value: PaymentMethod) => void
   onInstallmentsChange: (value: number) => void
-  onPaymentDateChange: (value: Date) => void
+  onPaymentDateChange: (value: string) => void
   onTodayClick: () => void
   showInstallments?: boolean
   maxInstallments?: number
@@ -46,12 +46,6 @@ export function PaymentSection({
     const numbers = value.replace(/\D/g, '')
     const numberValue = parseInt(numbers)
     onAmountChange(numberValue / 100)
-  }
-
-  const handleDateChange = (dateString: string) => {
-    const [year, month, day] = dateString.split('-').map(Number)
-    const date = new Date(year, month - 1, day, 12, 0, 0)
-    onPaymentDateChange(date)
   }
 
   return (
@@ -110,8 +104,8 @@ export function PaymentSection({
           <div className="flex gap-2">
             <Input
               type="date"
-              value={paymentDate ? format(paymentDate, "yyyy-MM-dd") : ''}
-              onChange={e => handleDateChange(e.target.value)}
+              value={paymentDate || ''}
+              onChange={e => onPaymentDateChange(e.target.value)}
               className="flex-1"
             />
             <Button
