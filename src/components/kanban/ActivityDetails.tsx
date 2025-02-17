@@ -2,7 +2,8 @@
 import { ContactAttemptForm } from "./ContactAttemptForm"
 import { EffectiveContactForm } from "./EffectiveContactForm"
 import { SchedulingForm } from "./SchedulingForm"
-import { ContactAttempt, EffectiveContact, Scheduling } from "./types"
+import { AttendanceForm } from "./AttendanceForm"
+import { ContactAttempt, EffectiveContact, Scheduling, Attendance } from "./types"
 
 interface ActivityDetailsProps {
   selectedActivity: string | null
@@ -10,6 +11,7 @@ interface ActivityDetailsProps {
   onRegisterAttempt: (attempt: ContactAttempt) => Promise<void>
   onRegisterEffectiveContact: (contact: EffectiveContact) => Promise<void>
   onRegisterScheduling?: (scheduling: Scheduling) => Promise<void>
+  onRegisterAttendance?: (attendance: Attendance) => Promise<void>
 }
 
 export function ActivityDetails({
@@ -17,7 +19,8 @@ export function ActivityDetails({
   cardId,
   onRegisterAttempt,
   onRegisterEffectiveContact,
-  onRegisterScheduling
+  onRegisterScheduling,
+  onRegisterAttendance
 }: ActivityDetailsProps) {
   return (
     <div className="border-l pl-4">
@@ -35,6 +38,11 @@ export function ActivityDetails({
       ) : selectedActivity === 'Agendamento' && onRegisterScheduling ? (
         <SchedulingForm
           onSubmit={onRegisterScheduling}
+          cardId={cardId}
+        />
+      ) : selectedActivity === 'Atendimento' && onRegisterAttendance ? (
+        <AttendanceForm
+          onSubmit={onRegisterAttendance}
           cardId={cardId}
         />
       ) : (

@@ -42,3 +42,8 @@ export type Scheduling = {
   nextContactDate?: Date
   type: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial'
 }
+
+export type Attendance = {
+  result: 'matriculado' | 'negociacao' | 'perdido'
+  cardId: string
+}
