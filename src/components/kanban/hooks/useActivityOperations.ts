@@ -151,10 +151,28 @@ export function useActivityOperations() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      // Ao invés de excluir, apenas marca como inativa
+      // Verifica se já está inativa antes de tentar atualizar
+      const { data: currentActivity } = await supabase
+        .from('client_activities')
+        .select('active')
+        .eq('id', activityId)
+        .single()
+
+      if (!currentActivity) {
+        throw new Error('Atividade não encontrada')
+      }
+
+      if (!currentActivity.active) {
+        throw new Error('Atividade já está inativa')
+      }
+
+      // Atualiza a atividade para inativa
       const { error: updateError } = await supabase
         .from('client_activities')
-        .update({ active: false })
+        .update({ 
+          active: false,
+          updated_at: new Date().toISOString() // Garante que o updated_at seja atualizado
+        })
         .eq('id', activityId)
 
       if (updateError) {
@@ -162,7 +180,7 @@ export function useActivityOperations() {
         throw updateError
       }
 
-      // Atualizar a query cache para refletir a mudança
+      // Invalidar o cache para forçar recarregamento dos dados
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       toast({
@@ -174,9 +192,8 @@ export function useActivityOperations() {
       toast({
         variant: "destructive",
         title: "Erro ao excluir atividade",
-        description: "Ocorreu um erro ao tentar excluir a atividade.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao tentar excluir a atividade.",
       })
-      throw error
     }
   }
 
