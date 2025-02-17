@@ -356,6 +356,33 @@ export function ActivityDashboard() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Nova seção de Informações do Cliente */}
+        <div className="mt-6 border rounded-lg p-4">
+          <h3 className="text-lg font-semibold mb-4">Informações do Cliente</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="mb-3">
+                <span className="font-medium text-sm">Origem:</span>
+                <p className="text-sm mt-1">{selectedSource === "todos" ? "Todos" : leadSources?.find(s => s.id === selectedSource)?.name || "-"}</p>
+              </div>
+              <div className="mb-3">
+                <span className="font-medium text-sm">Anúncio:</span>
+                <p className="text-sm mt-1">-</p>
+              </div>
+            </div>
+            <div>
+              <div className="mb-3">
+                <span className="font-medium text-sm">Segmentação:</span>
+                <p className="text-sm mt-1">-</p>
+              </div>
+              <div className="mb-3">
+                <span className="font-medium text-sm">Observações:</span>
+                <p className="text-sm mt-1">-</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>;
 }
