@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -18,10 +18,11 @@ export default function Auth() {
   const { toast } = useToast();
 
   // Verifica se o usuário já está autenticado
-  const { data: session } = useQuery({
+  const { data: session, isLoading: isCheckingSession } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      console.log("Sessão atual:", session);
       return session;
     },
   });
@@ -29,6 +30,7 @@ export default function Auth() {
   // Se já estiver autenticado, redireciona para o dashboard
   useEffect(() => {
     if (session) {
+      console.log("Usuário autenticado, redirecionando para dashboard");
       navigate("/dashboard");
     }
   }, [session, navigate]);
@@ -48,7 +50,6 @@ export default function Auth() {
     console.log("Iniciando login para:", email);
     
     try {
-      console.log("Tentando fazer login com:", { email, password });
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -56,12 +57,10 @@ export default function Auth() {
 
       if (error) {
         console.error("Erro detalhado no login:", error);
-        let errorMessage = "Erro ao fazer login";
+        let errorMessage = "Email ou senha incorretos";
         
-        // Mensagens de erro mais amigáveis
-        if (error.message.includes("Invalid login credentials")) {
-          errorMessage = "Email ou senha incorretos";
-        } else if (error.message.includes("Email not confirmed")) {
+        // Mensagens de erro mais específicas se necessário
+        if (error.message.includes("Email not confirmed")) {
           errorMessage = "Email ainda não confirmado";
         }
 
@@ -73,6 +72,16 @@ export default function Auth() {
         return;
       }
 
+      if (!data.user || !data.session) {
+        console.error("Login sem dados de usuário/sessão");
+        toast({
+          variant: "destructive",
+          title: "Erro no login",
+          description: "Erro ao obter dados do usuário",
+        });
+        return;
+      }
+
       console.log("Login bem sucedido:", data);
       
       toast({
@@ -80,7 +89,8 @@ export default function Auth() {
         description: "Redirecionando para o dashboard...",
       });
 
-      navigate("/dashboard");
+      // Força o redirecionamento após login bem-sucedido
+      navigate("/dashboard", { replace: true });
 
     } catch (error: any) {
       console.error("Erro inesperado no login:", error);
@@ -173,6 +183,15 @@ export default function Auth() {
       setLoading(false);
     }
   };
+
+  // Se ainda está verificando a sessão, mostra uma mensagem de carregamento
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Carregando...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
