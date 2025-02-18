@@ -58,7 +58,10 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
   });
 
   async function onSubmit(data: UnitFormData) {
+    console.log('Iniciando submissão do formulário');
     console.log('Dados do formulário para envio:', data);
+    console.log('isEditing:', isEditing);
+    console.log('initialData?.id:', initialData?.id);
     
     try {
       const formData = {
@@ -82,13 +85,17 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
         postal_code: data.postal_code,
       };
 
+      console.log('Dados formatados para envio:', formData);
+
       if (isEditing && initialData?.id) {
         console.log('Atualizando unidade:', initialData.id);
         
-        const { error } = await supabase
+        const { data: updateData, error } = await supabase
           .from('units')
           .update(formData)
           .eq('id', initialData.id);
+
+        console.log('Resposta do update:', { data: updateData, error });
 
         if (error) {
           console.error('Erro ao atualizar:', error);
@@ -105,7 +112,10 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
         }
       }
 
+      console.log('Operação realizada com sucesso, invalidando queries...');
       await queryClient.invalidateQueries({ queryKey: ['units'] });
+      
+      console.log('Chamando callback de sucesso...');
       onSuccess();
       
       toast({
@@ -124,9 +134,14 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
     }
   }
 
+  const handleSubmit = form.handleSubmit((data) => {
+    console.log('Form handleSubmit chamado');
+    onSubmit(data);
+  });
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <BasicInfoSection form={form} />
         <FeesSection form={form} />
         <ContactSection form={form} />
