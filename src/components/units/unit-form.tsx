@@ -22,6 +22,7 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
+  console.log('Componente UnitForm renderizado');
   console.log('Dados iniciais recebidos no formulário:', initialData);
 
   // Converter os valores numéricos para number ao inicializar o formulário
@@ -132,16 +133,27 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
     }
   };
 
+  // Adicionar log no evento de submit do formulário
+  const handleFormSubmit = form.handleSubmit((data) => {
+    console.log('Form handleSubmit chamado');
+    onSubmit(data);
+  });
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleFormSubmit} className="space-y-6">
         <BasicInfoSection form={form} />
         <FeesSection form={form} />
         <ContactSection form={form} />
         <AddressSection form={form} />
 
         <div className="flex justify-end space-x-4">
-          <Button type="submit">Salvar</Button>
+          <Button 
+            type="submit"
+            onClick={() => console.log('Botão clicado')}
+          >
+            Salvar
+          </Button>
         </div>
       </form>
     </Form>
