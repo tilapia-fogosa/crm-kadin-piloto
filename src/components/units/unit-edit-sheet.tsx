@@ -1,17 +1,17 @@
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { UnitForm } from "./unit-form";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-interface UnitEditSheetProps {
+interface UnitEditDialogProps {
   unit: any;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function UnitEditSheet({ unit, open, onOpenChange }: UnitEditSheetProps) {
+export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps) {
   const { toast } = useToast();
 
   const { data: unitWithAddress, isLoading } = useQuery({
@@ -38,13 +38,13 @@ export function UnitEditSheet({ unit, open, onOpenChange }: UnitEditSheetProps) 
 
   if (isLoading) {
     return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full sm:max-w-[720px] overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Carregando...</SheetTitle>
-          </SheetHeader>
-        </SheetContent>
-      </Sheet>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Carregando...</DialogTitle>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     );
   }
 
@@ -55,11 +55,11 @@ export function UnitEditSheet({ unit, open, onOpenChange }: UnitEditSheetProps) 
   } : null;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-[720px] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Editar Unidade</SheetTitle>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[720px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Editar Unidade</DialogTitle>
+        </DialogHeader>
 
         {initialData && (
           <div className="mt-6">
@@ -76,7 +76,7 @@ export function UnitEditSheet({ unit, open, onOpenChange }: UnitEditSheetProps) 
             />
           </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

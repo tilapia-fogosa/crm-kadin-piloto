@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { UnitActions } from "./unit-actions";
-import { UnitEditSheet } from "./unit-edit-sheet";
+import { UnitEditDialog } from "./unit-edit-sheet";
 import { useState } from "react";
 
 interface UnitsTableProps {
@@ -52,7 +52,7 @@ export function UnitsTable({ units }: UnitsTableProps) {
         </Table>
       </div>
 
-      <UnitEditSheet
+      <UnitEditDialog
         unit={editingUnit}
         open={!!editingUnit}
         onOpenChange={(open) => !open && setEditingUnit(null)}
