@@ -17,7 +17,6 @@ import ApiDocsPage from "@/pages/api-docs";
 import Auth from "@/pages/Auth";
 import RegionsPage from "@/pages/regions";
 import NewUnitPage from "@/pages/regions/units/new";
-import EditUnitPage from "@/pages/regions/units/edit";
 import UnitsPage from "@/pages/regions/units";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -63,7 +62,6 @@ function App() {
                             <Route path="/clients/sources" element={<LeadSourcesPage />} />
                             <Route path="/regions" element={<RegionsPage />} />
                             <Route path="/regions/units/new" element={<NewUnitPage />} />
-                            <Route path="/regions/units/:id/edit" element={<EditUnitPage />} />
                             <Route path="/regions/units" element={<UnitsPage />} />
                             <Route path="/api-docs" element={<ApiDocsPage />} />
                             <Route path="*" element={<NotFound />} />

@@ -19,9 +19,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface UnitActionsProps {
   unit: any;
+  onEdit: () => void;
 }
 
-export function UnitActions({ unit }: UnitActionsProps) {
+export function UnitActions({ unit, onEdit }: UnitActionsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -67,7 +68,7 @@ export function UnitActions({ unit }: UnitActionsProps) {
       <Button
         variant="outline"
         size="icon"
-        onClick={() => navigate(`/regions/units/${unit.id}/edit`)}
+        onClick={onEdit}
       >
         <Pencil className="h-4 w-4" />
       </Button>
