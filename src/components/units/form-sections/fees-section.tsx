@@ -18,7 +18,16 @@ export function FeesSection({ form }: { form: any }) {
           <FormItem>
             <FormLabel>Valor da Matrícula</FormLabel>
             <FormControl>
-              <Input type="number" step="0.01" {...field} />
+              <Input 
+                type="number" 
+                step="0.01" 
+                placeholder="0.00"
+                {...field}
+                onChange={(e) => {
+                  const value = e.target.value ? parseFloat(e.target.value) : 0;
+                  field.onChange(value);
+                }}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -32,7 +41,16 @@ export function FeesSection({ form }: { form: any }) {
           <FormItem>
             <FormLabel>Valor do Material</FormLabel>
             <FormControl>
-              <Input type="number" step="0.01" {...field} />
+              <Input 
+                type="number" 
+                step="0.01" 
+                placeholder="0.00"
+                {...field}
+                onChange={(e) => {
+                  const value = e.target.value ? parseFloat(e.target.value) : 0;
+                  field.onChange(value);
+                }}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -46,7 +64,16 @@ export function FeesSection({ form }: { form: any }) {
           <FormItem>
             <FormLabel>Valor da Mensalidade</FormLabel>
             <FormControl>
-              <Input type="number" step="0.01" {...field} />
+              <Input 
+                type="number" 
+                step="0.01" 
+                placeholder="0.00"
+                {...field}
+                onChange={(e) => {
+                  const value = e.target.value ? parseFloat(e.target.value) : 0;
+                  field.onChange(value);
+                }}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
