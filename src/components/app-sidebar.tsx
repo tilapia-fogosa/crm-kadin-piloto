@@ -31,7 +31,15 @@ const navigation = [
       { name: "Origens", href: "/clients/sources", icon: Link2 }
     ]
   },
-  { name: "Regiões", href: "/regions", icon: Globe },
+  { 
+    name: "Regiões", 
+    href: "/regions", 
+    icon: Globe,
+    subItems: [
+      { name: "Cadastrar Unidade", href: "/regions/units/new", icon: Plus },
+      { name: "Todas Unidades", href: "/regions/units", icon: Users }
+    ]
+  },
   { name: "API Docs", href: "/api-docs", icon: FileCode },
 ];
 

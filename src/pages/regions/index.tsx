@@ -1,18 +1,42 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { RegionsTable } from "@/components/regions/regions-table";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const regionFormSchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório"),
+});
 
 export default function RegionsPage() {
-  const [selectedRegion, setSelectedRegion] = useState<any>(null);
+  const [showNewRegionDialog, setShowNewRegionDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const handleEdit = (region: any) => {
-    setSelectedRegion(region);
-  };
+  const form = useForm<z.infer<typeof regionFormSchema>>({
+    resolver: zodResolver(regionFormSchema),
+  });
 
   const handleDelete = async (regionId: string) => {
     try {
@@ -39,34 +63,74 @@ export default function RegionsPage() {
     }
   };
 
+  const onSubmit = async (values: z.infer<typeof regionFormSchema>) => {
+    try {
+      const { error } = await supabase
+        .from('regions')
+        .insert({ name: values.name });
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['regions'] });
+      setShowNewRegionDialog(false);
+      form.reset();
+      
+      toast({
+        title: "Região criada",
+        description: "A região foi criada com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao criar região:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao criar",
+        description: "Ocorreu um erro ao tentar criar a região.",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto py-10">
-      <Tabs defaultValue="list" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="list">Todas Unidades</TabsTrigger>
-          <TabsTrigger value="new">Nova Unidade</TabsTrigger>
-        </TabsList>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Regiões</h1>
+        <Button onClick={() => setShowNewRegionDialog(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nova Região
+        </Button>
+      </div>
 
-        <TabsContent value="list" className="space-y-4">
-          <RegionsTable
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        </TabsContent>
-
-        <TabsContent value="new" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <div className="col-span-4">
-              <div className="h-full space-y-4">
-                <div className="border rounded-lg p-4">
-                  <h2 className="text-lg font-medium mb-4">Nova Unidade</h2>
-                  {/* Implementar formulário de nova unidade */}
-                </div>
+      <Dialog open={showNewRegionDialog} onOpenChange={setShowNewRegionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Região</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome da Região</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end">
+                <Button type="submit">Salvar</Button>
               </div>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      <RegionsTable
+        onEdit={() => {}}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }
