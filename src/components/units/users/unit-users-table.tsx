@@ -14,9 +14,24 @@ import { UnitUserActions } from "./unit-user-actions";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 
+interface UnitUser {
+  id: string;
+  active: boolean;
+  role: string;
+  user_id: string;
+  user: {
+    full_name: string;
+    email: string;
+  };
+  accessInfo?: {
+    last_sign_in_at: string | null;
+    has_first_access: boolean;
+  } | null;
+}
+
 interface UnitUsersTableProps {
   unitId: string;
-  onEdit: (user: any) => void;
+  onEdit: (user: UnitUser) => void;
 }
 
 export function UnitUsersTable({ unitId, onEdit }: UnitUsersTableProps) {
@@ -28,8 +43,11 @@ export function UnitUsersTable({ unitId, onEdit }: UnitUsersTableProps) {
       const { data: unitUsers, error: unitUsersError } = await supabase
         .from('unit_users')
         .select(`
-          *,
-          user:profiles(
+          id,
+          active,
+          role,
+          user_id,
+          user:profiles!unit_users_user_id_fkey (
             full_name,
             email
           )
@@ -57,7 +75,7 @@ export function UnitUsersTable({ unitId, onEdit }: UnitUsersTableProps) {
         })
       );
 
-      return usersWithAccess;
+      return usersWithAccess as UnitUser[];
     },
   });
 
