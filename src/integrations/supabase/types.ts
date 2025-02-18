@@ -499,6 +499,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_unit_user: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_unit_id: string
+          p_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: string
+      }
+      get_user_access_info: {
+        Args: {
+          user_id: string
+        }
+        Returns: {
+          last_sign_in_at: string
+          has_first_access: boolean
+        }[]
+      }
       inactivate_activity: {
         Args: {
           activity_id: string
@@ -508,6 +526,18 @@ export type Database = {
       is_admin: {
         Args: {
           user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin_in_unit: {
+        Args: {
+          unit_id: string
+        }
+        Returns: boolean
+      }
+      user_has_unit_access: {
+        Args: {
+          unit_id: string
         }
         Returns: boolean
       }
@@ -528,7 +558,7 @@ export type Database = {
         | "cartao_debito"
         | "boleto"
         | "recorrencia"
-      user_role: "consultor" | "franqueado"
+      user_role: "consultor" | "franqueado" | "admin"
       user_role_old: "consultor" | "franqueado" | "gestor_comercial"
     }
     CompositeTypes: {
