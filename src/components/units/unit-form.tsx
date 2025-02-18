@@ -133,25 +133,22 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
     }
   };
 
-  // Adicionar log no evento de submit do formulário
-  const handleFormSubmit = form.handleSubmit((data) => {
-    console.log('Form handleSubmit chamado');
-    onSubmit(data);
-  });
-
   return (
     <Form {...form}>
-      <form onSubmit={handleFormSubmit} className="space-y-6">
+      <form 
+        onSubmit={form.handleSubmit((data) => {
+          console.log('Form handleSubmit chamado');
+          onSubmit(data);
+        })}
+        className="space-y-6"
+      >
         <BasicInfoSection form={form} />
         <FeesSection form={form} />
         <ContactSection form={form} />
         <AddressSection form={form} />
 
         <div className="flex justify-end space-x-4">
-          <Button 
-            type="submit"
-            onClick={() => console.log('Botão clicado')}
-          >
+          <Button type="submit">
             Salvar
           </Button>
         </div>
