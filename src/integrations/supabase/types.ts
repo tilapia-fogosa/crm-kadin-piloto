@@ -168,6 +168,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          is_admin: boolean | null
           role: string | null
           updated_at: string
         }
@@ -177,6 +178,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          is_admin?: boolean | null
           role?: string | null
           updated_at?: string
         }
@@ -186,6 +188,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_admin?: boolean | null
           role?: string | null
           updated_at?: string
         }
@@ -525,7 +528,8 @@ export type Database = {
         | "cartao_debito"
         | "boleto"
         | "recorrencia"
-      user_role: "consultor" | "franqueado" | "gestor_comercial"
+      user_role: "consultor" | "franqueado"
+      user_role_old: "consultor" | "franqueado" | "gestor_comercial"
     }
     CompositeTypes: {
       [_ in never]: never
