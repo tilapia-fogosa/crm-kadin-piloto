@@ -511,6 +511,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      user_has_unit_access: {
+        Args: {
+          unit_id: string
+        }
+        Returns: boolean
+      }
       verify_webhook_credentials: {
         Args: {
           p_username: string
