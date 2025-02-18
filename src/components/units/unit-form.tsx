@@ -80,10 +80,11 @@ type UnitFormData = z.infer<typeof unitFormSchema>;
 
 interface UnitFormProps {
   onSuccess: () => void;
-  initialData?: UnitFormData;
+  initialData?: any;
+  isEditing?: boolean;
 }
 
-export function UnitForm({ onSuccess, initialData }: UnitFormProps) {
+export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitFormProps) {
   const queryClient = useQueryClient();
   const form = useForm<UnitFormData>({
     resolver: zodResolver(unitFormSchema),
@@ -125,47 +126,85 @@ export function UnitForm({ onSuccess, initialData }: UnitFormProps) {
 
   async function onSubmit(data: UnitFormData) {
     try {
-      // Insere a unidade
-      const { data: unit, error: unitError } = await supabase
-        .from('units')
-        .insert({
-          name: data.name,
-          company_name: data.company_name,
-          cnpj: data.cnpj,
-          trading_name: data.trading_name || null,
-          region_id: data.region_id,
-          enrollment_fee: data.enrollment_fee ? parseFloat(data.enrollment_fee) : null,
-          material_fee: data.material_fee ? parseFloat(data.material_fee) : null,
-          monthly_fee: data.monthly_fee ? parseFloat(data.monthly_fee) : null,
-          email: data.email || null,
-          phone: data.phone || null,
-          legal_representative: data.legal_representative || null,
-        })
-        .select()
-        .single();
+      if (isEditing) {
+        // Atualiza a unidade
+        const { error: unitError } = await supabase
+          .from('units')
+          .update({
+            name: data.name,
+            company_name: data.company_name,
+            cnpj: data.cnpj,
+            trading_name: data.trading_name || null,
+            region_id: data.region_id,
+            enrollment_fee: data.enrollment_fee ? parseFloat(data.enrollment_fee) : null,
+            material_fee: data.material_fee ? parseFloat(data.material_fee) : null,
+            monthly_fee: data.monthly_fee ? parseFloat(data.monthly_fee) : null,
+            email: data.email || null,
+            phone: data.phone || null,
+            legal_representative: data.legal_representative || null,
+          })
+          .eq('id', initialData.id);
 
-      if (unitError) throw unitError;
+        if (unitError) throw unitError;
 
-      // Insere o endereço
-      const { error: addressError } = await supabase
-        .from('unit_addresses')
-        .insert({
-          unit_id: unit.id,
-          street: data.street,
-          number: data.number,
-          complement: data.complement || null,
-          neighborhood: data.neighborhood,
-          city: data.city,
-          state: data.state,
-          postal_code: data.postal_code,
-        });
+        // Atualiza o endereço
+        const { error: addressError } = await supabase
+          .from('unit_addresses')
+          .update({
+            street: data.street,
+            number: data.number,
+            complement: data.complement || null,
+            neighborhood: data.neighborhood,
+            city: data.city,
+            state: data.state,
+            postal_code: data.postal_code,
+          })
+          .eq('unit_id', initialData.id);
 
-      if (addressError) throw addressError;
+        if (addressError) throw addressError;
+      } else {
+        // Insere a unidade
+        const { data: unit, error: unitError } = await supabase
+          .from('units')
+          .insert({
+            name: data.name,
+            company_name: data.company_name,
+            cnpj: data.cnpj,
+            trading_name: data.trading_name || null,
+            region_id: data.region_id,
+            enrollment_fee: data.enrollment_fee ? parseFloat(data.enrollment_fee) : null,
+            material_fee: data.material_fee ? parseFloat(data.material_fee) : null,
+            monthly_fee: data.monthly_fee ? parseFloat(data.monthly_fee) : null,
+            email: data.email || null,
+            phone: data.phone || null,
+            legal_representative: data.legal_representative || null,
+          })
+          .select()
+          .single();
+
+        if (unitError) throw unitError;
+
+        // Insere o endereço
+        const { error: addressError } = await supabase
+          .from('unit_addresses')
+          .insert({
+            unit_id: unit.id,
+            street: data.street,
+            number: data.number,
+            complement: data.complement || null,
+            neighborhood: data.neighborhood,
+            city: data.city,
+            state: data.state,
+            postal_code: data.postal_code,
+          });
+
+        if (addressError) throw addressError;
+      }
 
       await queryClient.invalidateQueries({ queryKey: ['units'] });
       onSuccess();
     } catch (error) {
-      console.error('Erro ao criar unidade:', error);
+      console.error('Erro ao salvar unidade:', error);
     }
   }
 

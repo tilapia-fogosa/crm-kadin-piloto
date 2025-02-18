@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -20,7 +19,6 @@ import NewUnitPage from "@/pages/regions/units/new";
 import UnitsPage from "@/pages/regions/units";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -39,17 +37,14 @@ function App() {
           <SidebarProvider>
             <div className="flex min-h-screen w-full">
               <Routes>
-                {/* Rota de autenticação */}
                 <Route path="/auth" element={<Auth />} />
                 
-                {/* Redireciona a raiz para o dashboard se autenticado */}
                 <Route path="/" element={
                   <ProtectedRoute>
                     <Navigate to="/dashboard" replace />
                   </ProtectedRoute>
                 } />
 
-                {/* Todas as outras rotas protegidas */}
                 <Route
                   path="*"
                   element={
@@ -66,6 +61,7 @@ function App() {
                             <Route path="/clients/sources" element={<LeadSourcesPage />} />
                             <Route path="/regions" element={<RegionsPage />} />
                             <Route path="/regions/units/new" element={<NewUnitPage />} />
+                            <Route path="/regions/units/:id/edit" element={<EditUnitPage />} />
                             <Route path="/regions/units" element={<UnitsPage />} />
                             <Route path="/api-docs" element={<ApiDocsPage />} />
                             <Route path="*" element={<NotFound />} />

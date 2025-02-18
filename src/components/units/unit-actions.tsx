@@ -59,7 +59,7 @@ export function UnitActions({ unit }: UnitActionsProps) {
       <Button
         variant="outline"
         size="icon"
-        onClick={() => navigate(`/units/${unit.id}/users`)}
+        onClick={() => navigate(`/regions/units/${unit.id}/users`)}
       >
         <Users className="h-4 w-4" />
       </Button>
@@ -67,7 +67,7 @@ export function UnitActions({ unit }: UnitActionsProps) {
       <Button
         variant="outline"
         size="icon"
-        onClick={() => navigate(`/units/${unit.id}/edit`)}
+        onClick={() => navigate(`/regions/units/${unit.id}/edit`)}
       >
         <Pencil className="h-4 w-4" />
       </Button>
