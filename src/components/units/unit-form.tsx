@@ -24,9 +24,18 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
   
   console.log('Dados iniciais recebidos no formulário:', initialData);
 
+  // Converter os valores numéricos para number ao inicializar o formulário
+  const formattedInitialData = initialData ? {
+    ...initialData,
+    enrollment_fee: Number(initialData.enrollment_fee) || 0,
+    material_fee: Number(initialData.material_fee) || 0,
+    monthly_fee: Number(initialData.monthly_fee) || 0,
+    complement: initialData.complement || ""
+  } : undefined;
+
   const form = useForm<UnitFormData>({
     resolver: zodResolver(unitFormSchema),
-    defaultValues: initialData || {
+    defaultValues: formattedInitialData || {
       name: "",
       company_name: "",
       cnpj: "",
@@ -52,59 +61,48 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
     console.log('Dados do formulário para envio:', data);
     
     try {
-      if (isEditing) {
+      const formData = {
+        name: data.name,
+        company_name: data.company_name,
+        cnpj: data.cnpj,
+        trading_name: data.trading_name || null,
+        region_id: data.region_id,
+        enrollment_fee: data.enrollment_fee,
+        material_fee: data.material_fee,
+        monthly_fee: data.monthly_fee,
+        email: data.email || null,
+        phone: data.phone || null,
+        legal_representative: data.legal_representative || null,
+        street: data.street,
+        number: data.number,
+        complement: data.complement || null,
+        neighborhood: data.neighborhood,
+        city: data.city,
+        state: data.state,
+        postal_code: data.postal_code,
+      };
+
+      if (isEditing && initialData?.id) {
         console.log('Atualizando unidade:', initialData.id);
         
         const { error } = await supabase
           .from('units')
-          .update({
-            name: data.name,
-            company_name: data.company_name,
-            cnpj: data.cnpj,
-            trading_name: data.trading_name || null,
-            region_id: data.region_id,
-            enrollment_fee: data.enrollment_fee,
-            material_fee: data.material_fee,
-            monthly_fee: data.monthly_fee,
-            email: data.email || null,
-            phone: data.phone || null,
-            legal_representative: data.legal_representative || null,
-            street: data.street,
-            number: data.number,
-            complement: data.complement || null,
-            neighborhood: data.neighborhood,
-            city: data.city,
-            state: data.state,
-            postal_code: data.postal_code,
-          })
+          .update(formData)
           .eq('id', initialData.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao atualizar:', error);
+          throw error;
+        }
       } else {
         const { error } = await supabase
           .from('units')
-          .insert({
-            name: data.name,
-            company_name: data.company_name,
-            cnpj: data.cnpj,
-            trading_name: data.trading_name || null,
-            region_id: data.region_id,
-            enrollment_fee: data.enrollment_fee,
-            material_fee: data.material_fee,
-            monthly_fee: data.monthly_fee,
-            email: data.email || null,
-            phone: data.phone || null,
-            legal_representative: data.legal_representative || null,
-            street: data.street,
-            number: data.number,
-            complement: data.complement || null,
-            neighborhood: data.neighborhood,
-            city: data.city,
-            state: data.state,
-            postal_code: data.postal_code,
-          });
+          .insert(formData);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao inserir:', error);
+          throw error;
+        }
       }
 
       await queryClient.invalidateQueries({ queryKey: ['units'] });

@@ -54,7 +54,7 @@ export const unitFormSchema = z.object({
   legal_representative: z.string().optional(),
   street: z.string().min(1, "Rua é obrigatória"),
   number: z.string().min(1, "Número é obrigatório"),
-  complement: z.string().optional(),
+  complement: z.string().optional().or(z.literal("")),
   neighborhood: z.string().min(1, "Bairro é obrigatório"),
   city: z.string().min(1, "Cidade é obrigatória"),
   state: z.string().min(1, "Estado é obrigatório"),
