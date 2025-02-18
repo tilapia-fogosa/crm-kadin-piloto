@@ -2,8 +2,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { UnitForm } from "./unit-form";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 interface UnitEditDialogProps {
   unit: any;
@@ -14,21 +12,6 @@ interface UnitEditDialogProps {
 export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps) {
   const { toast } = useToast();
 
-  const { data: unitData, isLoading } = useQuery({
-    queryKey: ['unit', unit?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('units')
-        .select('*')
-        .eq('id', unit.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!unit && open,
-  });
-
   if (!unit) return null;
 
   return (
@@ -38,19 +21,19 @@ export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps
           <DialogTitle>Editar Unidade</DialogTitle>
         </DialogHeader>
 
-        {isLoading ? (
-          <div>Carregando...</div>
-        ) : unitData && (
-          <div className="mt-6">
-            <UnitForm
-              initialData={unitData}
-              isEditing={true}
-              onSuccess={() => {
-                onOpenChange(false);
-              }}
-            />
-          </div>
-        )}
+        <div className="mt-6">
+          <UnitForm
+            initialData={unit}
+            isEditing={true}
+            onSuccess={() => {
+              onOpenChange(false);
+              toast({
+                title: "Unidade atualizada",
+                description: "A unidade foi atualizada com sucesso.",
+              });
+            }}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

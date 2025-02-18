@@ -11,6 +11,7 @@ import { ContactSection } from "./form-sections/contact-section";
 import { AddressSection } from "./form-sections/address-section";
 import { unitFormSchema, type UnitFormData } from "./form-validation";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 interface UnitFormProps {
   onSuccess: () => void;
@@ -21,22 +22,10 @@ interface UnitFormProps {
 export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitFormProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
-  console.log('Componente UnitForm renderizado');
-  console.log('Dados iniciais recebidos no formulário:', initialData);
-
-  // Converter os valores numéricos para number ao inicializar o formulário
-  const formattedInitialData = initialData ? {
-    ...initialData,
-    enrollment_fee: Number(initialData.enrollment_fee) || 0,
-    material_fee: Number(initialData.material_fee) || 0,
-    monthly_fee: Number(initialData.monthly_fee) || 0,
-    complement: initialData.complement || ""
-  } : undefined;
 
   const form = useForm<UnitFormData>({
     resolver: zodResolver(unitFormSchema),
-    defaultValues: formattedInitialData || {
+    defaultValues: {
       name: "",
       company_name: "",
       cnpj: "",
@@ -58,12 +47,25 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
     },
   });
 
+  // Atualiza o formulário quando receber dados iniciais
+  useEffect(() => {
+    if (initialData) {
+      const formattedData = {
+        ...initialData,
+        enrollment_fee: Number(initialData.enrollment_fee) || 0,
+        material_fee: Number(initialData.material_fee) || 0,
+        monthly_fee: Number(initialData.monthly_fee) || 0,
+        complement: initialData.complement || "",
+        trading_name: initialData.trading_name || "",
+        email: initialData.email || "",
+        phone: initialData.phone || "",
+        legal_representative: initialData.legal_representative || "",
+      };
+      form.reset(formattedData);
+    }
+  }, [initialData, form]);
+
   const onSubmit = async (data: UnitFormData) => {
-    console.log('Iniciando submissão do formulário');
-    console.log('Dados do formulário para envio:', data);
-    console.log('isEditing:', isEditing);
-    console.log('initialData?.id:', initialData?.id);
-    
     try {
       const formData = {
         name: data.name,
@@ -86,43 +88,24 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
         postal_code: data.postal_code,
       };
 
-      console.log('Dados formatados para envio:', formData);
-
       if (isEditing && initialData?.id) {
-        console.log('Atualizando unidade:', initialData.id);
-        
         const { error } = await supabase
           .from('units')
           .update(formData)
           .eq('id', initialData.id);
 
-        if (error) {
-          console.error('Erro ao atualizar:', error);
-          throw error;
-        }
+        if (error) throw error;
       } else {
         const { error } = await supabase
           .from('units')
           .insert(formData);
 
-        if (error) {
-          console.error('Erro ao inserir:', error);
-          throw error;
-        }
+        if (error) throw error;
       }
 
-      console.log('Operação realizada com sucesso, invalidando queries...');
       await queryClient.invalidateQueries({ queryKey: ['units'] });
-      
-      console.log('Chamando callback de sucesso...');
       onSuccess();
       
-      toast({
-        title: isEditing ? "Unidade atualizada" : "Unidade criada",
-        description: isEditing 
-          ? "A unidade foi atualizada com sucesso."
-          : "A unidade foi criada com sucesso.",
-      });
     } catch (error) {
       console.error('Erro ao salvar unidade:', error);
       toast({
@@ -135,13 +118,7 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
 
   return (
     <Form {...form}>
-      <form 
-        onSubmit={form.handleSubmit((data) => {
-          console.log('Form handleSubmit chamado');
-          onSubmit(data);
-        })}
-        className="space-y-6"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <BasicInfoSection form={form} />
         <FeesSection form={form} />
         <ContactSection form={form} />
