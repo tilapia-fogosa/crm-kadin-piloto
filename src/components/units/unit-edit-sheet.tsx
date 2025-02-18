@@ -21,38 +21,6 @@ export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps
       
       console.log('Buscando dados da unidade:', unit.id);
       
-      // Primeiro, verifica se o usuário tem permissão para ver a unidade
-      const { data: userPermission, error: permissionError } = await supabase
-        .from('unit_users')
-        .select('role')
-        .eq('unit_id', unit.id)
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (permissionError && !permissionError.message.includes('No rows found')) {
-        console.error('Erro ao verificar permissões:', permissionError);
-        throw permissionError;
-      }
-
-      // Se não tem permissão direta, verifica se é admin
-      if (!userPermission) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', (await supabase.auth.getUser()).data.user?.id)
-          .single();
-
-        if (profileError) {
-          console.error('Erro ao verificar perfil:', profileError);
-          throw profileError;
-        }
-
-        if (!profile?.is_admin) {
-          throw new Error('Sem permissão para acessar esta unidade');
-        }
-      }
-      
-      // Busca os dados da unidade
       const { data, error } = await supabase
         .from('units')
         .select(`
@@ -80,8 +48,8 @@ export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps
     toast({
       variant: "destructive",
       title: "Erro ao carregar dados",
-      description: error.message === 'Sem permissão para acessar esta unidade' 
-        ? "Você não tem permissão para acessar esta unidade."
+      description: error.message === 'No rows found' 
+        ? "Unidade não encontrada ou sem permissão de acesso."
         : "Houve um erro ao carregar os dados da unidade.",
     });
     onOpenChange(false);
