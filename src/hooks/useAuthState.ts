@@ -26,7 +26,7 @@ export function useAuthState() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log("Evento de autenticação:", event);
       
-      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !currentSession) {
+      if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !currentSession)) {
         console.log("Sessão expirada ou usuário deslogado");
         toast({
           title: "Sessão expirada",
