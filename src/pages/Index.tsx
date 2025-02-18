@@ -1,30 +1,74 @@
 
+import { UsersIcon } from "lucide-react";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { LeadsChart } from "@/components/dashboard/LeadsChart";
-import { BarChart4 } from "lucide-react";
+import LeadsTable from "@/components/leads/LeadsTable";
+import { useLeadsStats } from "@/hooks/useLeadsStats";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
-export default function Index() {
+const Index = () => {
+  const { data: stats, isLoading } = useLeadsStats();
+  const queryClient = useQueryClient();
+  const location = useLocation();
+
+  // Refetch stats when component mounts or route changes
+  useEffect(() => {
+    console.log("Dashboard mounted or route changed, refetching data...")
+    queryClient.invalidateQueries({ queryKey: ['leads-stats'] })
+  }, [location.pathname, queryClient]);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-full">Carregando...</div>;
+  }
+
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="space-y-0.5">
-        <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">
-          Gerencie seus leads e acompanhe o desempenho da sua unidade.
-        </p>
+    <div className="flex-1 space-y-4 p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard 
-          title="Total de Leads"
-          value="120"
-          icon={BarChart4}
-          description="Total de leads ativos"
+        <StatsCard
+          title="Mês Atual"
+          value={stats?.oneMonth.total || 0}
+          icon={UsersIcon}
+          comparison={stats?.oneMonth.comparison}
+          description="Comparado ao mesmo mês do ano anterior"
+        />
+        <StatsCard
+          title="3 Meses"
+          value={stats?.threeMonths.total || 0}
+          icon={UsersIcon}
+          comparison={stats?.threeMonths.comparison}
+          description="Comparado aos mesmos 3 meses do ano anterior"
+        />
+        <StatsCard
+          title="6 Meses"
+          value={stats?.sixMonths.total || 0}
+          icon={UsersIcon}
+          comparison={stats?.sixMonths.comparison}
+          description="Comparado aos mesmos 6 meses do ano anterior"
+        />
+        <StatsCard
+          title="12 Meses"
+          value={stats?.twelveMonths.total || 0}
+          icon={UsersIcon}
+          comparison={stats?.twelveMonths.comparison}
+          description="Comparado aos 12 meses anteriores"
         />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <div className="col-span-4">
-          <LeadsChart />
+        <LeadsChart />
+        <div className="col-span-4 lg:col-span-3">
+          <div className="flex items-center justify-between space-y-2">
+            <h2 className="text-2xl font-bold tracking-tight">Leads Recentes</h2>
+          </div>
+          <LeadsTable />
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Index;
