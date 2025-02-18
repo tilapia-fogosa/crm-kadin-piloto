@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { LeadsChart } from "@/components/dashboard/LeadsChart";
+import { BarChart4 } from "lucide-react";
 
 export default function Index() {
   return (
@@ -22,10 +23,17 @@ export default function Index() {
         </TabsList>
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatsCard />
+            <StatsCard 
+              title="Total de Leads"
+              value="120"
+              icon={BarChart4}
+              description="Total de leads ativos"
+            />
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <LeadsChart className="col-span-4" />
+            <div className="col-span-4">
+              <LeadsChart />
+            </div>
           </div>
         </TabsContent>
         <TabsContent value="regions">
