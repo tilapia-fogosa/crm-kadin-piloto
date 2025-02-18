@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import {
   Menu,
   Plus,
   Link2,
+  Globe,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { useSidebar } from "./ui/sidebar";
@@ -30,6 +30,7 @@ const navigation = [
       { name: "Origens", href: "/clients/sources", icon: Link2 }
     ]
   },
+  { name: "Regiões", href: "/regions", icon: Globe },
   { name: "API Docs", href: "/api-docs", icon: FileCode },
 ];
 
