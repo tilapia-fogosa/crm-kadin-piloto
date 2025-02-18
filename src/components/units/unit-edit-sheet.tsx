@@ -14,10 +14,12 @@ interface UnitEditDialogProps {
 export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps) {
   const { toast } = useToast();
 
-  const { data: unitWithAddress, isLoading } = useQuery({
+  const { data: unitWithAddress, isLoading, error } = useQuery({
     queryKey: ['units', unit?.id],
     queryFn: async () => {
       if (!unit) return null;
+      
+      console.log('Buscando dados da unidade:', unit.id);
       
       const { data, error } = await supabase
         .from('units')
@@ -28,13 +30,27 @@ export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps
         .eq('id', unit.id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar unidade:', error);
+        throw error;
+      }
+
+      console.log('Dados recuperados:', data);
       return data;
     },
     enabled: !!unit,
   });
 
   if (!unit) return null;
+
+  if (error) {
+    console.error('Erro na query:', error);
+    toast({
+      variant: "destructive",
+      title: "Erro ao carregar dados",
+      description: "Houve um erro ao carregar os dados da unidade.",
+    });
+  }
 
   if (isLoading) {
     return (
@@ -53,6 +69,8 @@ export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps
     ...unitWithAddress,
     ...unitWithAddress.address[0],
   } : null;
+
+  console.log('Dados iniciais do formulário:', initialData);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

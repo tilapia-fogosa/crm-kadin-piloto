@@ -10,6 +10,7 @@ import { FeesSection } from "./form-sections/fees-section";
 import { ContactSection } from "./form-sections/contact-section";
 import { AddressSection } from "./form-sections/address-section";
 import { unitFormSchema, type UnitFormData } from "./form-validation";
+import { useToast } from "@/hooks/use-toast";
 
 interface UnitFormProps {
   onSuccess: () => void;
@@ -19,6 +20,10 @@ interface UnitFormProps {
 
 export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitFormProps) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  console.log('Dados iniciais recebidos no formulário:', initialData);
+
   const form = useForm<UnitFormData>({
     resolver: zodResolver(unitFormSchema),
     defaultValues: initialData || {
@@ -44,8 +49,12 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
   });
 
   async function onSubmit(data: UnitFormData) {
+    console.log('Dados do formulário para envio:', data);
+    
     try {
       if (isEditing) {
+        console.log('Atualizando unidade:', initialData.id);
+        
         // Atualiza a unidade
         const { error: unitError } = await supabase
           .from('units')
@@ -64,8 +73,13 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
           })
           .eq('id', initialData.id);
 
-        if (unitError) throw unitError;
+        if (unitError) {
+          console.error('Erro ao atualizar unidade:', unitError);
+          throw unitError;
+        }
 
+        console.log('Atualizando endereço da unidade');
+        
         // Atualiza o endereço
         const { error: addressError } = await supabase
           .from('unit_addresses')
@@ -80,7 +94,10 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
           })
           .eq('unit_id', initialData.id);
 
-        if (addressError) throw addressError;
+        if (addressError) {
+          console.error('Erro ao atualizar endereço:', addressError);
+          throw addressError;
+        }
       } else {
         // Insere a unidade
         const { data: unit, error: unitError } = await supabase
@@ -124,6 +141,11 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
       onSuccess();
     } catch (error) {
       console.error('Erro ao salvar unidade:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao tentar salvar a unidade.",
+      });
     }
   }
 
