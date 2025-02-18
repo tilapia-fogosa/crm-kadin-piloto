@@ -48,12 +48,8 @@ export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps
     toast({
       variant: "destructive",
       title: "Erro ao carregar dados",
-      description: error.message === 'No rows found' 
-        ? "Unidade não encontrada ou sem permissão de acesso."
-        : "Houve um erro ao carregar os dados da unidade.",
+      description: "Houve um erro ao carregar os dados da unidade.",
     });
-    onOpenChange(false);
-    return null;
   }
 
   if (isLoading) {

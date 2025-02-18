@@ -5,20 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
 
 export default function UnitsPage() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   
-  const { data: units, isLoading, error } = useQuery({
+  const { data: units, isLoading } = useQuery({
     queryKey: ['units'],
     queryFn: async () => {
-      console.log('Iniciando busca de unidades');
-      
-      const { data: userProfile } = await supabase.auth.getUser();
-      console.log('Usuário atual:', userProfile.user?.email);
-      
       const { data, error } = await supabase
         .from('units')
         .select(`
@@ -28,27 +21,13 @@ export default function UnitsPage() {
         .eq('active', true)
         .order('name');
       
-      if (error) {
-        console.error('Erro ao buscar unidades:', error);
-        throw error;
-      }
-
-      console.log('Unidades recuperadas:', data?.length);
+      if (error) throw error;
       return data;
     },
   });
 
-  if (error) {
-    console.error('Erro na query:', error);
-    toast({
-      variant: "destructive",
-      title: "Erro ao carregar unidades",
-      description: "Houve um erro ao carregar a lista de unidades. Por favor, tente novamente.",
-    });
-  }
-
   if (isLoading) {
-    return <div className="container mx-auto py-10">Carregando...</div>;
+    return <div>Carregando...</div>;
   }
 
   return (

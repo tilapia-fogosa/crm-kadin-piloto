@@ -528,7 +528,7 @@ export type Database = {
         | "cartao_debito"
         | "boleto"
         | "recorrencia"
-      user_role: "consultor" | "franqueado" | "admin"
+      user_role: "consultor" | "franqueado"
       user_role_old: "consultor" | "franqueado" | "gestor_comercial"
     }
     CompositeTypes: {

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,26 +21,26 @@ export function useAuthState() {
     },
   });
 
-  const handleAuthChange = useCallback((event: string, currentSession: any) => {
-    console.log("Evento de autenticação:", event);
-    
-    if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !currentSession)) {
-      console.log("Sessão expirada ou usuário deslogado");
-      toast({
-        title: "Sessão expirada",
-        description: "Sua sessão expirou. Por favor, faça login novamente.",
-      });
-      navigate("/auth");
-    }
-  }, [navigate, toast]);
-
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+    // Inscreve-se para mudanças na sessão
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      console.log("Evento de autenticação:", event);
+      
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !currentSession) {
+        console.log("Sessão expirada ou usuário deslogado");
+        toast({
+          title: "Sessão expirada",
+          description: "Sua sessão expirou. Por favor, faça login novamente.",
+        });
+        navigate("/auth");
+      }
+    });
 
+    // Cleanup da inscrição quando o componente for desmontado
     return () => {
       subscription.unsubscribe();
     };
-  }, [handleAuthChange]);
+  }, [navigate, toast]);
 
   const resetForm = () => {
     setEmail("");
