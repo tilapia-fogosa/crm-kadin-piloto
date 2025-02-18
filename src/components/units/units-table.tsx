@@ -17,6 +17,7 @@ interface UnitsTableProps {
 
 export function UnitsTable({ units }: UnitsTableProps) {
   const [editingUnit, setEditingUnit] = useState<any>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   return (
     <>
@@ -43,7 +44,10 @@ export function UnitsTable({ units }: UnitsTableProps) {
                 <TableCell className="text-right">
                   <UnitActions 
                     unit={unit} 
-                    onEdit={() => setEditingUnit(unit)}
+                    onEdit={() => {
+                      setEditingUnit(unit);
+                      setIsEditDialogOpen(true);
+                    }}
                   />
                 </TableCell>
               </TableRow>
@@ -54,8 +58,11 @@ export function UnitsTable({ units }: UnitsTableProps) {
 
       <UnitEditDialog
         unit={editingUnit}
-        open={!!editingUnit}
-        onOpenChange={(open) => !open && setEditingUnit(null)}
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open);
+          if (!open) setEditingUnit(null);
+        }}
       />
     </>
   );

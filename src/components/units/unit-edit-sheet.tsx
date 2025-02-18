@@ -14,52 +14,22 @@ interface UnitEditDialogProps {
 export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps) {
   const { toast } = useToast();
 
-  const { data: unitData, isLoading, error } = useQuery({
-    queryKey: ['units', unit?.id],
+  const { data: unitData, isLoading } = useQuery({
+    queryKey: ['unit', unit?.id],
     queryFn: async () => {
-      if (!unit) return null;
-      
-      console.log('Buscando dados da unidade:', unit.id);
-      
       const { data, error } = await supabase
         .from('units')
         .select('*')
         .eq('id', unit.id)
         .single();
       
-      if (error) {
-        console.error('Erro ao buscar unidade:', error);
-        throw error;
-      }
-
-      console.log('Dados recuperados:', data);
+      if (error) throw error;
       return data;
     },
-    enabled: !!unit,
+    enabled: !!unit && open,
   });
 
   if (!unit) return null;
-
-  if (error) {
-    console.error('Erro na query:', error);
-    toast({
-      variant: "destructive",
-      title: "Erro ao carregar dados",
-      description: "Houve um erro ao carregar os dados da unidade.",
-    });
-  }
-
-  if (isLoading) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Carregando...</DialogTitle>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -68,16 +38,14 @@ export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps
           <DialogTitle>Editar Unidade</DialogTitle>
         </DialogHeader>
 
-        {unitData && (
+        {isLoading ? (
+          <div>Carregando...</div>
+        ) : unitData && (
           <div className="mt-6">
             <UnitForm
               initialData={unitData}
-              isEditing
+              isEditing={true}
               onSuccess={() => {
-                toast({
-                  title: "Unidade atualizada",
-                  description: "A unidade foi atualizada com sucesso.",
-                });
                 onOpenChange(false);
               }}
             />
