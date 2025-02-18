@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -17,7 +18,6 @@ import Auth from "@/pages/Auth";
 import RegionsPage from "@/pages/regions";
 import NewUnitPage from "@/pages/regions/units/new";
 import UnitsPage from "@/pages/regions/units";
-import UnitUsersPage from "@/pages/regions/units/users";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = new QueryClient({
@@ -63,7 +63,6 @@ function App() {
                             <Route path="/regions" element={<RegionsPage />} />
                             <Route path="/regions/units/new" element={<NewUnitPage />} />
                             <Route path="/regions/units" element={<UnitsPage />} />
-                            <Route path="/regions/units/:unitId/users" element={<UnitUsersPage />} />
                             <Route path="/api-docs" element={<ApiDocsPage />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
