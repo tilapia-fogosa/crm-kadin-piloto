@@ -62,7 +62,7 @@ export function UnitUsersTable({ unitId, onEdit }: UnitUsersTableProps) {
 
       // Buscar informações de acesso para cada usuário
       const usersWithAccess = await Promise.all(
-        unitUsers.map(async (unitUser) => {
+        (unitUsers || []).map(async (unitUser: any) => {
           const { data: accessInfo, error: accessError } = await supabase
             .rpc('get_user_access_info', { user_id: unitUser.user_id });
 
@@ -71,11 +71,14 @@ export function UnitUsersTable({ unitId, onEdit }: UnitUsersTableProps) {
             return { ...unitUser, accessInfo: null };
           }
 
-          return { ...unitUser, accessInfo: accessInfo[0] };
+          return {
+            ...unitUser,
+            accessInfo: accessInfo?.[0] || null
+          } as UnitUser;
         })
       );
 
-      return usersWithAccess as UnitUser[];
+      return usersWithAccess;
     },
   });
 
