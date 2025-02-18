@@ -57,7 +57,7 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
     },
   });
 
-  async function onSubmit(data: UnitFormData) {
+  const onSubmit = async (data: UnitFormData) => {
     console.log('Iniciando submissão do formulário');
     console.log('Dados do formulário para envio:', data);
     console.log('isEditing:', isEditing);
@@ -90,12 +90,10 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
       if (isEditing && initialData?.id) {
         console.log('Atualizando unidade:', initialData.id);
         
-        const { data: updateData, error } = await supabase
+        const { error } = await supabase
           .from('units')
           .update(formData)
           .eq('id', initialData.id);
-
-        console.log('Resposta do update:', { data: updateData, error });
 
         if (error) {
           console.error('Erro ao atualizar:', error);
@@ -132,16 +130,11 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
         description: "Ocorreu um erro ao tentar salvar a unidade.",
       });
     }
-  }
-
-  const handleSubmit = form.handleSubmit((data) => {
-    console.log('Form handleSubmit chamado');
-    onSubmit(data);
-  });
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <BasicInfoSection form={form} />
         <FeesSection form={form} />
         <ContactSection form={form} />
