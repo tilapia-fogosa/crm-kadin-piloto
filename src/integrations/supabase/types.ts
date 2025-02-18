@@ -320,56 +320,6 @@ export type Database = {
         }
         Relationships: []
       }
-      unit_addresses: {
-        Row: {
-          active: boolean
-          city: string
-          complement: string | null
-          created_at: string
-          id: string
-          neighborhood: string
-          number: string
-          postal_code: string
-          state: string
-          street: string
-          unit_id: string
-        }
-        Insert: {
-          active?: boolean
-          city: string
-          complement?: string | null
-          created_at?: string
-          id?: string
-          neighborhood: string
-          number: string
-          postal_code: string
-          state: string
-          street: string
-          unit_id: string
-        }
-        Update: {
-          active?: boolean
-          city?: string
-          complement?: string | null
-          created_at?: string
-          id?: string
-          neighborhood?: string
-          number?: string
-          postal_code?: string
-          state?: string
-          street?: string
-          unit_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "unit_addresses_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       unit_users: {
         Row: {
           active: boolean
@@ -408,8 +358,10 @@ export type Database = {
       units: {
         Row: {
           active: boolean
+          city: string
           cnpj: string
           company_name: string
+          complement: string | null
           created_at: string
           email: string | null
           enrollment_fee: number | null
@@ -418,14 +370,22 @@ export type Database = {
           material_fee: number | null
           monthly_fee: number | null
           name: string
+          neighborhood: string
+          number: string
           phone: string | null
+          postal_code: string
           region_id: string | null
+          state: string
+          street: string
           trading_name: string | null
+          updated_at: string
         }
         Insert: {
           active?: boolean
+          city: string
           cnpj: string
           company_name: string
+          complement?: string | null
           created_at?: string
           email?: string | null
           enrollment_fee?: number | null
@@ -434,14 +394,22 @@ export type Database = {
           material_fee?: number | null
           monthly_fee?: number | null
           name: string
+          neighborhood: string
+          number: string
           phone?: string | null
+          postal_code: string
           region_id?: string | null
+          state: string
+          street: string
           trading_name?: string | null
+          updated_at?: string
         }
         Update: {
           active?: boolean
+          city?: string
           cnpj?: string
           company_name?: string
+          complement?: string | null
           created_at?: string
           email?: string | null
           enrollment_fee?: number | null
@@ -450,9 +418,15 @@ export type Database = {
           material_fee?: number | null
           monthly_fee?: number | null
           name?: string
+          neighborhood?: string
+          number?: string
           phone?: string | null
+          postal_code?: string
           region_id?: string | null
+          state?: string
+          street?: string
           trading_name?: string | null
+          updated_at?: string
         }
         Relationships: [
           {

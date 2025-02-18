@@ -55,8 +55,7 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
       if (isEditing) {
         console.log('Atualizando unidade:', initialData.id);
         
-        // Atualiza a unidade
-        const { error: unitError } = await supabase
+        const { error } = await supabase
           .from('units')
           .update({
             name: data.name,
@@ -70,20 +69,6 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
             email: data.email || null,
             phone: data.phone || null,
             legal_representative: data.legal_representative || null,
-          })
-          .eq('id', initialData.id);
-
-        if (unitError) {
-          console.error('Erro ao atualizar unidade:', unitError);
-          throw unitError;
-        }
-
-        console.log('Atualizando endereço da unidade');
-        
-        // Atualiza o endereço
-        const { error: addressError } = await supabase
-          .from('unit_addresses')
-          .update({
             street: data.street,
             number: data.number,
             complement: data.complement || null,
@@ -92,15 +77,11 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
             state: data.state,
             postal_code: data.postal_code,
           })
-          .eq('unit_id', initialData.id);
+          .eq('id', initialData.id);
 
-        if (addressError) {
-          console.error('Erro ao atualizar endereço:', addressError);
-          throw addressError;
-        }
+        if (error) throw error;
       } else {
-        // Insere a unidade
-        const { data: unit, error: unitError } = await supabase
+        const { error } = await supabase
           .from('units')
           .insert({
             name: data.name,
@@ -114,17 +95,6 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
             email: data.email || null,
             phone: data.phone || null,
             legal_representative: data.legal_representative || null,
-          })
-          .select()
-          .single();
-
-        if (unitError) throw unitError;
-
-        // Insere o endereço
-        const { error: addressError } = await supabase
-          .from('unit_addresses')
-          .insert({
-            unit_id: unit.id,
             street: data.street,
             number: data.number,
             complement: data.complement || null,
@@ -134,11 +104,18 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
             postal_code: data.postal_code,
           });
 
-        if (addressError) throw addressError;
+        if (error) throw error;
       }
 
       await queryClient.invalidateQueries({ queryKey: ['units'] });
       onSuccess();
+      
+      toast({
+        title: isEditing ? "Unidade atualizada" : "Unidade criada",
+        description: isEditing 
+          ? "A unidade foi atualizada com sucesso."
+          : "A unidade foi criada com sucesso.",
+      });
     } catch (error) {
       console.error('Erro ao salvar unidade:', error);
       toast({

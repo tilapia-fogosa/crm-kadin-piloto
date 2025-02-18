@@ -14,7 +14,7 @@ interface UnitEditDialogProps {
 export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps) {
   const { toast } = useToast();
 
-  const { data: unitWithAddress, isLoading, error } = useQuery({
+  const { data: unitData, isLoading, error } = useQuery({
     queryKey: ['units', unit?.id],
     queryFn: async () => {
       if (!unit) return null;
@@ -23,10 +23,7 @@ export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps
       
       const { data, error } = await supabase
         .from('units')
-        .select(`
-          *,
-          address:unit_addresses(*)
-        `)
+        .select('*')
         .eq('id', unit.id)
         .single();
       
@@ -64,14 +61,6 @@ export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps
     );
   }
 
-  // Prepara os dados iniciais combinando unidade e endereço
-  const initialData = unitWithAddress ? {
-    ...unitWithAddress,
-    ...unitWithAddress.address[0],
-  } : null;
-
-  console.log('Dados iniciais do formulário:', initialData);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[720px] max-h-[90vh] overflow-y-auto">
@@ -79,10 +68,10 @@ export function UnitEditDialog({ unit, open, onOpenChange }: UnitEditDialogProps
           <DialogTitle>Editar Unidade</DialogTitle>
         </DialogHeader>
 
-        {initialData && (
+        {unitData && (
           <div className="mt-6">
             <UnitForm
-              initialData={initialData}
+              initialData={unitData}
               isEditing
               onSuccess={() => {
                 toast({
