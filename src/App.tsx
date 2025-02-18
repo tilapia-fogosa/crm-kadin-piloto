@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -16,6 +17,7 @@ import ApiDocsPage from "@/pages/api-docs";
 import Auth from "@/pages/Auth";
 import RegionsPage from "@/pages/regions";
 import NewUnitPage from "@/pages/regions/units/new";
+import EditUnitPage from "@/pages/regions/units/edit";
 import UnitsPage from "@/pages/regions/units";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
