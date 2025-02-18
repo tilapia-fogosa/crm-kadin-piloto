@@ -403,13 +403,6 @@ export type Database = {
             referencedRelation: "units"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "unit_users_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       units: {
@@ -535,7 +528,7 @@ export type Database = {
         | "cartao_debito"
         | "boleto"
         | "recorrencia"
-      user_role: "consultor" | "franqueado"
+      user_role: "consultor" | "franqueado" | "admin"
       user_role_old: "consultor" | "franqueado" | "gestor_comercial"
     }
     CompositeTypes: {
