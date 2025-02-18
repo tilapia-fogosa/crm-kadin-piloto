@@ -1,74 +1,37 @@
 
-import { UsersIcon } from "lucide-react";
+import { RegionsTable } from "@/components/regions/regions-table";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { LeadsChart } from "@/components/dashboard/LeadsChart";
-import LeadsTable from "@/components/leads/LeadsTable";
-import { useLeadsStats } from "@/hooks/useLeadsStats";
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 
-const Index = () => {
-  const { data: stats, isLoading } = useLeadsStats();
-  const queryClient = useQueryClient();
-  const location = useLocation();
-
-  // Refetch stats when component mounts or route changes
-  useEffect(() => {
-    console.log("Dashboard mounted or route changed, refetching data...")
-    queryClient.invalidateQueries({ queryKey: ['leads-stats'] })
-  }, [location.pathname, queryClient]);
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-full">Carregando...</div>;
-  }
-
+export default function Index() {
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="space-y-0.5">
+        <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+        <p className="text-muted-foreground">
+          Gerencie seus leads e acompanhe o desempenho da sua unidade.
+        </p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Mês Atual"
-          value={stats?.oneMonth.total || 0}
-          icon={UsersIcon}
-          comparison={stats?.oneMonth.comparison}
-          description="Comparado ao mesmo mês do ano anterior"
-        />
-        <StatsCard
-          title="3 Meses"
-          value={stats?.threeMonths.total || 0}
-          icon={UsersIcon}
-          comparison={stats?.threeMonths.comparison}
-          description="Comparado aos mesmos 3 meses do ano anterior"
-        />
-        <StatsCard
-          title="6 Meses"
-          value={stats?.sixMonths.total || 0}
-          icon={UsersIcon}
-          comparison={stats?.sixMonths.comparison}
-          description="Comparado aos mesmos 6 meses do ano anterior"
-        />
-        <StatsCard
-          title="12 Meses"
-          value={stats?.twelveMonths.total || 0}
-          icon={UsersIcon}
-          comparison={stats?.twelveMonths.comparison}
-          description="Comparado aos 12 meses anteriores"
-        />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <LeadsChart />
-        <div className="col-span-4 lg:col-span-3">
-          <div className="flex items-center justify-between space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight">Leads Recentes</h2>
+      <Separator className="my-6" />
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="regions">Regiões</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <StatsCard />
           </div>
-          <LeadsTable />
-        </div>
-      </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <LeadsChart className="col-span-4" />
+          </div>
+        </TabsContent>
+        <TabsContent value="regions">
+          <RegionsTable />
+        </TabsContent>
+      </Tabs>
     </div>
   );
-};
-
-export default Index;
+}
