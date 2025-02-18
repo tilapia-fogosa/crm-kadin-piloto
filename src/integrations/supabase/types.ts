@@ -191,6 +191,27 @@ export type Database = {
         }
         Relationships: []
       }
+      regions: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       sales: {
         Row: {
           active: boolean
@@ -296,26 +317,149 @@ export type Database = {
         }
         Relationships: []
       }
-      units: {
+      unit_addresses: {
+        Row: {
+          active: boolean
+          city: string
+          complement: string | null
+          created_at: string
+          id: string
+          neighborhood: string
+          number: string
+          postal_code: string
+          state: string
+          street: string
+          unit_id: string
+        }
+        Insert: {
+          active?: boolean
+          city: string
+          complement?: string | null
+          created_at?: string
+          id?: string
+          neighborhood: string
+          number: string
+          postal_code: string
+          state: string
+          street: string
+          unit_id: string
+        }
+        Update: {
+          active?: boolean
+          city?: string
+          complement?: string | null
+          created_at?: string
+          id?: string
+          neighborhood?: string
+          number?: string
+          postal_code?: string
+          state?: string
+          street?: string
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unit_addresses_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unit_users: {
         Row: {
           active: boolean
           created_at: string
           id: string
-          name: string
+          role: Database["public"]["Enums"]["user_role"]
+          unit_id: string
+          user_id: string
         }
         Insert: {
           active?: boolean
           created_at?: string
           id?: string
-          name: string
+          role: Database["public"]["Enums"]["user_role"]
+          unit_id: string
+          user_id: string
         }
         Update: {
           active?: boolean
           created_at?: string
           id?: string
-          name?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          unit_id?: string
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "unit_users_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      units: {
+        Row: {
+          active: boolean
+          cnpj: string
+          company_name: string
+          created_at: string
+          email: string | null
+          enrollment_fee: number | null
+          id: string
+          legal_representative: string | null
+          material_fee: number | null
+          monthly_fee: number | null
+          name: string
+          phone: string | null
+          region_id: string | null
+          trading_name: string | null
+        }
+        Insert: {
+          active?: boolean
+          cnpj: string
+          company_name: string
+          created_at?: string
+          email?: string | null
+          enrollment_fee?: number | null
+          id?: string
+          legal_representative?: string | null
+          material_fee?: number | null
+          monthly_fee?: number | null
+          name: string
+          phone?: string | null
+          region_id?: string | null
+          trading_name?: string | null
+        }
+        Update: {
+          active?: boolean
+          cnpj?: string
+          company_name?: string
+          created_at?: string
+          email?: string | null
+          enrollment_fee?: number | null
+          id?: string
+          legal_representative?: string | null
+          material_fee?: number | null
+          monthly_fee?: number | null
+          name?: string
+          phone?: string | null
+          region_id?: string | null
+          trading_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "units_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       webhook_credentials: {
         Row: {
@@ -358,6 +502,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
       verify_webhook_credentials: {
         Args: {
           p_username: string
@@ -375,7 +525,7 @@ export type Database = {
         | "cartao_debito"
         | "boleto"
         | "recorrencia"
-      user_role: "consultor" | "franqueado"
+      user_role: "consultor" | "franqueado" | "gestor_comercial"
     }
     CompositeTypes: {
       [_ in never]: never
