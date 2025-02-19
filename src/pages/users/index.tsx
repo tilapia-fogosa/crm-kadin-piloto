@@ -22,20 +22,8 @@ interface User {
   }>;
 }
 
-interface Profile {
-  id: string;
-  full_name: string;
-  email: string;
-  access_blocked: boolean;
-  email_confirmed: boolean;
-}
-
-interface UnitUser {
-  role: string;
-  unit: {
-    name: string;
-  };
-}
+type Profile = Pick<User, 'id' | 'full_name' | 'email' | 'access_blocked' | 'email_confirmed'>;
+type UnitUser = Pick<User['unit_users'][0], 'role' | 'unit'>;
 
 export default function UsersPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -45,13 +33,7 @@ export default function UsersPage() {
     queryFn: async () => {
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select<'profiles', Profile>(`
-          id,
-          full_name,
-          email,
-          access_blocked,
-          email_confirmed
-        `)
+        .select('id, full_name, email, access_blocked, email_confirmed')
         .eq('active', true)
         .order('full_name');
 
@@ -61,12 +43,7 @@ export default function UsersPage() {
         (profiles || []).map(async (profile) => {
           const { data: unitUsers, error: unitError } = await supabase
             .from('unit_users')
-            .select<'unit_users', UnitUser>(`
-              role,
-              unit:units (
-                name
-              )
-            `)
+            .select('role, unit:units(name)')
             .eq('user_id', profile.id)
             .eq('active', true);
 
@@ -79,7 +56,7 @@ export default function UsersPage() {
         })
       );
 
-      return usersWithUnits;
+      return usersWithUnits as User[];
     },
   });
 
