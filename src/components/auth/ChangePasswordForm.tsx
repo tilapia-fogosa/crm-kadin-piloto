@@ -6,12 +6,14 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 export function ChangePasswordForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,19 +37,31 @@ export function ChangePasswordForm() {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({
+      // Atualiza a senha
+      const { error: passwordError } = await supabase.auth.updateUser({
         password: password,
       });
 
-      if (error) throw error;
+      if (passwordError) throw passwordError;
+
+      // Atualiza o flag must_change_password no perfil
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não encontrado');
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ must_change_password: false })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
 
       toast({
         title: "Sucesso",
         description: "Senha alterada com sucesso",
       });
 
-      // Redireciona para o dashboard após trocar a senha
-      window.location.href = '/dashboard';
+      // Redireciona para o dashboard usando o navigate
+      navigate("/dashboard", { replace: true });
     } catch (error: any) {
       console.error("Erro ao alterar senha:", error);
       toast({
