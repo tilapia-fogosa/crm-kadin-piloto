@@ -7,23 +7,16 @@ import { CreateUserDialog } from "@/components/users/create-user-dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminRoute } from "@/components/auth/AdminRoute";
+import { Database } from "@/integrations/supabase/types";
 
-interface User {
-  id: string;
-  full_name: string;
-  email: string;
-  access_blocked: boolean;
-  email_confirmed: boolean;
-  unit_users: Array<{
-    role: string;
-    unit: {
-      name: string;
-    };
-  }>;
+type Profile = Database['public']['Tables']['profiles']['Row'];
+type UnitUser = Database['public']['Tables']['unit_users']['Row'] & {
+  unit: Pick<Database['public']['Tables']['units']['Row'], 'name'>;
+};
+
+interface User extends Profile {
+  unit_users: UnitUser[];
 }
-
-type Profile = Pick<User, 'id' | 'full_name' | 'email' | 'access_blocked' | 'email_confirmed'>;
-type UnitUser = Pick<User['unit_users'][0], 'role' | 'unit'>;
 
 export default function UsersPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -31,6 +24,7 @@ export default function UsersPage() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
+      // Primeiro, buscar os perfis
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name, email, access_blocked, email_confirmed')
@@ -39,6 +33,7 @@ export default function UsersPage() {
 
       if (profilesError) throw profilesError;
 
+      // Depois, buscar as unidades de cada perfil
       const usersWithUnits = await Promise.all(
         (profiles || []).map(async (profile) => {
           const { data: unitUsers, error: unitError } = await supabase
@@ -56,7 +51,7 @@ export default function UsersPage() {
         })
       );
 
-      return usersWithUnits as User[];
+      return usersWithUnits;
     },
   });
 
