@@ -8,33 +8,65 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminRoute } from "@/components/auth/AdminRoute";
 
+interface User {
+  id: string;
+  full_name: string;
+  email: string;
+  access_blocked: boolean;
+  email_confirmed: boolean;
+  unit_users: Array<{
+    role: string;
+    unit: {
+      name: string;
+    };
+  }>;
+}
+
 export default function UsersPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Primeiro, buscar todos os perfis ativos
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
           id,
           full_name,
           email,
           access_blocked,
-          email_confirmed,
-          unit_users (
-            unit_id,
-            role,
-            unit:units (
-              name
-            )
-          )
+          email_confirmed
         `)
         .eq('active', true)
         .order('full_name');
 
-      if (error) throw error;
-      return data;
+      if (profilesError) throw profilesError;
+
+      // Para cada perfil, buscar suas unidades e funções
+      const usersWithUnits = await Promise.all(
+        profiles.map(async (profile) => {
+          const { data: unitUsers, error: unitError } = await supabase
+            .from('unit_users')
+            .select(`
+              role,
+              unit:units (
+                name
+              )
+            `)
+            .eq('user_id', profile.id)
+            .eq('active', true);
+
+          if (unitError) throw unitError;
+
+          return {
+            ...profile,
+            unit_users: unitUsers || []
+          };
+        })
+      );
+
+      return usersWithUnits as User[];
     },
   });
 
