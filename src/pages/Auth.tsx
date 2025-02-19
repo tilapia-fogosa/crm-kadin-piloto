@@ -1,13 +1,9 @@
 
 import { useState, useEffect } from "react";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { RequestUserDialog } from "@/components/auth/RequestUserDialog";
 import { useAuthState } from "@/hooks/useAuthState";
 
 export default function Auth() {
-  const [showRequestDialog, setShowRequestDialog] = useState(false);
   const {
     email,
     setEmail,
@@ -37,15 +33,8 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Bem-vindo</CardTitle>
-          <CardDescription className="text-center">
-            Entre com sua conta para acessar o sistema
-          </CardDescription>
-        </CardHeader>
-        
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-sm p-4">
         <LoginForm
           email={email}
           setEmail={setEmail}
@@ -56,22 +45,7 @@ export default function Auth() {
           toast={toast}
           navigate={navigate}
         />
-
-        <div className="px-6 pb-6 pt-2">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => setShowRequestDialog(true)}
-          >
-            Solicite seu Usuário Aqui
-          </Button>
-        </div>
-      </Card>
-
-      <RequestUserDialog
-        open={showRequestDialog}
-        onOpenChange={setShowRequestDialog}
-      />
+      </div>
     </div>
   );
 }
