@@ -13,41 +13,41 @@ export function useAuthState() {
   const location = useLocation();
   const { toast } = useToast();
 
+  // Verifica sessão inicial apenas para proteção de rotas
   const { data: session, isLoading: isCheckingSession } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      console.log("Sessão atual:", session);
+      console.log("Verificação inicial de sessão:", session);
       return session;
     },
   });
 
+  // Efeito para proteção de rotas - redireciona para dashboard se já estiver logado e tentar acessar /auth
   useEffect(() => {
-    // Se já tiver uma sessão e estiver na página de auth, redireciona para o dashboard
     if (session && location.pathname === '/auth') {
-      console.log("Sessão existente detectada na página de auth, redirecionando para dashboard");
+      console.log("Tentativa de acesso à página de auth com sessão ativa, redirecionando para dashboard");
       navigate("/dashboard", { replace: true });
     }
-  }, [session, navigate, location]);
+  }, [session, location.pathname, navigate]);
 
+  // Gerenciamento de eventos de autenticação
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      console.log("Evento de autenticação:", event, "Sessão:", currentSession);
+      console.log("Evento de autenticação:", event);
       
+      // Tratamento específico para login bem-sucedido
       if (event === 'SIGNED_IN' && currentSession) {
-        console.log("Usuário logado com sucesso, forçando redirecionamento para dashboard");
-        // Forçar atualização do estado antes do redirecionamento
+        console.log("Login realizado com sucesso");
         toast({
           title: "Login realizado com sucesso!",
           description: "Redirecionando para o dashboard...",
         });
-        
-        // Pequeno delay para garantir que o toast seja mostrado
-        setTimeout(() => {
-          navigate("/dashboard", { replace: true });
-        }, 100);
-      } else if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !currentSession)) {
-        console.log("Sessão expirada ou usuário deslogado");
+        navigate("/dashboard", { replace: true });
+      } 
+      // Tratamento de logout ou expiração de sessão
+      else if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !currentSession)) {
+        console.log("Logout ou sessão expirada");
         if (location.pathname !== '/auth') {
           toast({
             title: "Sessão expirada",
@@ -56,12 +56,13 @@ export function useAuthState() {
           navigate("/auth", { replace: true });
         }
       }
+      // Ignora INITIAL_SESSION para evitar redirecionamentos desnecessários
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast, location]);
+  }, [navigate, toast, location.pathname]);
 
   const resetForm = () => {
     setEmail("");
