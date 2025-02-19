@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
 export function ChangePasswordForm() {
   const [password, setPassword] = useState("");
@@ -14,6 +15,23 @@ export function ChangePasswordForm() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Verifica a sessão usando React Query
+  const { data: session, isLoading: isCheckingSession } = useQuery({
+    queryKey: ['session'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    },
+  });
+
+  // Redireciona para /auth se não houver sessão
+  useEffect(() => {
+    if (!isCheckingSession && !session) {
+      console.log("Sessão não encontrada, redirecionando para /auth");
+      navigate("/auth", { replace: true });
+    }
+  }, [session, isCheckingSession, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +53,16 @@ export function ChangePasswordForm() {
       return;
     }
 
+    if (!session) {
+      toast({
+        title: "Erro",
+        description: "Sessão expirada. Por favor, faça login novamente.",
+        variant: "destructive",
+      });
+      navigate("/auth", { replace: true });
+      return;
+    }
+
     setLoading(true);
     try {
       // Atualiza a senha
@@ -45,13 +73,10 @@ export function ChangePasswordForm() {
       if (passwordError) throw passwordError;
 
       // Atualiza o flag must_change_password no perfil
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não encontrado');
-
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ must_change_password: false })
-        .eq('id', user.id);
+        .eq('id', session.user.id);
 
       if (profileError) throw profileError;
 
@@ -73,6 +98,11 @@ export function ChangePasswordForm() {
       setLoading(false);
     }
   };
+
+  // Mostra loading enquanto verifica a sessão
+  if (isCheckingSession) {
+    return <div>Carregando...</div>;
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
