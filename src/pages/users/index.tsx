@@ -22,6 +22,21 @@ interface User {
   }>;
 }
 
+interface Profile {
+  id: string;
+  full_name: string;
+  email: string;
+  access_blocked: boolean;
+  email_confirmed: boolean;
+}
+
+interface UnitUser {
+  role: string;
+  unit: {
+    name: string;
+  };
+}
+
 export default function UsersPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
@@ -30,7 +45,7 @@ export default function UsersPage() {
     queryFn: async () => {
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
+        .select<'profiles', Profile>(`
           id,
           full_name,
           email,
@@ -42,12 +57,11 @@ export default function UsersPage() {
 
       if (profilesError) throw profilesError;
 
-      // Para cada perfil, buscar suas unidades e funções
       const usersWithUnits = await Promise.all(
-        profiles.map(async (profile) => {
+        (profiles || []).map(async (profile) => {
           const { data: unitUsers, error: unitError } = await supabase
             .from('unit_users')
-            .select(`
+            .select<'unit_users', UnitUser>(`
               role,
               unit:units (
                 name
@@ -65,7 +79,7 @@ export default function UsersPage() {
         })
       );
 
-      return usersWithUnits as User[];
+      return usersWithUnits;
     },
   });
 
