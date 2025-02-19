@@ -28,7 +28,6 @@ export default function UsersPage() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // Primeiro, buscar todos os perfis ativos
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
