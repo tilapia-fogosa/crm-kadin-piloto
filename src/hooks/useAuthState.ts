@@ -22,21 +22,22 @@ export function useAuthState() {
   });
 
   useEffect(() => {
-    // Inscreve-se para mudanças na sessão
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log("Evento de autenticação:", event);
       
-      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !currentSession) {
+      if (event === 'SIGNED_IN') {
+        console.log("Usuário logado com sucesso");
+        navigate("/dashboard", { replace: true });
+      } else if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !currentSession)) {
         console.log("Sessão expirada ou usuário deslogado");
         toast({
           title: "Sessão expirada",
           description: "Sua sessão expirou. Por favor, faça login novamente.",
         });
-        navigate("/auth");
+        navigate("/auth", { replace: true });
       }
     });
 
-    // Cleanup da inscrição quando o componente for desmontado
     return () => {
       subscription.unsubscribe();
     };

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 interface LoginFormProps {
   email: string;
@@ -104,6 +105,7 @@ export function LoginForm({
             placeholder="seu@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
             required
           />
         </div>
@@ -114,13 +116,21 @@ export function LoginForm({
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
             required
           />
         </div>
       </CardContent>
       <CardFooter>
         <Button className="w-full" type="submit" disabled={loading}>
-          {loading ? "Entrando..." : "Entrar"}
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Entrando...
+            </>
+          ) : (
+            "Entrar"
+          )}
         </Button>
       </CardFooter>
     </form>

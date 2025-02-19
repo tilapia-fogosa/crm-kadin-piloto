@@ -1,12 +1,13 @@
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { RegisterForm } from "@/components/auth/RegisterForm";
+import { RequestUserDialog } from "@/components/auth/RequestUserDialog";
 import { useAuthState } from "@/hooks/useAuthState";
 
 export default function Auth() {
+  const [showRequestDialog, setShowRequestDialog] = useState(false);
   const {
     email,
     setEmail,
@@ -18,13 +19,12 @@ export default function Auth() {
     isCheckingSession,
     navigate,
     toast,
-    resetForm
   } = useAuthState();
 
   useEffect(() => {
     if (session) {
       console.log("Usuário autenticado, redirecionando para dashboard");
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     }
   }, [session, navigate]);
 
@@ -45,37 +45,33 @@ export default function Auth() {
             Entre com sua conta para acessar o sistema
           </CardDescription>
         </CardHeader>
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Cadastro</TabsTrigger>
-          </TabsList>
-          <TabsContent value="login">
-            <LoginForm
-              email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
-              loading={loading}
-              setLoading={setLoading}
-              toast={toast}
-              navigate={navigate}
-            />
-          </TabsContent>
-          <TabsContent value="register">
-            <RegisterForm
-              email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
-              loading={loading}
-              setLoading={setLoading}
-              toast={toast}
-              resetForm={resetForm}
-            />
-          </TabsContent>
-        </Tabs>
+        
+        <LoginForm
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          loading={loading}
+          setLoading={setLoading}
+          toast={toast}
+          navigate={navigate}
+        />
+
+        <div className="px-6 pb-6 pt-2">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setShowRequestDialog(true)}
+          >
+            Solicite seu Usuário Aqui
+          </Button>
+        </div>
       </Card>
+
+      <RequestUserDialog
+        open={showRequestDialog}
+        onOpenChange={setShowRequestDialog}
+      />
     </div>
   );
 }
