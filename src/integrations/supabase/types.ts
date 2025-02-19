@@ -163,32 +163,44 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_blocked: boolean | null
           avatar_url: string | null
           created_at: string
           email: string | null
+          email_confirmed: boolean | null
+          first_access_at: string | null
           full_name: string | null
           id: string
           is_admin: boolean | null
+          must_change_password: boolean | null
           role: string | null
           updated_at: string
         }
         Insert: {
+          access_blocked?: boolean | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          email_confirmed?: boolean | null
+          first_access_at?: string | null
           full_name?: string | null
           id: string
           is_admin?: boolean | null
+          must_change_password?: boolean | null
           role?: string | null
           updated_at?: string
         }
         Update: {
+          access_blocked?: boolean | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          email_confirmed?: boolean | null
+          first_access_at?: string | null
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
+          must_change_password?: boolean | null
           role?: string | null
           updated_at?: string
         }
@@ -473,15 +485,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      create_unit_user: {
+      change_initial_password: {
         Args: {
-          p_email: string
-          p_full_name: string
-          p_unit_id: string
-          p_role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+          new_password: string
         }
-        Returns: string
+        Returns: boolean
       }
+      create_unit_user:
+        | {
+            Args: {
+              p_email: string
+              p_full_name: string
+              p_unit_id: string
+              p_role: Database["public"]["Enums"]["user_role"]
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_email: string
+              p_full_name: string
+              p_unit_ids: string[]
+              p_role: Database["public"]["Enums"]["user_role"]
+            }
+            Returns: string
+          }
       get_user_access_info: {
         Args: {
           user_id: string
