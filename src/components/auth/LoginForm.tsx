@@ -60,6 +60,7 @@ export function LoginForm({
           title: "Erro no login",
           description: errorMessage,
         });
+        setLoading(false);
         return;
       }
 
@@ -70,17 +71,14 @@ export function LoginForm({
           title: "Erro no login",
           description: "Erro ao obter dados do usuário",
         });
+        setLoading(false);
         return;
       }
 
       console.log("Login bem sucedido:", data);
       
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Redirecionando para o dashboard...",
-      });
-
-      navigate("/dashboard", { replace: true });
+      // O redirecionamento agora é tratado pelo useAuthState
+      // através do evento SIGNED_IN
 
     } catch (error: any) {
       console.error("Erro inesperado no login:", error);

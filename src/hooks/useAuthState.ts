@@ -22,11 +22,23 @@ export function useAuthState() {
   });
 
   useEffect(() => {
+    // Se já tiver uma sessão, redireciona para o dashboard
+    if (session) {
+      console.log("Sessão existente detectada, redirecionando para dashboard");
+      navigate("/dashboard", { replace: true });
+    }
+  }, [session, navigate]);
+
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      console.log("Evento de autenticação:", event);
+      console.log("Evento de autenticação:", event, "Sessão:", currentSession);
       
-      if (event === 'SIGNED_IN') {
-        console.log("Usuário logado com sucesso");
+      if (event === 'SIGNED_IN' && currentSession) {
+        console.log("Usuário logado com sucesso, redirecionando");
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Redirecionando para o dashboard...",
+        });
         navigate("/dashboard", { replace: true });
       } else if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !currentSession)) {
         console.log("Sessão expirada ou usuário deslogado");
