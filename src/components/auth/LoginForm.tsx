@@ -62,7 +62,6 @@ export function LoginForm({
           type: 'error',
           text: errorMessage
         });
-        setLoading(false);
         return;
       }
 
@@ -72,7 +71,6 @@ export function LoginForm({
           type: 'error',
           text: "Erro ao obter dados do usuário"
         });
-        setLoading(false);
         return;
       }
 
@@ -81,6 +79,12 @@ export function LoginForm({
         type: 'success',
         text: "Login realizado com sucesso! Redirecionando..."
       });
+
+      // Aguarda 1.5 segundos para mostrar a mensagem antes de redirecionar
+      setTimeout(() => {
+        // Força uma atualização da página e redireciona para o dashboard
+        window.location.href = '/dashboard';
+      }, 1500);
       
     } catch (error: any) {
       console.error("Erro inesperado no login:", error);
