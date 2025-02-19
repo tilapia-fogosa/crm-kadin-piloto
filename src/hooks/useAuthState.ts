@@ -34,7 +34,7 @@ export function useAuthState() {
       console.log("Evento de autenticação:", event, "Sessão:", currentSession);
       
       if (event === 'SIGNED_IN' && currentSession) {
-        console.log("Usuário logado com sucesso, redirecionando");
+        console.log("Usuário logado com sucesso, redirecionando para dashboard");
         toast({
           title: "Login realizado com sucesso!",
           description: "Redirecionando para o dashboard...",
