@@ -18,6 +18,7 @@ import Auth from "@/pages/Auth";
 import RegionsPage from "@/pages/regions";
 import NewUnitPage from "@/pages/regions/units/new";
 import UnitsPage from "@/pages/regions/units";
+import ChangePassword from "@/pages/auth/ChangePassword";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = new QueryClient({
@@ -39,6 +40,11 @@ function App() {
             <div className="flex min-h-screen w-full">
               <Routes>
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/change-password" element={
+                  <ProtectedRoute>
+                    <ChangePassword />
+                  </ProtectedRoute>
+                } />
                 
                 <Route path="/" element={
                   <ProtectedRoute>
