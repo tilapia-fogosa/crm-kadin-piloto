@@ -18,6 +18,7 @@ interface UnitUser {
   role: string;
   unit_id: string;
   units: Unit;
+  active: boolean;
 }
 
 interface Profile {
@@ -59,6 +60,7 @@ export default function UsersPage() {
           unit_users (
             role,
             unit_id,
+            active,
             units (
               id,
               name
@@ -76,7 +78,9 @@ export default function UsersPage() {
       // Mapear os resultados para o formato esperado
       const formattedUsers = (data || []).map((profile: Profile) => {
         // Encontrar o primeiro unit_user ativo
-        const activeUnitUser = profile.unit_users?.find(uu => uu.units?.name);
+        const activeUnitUser = profile.unit_users?.find(uu => uu.active && uu.units?.name);
+        
+        console.log('Profile:', profile.email, 'Active unit user:', activeUnitUser);
         
         return {
           id: profile.id,
