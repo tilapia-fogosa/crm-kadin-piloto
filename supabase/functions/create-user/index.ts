@@ -10,7 +10,6 @@ const corsHeaders = {
 interface CreateUserRequest {
   email: string
   fullName: string
-  unitIds: string[]
   role: 'consultor' | 'franqueado' | 'admin'
 }
 
@@ -25,7 +24,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { email, fullName, unitIds, role } = await req.json() as CreateUserRequest
+    const { email, fullName, role } = await req.json() as CreateUserRequest
 
     // Criar usuário com senha padrão
     const { data: authUser, error: createError } = await supabase.auth.admin.createUser({
@@ -36,12 +35,11 @@ serve(async (req) => {
 
     if (createError) throw createError
 
-    // Criar perfil e associações com unidades usando a função do banco
+    // Usar a nova função simplificada para criar usuário e associar à unidade
     const { data, error: dbError } = await supabase
-      .rpc('create_unit_user', {
+      .rpc('create_unit_user_simple', {
         p_email: email,
         p_full_name: fullName,
-        p_unit_ids: unitIds,
         p_role: role,
       })
 
