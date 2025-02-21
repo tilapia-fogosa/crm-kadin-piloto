@@ -553,6 +553,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_user: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
       user_has_unit_access: {
         Args: {
           unit_id: string

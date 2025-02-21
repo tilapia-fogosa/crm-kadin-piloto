@@ -41,20 +41,15 @@ serve(async (req) => {
       throw new Error('Erro ao verificar usuário')
     }
 
-    // Verificar se o usuário é admin em alguma unidade
-    const { data: adminCheck, error: adminError } = await supabase
-      .from('unit_users')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .eq('active', true)
-      .limit(1)
+    // Verificar se o usuário é admin usando a nova função
+    const { data: isAdmin, error: adminCheckError } = await supabase
+      .rpc('is_admin_user', { user_id: user.id })
 
-    if (adminError) {
+    if (adminCheckError) {
       throw new Error('Erro ao verificar permissões de admin')
     }
 
-    if (!adminCheck || adminCheck.length === 0) {
+    if (!isAdmin) {
       throw new Error('Apenas administradores podem criar usuários')
     }
 
