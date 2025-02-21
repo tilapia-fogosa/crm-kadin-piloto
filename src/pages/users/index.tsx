@@ -8,26 +8,28 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminRoute } from "@/components/auth/AdminRoute";
 
-// Interface para a estrutura aninhada retornada pela query
-interface UnitData {
+// Interfaces para representar a estrutura exata dos dados
+interface Unit {
+  id: string;
   name: string;
 }
 
-interface UnitUserData {
+interface UnitUser {
   role: string;
-  units: UnitData;
+  unit_id: string;
+  units: Unit;
 }
 
-interface ProfileWithUnit {
+interface Profile {
   id: string;
   full_name: string;
   email: string;
   access_blocked: boolean;
   email_confirmed: boolean;
-  unit_users: UnitUserData[];
+  unit_users: UnitUser[];
 }
 
-// Tipo para o formato final dos usuários
+// Tipo para o formato final dos usuários na tabela
 type User = {
   id: string;
   full_name: string;
@@ -54,14 +56,15 @@ export default function UsersPage() {
           email,
           access_blocked,
           email_confirmed,
-          unit_users!inner (
+          unit_users (
             role,
+            unit_id,
             units (
+              id,
               name
             )
           )
-        `)
-        .eq('unit_users.active', true);
+        `);
 
       if (error) {
         console.error('Erro ao buscar usuários:', error);
@@ -71,15 +74,20 @@ export default function UsersPage() {
       console.log('Dados retornados:', data);
 
       // Mapear os resultados para o formato esperado
-      const formattedUsers = (data || []).map((profile: ProfileWithUnit) => ({
-        id: profile.id,
-        full_name: profile.full_name,
-        email: profile.email,
-        access_blocked: profile.access_blocked,
-        email_confirmed: profile.email_confirmed,
-        role: profile.unit_users[0]?.role || 'consultor',
-        unit_name: profile.unit_users[0]?.units?.name || 'Unidade Padrão'
-      }));
+      const formattedUsers = (data || []).map((profile: Profile) => {
+        // Encontrar o primeiro unit_user ativo
+        const activeUnitUser = profile.unit_users?.find(uu => uu.units?.name);
+        
+        return {
+          id: profile.id,
+          full_name: profile.full_name,
+          email: profile.email,
+          access_blocked: profile.access_blocked,
+          email_confirmed: profile.email_confirmed,
+          role: activeUnitUser?.role || 'consultor',
+          unit_name: activeUnitUser?.units?.name || 'Unidade Padrão'
+        };
+      });
 
       console.log('Dados formatados:', formattedUsers);
       return formattedUsers as User[];
