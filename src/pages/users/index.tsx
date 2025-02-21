@@ -19,6 +19,21 @@ type User = {
   unit_name: string;
 };
 
+// Tipo para o resultado da query do Supabase
+type ProfileWithUnit = {
+  id: string;
+  full_name: string;
+  email: string;
+  access_blocked: boolean;
+  email_confirmed: boolean;
+  unit_users: Array<{
+    role: string;
+    unit: {
+      name: string;
+    };
+  }>;
+};
+
 export default function UsersPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
@@ -44,7 +59,7 @@ export default function UsersPage() {
       if (error) throw error;
 
       // Transformar os dados para o formato simplificado
-      return (data || []).map(profile => ({
+      return ((data || []) as ProfileWithUnit[]).map(profile => ({
         id: profile.id,
         full_name: profile.full_name,
         email: profile.email,
