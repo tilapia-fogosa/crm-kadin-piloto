@@ -9,14 +9,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminRoute } from "@/components/auth/AdminRoute";
 import { Database } from "@/integrations/supabase/types";
 
-// Define flat types to avoid circular references
-type Profile = Database['public']['Tables']['profiles']['Row'];
-type Unit = Database['public']['Tables']['units']['Row'];
-type UnitUser = Omit<Database['public']['Tables']['unit_users']['Row'], 'unit'> & {
-  unit: Pick<Unit, 'name'>;
+// Definir tipos de forma plana para evitar referências circulares
+type Profile = {
+  id: string;
+  full_name: string;
+  email: string;
+  access_blocked: boolean;
+  email_confirmed: boolean;
 };
 
-interface User extends Omit<Profile, 'unit_users'> {
+type UnitUser = {
+  role: string;
+  unit: {
+    name: string;
+  };
+};
+
+interface User extends Profile {
   unit_users: UnitUser[];
 }
 
@@ -53,7 +62,7 @@ export default function UsersPage() {
         })
       );
 
-      return usersWithUnits as User[];
+      return usersWithUnits;
     },
   });
 
