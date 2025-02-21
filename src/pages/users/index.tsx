@@ -25,6 +25,9 @@ export default function UsersPage() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
+      console.log('Iniciando busca de usuários');
+      
+      // Buscar profiles e unit_users em uma única query usando join
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -32,37 +35,36 @@ export default function UsersPage() {
           full_name,
           email,
           access_blocked,
-          email_confirmed
-        `);
-
-      if (error) throw error;
-
-      // Buscar informações de unidade e role separadamente
-      const usersWithRoles = await Promise.all((data || []).map(async (profile) => {
-        const { data: unitData } = await supabase
-          .from('unit_users')
-          .select(`
+          email_confirmed,
+          unit_users!inner (
             role,
             units (
               name
             )
-          `)
-          .eq('user_id', profile.id)
-          .eq('active', true)
-          .single();
+          )
+        `)
+        .eq('unit_users.active', true);
 
-        return {
-          id: profile.id,
-          full_name: profile.full_name,
-          email: profile.email,
-          access_blocked: profile.access_blocked,
-          email_confirmed: profile.email_confirmed,
-          role: unitData?.role || 'consultor',
-          unit_name: unitData?.units?.name || 'Unidade Padrão'
-        };
+      if (error) {
+        console.error('Erro ao buscar usuários:', error);
+        throw error;
+      }
+
+      console.log('Dados retornados:', data);
+
+      // Mapear os resultados para o formato esperado
+      const formattedUsers = (data || []).map(profile => ({
+        id: profile.id,
+        full_name: profile.full_name,
+        email: profile.email,
+        access_blocked: profile.access_blocked,
+        email_confirmed: profile.email_confirmed,
+        role: profile.unit_users[0]?.role || 'consultor',
+        unit_name: profile.unit_users[0]?.units?.name || 'Unidade Padrão'
       }));
 
-      return usersWithRoles as User[];
+      console.log('Dados formatados:', formattedUsers);
+      return formattedUsers as User[];
     },
   });
 
