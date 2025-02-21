@@ -46,7 +46,6 @@ export default function UsersPage() {
     queryFn: async () => {
       console.log('Iniciando busca de usuários');
       
-      // Buscar profiles e unit_users em uma única query usando join
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -55,7 +54,7 @@ export default function UsersPage() {
           email,
           access_blocked,
           email_confirmed,
-          unit_users!inner (
+          unit_users (
             role,
             units (
               name
@@ -72,14 +71,14 @@ export default function UsersPage() {
       console.log('Dados retornados:', data);
 
       // Mapear os resultados para o formato esperado
-      const formattedUsers = (data || []).map((profile: ProfileWithUnit) => ({
+      const formattedUsers = (data || []).map((profile: any) => ({
         id: profile.id,
         full_name: profile.full_name,
         email: profile.email,
         access_blocked: profile.access_blocked,
         email_confirmed: profile.email_confirmed,
-        role: profile.unit_users[0]?.role || 'consultor',
-        unit_name: profile.unit_users[0]?.units?.name || 'Unidade Padrão'
+        role: profile.unit_users?.[0]?.role || 'consultor',
+        unit_name: profile.unit_users?.[0]?.units?.name || 'Unidade Padrão'
       }));
 
       console.log('Dados formatados:', formattedUsers);
