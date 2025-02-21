@@ -23,14 +23,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { MultipleUnitSelect } from "./MultipleUnitSelect";
-import { useQuery } from "@tanstack/react-query";
 
 const formSchema = z.object({
   fullName: z.string().min(1, "Nome é obrigatório"),
   email: z.string().email("Email inválido"),
   role: z.enum(["consultor", "franqueado", "admin"]),
-  unitIds: z.array(z.string()).min(1, "Selecione pelo menos uma unidade"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -43,22 +40,6 @@ export function CreateUserForm() {
     defaultValues: {
       fullName: "",
       email: "",
-      unitIds: [],
-    },
-  });
-
-  // Busca unidades disponíveis
-  const { data: units, isLoading: loadingUnits } = useQuery({
-    queryKey: ['available-units'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('units')
-        .select('id, name')
-        .eq('active', true)
-        .order('name');
-      
-      if (error) throw error;
-      return data;
     },
   });
 
@@ -69,7 +50,6 @@ export function CreateUserForm() {
         body: {
           email: values.email,
           fullName: values.fullName,
-          unitIds: values.unitIds,
           role: values.role,
         },
       });
@@ -93,10 +73,6 @@ export function CreateUserForm() {
       setLoading(false);
     }
   };
-
-  if (loadingUnits) {
-    return <div>Carregando...</div>;
-  }
 
   return (
     <Form {...form}>
@@ -147,24 +123,6 @@ export function CreateUserForm() {
                   <SelectItem value="admin">Administrador</SelectItem>
                 </SelectContent>
               </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="unitIds"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Unidades</FormLabel>
-              <FormControl>
-                <MultipleUnitSelect
-                  units={units || []}
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              </FormControl>
               <FormMessage />
             </FormItem>
           )}

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import {
   Menu,
   Plus,
   Link2,
-  Globe,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { useSidebar } from "./ui/sidebar";
@@ -28,15 +28,6 @@ const navigation = [
     subItems: [
       { name: "Novo Cliente", href: "/clients/new", icon: Plus },
       { name: "Origens", href: "/clients/sources", icon: Link2 }
-    ]
-  },
-  { 
-    name: "Regiões", 
-    href: "/regions", 
-    icon: Globe,
-    subItems: [
-      { name: "Cadastrar Unidade", href: "/regions/units/new", icon: Plus },
-      { name: "Todas Unidades", href: "/regions/units", icon: Users }
     ]
   },
   { name: "Usuários", href: "/users", icon: Users },
