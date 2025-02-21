@@ -60,6 +60,15 @@ serve(async (req) => {
 
     const { email, fullName, role } = await req.json() as CreateUserRequest
 
+    // Criar usuário com senha padrão usando auth.admin
+    const { data: authUser, error: createAuthError } = await supabase.auth.admin.createUser({
+      email,
+      password: 'Mudar@123',
+      email_confirm: true,
+    })
+
+    if (createAuthError) throw createAuthError
+
     // Criar usuário usando a função RPC
     const { data, error: createError } = await supabase
       .rpc('create_unit_user_simple', {
