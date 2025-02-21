@@ -16,12 +16,8 @@ interface User {
   email: string;
   access_blocked: boolean;
   email_confirmed: boolean;
-  unit_users: Array<{
-    role: string;
-    unit: {
-      name: string;
-    };
-  }>;
+  role: string;
+  unit_name: string;
 }
 
 interface UsersTableProps {
@@ -37,8 +33,8 @@ export function UsersTable({ users }: UsersTableProps) {
             <TableHead>Nome</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Unidades</TableHead>
-            <TableHead>Funções</TableHead>
+            <TableHead>Unidade</TableHead>
+            <TableHead>Função</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -58,12 +54,8 @@ export function UsersTable({ users }: UsersTableProps) {
                   )}
                 </div>
               </TableCell>
-              <TableCell>
-                {user.unit_users.map(u => u.unit.name).join(", ")}
-              </TableCell>
-              <TableCell>
-                {user.unit_users.map(u => u.role).join(", ")}
-              </TableCell>
+              <TableCell>{user.unit_name}</TableCell>
+              <TableCell>{user.role}</TableCell>
               <TableCell className="text-right">
                 <UserActions user={user} />
               </TableCell>

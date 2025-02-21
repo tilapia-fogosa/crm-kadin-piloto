@@ -7,27 +7,17 @@ import { CreateUserDialog } from "@/components/users/create-user-dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminRoute } from "@/components/auth/AdminRoute";
-import { Database } from "@/integrations/supabase/types";
 
-// Definir tipos de forma plana para evitar referências circulares
-type Profile = {
+// Tipo simplificado para usuários
+type User = {
   id: string;
   full_name: string;
   email: string;
   access_blocked: boolean;
   email_confirmed: boolean;
-};
-
-type UnitUser = {
   role: string;
-  unit: {
-    name: string;
-  };
+  unit_name: string;
 };
-
-interface User extends Profile {
-  unit_users: UnitUser[];
-}
 
 export default function UsersPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -35,34 +25,34 @@ export default function UsersPage() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // Primeiro, buscar os perfis
-      const { data: profiles, error: profilesError } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, email, access_blocked, email_confirmed')
-        .eq('active', true)
+        .select(`
+          id,
+          full_name,
+          email,
+          access_blocked,
+          email_confirmed,
+          unit_users!inner (
+            role,
+            unit:units(name)
+          )
+        `)
+        .eq('unit_users.active', true)
         .order('full_name');
 
-      if (profilesError) throw profilesError;
+      if (error) throw error;
 
-      // Depois, buscar as unidades de cada perfil
-      const usersWithUnits = await Promise.all(
-        (profiles || []).map(async (profile) => {
-          const { data: unitUsers, error: unitError } = await supabase
-            .from('unit_users')
-            .select('role, unit:units(name)')
-            .eq('user_id', profile.id)
-            .eq('active', true);
-
-          if (unitError) throw unitError;
-
-          return {
-            ...profile,
-            unit_users: unitUsers || []
-          };
-        })
-      );
-
-      return usersWithUnits;
+      // Transformar os dados para o formato simplificado
+      return (data || []).map(profile => ({
+        id: profile.id,
+        full_name: profile.full_name,
+        email: profile.email,
+        access_blocked: profile.access_blocked,
+        email_confirmed: profile.email_confirmed,
+        role: profile.unit_users[0]?.role || 'consultor',
+        unit_name: profile.unit_users[0]?.unit?.name || 'Unidade Padrão'
+      })) as User[];
     },
   });
 
