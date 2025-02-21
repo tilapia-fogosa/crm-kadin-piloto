@@ -511,6 +511,14 @@ export type Database = {
             }
             Returns: string
           }
+      create_unit_user_simple: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: string
+      }
       get_user_access_info: {
         Args: {
           user_id: string
