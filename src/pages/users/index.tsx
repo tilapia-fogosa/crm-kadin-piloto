@@ -8,7 +8,26 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminRoute } from "@/components/auth/AdminRoute";
 
-// Tipo simplificado para usuários
+// Interface para a estrutura aninhada retornada pela query
+interface UnitData {
+  name: string;
+}
+
+interface UnitUserData {
+  role: string;
+  units: UnitData;
+}
+
+interface ProfileWithUnit {
+  id: string;
+  full_name: string;
+  email: string;
+  access_blocked: boolean;
+  email_confirmed: boolean;
+  unit_users: UnitUserData[];
+}
+
+// Tipo para o formato final dos usuários
 type User = {
   id: string;
   full_name: string;
@@ -53,7 +72,7 @@ export default function UsersPage() {
       console.log('Dados retornados:', data);
 
       // Mapear os resultados para o formato esperado
-      const formattedUsers = (data || []).map(profile => ({
+      const formattedUsers = (data || []).map((profile: ProfileWithUnit) => ({
         id: profile.id,
         full_name: profile.full_name,
         email: profile.email,
