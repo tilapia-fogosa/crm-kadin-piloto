@@ -19,21 +19,6 @@ type User = {
   unit_name: string;
 };
 
-// Tipo para o resultado da query do Supabase
-type ProfileWithUnit = {
-  id: string;
-  full_name: string;
-  email: string;
-  access_blocked: boolean;
-  email_confirmed: boolean;
-  unit_users: Array<{
-    role: string;
-    unit: {
-      name: string;
-    };
-  }>;
-};
-
 export default function UsersPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
@@ -47,27 +32,37 @@ export default function UsersPage() {
           full_name,
           email,
           access_blocked,
-          email_confirmed,
-          unit_users!inner (
-            role,
-            unit:units(name)
-          )
-        `)
-        .eq('unit_users.active', true)
-        .order('full_name');
+          email_confirmed
+        `);
 
       if (error) throw error;
 
-      // Transformar os dados para o formato simplificado
-      return ((data || []) as ProfileWithUnit[]).map(profile => ({
-        id: profile.id,
-        full_name: profile.full_name,
-        email: profile.email,
-        access_blocked: profile.access_blocked,
-        email_confirmed: profile.email_confirmed,
-        role: profile.unit_users[0]?.role || 'consultor',
-        unit_name: profile.unit_users[0]?.unit?.name || 'Unidade Padrão'
-      })) as User[];
+      // Buscar informações de unidade e role separadamente
+      const usersWithRoles = await Promise.all((data || []).map(async (profile) => {
+        const { data: unitData } = await supabase
+          .from('unit_users')
+          .select(`
+            role,
+            units (
+              name
+            )
+          `)
+          .eq('user_id', profile.id)
+          .eq('active', true)
+          .single();
+
+        return {
+          id: profile.id,
+          full_name: profile.full_name,
+          email: profile.email,
+          access_blocked: profile.access_blocked,
+          email_confirmed: profile.email_confirmed,
+          role: unitData?.role || 'consultor',
+          unit_name: unitData?.units?.name || 'Unidade Padrão'
+        };
+      }));
+
+      return usersWithRoles as User[];
     },
   });
 
