@@ -91,6 +91,12 @@ serve(async (req) => {
       })
 
       const tokenData = await tokenResponse.json()
+      console.log('Token response received:', { 
+        ok: tokenResponse.ok, 
+        status: tokenResponse.status,
+        hasAccessToken: !!tokenData.access_token,
+        hasRefreshToken: !!tokenData.refresh_token
+      })
       
       if (!tokenResponse.ok || !tokenData.access_token) {
         console.error('Erro ao trocar código por tokens:', tokenData)
@@ -100,21 +106,31 @@ serve(async (req) => {
       console.log('Tokens obtidos com sucesso, buscando informações do usuário')
 
       try {
-        // Obter informações do usuário Google
+        // Obter informações do usuário Google usando o token de acesso
         const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
           headers: {
             'Authorization': `Bearer ${tokenData.access_token}`,
+            'Accept': 'application/json',
           },
         })
 
+        console.log('User info response status:', userInfoResponse.status)
+
         if (!userInfoResponse.ok) {
-          const errorData = await userInfoResponse.json()
+          const errorData = await userInfoResponse.text()
           console.error('Erro na resposta do userInfo:', errorData)
           throw new Error('Failed to fetch user info from Google')
         }
 
         const userInfo = await userInfoResponse.json()
-        console.log('Informações do usuário obtidas com sucesso')
+        console.log('Informações do usuário obtidas com sucesso:', {
+          hasEmail: !!userInfo.email,
+          emailVerified: userInfo.verified_email
+        })
+
+        if (!userInfo.email) {
+          throw new Error('User email not found in Google response')
+        }
 
         // Usar o cliente admin para salvar as configurações
         const { error: insertError } = await supabaseAdmin
