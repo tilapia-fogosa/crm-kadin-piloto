@@ -4,19 +4,9 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { LeadsChart } from "@/components/dashboard/LeadsChart";
 import LeadsTable from "@/components/leads/LeadsTable";
 import { useLeadsStats } from "@/hooks/useLeadsStats";
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 
 const Index = () => {
   const { data: stats, isLoading } = useLeadsStats();
-  const queryClient = useQueryClient();
-  const location = useLocation();
-
-  useEffect(() => {
-    console.log("Dashboard mounted or route changed, refetching data...")
-    queryClient.invalidateQueries({ queryKey: ['leads-stats'] })
-  }, [location.pathname, queryClient]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-full">Carregando...</div>;
