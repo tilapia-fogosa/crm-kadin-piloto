@@ -34,9 +34,13 @@ serve(async (req) => {
 
     // Rota para iniciar o fluxo OAuth
     if (path === 'init') {
-      const redirectUri = `${req.headers.get('origin')}/auth/callback`
+      // Usar o origin da requisição como base para o redirect_uri
+      const origin = req.headers.get('origin') || 'http://localhost:8080'
+      const redirectUri = `${origin}/auth/callback`
+      console.log('Redirect URI:', redirectUri) // Log para debug
+      
       const scope = encodeURIComponent('https://www.googleapis.com/auth/calendar')
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`
       
       return new Response(
         JSON.stringify({ url: authUrl }),
@@ -49,7 +53,9 @@ serve(async (req) => {
 
     // Rota para processar o callback do OAuth
     if (path === 'callback' && code) {
-      const redirectUri = `${req.headers.get('origin')}/auth/callback`
+      const origin = req.headers.get('origin') || 'http://localhost:8080'
+      const redirectUri = `${origin}/auth/callback`
+      console.log('Callback Redirect URI:', redirectUri) // Log para debug
       
       // Trocar o código por tokens
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
