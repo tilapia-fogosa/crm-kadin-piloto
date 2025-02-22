@@ -12,6 +12,10 @@ interface KanbanCardProps {
   onWhatsAppClick: (e: React.MouseEvent) => void;
 }
 
+// Sistema de cores para status do próximo contato:
+// Verde (#00CC00): Data futura (amanhã ou posterior)
+// Amarelo (#FFD700): Hoje, antes do horário marcado
+// Vermelho (#FF3333): Atrasado (data anterior ou após horário marcado hoje)
 const getNextContactColor = (nextContactDate: Date | null): string => {
   if (!nextContactDate) return "text-muted-foreground";
   
@@ -21,21 +25,21 @@ const getNextContactColor = (nextContactDate: Date | null): string => {
 
   // Verde: Data é amanhã ou posterior
   if (isAfter(contactDay, today)) {
-    return "text-[#0EA5E9]"; // Ocean Blue
+    return "text-[#00CC00]"; // Verde suave
   }
 
   // Se for hoje, verifica o horário
   if (isToday(nextContactDate)) {
     // Vermelho: Já passou do horário
     if (isBefore(nextContactDate, now)) {
-      return "text-[#ea384c]"; // Red
+      return "text-[#FF3333]"; // Vermelho suave
     }
     // Amarelo: É hoje mas ainda não chegou o horário
-    return "text-[#F97316]"; // Bright Orange
+    return "text-[#FFD700]"; // Amarelo dourado
   }
 
   // Vermelho: Data anterior
-  return "text-[#ea384c]"; // Red
+  return "text-[#FF3333]"; // Vermelho suave
 }
 
 export function KanbanCard({
