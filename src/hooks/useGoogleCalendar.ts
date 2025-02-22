@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from '@tanstack/react-query';
+import { Json } from '@/integrations/supabase/types';
 
 interface AuthWindowMessage {
   type: 'google-auth-success' | 'google-auth-error';
@@ -25,6 +26,20 @@ interface CalendarSettings {
   last_sync: string | null;
 }
 
+// Interface para mapear o tipo que vem do Supabase
+interface RawCalendarSettings {
+  id: string;
+  user_id: string;
+  google_account_email: string | null;
+  google_refresh_token: string | null;
+  sync_enabled: boolean;
+  selected_calendars: Json;
+  calendars_metadata: Json;
+  last_sync: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
 export function useGoogleCalendar() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [authWindow, setAuthWindow] = useState<Window | null>(null);
@@ -40,7 +55,22 @@ export function useGoogleCalendar() {
         .single();
 
       if (error) throw error;
-      return data as CalendarSettings;
+      
+      // Converter o dado bruto para o formato esperado
+      const rawData = data as RawCalendarSettings;
+      const formattedData: CalendarSettings = {
+        google_account_email: rawData.google_account_email,
+        sync_enabled: rawData.sync_enabled,
+        selected_calendars: Array.isArray(rawData.selected_calendars) 
+          ? rawData.selected_calendars as string[]
+          : [],
+        calendars_metadata: Array.isArray(rawData.calendars_metadata) 
+          ? rawData.calendars_metadata as Calendar[]
+          : [],
+        last_sync: rawData.last_sync
+      };
+
+      return formattedData;
     }
   });
 
