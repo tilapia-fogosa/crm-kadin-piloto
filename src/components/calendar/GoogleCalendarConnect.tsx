@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
-import { Calendar } from "lucide-react";
+import { Calendar, Loader2 } from "lucide-react";
 
 export function GoogleCalendarConnect() {
   const { isConnecting, startGoogleAuth } = useGoogleCalendar();
@@ -13,8 +13,17 @@ export function GoogleCalendarConnect() {
       onClick={startGoogleAuth}
       disabled={isConnecting}
     >
-      <Calendar className="h-4 w-4" />
-      {isConnecting ? "Conectando..." : "Conectar Google Calendar"}
+      {isConnecting ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Conectando...
+        </>
+      ) : (
+        <>
+          <Calendar className="h-4 w-4" />
+          Conectar Google Calendar
+        </>
+      )}
     </Button>
   );
 }
