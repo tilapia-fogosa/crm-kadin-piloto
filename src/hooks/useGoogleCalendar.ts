@@ -65,7 +65,11 @@ export function useGoogleCalendar() {
           ? rawData.selected_calendars as string[]
           : [],
         calendars_metadata: Array.isArray(rawData.calendars_metadata) 
-          ? rawData.calendars_metadata as Calendar[]
+          ? (rawData.calendars_metadata as any[]).map(cal => ({
+              id: cal.id as string,
+              summary: cal.summary as string,
+              backgroundColor: cal.backgroundColor as string
+            }))
           : [],
         last_sync: rawData.last_sync
       };
