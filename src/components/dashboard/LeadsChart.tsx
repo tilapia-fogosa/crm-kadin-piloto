@@ -32,7 +32,7 @@ export function LeadsChart() {
       const { data: leads, error } = await supabase
         .from('clients')
         .select('created_at, lead_source')
-        .eq('active', true) // Filtra apenas clientes ativos
+        .eq('active', true)
         .gte('created_at', sixMonthsAgo.toISOString())
         .order('created_at', { ascending: true });
 
@@ -69,8 +69,8 @@ export function LeadsChart() {
         sources: allSources
       };
     },
-    refetchInterval: 5000,
-    refetchOnWindowFocus: true
+    staleTime: 60 * 60 * 1000, // 1 hora
+    refetchOnWindowFocus: false
   });
 
   if (isLoading) {

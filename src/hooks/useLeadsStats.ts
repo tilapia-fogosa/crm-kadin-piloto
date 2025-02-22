@@ -20,7 +20,7 @@ export function useLeadsStats() {
         const { data, error } = await supabase
           .from('clients')
           .select('created_at')
-          .eq('active', true) // Filtra apenas clientes ativos
+          .eq('active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
 
@@ -66,8 +66,7 @@ export function useLeadsStats() {
       }
     },
     refetchInterval: 5000,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    staleTime: 0
+    staleTime: 4000,
+    refetchOnWindowFocus: false
   })
 }
