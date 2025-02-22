@@ -45,7 +45,7 @@ export function AppSidebar() {
 
   const sidebar = (
     <div className="flex h-full flex-col gap-4">
-      <div className="flex h-[60px] items-center px-6">
+      <div className="flex h-[60px] items-center px-6 bg-[#311D64]">
         <img
           className="h-8 w-auto"
           src="/lovable-uploads/c9bc0aec-0f40-468c-8c5e-24cb91ff0918.png"
@@ -59,7 +59,11 @@ export function AppSidebar() {
               <div key={item.name}>
                 <Button
                   variant={location.pathname === item.href ? "secondary" : "ghost"}
-                  className={cn("w-full justify-start")}
+                  className={cn(
+                    "w-full justify-start text-white",
+                    "hover:bg-[#FF6B00] hover:text-white transition-colors duration-200",
+                    location.pathname === item.href && "bg-white/20 text-white hover:bg-[#FF6B00]"
+                  )}
                   asChild
                 >
                   <Link to={item.href}>
@@ -74,7 +78,11 @@ export function AppSidebar() {
                       <Button
                         key={subItem.name}
                         variant={location.pathname === subItem.href ? "secondary" : "ghost"}
-                        className={cn("w-full justify-start text-sm")}
+                        className={cn(
+                          "w-full justify-start text-sm text-white",
+                          "hover:bg-[#FF6B00] hover:text-white transition-colors duration-200",
+                          location.pathname === subItem.href && "bg-white/20 text-white hover:bg-[#FF6B00]"
+                        )}
                         asChild
                       >
                         <Link to={subItem.href}>
@@ -108,12 +116,15 @@ export function AppSidebar() {
             <Menu className="h-4 w-4" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-72 p-0">
+        <SheetContent side="left" className="w-72 p-0 bg-[#311D64]">
           {sidebar}
         </SheetContent>
       </Sheet>
-      <div className="hidden border-r bg-background md:block w-72">
+      <div className="hidden border-r bg-[#311D64] md:block w-72 fixed h-full z-40">
         {sidebar}
+      </div>
+      <div className="hidden md:block w-72">
+        {/* Espaçador para compensar a sidebar fixa */}
       </div>
     </>
   );
