@@ -41,7 +41,9 @@ export function CalendarDashboard() {
 
       if (error) throw error
       return data as ScheduledLead[]
-    }
+    },
+    refetchInterval: 5000,
+    refetchOnMount: true
   })
 
   const currentMonth = format(currentDate, 'MMM', { locale: ptBR }).toUpperCase()

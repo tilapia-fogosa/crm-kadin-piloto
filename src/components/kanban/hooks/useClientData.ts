@@ -21,8 +21,10 @@ export function useClientData() {
         },
         (payload: RealtimePostgresInsertPayload<any>) => {
           console.log('New client inserted:', payload)
-          // Invalidate and refetch data when a new client is inserted
+          // Invalidate all relevant queries
           queryClient.invalidateQueries({ queryKey: ['clients'] })
+          queryClient.invalidateQueries({ queryKey: ['activity-dashboard'] })
+          queryClient.invalidateQueries({ queryKey: ['scheduled-leads'] })
         }
       )
       .on(
@@ -34,8 +36,10 @@ export function useClientData() {
         },
         (payload: RealtimePostgresUpdatePayload<any>) => {
           console.log('Client updated:', payload)
-          // Invalidate and refetch data when a client is updated (including inactivation)
+          // Invalidate all relevant queries
           queryClient.invalidateQueries({ queryKey: ['clients'] })
+          queryClient.invalidateQueries({ queryKey: ['activity-dashboard'] })
+          queryClient.invalidateQueries({ queryKey: ['scheduled-leads'] })
         }
       )
       .subscribe()
@@ -54,7 +58,6 @@ export function useClientData() {
 
       console.log('Fetching clients data...')
       
-      // Alterada a query para usar left join e permitir clientes sem atividades
       const { data, error } = await supabase
         .from('clients')
         .select(`
@@ -78,7 +81,7 @@ export function useClientData() {
             active
           )
         `)
-        .eq('active', true) // Filtra apenas clientes ativos
+        .eq('active', true)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -103,7 +106,6 @@ export function useClientData() {
       const clientsWithActivities = data?.map(client => {
         return {
           ...client,
-          // Filtra apenas atividades ativas antes de transformar em string
           client_activities: (client.client_activities || [])
             .filter(activity => activity.active)
             .map(activity => {
