@@ -120,7 +120,7 @@ export function AppSidebar() {
           {sidebar}
         </SheetContent>
       </Sheet>
-      <div className="hidden border-r bg-[#311D64] md:block w-72 fixed h-full z-40">
+      <div className="hidden bg-[#311D64] md:block w-72 fixed h-full z-40">
         {sidebar}
       </div>
       <div className="hidden md:block w-72">

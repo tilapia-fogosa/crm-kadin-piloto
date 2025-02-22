@@ -54,7 +54,7 @@ export function KanbanBoard() {
   const columns = transformClientsToColumnData(filteredClients)
 
   return (
-    <div className="flex flex-col h-full bg-[#311D64]">
+    <div className="flex flex-col h-full">
       <BoardHeader 
         showPendingOnly={showPendingOnly}
         setShowPendingOnly={setShowPendingOnly}
@@ -62,7 +62,7 @@ export function KanbanBoard() {
       />
 
       <div className="flex-1 overflow-x-auto p-4">
-        <div className="flex gap-4 h-full">
+        <div className="flex gap-4 h-full min-w-fit">
           {columns.map((column, index) => (
             <KanbanColumn
               key={column.id}
