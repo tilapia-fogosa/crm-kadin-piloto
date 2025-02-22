@@ -10,7 +10,7 @@ const corsHeaders = {
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
 serve(async (req) => {
   // Handle CORS
@@ -19,27 +19,35 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
+    // Criar cliente Supabase com service_role key
+    const supabaseAdmin = createClient(
       SUPABASE_URL!,
-      SUPABASE_ANON_KEY!
+      SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Get auth header
+    // Obter o token de autenticação do usuário
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       throw new Error('No authorization header')
     }
 
-    // Get session
-    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
+    // Validar o usuário atual usando o token
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    )
+    
     if (userError || !user) {
-      throw new Error('Error fetching user')
+      console.error('Erro ao validar usuário:', userError)
+      throw new Error('User not authenticated')
     }
+
+    console.log('Usuário autenticado:', user.id)
 
     const { path, code } = await req.json()
 
     if (path === 'init') {
-      // Generate auth URL
+      console.log('Iniciando fluxo de autenticação Google')
+      
       const redirectUri = `${req.headers.get('origin')}/auth/callback`
       const scope = encodeURIComponent('https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events')
       
@@ -63,10 +71,12 @@ serve(async (req) => {
         throw new Error('No code provided')
       }
 
+      console.log('Processando callback com código:', code)
+
       const redirectUri = `${req.headers.get('origin')}/auth/callback`
 
-      // Exchange code for tokens
-      const response = await fetch('https://oauth2.googleapis.com/token', {
+      // Trocar código por tokens
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -80,37 +90,45 @@ serve(async (req) => {
         }),
       })
 
-      const data = await response.json()
+      const tokenData = await tokenResponse.json()
       
-      if (!response.ok) {
-        console.error('Error exchanging code:', data)
+      if (!tokenResponse.ok) {
+        console.error('Erro ao trocar código por tokens:', tokenData)
         throw new Error('Failed to exchange code')
       }
 
-      // Get user email from Google
+      // Obter informações do usuário Google
       const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: {
-          Authorization: `Bearer ${data.access_token}`,
+          Authorization: `Bearer ${tokenData.access_token}`,
         },
       })
 
       const userInfo = await userInfoResponse.json()
+      if (!userInfoResponse.ok) {
+        console.error('Erro ao obter informações do usuário:', userInfo)
+        throw new Error('Failed to get user info')
+      }
 
-      // Store refresh token and email
-      const { error: insertError } = await supabase
+      console.log('Salvando tokens e email do usuário')
+
+      // Usar o cliente admin para salvar as configurações
+      const { error: insertError } = await supabaseAdmin
         .from('user_calendar_settings')
         .upsert({
           user_id: user.id,
-          google_refresh_token: data.refresh_token,
+          google_refresh_token: tokenData.refresh_token,
           google_account_email: userInfo.email,
           sync_enabled: true,
           updated_at: new Date().toISOString(),
         })
 
       if (insertError) {
-        console.error('Error storing refresh token:', insertError)
+        console.error('Erro ao salvar tokens:', insertError)
         throw new Error('Failed to store refresh token')
       }
+
+      console.log('Configurações salvas com sucesso')
 
       return new Response(
         JSON.stringify({ success: true }),
@@ -121,9 +139,12 @@ serve(async (req) => {
     throw new Error('Invalid path')
 
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Erro na Edge Function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack 
+      }),
       { 
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
