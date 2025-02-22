@@ -69,6 +69,14 @@ export function useGoogleCalendar() {
       setIsConnecting(true);
       
       console.log('Iniciando autenticação com Google Calendar');
+
+      // Obter a sessão atual do usuário
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
         body: { path: 'init' }
       });
@@ -111,6 +119,14 @@ export function useGoogleCalendar() {
   const handleAuthCallback = async (code: string): Promise<boolean> => {
     try {
       console.log('Processando callback com código:', code);
+
+      // Obter a sessão atual do usuário
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
         body: { 
           path: 'callback',

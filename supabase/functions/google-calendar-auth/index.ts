@@ -85,7 +85,7 @@ serve(async (req) => {
         )
       }
 
-      // Obter informações do usuário autenticado no Supabase
+      // Obter informações do usuário autenticado
       const authHeader = req.headers.get('Authorization')
       if (!authHeader) {
         return new Response(
@@ -97,11 +97,30 @@ serve(async (req) => {
         )
       }
 
+      // Extrair o token JWT do header de autorização
+      const token = authHeader.replace('Bearer ', '')
+      
+      // Decodificar o JWT para obter o user_id
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+      
+      if (userError || !user) {
+        console.error('Erro ao decodificar token:', userError)
+        return new Response(
+          JSON.stringify({ error: 'Token inválido' }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 401 
+          }
+        )
+      }
+
+      console.log('User ID extraído:', user.id) // Log para debug
+
       // Salvar os tokens no banco de dados
       const { data: userSettings, error: upsertError } = await supabase
         .from('user_calendar_settings')
         .upsert({
-          user_id: authHeader.split(' ')[1], // Token JWT contém o user_id
+          user_id: user.id,
           google_refresh_token: tokens.refresh_token,
           sync_enabled: true,
           last_sync: new Date().toISOString(),
