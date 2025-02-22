@@ -92,48 +92,59 @@ serve(async (req) => {
 
       const tokenData = await tokenResponse.json()
       
-      if (!tokenResponse.ok) {
+      if (!tokenResponse.ok || !tokenData.access_token) {
         console.error('Erro ao trocar código por tokens:', tokenData)
-        throw new Error('Failed to exchange code')
+        throw new Error('Failed to exchange code for tokens')
       }
 
-      // Obter informações do usuário Google
-      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-        headers: {
-          Authorization: `Bearer ${tokenData.access_token}`,
-        },
-      })
+      console.log('Tokens obtidos com sucesso, buscando informações do usuário')
 
-      const userInfo = await userInfoResponse.json()
-      if (!userInfoResponse.ok) {
-        console.error('Erro ao obter informações do usuário:', userInfo)
-        throw new Error('Failed to get user info')
-      }
-
-      console.log('Salvando tokens e email do usuário')
-
-      // Usar o cliente admin para salvar as configurações
-      const { error: insertError } = await supabaseAdmin
-        .from('user_calendar_settings')
-        .upsert({
-          user_id: user.id,
-          google_refresh_token: tokenData.refresh_token,
-          google_account_email: userInfo.email,
-          sync_enabled: true,
-          updated_at: new Date().toISOString(),
+      try {
+        // Obter informações do usuário Google
+        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: {
+            'Authorization': `Bearer ${tokenData.access_token}`,
+          },
         })
 
-      if (insertError) {
-        console.error('Erro ao salvar tokens:', insertError)
-        throw new Error('Failed to store refresh token')
+        if (!userInfoResponse.ok) {
+          const errorData = await userInfoResponse.json()
+          console.error('Erro na resposta do userInfo:', errorData)
+          throw new Error('Failed to fetch user info from Google')
+        }
+
+        const userInfo = await userInfoResponse.json()
+        console.log('Informações do usuário obtidas com sucesso')
+
+        // Usar o cliente admin para salvar as configurações
+        const { error: insertError } = await supabaseAdmin
+          .from('user_calendar_settings')
+          .upsert({
+            user_id: user.id,
+            google_refresh_token: tokenData.refresh_token,
+            google_account_email: userInfo.email,
+            sync_enabled: true,
+            selected_calendars: [],
+            calendars_metadata: [],
+            updated_at: new Date().toISOString(),
+          })
+
+        if (insertError) {
+          console.error('Erro ao salvar tokens:', insertError)
+          throw new Error('Failed to store refresh token')
+        }
+
+        console.log('Configurações salvas com sucesso')
+
+        return new Response(
+          JSON.stringify({ success: true }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+
+      } catch (userInfoError) {
+        console.error('Erro ao obter/processar informações do usuário:', userInfoError)
+        throw new Error('Failed to process user information')
       }
-
-      console.log('Configurações salvas com sucesso')
-
-      return new Response(
-        JSON.stringify({ success: true }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
     }
 
     throw new Error('Invalid path')
