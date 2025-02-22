@@ -54,25 +54,27 @@ export function KanbanBoard() {
   const columns = transformClientsToColumnData(filteredClients)
 
   return (
-    <div className="flex h-full w-full flex-col gap-4 p-4">
+    <div className="flex flex-col h-full bg-[#311D64]">
       <BoardHeader 
         showPendingOnly={showPendingOnly}
         setShowPendingOnly={setShowPendingOnly}
         onRefresh={() => refetch()}
       />
 
-      <div className="flex h-full gap-4 overflow-x-auto pb-4">
-        {columns.map((column, index) => (
-          <KanbanColumn
-            key={column.id}
-            column={column}
-            index={index}
-            onWhatsAppClick={handleWhatsAppClick}
-            onRegisterAttempt={registerAttempt}
-            onRegisterEffectiveContact={registerEffectiveContact}
-            onDeleteActivity={deleteActivity}
-          />
-        ))}
+      <div className="flex-1 overflow-x-auto p-4">
+        <div className="flex gap-4 h-full">
+          {columns.map((column, index) => (
+            <KanbanColumn
+              key={column.id}
+              column={column}
+              index={index}
+              onWhatsAppClick={handleWhatsAppClick}
+              onRegisterAttempt={registerAttempt}
+              onRegisterEffectiveContact={registerEffectiveContact}
+              onDeleteActivity={deleteActivity}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )

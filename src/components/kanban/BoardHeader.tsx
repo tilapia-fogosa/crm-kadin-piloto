@@ -18,7 +18,7 @@ export function BoardHeader({
   onRefresh,
 }: BoardHeaderProps) {
   return (
-    <div className="grid grid-cols-4 items-center mb-4 bg-secondary rounded-lg p-4">
+    <div className="grid grid-cols-4 items-center bg-[#311D64] p-4">
       <div className="col-span-1">
         <h1 className="text-2xl font-semibold tracking-tight text-white">Painel do Consultor</h1>
       </div>

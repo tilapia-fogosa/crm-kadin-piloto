@@ -56,7 +56,7 @@ function App() {
                     <ProtectedRoute>
                       <>
                         <AppSidebar />
-                        <SidebarInset className="ml-0 md:ml-72">
+                        <div className="flex-1">
                           <Routes>
                             <Route path="/dashboard" element={<Index />} />
                             <Route path="/kanban" element={<Kanban />} />
@@ -69,7 +69,7 @@ function App() {
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                           <Toaster />
-                        </SidebarInset>
+                        </div>
                       </>
                     </ProtectedRoute>
                   }
