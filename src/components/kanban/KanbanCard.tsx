@@ -53,15 +53,18 @@ export function KanbanCard({
   const nextContactColor = getNextContactColor(nextContactDate);
   
   return (
-    <Card className="cursor-pointer hover:bg-accent/5" onClick={onClick}>
+    <Card 
+      className="cursor-pointer bg-[#8A898C] hover:bg-primary/20 transition-colors duration-200"
+      onClick={onClick}
+    >
       <CardHeader className="p-2 pb-0">
         <div className="flex justify-between items-start">
           <div className="space-y-1">
-            <CardTitle className="text-base -mt-1">{card.clientName}</CardTitle>
+            <CardTitle className="text-base -mt-1 text-white">{card.clientName}</CardTitle>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1 text-xs text-white/80">
                     <Calendar className="h-3 w-3" />
                     <span>
                       {isValidDate ? format(createdAtDate, 'dd-MM-yy HH:mm') : 'Data inválida'}
@@ -84,20 +87,20 @@ export function KanbanCard({
       </CardHeader>
       <CardContent className="p-2">
         <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-white/80">
             Origem: {card.leadSource}
           </p>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="p-0" onClick={onWhatsAppClick}>
+            <Button variant="ghost" size="sm" className="p-0 hover:bg-transparent" onClick={onWhatsAppClick}>
               <MessageSquare className="h-4 w-4 text-green-500" />
             </Button>
-            <Phone className="h-4 w-4" />
-            <span className="text-sm">{card.phoneNumber}</span>
+            <Phone className="h-4 w-4 text-white" />
+            <span className="text-sm text-white">{card.phoneNumber}</span>
           </div>
           {card.labels && (
             <div className="mt-1 flex flex-wrap gap-1">
               {card.labels.map(label => (
-                <span key={label} className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium">
+                <span key={label} className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white">
                   {label}
                 </span>
               ))}
