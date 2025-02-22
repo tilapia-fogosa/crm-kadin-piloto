@@ -1,22 +1,38 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { OAuth2Client } from "https://deno.land/x/oauth2_client@v1.0.2/mod.ts";
-
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')!
-const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')!
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Cliente Supabase com service_role para bypass RLS
-const adminSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false }
-})
+const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')
+const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')
+
+async function getGoogleAccessToken(refresh_token: string): Promise<string> {
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID!,
+      client_secret: GOOGLE_CLIENT_SECRET!,
+      refresh_token: refresh_token,
+      grant_type: 'refresh_token',
+    }),
+  })
+
+  const data = await response.json()
+  if (!response.ok) {
+    throw new Error('Failed to refresh token')
+  }
+
+  return data.access_token
+}
 
 serve(async (req) => {
   // Handle CORS
@@ -25,161 +41,122 @@ serve(async (req) => {
   }
 
   try {
-    // Verificar autenticação
-    const authHeader = req.headers.get('Authorization')!
-    const { data: { user }, error: userError } = await adminSupabase.auth.getUser(authHeader.replace('Bearer ', ''))
-    
-    if (userError || !user) {
-      throw new Error('Unauthorized')
+    const supabase = createClient(
+      SUPABASE_URL!,
+      SUPABASE_ANON_KEY!
+    )
+
+    // Get auth header
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('No authorization header')
     }
 
-    // Obter as configurações do calendário do usuário
-    const { data: settings, error: settingsError } = await adminSupabase
+    // Get session
+    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
+    if (userError || !user) {
+      throw new Error('Error fetching user')
+    }
+
+    // Get user's calendar settings
+    const { data: settings, error: settingsError } = await supabase
       .from('user_calendar_settings')
       .select('*')
       .eq('user_id', user.id)
       .single()
 
     if (settingsError || !settings?.google_refresh_token) {
-      throw new Error('Configurações do calendário não encontradas')
+      throw new Error('Calendar not connected')
     }
 
-    // Configurar cliente OAuth2
-    const oauth2Client = new OAuth2Client({
-      clientId: GOOGLE_CLIENT_ID,
-      clientSecret: GOOGLE_CLIENT_SECRET,
-      tokenUri: "https://oauth2.googleapis.com/token"
-    });
+    const { path, calendarId, eventId } = await req.json()
 
-    // Configurar refresh token
-    const tokens = await oauth2Client.refreshToken.refresh(settings.google_refresh_token);
-    const accessToken = tokens.accessToken;
+    // Get fresh access token
+    const accessToken = await getGoogleAccessToken(settings.google_refresh_token)
 
-    // Parse da URL para obter o path e query params
-    const url = new URL(req.url)
-    const path = url.pathname.split('/').pop()
-
-    switch (path) {
-      case 'calendars':
-        if (req.method === 'GET') {
-          // Listar calendários disponíveis
-          const response = await fetch(
-            'https://www.googleapis.com/calendar/v3/users/me/calendarList',
-            {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-              },
-            }
-          );
-          
-          if (!response.ok) {
-            throw new Error('Erro ao buscar calendários');
-          }
-          
-          const data = await response.json();
-          const calendars = data.items || [];
-
-          // Atualizar metadados no banco
-          await adminSupabase
-            .from('user_calendar_settings')
-            .update({
-              calendars_metadata: calendars.reduce((acc, cal) => ({
-                ...acc,
-                [cal.id]: {
-                  name: cal.summary,
-                  primary: cal.primary || false,
-                  backgroundColor: cal.backgroundColor
-                }
-              }), {})
-            })
-            .eq('user_id', user.id)
-
-          return new Response(
-            JSON.stringify({ 
-              calendars: calendars.map(cal => ({
-                id: cal.id,
-                name: cal.summary,
-                primary: cal.primary || false,
-                selected: (settings.selected_calendars || []).includes(cal.id),
-                backgroundColor: cal.backgroundColor
-              }))
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        } else if (req.method === 'POST') {
-          // Atualizar calendários selecionados
-          const { selectedIds } = await req.json()
-          
-          if (!Array.isArray(selectedIds)) {
-            throw new Error('selectedIds deve ser um array')
-          }
-
-          await adminSupabase
-            .from('user_calendar_settings')
-            .update({
-              selected_calendars: selectedIds,
-              updated_at: new Date().toISOString()
-            })
-            .eq('user_id', user.id)
-
-          return new Response(
-            JSON.stringify({ success: true }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
+    if (path === 'list-calendars') {
+      const response = await fetch(
+        'https://www.googleapis.com/calendar/v3/users/me/calendarList',
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         }
-        break
+      )
 
-      case 'events':
-        if (req.method === 'GET') {
-          const timeMin = url.searchParams.get('timeMin') || new Date().toISOString()
-          const timeMax = url.searchParams.get('timeMax') || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error('Failed to fetch calendars')
+      }
 
-          // Buscar eventos de todos os calendários selecionados
-          const selectedCalendars = settings.selected_calendars || []
-          const allEvents = await Promise.all(
-            selectedCalendars.map(calendarId =>
-              fetch(
-                `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                  },
-                }
-              ).then(response => response.json())
-            )
-          )
+      // Update calendars metadata
+      await supabase
+        .from('user_calendar_settings')
+        .update({
+          calendars_metadata: data.items,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id)
 
-          const events = allEvents.flatMap(response => 
-            (response.items || []).map(event => ({
-              id: event.id,
-              calendarId: event.calendarId,
-              title: event.summary,
-              start: event.start?.dateTime || event.start?.date,
-              end: event.end?.dateTime || event.end?.date,
-              description: event.description
-            }))
-          )
-
-          return new Response(
-            JSON.stringify({ events }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-        break
+      return new Response(
+        JSON.stringify({ calendars: data.items }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    // Rota não encontrada
-    return new Response(
-      JSON.stringify({ error: 'Rota não encontrada' }),
-      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    if (path === 'sync-events') {
+      const now = new Date()
+      const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+      const oneMonthAhead = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
+
+      const promises = settings.selected_calendars.map(async (calId: string) => {
+        const response = await fetch(
+          `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events?` +
+          `timeMin=${oneMonthAgo.toISOString()}&` +
+          `timeMax=${oneMonthAhead.toISOString()}&` +
+          `singleEvents=true`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        )
+
+        if (!response.ok) {
+          console.error(`Failed to fetch events for calendar ${calId}`)
+          return []
+        }
+
+        const data = await response.json()
+        return data.items || []
+      })
+
+      const allEvents = await Promise.all(promises)
+      const flatEvents = allEvents.flat()
+
+      // Update last sync time
+      await supabase
+        .from('user_calendar_settings')
+        .update({
+          last_sync: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id)
+
+      return new Response(
+        JSON.stringify({ events: flatEvents }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    throw new Error('Invalid path')
 
   } catch (error) {
-    console.error('Erro:', error)
+    console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: error.message === 'Unauthorized' ? 401 : 500,
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )

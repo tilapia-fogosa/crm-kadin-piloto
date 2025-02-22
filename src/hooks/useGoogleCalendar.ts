@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from '@tanstack/react-query';
 
 interface AuthWindowMessage {
   type: 'google-auth-success' | 'google-auth-error';
@@ -9,10 +10,55 @@ interface AuthWindowMessage {
   error?: string;
 }
 
+interface Calendar {
+  id: string;
+  summary: string;
+  backgroundColor: string;
+  selected?: boolean;
+}
+
+interface CalendarSettings {
+  google_account_email: string | null;
+  sync_enabled: boolean;
+  selected_calendars: string[];
+  calendars_metadata: Calendar[];
+  last_sync: string | null;
+}
+
 export function useGoogleCalendar() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [authWindow, setAuthWindow] = useState<Window | null>(null);
   const { toast } = useToast();
+
+  // Fetch calendar settings
+  const { data: settings, isLoading: isLoadingSettings, refetch: refetchSettings } = useQuery({
+    queryKey: ['calendar-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_calendar_settings')
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      return data as CalendarSettings;
+    }
+  });
+
+  // Fetch calendars list
+  const { data: calendars, isLoading: isLoadingCalendars, refetch: refetchCalendars } = useQuery({
+    queryKey: ['calendars'],
+    queryFn: async () => {
+      if (!settings?.sync_enabled) return [];
+
+      const { data, error } = await supabase.functions.invoke('google-calendar-manage', {
+        body: { path: 'list-calendars' }
+      });
+
+      if (error) throw error;
+      return data.calendars as Calendar[];
+    },
+    enabled: !!settings?.sync_enabled
+  });
 
   useEffect(() => {
     // Listener para mensagens do popup
@@ -120,13 +166,6 @@ export function useGoogleCalendar() {
     try {
       console.log('Processando callback com código:', code);
 
-      // Obter a sessão atual do usuário
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        throw new Error('Usuário não autenticado');
-      }
-
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
         body: { 
           path: 'callback',
@@ -141,6 +180,10 @@ export function useGoogleCalendar() {
         title: "Conexão realizada",
         description: "Google Calendar conectado com sucesso!",
       });
+
+      // Atualizar dados
+      await refetchSettings();
+      await refetchCalendars();
 
       return true;
     } catch (error) {
@@ -160,9 +203,70 @@ export function useGoogleCalendar() {
     }
   };
 
+  const syncCalendars = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('google-calendar-manage', {
+        body: { path: 'sync-events' }
+      });
+
+      if (error) throw error;
+
+      await refetchSettings();
+      
+      toast({
+        title: "Sincronização concluída",
+        description: "Calendários atualizados com sucesso!",
+      });
+
+      return data.events;
+    } catch (error) {
+      console.error('Erro ao sincronizar calendários:', error);
+      toast({
+        title: "Erro na sincronização",
+        description: "Não foi possível sincronizar os calendários",
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
+
+  const updateSelectedCalendars = async (calendarIds: string[]) => {
+    try {
+      const { error } = await supabase
+        .from('user_calendar_settings')
+        .update({ 
+          selected_calendars: calendarIds,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (error) throw error;
+
+      await refetchSettings();
+      await refetchCalendars();
+
+      toast({
+        title: "Calendários atualizados",
+        description: "Suas preferências foram salvas com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar calendários:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível atualizar suas preferências",
+        variant: "destructive"
+      });
+    }
+  };
+
   return {
     isConnecting,
+    isLoading: isLoadingSettings || isLoadingCalendars,
+    settings,
+    calendars,
     startGoogleAuth,
-    handleAuthCallback
+    handleAuthCallback,
+    syncCalendars,
+    updateSelectedCalendars
   };
 }
