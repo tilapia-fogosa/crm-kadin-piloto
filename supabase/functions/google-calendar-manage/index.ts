@@ -1,196 +1,157 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
+import { calendar_v3 } from "https://googleapis.deno.dev/v1/calendar:v3.ts"
+import { oauth2_v2 } from "https://googleapis.deno.dev/v1/oauth2:v2.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')
-const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')
-
-async function getGoogleAccessToken(refresh_token: string): Promise<string> {
-  console.log('Tentando obter novo access token...');
-  
-  const response = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      client_id: GOOGLE_CLIENT_ID!,
-      client_secret: GOOGLE_CLIENT_SECRET!,
-      refresh_token: refresh_token,
-      grant_type: 'refresh_token',
-    }),
-  })
-
-  const data = await response.json()
-  if (!response.ok) {
-    console.error('Erro ao obter access token:', data);
-    throw new Error(`Failed to refresh token: ${data.error}`)
-  }
-
-  console.log('Novo access token obtido com sucesso');
-  return data.access_token
-}
+// Criar cliente Supabase com service_role key
+const supabaseAdmin = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+)
 
 serve(async (req) => {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const supabase = createClient(
-      SUPABASE_URL!,
-      SUPABASE_ANON_KEY!
-    )
-
-    // Get auth header
+    // Autenticar usuário
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       throw new Error('No authorization header')
     }
 
-    // Get session
-    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    )
+    
     if (userError || !user) {
-      throw new Error('Error fetching user')
+      console.error('Erro ao validar usuário:', userError)
+      throw new Error('User not authenticated')
     }
 
-    // Get user's calendar settings
-    const { data: settings, error: settingsError } = await supabase
+    console.log('Usuário autenticado:', user.id)
+
+    // Buscar configurações do calendário do usuário
+    const { data: settings, error: settingsError } = await supabaseAdmin
       .from('user_calendar_settings')
       .select('*')
       .eq('user_id', user.id)
       .single()
 
     if (settingsError || !settings?.google_refresh_token) {
-      console.error('Erro ao buscar configurações:', settingsError);
+      console.error('Erro ao buscar configurações:', settingsError)
       throw new Error('Calendar not connected')
     }
 
+    // Criar cliente do Google Calendar
     const { path } = await req.json()
 
-    // Get fresh access token
-    const accessToken = await getGoogleAccessToken(settings.google_refresh_token)
-
     if (path === 'list-calendars') {
-      console.log('Listando calendários...');
-      
-      const response = await fetch(
-        'https://www.googleapis.com/calendar/v3/users/me/calendarList',
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+      console.log('Listando calendários do usuário')
+
+      // Criar cliente do Google Calendar
+      const calendar = new calendar_v3.Calendar({
+        auth: settings.google_refresh_token,
+      })
+
+      try {
+        const response = await calendar.calendarList.list()
+        console.log(`${response.items?.length || 0} calendários encontrados`)
+
+        // Atualizar metadata dos calendários
+        if (response.items && response.items.length > 0) {
+          await supabaseAdmin
+            .from('user_calendar_settings')
+            .update({
+              calendars_metadata: response.items,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id)
         }
-      )
 
-      const data = await response.json()
-      if (!response.ok) {
-        console.error('Erro ao buscar calendários:', data);
-        throw new Error('Failed to fetch calendars')
+        return new Response(
+          JSON.stringify({ calendars: response.items }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      } catch (error) {
+        console.error('Erro ao listar calendários:', error)
+        throw new Error('Failed to list calendars')
       }
-
-      // Update calendars metadata
-      await supabase
-        .from('user_calendar_settings')
-        .update({
-          calendars_metadata: data.items,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id)
-
-      console.log(`${data.items?.length || 0} calendários encontrados`);
-      
-      return new Response(
-        JSON.stringify({ calendars: data.items }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
     }
 
     if (path === 'sync-events') {
-      console.log('Iniciando sincronização de eventos...');
-      
-      // Validar selected_calendars
+      console.log('Sincronizando eventos')
+
       if (!Array.isArray(settings.selected_calendars) || settings.selected_calendars.length === 0) {
-        console.log('Nenhum calendário selecionado para sincronização');
+        console.log('Nenhum calendário selecionado para sincronização')
         return new Response(
           JSON.stringify({ events: [] }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
-      const now = new Date()
-      const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
-      const oneMonthAhead = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
-
-      console.log(`Buscando eventos entre ${oneMonthAgo.toISOString()} e ${oneMonthAhead.toISOString()}`);
-      
-      const promises = settings.selected_calendars.map(async (calId: string) => {
-        try {
-          console.log(`Buscando eventos do calendário ${calId}...`);
-          
-          const response = await fetch(
-            `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events?` +
-            `timeMin=${oneMonthAgo.toISOString()}&` +
-            `timeMax=${oneMonthAhead.toISOString()}&` +
-            `singleEvents=true`,
-            {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-              },
-            }
-          )
-
-          if (!response.ok) {
-            console.error(`Erro ao buscar eventos do calendário ${calId}:`, await response.text());
-            return [];
-          }
-
-          const data = await response.json()
-          console.log(`${data.items?.length || 0} eventos encontrados no calendário ${calId}`);
-          return data.items || []
-        } catch (error) {
-          console.error(`Erro ao processar calendário ${calId}:`, error);
-          return [];
-        }
+      const calendar = new calendar_v3.Calendar({
+        auth: settings.google_refresh_token,
       })
 
-      const allEvents = await Promise.all(promises)
-      const flatEvents = allEvents.flat()
+      const now = new Date()
+      const timeMin = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).toISOString()
+      const timeMax = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate()).toISOString()
 
-      console.log(`Total de ${flatEvents.length} eventos sincronizados`);
+      console.log(`Buscando eventos entre ${timeMin} e ${timeMax}`)
 
-      // Update last sync time
-      await supabase
-        .from('user_calendar_settings')
-        .update({
-          last_sync: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id)
+      try {
+        const allEvents = []
 
-      return new Response(
-        JSON.stringify({ events: flatEvents }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        for (const calendarId of settings.selected_calendars) {
+          console.log(`Buscando eventos do calendário ${calendarId}`)
+          
+          const response = await calendar.events.list({
+            calendarId,
+            timeMin,
+            timeMax,
+            singleEvents: true,
+          })
+
+          if (response.items) {
+            allEvents.push(...response.items)
+          }
+        }
+
+        console.log(`Total de ${allEvents.length} eventos encontrados`)
+
+        // Atualizar última sincronização
+        await supabaseAdmin
+          .from('user_calendar_settings')
+          .update({
+            last_sync: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+
+        return new Response(
+          JSON.stringify({ events: allEvents }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      } catch (error) {
+        console.error('Erro ao sincronizar eventos:', error)
+        throw new Error('Failed to sync events')
+      }
     }
 
     throw new Error('Invalid path')
 
   } catch (error) {
-    console.error('Erro na Edge Function:', error);
+    console.error('Erro na Edge Function:', error)
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        details: error.stack 
-      }),
+      JSON.stringify({ error: error.message }),
       { 
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

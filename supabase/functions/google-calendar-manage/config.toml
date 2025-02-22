@@ -4,3 +4,9 @@ project_id = "hkvjdxxndapxpslovrlc"
 [api]
 enabled = true
 cors = [ "*" ]
+
+[deploy]
+allowed_imports = [
+  "https://googleapis.deno.dev/v1/calendar:v3.ts",
+  "https://googleapis.deno.dev/v1/oauth2:v2.ts"
+]
