@@ -61,8 +61,8 @@ export function KanbanBoard() {
         onRefresh={() => refetch()}
       />
 
-      <div className="flex-1 overflow-x-auto p-4">
-        <div className="flex gap-4 h-full min-w-fit">
+      <div className="flex-1 overflow-x-auto px-4">
+        <div className="flex gap-4 h-full">
           {columns.map((column, index) => (
             <KanbanColumn
               key={column.id}

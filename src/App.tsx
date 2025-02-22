@@ -22,7 +22,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
       retry: 1,
       refetchOnWindowFocus: false,
     },
@@ -54,23 +54,27 @@ function App() {
                   path="*"
                   element={
                     <ProtectedRoute>
-                      <>
+                      <div className="flex w-full">
                         <AppSidebar />
-                        <SidebarInset className="w-full md:pl-72">
-                          <Routes>
-                            <Route path="/dashboard" element={<Index />} />
-                            <Route path="/kanban" element={<Kanban />} />
-                            <Route path="/agenda" element={<Agenda />} />
-                            <Route path="/clients/new" element={<NewClient />} />
-                            <Route path="/clients" element={<ClientsPage />} />
-                            <Route path="/clients/sources" element={<LeadSourcesPage />} />
-                            <Route path="/users" element={<UsersPage />} />
-                            <Route path="/api-docs" element={<ApiDocsPage />} />
-                            <Route path="*" element={<NotFound />} />
-                          </Routes>
+                        <SidebarInset className="flex-1 overflow-x-hidden">
+                          <div className="flex min-h-full">
+                            <div className="flex-1 min-w-0">
+                              <Routes>
+                                <Route path="/dashboard" element={<Index />} />
+                                <Route path="/kanban" element={<Kanban />} />
+                                <Route path="/agenda" element={<Agenda />} />
+                                <Route path="/clients/new" element={<NewClient />} />
+                                <Route path="/clients" element={<ClientsPage />} />
+                                <Route path="/clients/sources" element={<LeadSourcesPage />} />
+                                <Route path="/users" element={<UsersPage />} />
+                                <Route path="/api-docs" element={<ApiDocsPage />} />
+                                <Route path="*" element={<NotFound />} />
+                              </Routes>
+                            </div>
+                          </div>
                           <Toaster />
                         </SidebarInset>
-                      </>
+                      </div>
                     </ProtectedRoute>
                   }
                 />
