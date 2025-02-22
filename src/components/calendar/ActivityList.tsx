@@ -43,14 +43,16 @@ export function ActivityList({ date, filters }: ActivityListProps) {
 
       // Por enquanto retornamos apenas os eventos do sistema
       // TODO: Implementar integração com eventos do Google Calendar
-      return events.map(event => ({
+      const systemEvents: Activity[] = events.map(event => ({
         id: event.id,
         title: event.title,
         start_time: event.start_time,
         end_time: event.end_time,
         description: event.description,
-        source: 'system' as const
+        source: 'system'
       }));
+
+      return systemEvents;
     }
   })
 
@@ -84,12 +86,22 @@ export function ActivityList({ date, filters }: ActivityListProps) {
   }
 
   const filteredActivities = activities.filter(activity => {
-    if (!filters.source.includes(activity.source)) return false;
-    if (activity.source === 'google' && activity.calendar) {
-      return filters.calendars.length === 0 || filters.calendars.includes(activity.calendar.id);
+    // Primeiro verifica se a origem está nos filtros ativos
+    if (!filters.source.includes(activity.source)) {
+      return false;
     }
+    
+    // Se for um evento do Google Calendar, verifica os filtros de calendário
+    if (activity.source === 'google' && activity.calendar) {
+      if (filters.calendars.length === 0) {
+        return true; // Se não há calendários selecionados, mostra todos
+      }
+      return filters.calendars.includes(activity.calendar.id);
+    }
+    
+    // Para eventos do sistema, sempre retorna true se passou pelo filtro de origem
     return true;
-  })
+  });
 
   return (
     <div className="space-y-4">

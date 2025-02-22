@@ -11,7 +11,7 @@ interface AuthWindowMessage {
   error?: string;
 }
 
-interface Calendar {
+export interface Calendar {
   id: string;
   summary: string;
   backgroundColor: string;
