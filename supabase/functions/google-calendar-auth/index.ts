@@ -5,11 +5,17 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')!
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')!
 
-// Configuração do cliente Supabase
+// Cliente Supabase para autenticação
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+// Cliente Supabase com service_role para bypass RLS
+const adminSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false }
+})
 
 serve(async (req) => {
   // Handle CORS
@@ -116,8 +122,9 @@ serve(async (req) => {
 
       console.log('User ID extraído:', user.id) // Log para debug
 
-      // Salvar os tokens no banco de dados
-      const { data: userSettings, error: upsertError } = await supabase
+      // Usar adminSupabase para bypass RLS
+      console.log('Tentando salvar configurações com service_role')
+      const { data: userSettings, error: upsertError } = await adminSupabase
         .from('user_calendar_settings')
         .upsert({
           user_id: user.id,
@@ -139,6 +146,7 @@ serve(async (req) => {
         )
       }
 
+      console.log('Configurações salvas com sucesso:', userSettings)
       return new Response(
         JSON.stringify({ 
           message: 'Autenticação concluída com sucesso',
