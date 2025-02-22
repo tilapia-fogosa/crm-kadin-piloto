@@ -3,13 +3,39 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Phone, MessageSquare, Clock, Calendar } from "lucide-react";
 import { KanbanCard as KanbanCardType } from "./types";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isBefore, isAfter, startOfDay, isToday } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface KanbanCardProps {
   card: KanbanCardType;
   onClick: () => void;
   onWhatsAppClick: (e: React.MouseEvent) => void;
+}
+
+const getNextContactColor = (nextContactDate: Date | null): string => {
+  if (!nextContactDate) return "text-muted-foreground";
+  
+  const now = new Date();
+  const today = startOfDay(new Date());
+  const contactDay = startOfDay(nextContactDate);
+
+  // Verde: Data é amanhã ou posterior
+  if (isAfter(contactDay, today)) {
+    return "text-[#0EA5E9]"; // Ocean Blue
+  }
+
+  // Se for hoje, verifica o horário
+  if (isToday(nextContactDate)) {
+    // Vermelho: Já passou do horário
+    if (isBefore(nextContactDate, now)) {
+      return "text-[#ea384c]"; // Red
+    }
+    // Amarelo: É hoje mas ainda não chegou o horário
+    return "text-[#F97316]"; // Bright Orange
+  }
+
+  // Vermelho: Data anterior
+  return "text-[#ea384c]"; // Red
 }
 
 export function KanbanCard({
@@ -20,8 +46,10 @@ export function KanbanCard({
   const createdAtDate = parseISO(card.createdAt);
   const isValidDate = !isNaN(createdAtDate.getTime());
   const nextContactDate = card.nextContactDate ? parseISO(card.nextContactDate) : null;
+  const nextContactColor = getNextContactColor(nextContactDate);
   
-  return <Card className="cursor-pointer hover:bg-accent/5" onClick={onClick}>
+  return (
+    <Card className="cursor-pointer hover:bg-accent/5" onClick={onClick}>
       <CardHeader className="p-2 pb-0">
         <div className="flex justify-between items-start">
           <div className="space-y-1">
@@ -43,7 +71,7 @@ export function KanbanCard({
             </TooltipProvider>
           </div>
           {nextContactDate && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground px-0 py-0 rounded-none">
+            <div className={`flex items-center gap-1 text-xs ${nextContactColor} px-0 py-0 rounded-none font-medium`}>
               <Clock className="h-3 w-3" />
               {format(nextContactDate, 'dd-MM-yy HH:mm')}
             </div>
@@ -62,12 +90,17 @@ export function KanbanCard({
             <Phone className="h-4 w-4" />
             <span className="text-sm">{card.phoneNumber}</span>
           </div>
-          {card.labels && <div className="mt-1 flex flex-wrap gap-1">
-              {card.labels.map(label => <span key={label} className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium">
+          {card.labels && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {card.labels.map(label => (
+                <span key={label} className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium">
                   {label}
-                </span>)}
-            </div>}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 }
