@@ -17,8 +17,16 @@ export function useGoogleCalendar() {
   useEffect(() => {
     // Listener para mensagens do popup
     const handleMessage = async (event: MessageEvent<AuthWindowMessage>) => {
-      // Verificar origem da mensagem (na produção, usar origem específica)
+      // Verificar origem da mensagem
+      if (event.origin !== window.location.origin) {
+        console.log('Mensagem recebida de origem não permitida:', event.origin);
+        return;
+      }
+
+      console.log('Mensagem recebida:', event.data);
+
       if (event.data?.type === 'google-auth-success' && event.data.code) {
+        console.log('Código de autorização recebido');
         await handleAuthCallback(event.data.code);
       } else if (event.data?.type === 'google-auth-error') {
         console.error('Erro na autenticação:', event.data.error);
@@ -27,6 +35,7 @@ export function useGoogleCalendar() {
           description: "Não foi possível conectar com o Google Calendar",
           variant: "destructive"
         });
+        setIsConnecting(false);
       }
     };
 
@@ -38,10 +47,16 @@ export function useGoogleCalendar() {
     // Monitorar fechamento do popup
     if (authWindow) {
       const checkWindow = setInterval(() => {
-        if (authWindow.closed) {
-          setAuthWindow(null);
-          setIsConnecting(false);
-          clearInterval(checkWindow);
+        try {
+          if (authWindow.closed) {
+            console.log('Popup fechado');
+            setAuthWindow(null);
+            setIsConnecting(false);
+            clearInterval(checkWindow);
+          }
+        } catch (error) {
+          // Ignora erros de acesso cross-origin
+          console.log('Erro ao verificar estado do popup');
         }
       }, 500);
 
@@ -53,11 +68,14 @@ export function useGoogleCalendar() {
     try {
       setIsConnecting(true);
       
+      console.log('Iniciando autenticação com Google Calendar');
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
         body: { path: 'init' }
       });
 
       if (error) throw error;
+
+      console.log('URL de autenticação recebida:', data.url);
 
       // Configurações da janela de popup
       const width = 600;
@@ -73,6 +91,7 @@ export function useGoogleCalendar() {
       );
 
       if (popup) {
+        console.log('Popup aberto com sucesso');
         setAuthWindow(popup);
       } else {
         throw new Error('Popup bloqueado pelo navegador');
@@ -91,6 +110,7 @@ export function useGoogleCalendar() {
 
   const handleAuthCallback = async (code: string): Promise<boolean> => {
     try {
+      console.log('Processando callback com código:', code);
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
         body: { 
           path: 'callback',
@@ -100,6 +120,7 @@ export function useGoogleCalendar() {
 
       if (error) throw error;
 
+      console.log('Autenticação completada com sucesso');
       toast({
         title: "Conexão realizada",
         description: "Google Calendar conectado com sucesso!",

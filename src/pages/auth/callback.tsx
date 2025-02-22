@@ -13,35 +13,44 @@ export default function AuthCallback() {
       const error = searchParams.get('error')
       
       if (error) {
+        console.error('Erro na autenticação:', error)
         setMessage("Erro na autenticação")
         // Enviar mensagem de erro para janela principal
-        window.opener?.postMessage({
-          type: 'google-auth-error',
-          error
-        }, '*');
+        if (window.opener) {
+          window.opener.postMessage({
+            type: 'google-auth-error',
+            error
+          }, window.location.origin)
+        }
         // Fechar popup após um breve delay
-        setTimeout(() => window.close(), 1000);
-        return;
+        setTimeout(() => window.close(), 1000)
+        return
       }
       
       if (code) {
+        console.log('Código recebido:', code)
         // Enviar código para janela principal
-        window.opener?.postMessage({
-          type: 'google-auth-success',
-          code
-        }, '*');
+        if (window.opener) {
+          window.opener.postMessage({
+            type: 'google-auth-success',
+            code
+          }, window.location.origin)
+        }
         setMessage("Autenticação realizada com sucesso!")
         // Fechar popup após um breve delay
-        setTimeout(() => window.close(), 1000);
+        setTimeout(() => window.close(), 1000)
       } else {
+        console.error('Código não encontrado')
         setMessage("Código de autenticação não encontrado")
         // Enviar mensagem de erro para janela principal
-        window.opener?.postMessage({
-          type: 'google-auth-error',
-          error: 'Código não encontrado'
-        }, '*');
+        if (window.opener) {
+          window.opener.postMessage({
+            type: 'google-auth-error',
+            error: 'Código não encontrado'
+          }, window.location.origin)
+        }
         // Fechar popup após um breve delay
-        setTimeout(() => window.close(), 1000);
+        setTimeout(() => window.close(), 1000)
       }
     }
 

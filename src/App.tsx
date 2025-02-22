@@ -15,6 +15,7 @@ import LeadSourcesPage from "@/pages/clients/sources";
 import ApiDocsPage from "@/pages/api-docs";
 import Auth from "@/pages/Auth";
 import ChangePassword from "@/pages/auth/ChangePassword";
+import AuthCallback from "@/pages/auth/callback";
 import UsersPage from "@/pages/users";
 
 const queryClient = new QueryClient({
@@ -37,6 +38,7 @@ function App() {
             <Routes>
               {/* Rotas públicas */}
               <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               
               {/* Rota raiz */}
               <Route path="/" element={
