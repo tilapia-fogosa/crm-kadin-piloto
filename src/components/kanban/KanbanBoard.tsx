@@ -16,7 +16,6 @@ export function KanbanBoard() {
   const [showPendingOnly, setShowPendingOnly] = useState(false)
   const location = useLocation()
 
-  // Refetch data when component mounts or when route changes to /kanban
   useEffect(() => {
     console.log("Kanban Board mounted or route changed, refetching data...")
     refetch()
@@ -29,7 +28,6 @@ export function KanbanBoard() {
   const filterClients = (clients: any[] | null) => {
     if (!clients) return null
     
-    // Se o filtro estiver desligado, retorna todos os clientes
     if (!showPendingOnly) {
       console.log('Filter is OFF, showing all clients')
       return clients
@@ -39,14 +37,12 @@ export function KanbanBoard() {
     console.log('Filtering clients with showPendingOnly:', showPendingOnly)
 
     return clients.filter(client => {
-      // Se não tem data de próximo contato
       if (!client.next_contact_date) {
         console.log('Client with no next contact date:', client.name)
-        return true // Mostra clientes sem data de próximo contato quando o filtro está ligado
+        return true
       }
 
       const nextContactDate = startOfDay(new Date(client.next_contact_date))
-      // Mostra apenas os que têm data menor ou igual a hoje
       const shouldShow = isBefore(nextContactDate, today) || isEqual(nextContactDate, today)
       console.log('Client:', client.name, 'Next contact:', nextContactDate, 'Should show:', shouldShow)
       return shouldShow
@@ -66,10 +62,11 @@ export function KanbanBoard() {
       />
 
       <div className="flex h-full gap-4 overflow-x-auto pb-4">
-        {columns.map((column) => (
+        {columns.map((column, index) => (
           <KanbanColumn
             key={column.id}
             column={column}
+            index={index}
             onWhatsAppClick={handleWhatsAppClick}
             onRegisterAttempt={registerAttempt}
             onRegisterEffectiveContact={registerEffectiveContact}

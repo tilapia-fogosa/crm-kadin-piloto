@@ -8,6 +8,7 @@ import { CardSheet } from "./components/sheet/CardSheet"
 
 interface KanbanColumnProps {
   column: KanbanColumnType
+  index?: number
   onWhatsAppClick: (e: React.MouseEvent, phoneNumber: string) => void
   onRegisterAttempt: (attempt: ContactAttempt) => void
   onRegisterEffectiveContact: (contact: EffectiveContact) => void
@@ -16,6 +17,7 @@ interface KanbanColumnProps {
 
 export function KanbanColumn({ 
   column, 
+  index = 0,
   onWhatsAppClick, 
   onRegisterAttempt,
   onRegisterEffectiveContact,
@@ -43,8 +45,10 @@ export function KanbanColumn({
     setActivityToDelete(null)
   }
 
+  const isEven = index % 2 === 0
+
   return (
-    <div className="flex w-80 flex-none flex-col gap-4">
+    <div className={`flex w-80 flex-none flex-col gap-4 rounded-lg p-4 shadow-sm ${isEven ? 'bg-white' : 'bg-[#F1F0FB]'}`}>
       <ColumnHeader title={column.title} cardCount={column.cards.length} />
       
       <div className="flex flex-col gap-4">
