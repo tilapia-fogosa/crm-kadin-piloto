@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { google } from "https://deno.land/x/google_oauth2_api/mod.ts";
+import { OAuth2Client } from "https://deno.land/x/oauth2_client@v1.0.2/mod.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -44,19 +44,16 @@ serve(async (req) => {
       throw new Error('Configurações do calendário não encontradas')
     }
 
-    // Configurar cliente Google
-    const oauth2Client = new google.auth.OAuth2(
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET,
-      `${SUPABASE_URL}/functions/v1/google-calendar-auth`
-    )
+    // Configurar cliente OAuth2
+    const oauth2Client = new OAuth2Client({
+      clientId: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
+      tokenUri: "https://oauth2.googleapis.com/token"
+    });
 
     // Configurar refresh token
-    oauth2Client.setCredentials({
-      refresh_token: settings.google_refresh_token
-    })
-
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+    const tokens = await oauth2Client.refreshToken.refresh(settings.google_refresh_token);
+    const accessToken = tokens.accessToken;
 
     // Parse da URL para obter o path e query params
     const url = new URL(req.url)
@@ -66,8 +63,21 @@ serve(async (req) => {
       case 'calendars':
         if (req.method === 'GET') {
           // Listar calendários disponíveis
-          const response = await calendar.calendarList.list()
-          const calendars = response.data.items || []
+          const response = await fetch(
+            'https://www.googleapis.com/calendar/v3/users/me/calendarList',
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          );
+          
+          if (!response.ok) {
+            throw new Error('Erro ao buscar calendários');
+          }
+          
+          const data = await response.json();
+          const calendars = data.items || [];
 
           // Atualizar metadados no banco
           await adminSupabase
@@ -75,7 +85,7 @@ serve(async (req) => {
             .update({
               calendars_metadata: calendars.reduce((acc, cal) => ({
                 ...acc,
-                [cal.id!]: {
+                [cal.id]: {
                   name: cal.summary,
                   primary: cal.primary || false,
                   backgroundColor: cal.backgroundColor
@@ -128,18 +138,19 @@ serve(async (req) => {
           const selectedCalendars = settings.selected_calendars || []
           const allEvents = await Promise.all(
             selectedCalendars.map(calendarId =>
-              calendar.events.list({
-                calendarId,
-                timeMin,
-                timeMax,
-                singleEvents: true,
-                orderBy: 'startTime'
-              })
+              fetch(
+                `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                  },
+                }
+              ).then(response => response.json())
             )
           )
 
           const events = allEvents.flatMap(response => 
-            (response.data.items || []).map(event => ({
+            (response.items || []).map(event => ({
               id: event.id,
               calendarId: event.calendarId,
               title: event.summary,

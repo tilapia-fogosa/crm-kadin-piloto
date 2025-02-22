@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { google } from "https://deno.land/x/google_oauth2_api/mod.ts";
+import { OAuth2Client } from "https://deno.land/x/oauth2_client@v1.0.2/mod.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
@@ -45,29 +45,29 @@ serve(async (req) => {
     const { path, code } = await req.json()
 
     // OAuth2 client do Google
-    const oauth2Client = new google.auth.OAuth2(
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET,
-      `${SUPABASE_URL}/functions/v1/google-calendar-auth`
-    )
+    const oauth2Client = new OAuth2Client({
+      clientId: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
+      authorizationEndpointUri: "https://accounts.google.com/o/oauth2/v2/auth",
+      tokenUri: "https://oauth2.googleapis.com/token",
+      redirectUri: `${SUPABASE_URL}/functions/v1/google-calendar-auth`,
+      defaults: {
+        scope: ["https://www.googleapis.com/auth/calendar.readonly", 
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/userinfo.email"]
+      }
+    });
 
     switch (path) {
       case 'init': {
         // Gerar URL de autorização
-        const scopes = [
-          'https://www.googleapis.com/auth/calendar.readonly',
-          'https://www.googleapis.com/auth/calendar.events',
-          'https://www.googleapis.com/auth/userinfo.email'
-        ]
-
-        const url = oauth2Client.generateAuthUrl({
-          access_type: 'offline',
-          scope: scopes,
-          prompt: 'consent'
-        })
+        const url = await oauth2Client.code.getAuthorizationUri({
+          access_type: "offline",
+          prompt: "consent"
+        });
 
         return new Response(
-          JSON.stringify({ url }),
+          JSON.stringify({ url: url.toString() }),
           { headers: { 'Content-Type': 'application/json' } }
         )
       }
@@ -78,18 +78,24 @@ serve(async (req) => {
         }
 
         // Trocar código por tokens
-        const { tokens } = await oauth2Client.getToken(code)
-        oauth2Client.setCredentials(tokens)
-
-        if (!tokens.refresh_token) {
+        const tokens = await oauth2Client.code.getToken(code);
+        
+        if (!tokens.refreshToken) {
           throw new Error('Refresh token não recebido')
         }
 
         // Obter informações do usuário Google
-        const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client })
-        const userInfo = await oauth2.userinfo.get()
+        const userInfoResponse = await fetch(
+          'https://www.googleapis.com/oauth2/v2/userinfo',
+          {
+            headers: {
+              Authorization: `Bearer ${tokens.accessToken}`,
+            },
+          }
+        );
+        const userInfo = await userInfoResponse.json();
         
-        console.log('Informações do usuário Google:', userInfo.data)
+        console.log('Informações do usuário Google:', userInfo)
 
         // Usar adminSupabase para bypass RLS
         console.log('Tentando salvar configurações com service_role')
@@ -97,9 +103,9 @@ serve(async (req) => {
           .from('user_calendar_settings')
           .upsert({
             user_id: user.id,
-            google_refresh_token: tokens.refresh_token,
+            google_refresh_token: tokens.refreshToken,
             sync_enabled: true,
-            google_account_email: userInfo.data.email,
+            google_account_email: userInfo.email,
             last_sync: new Date().toISOString()
           })
           .select()
@@ -117,7 +123,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             message: 'Autenticação concluída com sucesso',
-            email: userInfo.data.email
+            email: userInfo.email
           }),
           { headers: { 'Content-Type': 'application/json' } }
         )
