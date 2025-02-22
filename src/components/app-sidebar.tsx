@@ -116,14 +116,14 @@ export function AppSidebar() {
             <Menu className="h-4 w-4" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-72 p-0 bg-[#311D64]">
+        <SheetContent side="left" className="w-60 p-0 bg-[#311D64]">
           {sidebar}
         </SheetContent>
       </Sheet>
-      <div className="hidden bg-[#311D64] md:block w-72 fixed h-full z-40">
+      <div className="hidden bg-[#311D64] md:block w-60 fixed h-full z-40">
         {sidebar}
       </div>
-      <div className="hidden md:block w-72">
+      <div className="hidden md:block w-60">
         {/* Espaçador para compensar a sidebar fixa */}
       </div>
     </>
