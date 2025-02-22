@@ -1,0 +1,6 @@
+
+project_id = "hkvjdxxndapxpslovrlc"
+
+[api]
+enabled = true
+cors = [ "*" ]

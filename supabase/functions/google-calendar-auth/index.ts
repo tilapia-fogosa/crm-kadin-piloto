@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
-import { corsHeaders } from '../_shared/cors.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { google } from "https://deno.land/x/google_oauth2_api/mod.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
@@ -20,160 +20,122 @@ const adminSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      },
+    })
   }
 
+  const url = new URL(req.url)
+  
   try {
-    const { path, code, error } = await req.json()
-
-    // Tratamento de erros do OAuth
-    if (error) {
-      console.error('Erro na autenticação OAuth:', error)
-      return new Response(
-        JSON.stringify({ error: 'Erro na autenticação do Google' }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400 
-        }
-      )
+    // Verificar autenticação
+    const authHeader = req.headers.get('Authorization')!
+    const { data: { user }, error: userError } = await adminSupabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    )
+    
+    if (userError || !user) {
+      throw new Error('Unauthorized')
     }
 
-    // Rota para iniciar o fluxo OAuth
-    if (path === 'init') {
-      // Usar o origin da requisição como base para o redirect_uri
-      const origin = req.headers.get('origin') || 'http://localhost:8080'
-      const redirectUri = `${origin}/auth/callback`
-      console.log('Redirect URI:', redirectUri) // Log para debug
-      
-      const scope = encodeURIComponent('https://www.googleapis.com/auth/calendar')
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`
-      
-      return new Response(
-        JSON.stringify({ url: authUrl }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      )
-    }
+    // Parse do body da requisição
+    const { path, code } = await req.json()
 
-    // Rota para processar o callback do OAuth
-    if (path === 'callback' && code) {
-      const origin = req.headers.get('origin') || 'http://localhost:8080'
-      const redirectUri = `${origin}/auth/callback`
-      console.log('Callback Redirect URI:', redirectUri) // Log para debug
-      
-      // Trocar o código por tokens
-      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          code,
-          client_id: GOOGLE_CLIENT_ID,
-          client_secret: GOOGLE_CLIENT_SECRET,
-          redirect_uri: redirectUri,
-          grant_type: 'authorization_code',
-        }),
-      })
-
-      const tokens = await tokenResponse.json()
-
-      if (tokens.error) {
-        console.error('Erro ao obter tokens:', tokens.error)
-        return new Response(
-          JSON.stringify({ error: 'Falha ao obter tokens do Google' }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400 
-          }
-        )
-      }
-
-      // Obter informações do usuário autenticado
-      const authHeader = req.headers.get('Authorization')
-      if (!authHeader) {
-        return new Response(
-          JSON.stringify({ error: 'Não autorizado' }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 401 
-          }
-        )
-      }
-
-      // Extrair o token JWT do header de autorização
-      const token = authHeader.replace('Bearer ', '')
-      
-      // Decodificar o JWT para obter o user_id
-      const { data: { user }, error: userError } = await supabase.auth.getUser(token)
-      
-      if (userError || !user) {
-        console.error('Erro ao decodificar token:', userError)
-        return new Response(
-          JSON.stringify({ error: 'Token inválido' }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 401 
-          }
-        )
-      }
-
-      console.log('User ID extraído:', user.id) // Log para debug
-
-      // Usar adminSupabase para bypass RLS
-      console.log('Tentando salvar configurações com service_role')
-      const { data: userSettings, error: upsertError } = await adminSupabase
-        .from('user_calendar_settings')
-        .upsert({
-          user_id: user.id,
-          google_refresh_token: tokens.refresh_token,
-          sync_enabled: true,
-          last_sync: new Date().toISOString(),
-        })
-        .select()
-        .single()
-
-      if (upsertError) {
-        console.error('Erro ao salvar configurações:', upsertError)
-        return new Response(
-          JSON.stringify({ error: 'Erro ao salvar configurações' }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 500 
-          }
-        )
-      }
-
-      console.log('Configurações salvas com sucesso:', userSettings)
-      return new Response(
-        JSON.stringify({ 
-          message: 'Autenticação concluída com sucesso',
-          data: userSettings 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      )
-    }
-
-    return new Response(
-      JSON.stringify({ error: 'Rota inválida' }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400 
-      }
+    // OAuth2 client do Google
+    const oauth2Client = new google.auth.OAuth2(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      `${SUPABASE_URL}/functions/v1/google-calendar-auth`
     )
 
-  } catch (err) {
-    console.error('Erro interno:', err)
+    switch (path) {
+      case 'init': {
+        // Gerar URL de autorização
+        const scopes = [
+          'https://www.googleapis.com/auth/calendar.readonly',
+          'https://www.googleapis.com/auth/calendar.events',
+          'https://www.googleapis.com/auth/userinfo.email'
+        ]
+
+        const url = oauth2Client.generateAuthUrl({
+          access_type: 'offline',
+          scope: scopes,
+          prompt: 'consent'
+        })
+
+        return new Response(
+          JSON.stringify({ url }),
+          { headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+
+      case 'callback': {
+        if (!code) {
+          throw new Error('Código de autorização não fornecido')
+        }
+
+        // Trocar código por tokens
+        const { tokens } = await oauth2Client.getToken(code)
+        oauth2Client.setCredentials(tokens)
+
+        if (!tokens.refresh_token) {
+          throw new Error('Refresh token não recebido')
+        }
+
+        // Obter informações do usuário Google
+        const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client })
+        const userInfo = await oauth2.userinfo.get()
+        
+        console.log('Informações do usuário Google:', userInfo.data)
+
+        // Usar adminSupabase para bypass RLS
+        console.log('Tentando salvar configurações com service_role')
+        const { data: userSettings, error: upsertError } = await adminSupabase
+          .from('user_calendar_settings')
+          .upsert({
+            user_id: user.id,
+            google_refresh_token: tokens.refresh_token,
+            sync_enabled: true,
+            google_account_email: userInfo.data.email,
+            last_sync: new Date().toISOString()
+          })
+          .select()
+          .single()
+
+        if (upsertError) {
+          console.error('Erro ao salvar configurações:', upsertError)
+          throw new Error(
+            'Erro ao salvar configurações: ' + 
+            (upsertError?.message || 'Erro desconhecido')
+          )
+        }
+
+        console.log('Configurações salvas com sucesso:', userSettings)
+        return new Response(
+          JSON.stringify({ 
+            message: 'Autenticação concluída com sucesso',
+            email: userInfo.data.email
+          }),
+          { headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+
+      default:
+        return new Response(
+          JSON.stringify({ error: 'Path inválido' }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        )
+    }
+  } catch (error) {
+    console.error('Erro:', error)
     return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor' }),
+      JSON.stringify({ error: error.message }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
+        status: error.message === 'Unauthorized' ? 401 : 500,
+        headers: { 'Content-Type': 'application/json' }
       }
     )
   }

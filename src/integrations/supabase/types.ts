@@ -516,31 +516,37 @@ export type Database = {
       }
       user_calendar_settings: {
         Row: {
-          calendar_id: string | null
+          calendars_metadata: Json | null
           created_at: string | null
+          google_account_email: string | null
           google_refresh_token: string | null
           id: string
           last_sync: string | null
+          selected_calendars: Json | null
           sync_enabled: boolean | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
-          calendar_id?: string | null
+          calendars_metadata?: Json | null
           created_at?: string | null
+          google_account_email?: string | null
           google_refresh_token?: string | null
           id?: string
           last_sync?: string | null
+          selected_calendars?: Json | null
           sync_enabled?: boolean | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
-          calendar_id?: string | null
+          calendars_metadata?: Json | null
           created_at?: string | null
+          google_account_email?: string | null
           google_refresh_token?: string | null
           id?: string
           last_sync?: string | null
+          selected_calendars?: Json | null
           sync_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string
