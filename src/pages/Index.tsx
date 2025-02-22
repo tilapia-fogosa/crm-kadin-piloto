@@ -23,11 +23,11 @@ const Index = () => {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-6">
-      <div className="flex items-center justify-between space-y-2">
+    <div className="space-y-4 p-6 flex flex-col items-start">
+      <div className="flex items-center justify-between w-full">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 w-full">
         <StatsCard
           title="Mês Atual"
           value={stats?.oneMonth.total || 0}
@@ -57,7 +57,7 @@ const Index = () => {
           description="Comparado aos 12 meses anteriores"
         />
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 w-full">
         <LeadsChart />
         <div className="col-span-4 lg:col-span-3">
           <div className="flex items-center justify-between space-y-2">
