@@ -1,7 +1,9 @@
+
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { GoogleCalendarConnect } from "@/components/calendar/GoogleCalendarConnect"
 
 interface Activity {
   id: string
@@ -35,8 +37,9 @@ export default function Agenda() {
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
+      <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Agenda</h2>
+        <GoogleCalendarConnect />
       </div>
 
       <div className="grid grid-cols-[300px,1fr] gap-4">
