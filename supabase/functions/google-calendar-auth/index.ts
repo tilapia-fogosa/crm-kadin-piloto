@@ -1,22 +1,18 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { oauth2_v2 } from "https://googleapis.deno.dev/v1/oauth2:v2.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS'
 }
 
-const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')
-const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-
 serve(async (req) => {
-  // Handle CORS
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -24,12 +20,12 @@ serve(async (req) => {
     
     // Criar cliente Supabase com service_role key
     const supabaseAdmin = createClient(
-      SUPABASE_URL!,
-      SUPABASE_SERVICE_ROLE_KEY!
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
     // Validar configuração
-    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    if (!Deno.env.get('GOOGLE_CLIENT_ID') || !Deno.env.get('GOOGLE_CLIENT_SECRET')) {
       console.error('[OAuth] Erro: Credenciais do Google não configuradas')
       throw new Error('Google credentials not configured')
     }
@@ -63,7 +59,7 @@ serve(async (req) => {
       
       const googleAuthUrl = 
         `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${GOOGLE_CLIENT_ID}` +
+        `client_id=${Deno.env.get('GOOGLE_CLIENT_ID')}` +
         `&redirect_uri=${redirectUri}` +
         `&response_type=code` +
         `&scope=${scope}` +
@@ -88,69 +84,80 @@ serve(async (req) => {
 
       const redirectUri = `${req.headers.get('origin')}/auth/callback`
 
-      // Inicializar cliente OAuth2
-      const oauth2Client = new oauth2_v2.OAuth2({
-        clientId: GOOGLE_CLIENT_ID!,
-        clientSecret: GOOGLE_CLIENT_SECRET!,
+      // Trocar código por tokens
+      console.log('[OAuth] Trocando código por tokens')
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code,
+          client_id: Deno.env.get('GOOGLE_CLIENT_ID')!,
+          client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
+          redirect_uri: redirectUri,
+          grant_type: 'authorization_code',
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        console.error('[OAuth] Erro na resposta do token:', await tokenResponse.text())
+        throw new Error('Failed to exchange code for tokens')
+      }
+
+      const tokens = await tokenResponse.json()
+      
+      console.log('[OAuth] Tokens obtidos:', { 
+        hasAccessToken: !!tokens.access_token,
+        hasRefreshToken: !!tokens.refresh_token,
+        expiryDate: tokens.expiry_date
+      })
+
+      // Configurar cliente OAuth2
+      const oauth2Client = new oauth2_v2.Oauth2({
+        clientId: Deno.env.get('GOOGLE_CLIENT_ID')!,
+        clientSecret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
         redirectUri: redirectUri,
       });
 
-      try {
-        // Trocar código por tokens
-        console.log('[OAuth] Trocando código por tokens')
-        const { tokens } = await oauth2Client.getToken(code);
-        
-        console.log('[OAuth] Tokens obtidos:', { 
-          hasAccessToken: !!tokens.access_token,
-          hasRefreshToken: !!tokens.refresh_token,
-          expiryDate: tokens.expiry_date
-        });
+      oauth2Client.setCredentials(tokens);
 
-        // Configurar tokens no cliente
-        oauth2Client.setCredentials(tokens);
+      // Obter informações do usuário
+      console.log('[OAuth] Obtendo informações do usuário Google')
+      const userInfo = await oauth2Client.userinfo.get();
+      
+      console.log('[OAuth] Informações obtidas:', {
+        hasEmail: !!userInfo.email,
+        emailVerified: userInfo.verified_email
+      });
 
-        // Obter informações do usuário
-        console.log('[OAuth] Obtendo informações do usuário Google')
-        const userInfo = await oauth2Client.userinfo.get();
-        
-        console.log('[OAuth] Informações obtidas:', {
-          hasEmail: !!userInfo.email,
-          emailVerified: userInfo.verified_email
-        });
-
-        if (!userInfo.email) {
-          throw new Error('User email not found in Google response');
-        }
-
-        // Salvar configurações
-        console.log('[OAuth] Salvando configurações do usuário')
-        const { error: insertError } = await supabaseAdmin
-          .from('user_calendar_settings')
-          .upsert({
-            user_id: user.id,
-            google_refresh_token: tokens.refresh_token,
-            google_account_email: userInfo.email,
-            sync_enabled: true,
-            selected_calendars: [],
-            calendars_metadata: [],
-            updated_at: new Date().toISOString(),
-          })
-
-        if (insertError) {
-          console.error('[OAuth] Erro ao salvar tokens:', insertError)
-          throw new Error('Failed to store refresh token')
-        }
-
-        console.log('[OAuth] Configurações salvas com sucesso')
-
-        return new Response(
-          JSON.stringify({ success: true }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      } catch (error) {
-        console.error('[OAuth] Erro ao processar tokens:', error)
-        throw error
+      if (!userInfo.email) {
+        throw new Error('User email not found in Google response');
       }
+
+      // Salvar configurações
+      console.log('[OAuth] Salvando configurações do usuário')
+      const { error: insertError } = await supabaseAdmin
+        .from('user_calendar_settings')
+        .upsert({
+          user_id: user.id,
+          google_refresh_token: tokens.refresh_token,
+          google_account_email: userInfo.email,
+          sync_enabled: true,
+          selected_calendars: [],
+          calendars_metadata: [],
+          updated_at: new Date().toISOString(),
+        })
+
+      if (insertError) {
+        console.error('[OAuth] Erro ao salvar tokens:', insertError)
+        throw new Error('Failed to store refresh token')
+      }
+
+      console.log('[OAuth] Configurações salvas com sucesso')
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     throw new Error('Invalid path')
