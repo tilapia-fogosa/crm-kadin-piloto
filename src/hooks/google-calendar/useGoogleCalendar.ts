@@ -1,10 +1,12 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useGoogleAuth } from './useGoogleAuth';
 import { useCalendarOperations } from './useCalendarOperations';
 import type { AuthWindowMessage } from './types';
 
 export function useGoogleCalendar() {
+  const processingCodeRef = useRef<string | null>(null);
+  
   const { 
     settings,
     calendars,
@@ -36,15 +38,32 @@ export function useGoogleCalendar() {
       console.log('[GoogleCalendar] Mensagem recebida:', event.data);
 
       if (event.data?.type === 'google-auth-success' && event.data.code) {
+        const code = event.data.code;
+        
+        // Prevenir processamento duplicado do mesmo código
+        if (processingCodeRef.current === code) {
+          console.log('[GoogleCalendar] Código já está sendo processado:', code);
+          return;
+        }
+        
+        processingCodeRef.current = code;
         console.log('[GoogleCalendar] Código de autorização recebido');
-        await handleAuthCallback(event.data.code);
+        
+        try {
+          await handleAuthCallback(code);
+        } finally {
+          // Limpar o código após processamento
+          processingCodeRef.current = null;
+        }
       } else if (event.data?.type === 'google-auth-error') {
         console.error('[GoogleCalendar] Erro na autenticação:', event.data.error);
       }
     };
 
     window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
   }, [handleAuthCallback]);
 
   useEffect(() => {

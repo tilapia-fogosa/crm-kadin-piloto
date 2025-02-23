@@ -6,7 +6,6 @@ import { OAuth2 } from "https://googleapis.deno.dev/v1/oauth2:v2.ts"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS'
 }
 
 serve(async (req) => {
@@ -84,13 +83,6 @@ serve(async (req) => {
 
       const redirectUri = `${req.headers.get('origin')}/auth/callback`
 
-      // Configurar cliente OAuth2
-      const oauth2Client = new OAuth2({
-        clientId: Deno.env.get('GOOGLE_CLIENT_ID')!,
-        clientSecret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
-        redirectUri: redirectUri,
-      });
-
       // Trocar código por tokens
       console.log('[OAuth] Trocando código por tokens')
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -118,9 +110,19 @@ serve(async (req) => {
         expiryDate: tokens.expiry_date
       })
 
-      // Obter informações do usuário
+      // Obter informações do usuário usando o access token
       console.log('[OAuth] Obtendo informações do usuário Google')
-      const userInfo = await oauth2Client.userinfo.get();
+      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: {
+          'Authorization': `Bearer ${tokens.access_token}`
+        }
+      });
+
+      if (!userInfoResponse.ok) {
+        throw new Error('Failed to get user info');
+      }
+
+      const userInfo = await userInfoResponse.json();
       
       console.log('[OAuth] Informações obtidas:', {
         hasEmail: !!userInfo.email,
