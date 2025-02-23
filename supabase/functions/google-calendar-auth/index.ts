@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { OAuth2 } from "https://googleapis.deno.dev/v1/oauth2:v2.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -54,7 +53,8 @@ serve(async (req) => {
       console.log('[OAuth] Iniciando fluxo de autenticação Google')
       
       const redirectUri = `${req.headers.get('origin')}/auth/callback`
-      const scope = encodeURIComponent('https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events')
+      // Adicionando os escopos profile e email para acessar informações do usuário
+      const scope = encodeURIComponent('https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events profile email')
       
       const googleAuthUrl = 
         `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -98,8 +98,9 @@ serve(async (req) => {
       });
 
       if (!tokenResponse.ok) {
-        console.error('[OAuth] Erro na resposta do token:', await tokenResponse.text())
-        throw new Error('Failed to exchange code for tokens')
+        const errorText = await tokenResponse.text();
+        console.error('[OAuth] Erro na resposta do token:', errorText);
+        throw new Error(`Failed to exchange code for tokens: ${errorText}`);
       }
 
       const tokens = await tokenResponse.json()
@@ -119,14 +120,17 @@ serve(async (req) => {
       });
 
       if (!userInfoResponse.ok) {
-        throw new Error('Failed to get user info');
+        const errorText = await userInfoResponse.text();
+        console.error('[OAuth] Erro ao obter informações do usuário:', errorText);
+        throw new Error(`Failed to get user info: ${errorText}`);
       }
 
       const userInfo = await userInfoResponse.json();
       
       console.log('[OAuth] Informações obtidas:', {
         hasEmail: !!userInfo.email,
-        emailVerified: userInfo.verified_email
+        emailVerified: userInfo.verified_email,
+        responseData: userInfo // Log all user info for debugging
       });
 
       if (!userInfo.email) {
