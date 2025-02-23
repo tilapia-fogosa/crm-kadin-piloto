@@ -1,4 +1,3 @@
-
 import * as React from "react"
 
 import type {
@@ -127,41 +126,40 @@ export const reducer = (state: State, action: Action): State => {
   }
 }
 
-// Criar um contexto React para gerenciar o estado global dos toasts
-const ToastContext = React.createContext<{
-  state: State;
-  dispatch: React.Dispatch<Action>;
-}>({
+type ToastContextType = {
+  state: State
+  dispatch: React.Dispatch<Action>
+}
+
+const ToastContext = React.createContext<ToastContextType>({
   state: { toasts: [] },
   dispatch: () => null,
-});
+})
 
-// Provider component
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = React.useReducer(reducer, {
     toasts: [],
-  });
+  })
 
   return (
     <ToastContext.Provider value={{ state, dispatch }}>
       {children}
     </ToastContext.Provider>
-  );
+  )
 }
 
-// Hook para usar o contexto
 function useToastContext() {
-  const context = React.useContext(ToastContext);
+  const context = React.useContext(ToastContext)
   if (context === undefined) {
-    throw new Error("useToast must be used within a ToastProvider");
+    throw new Error("useToast must be used within a ToastProvider")
   }
-  return context;
+  return context
 }
 
 type Toast = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast) {
-  const { dispatch } = useToastContext();
+  const { dispatch } = useToastContext()
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -192,7 +190,7 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
-  const { state, dispatch } = useToastContext();
+  const { state, dispatch } = useToastContext()
 
   return {
     ...state,
