@@ -99,17 +99,17 @@ export function useGoogleCalendar() {
     const handleMessage = async (event: MessageEvent<AuthWindowMessage>) => {
       // Verificar origem da mensagem
       if (event.origin !== window.location.origin) {
-        console.log('Mensagem recebida de origem não permitida:', event.origin);
+        console.log('[GoogleCalendar] Mensagem recebida de origem não permitida:', event.origin);
         return;
       }
 
-      console.log('Mensagem recebida:', event.data);
+      console.log('[GoogleCalendar] Mensagem recebida:', event.data);
 
       if (event.data?.type === 'google-auth-success' && event.data.code) {
-        console.log('Código de autorização recebido');
+        console.log('[GoogleCalendar] Código de autorização recebido');
         await handleAuthCallback(event.data.code);
       } else if (event.data?.type === 'google-auth-error') {
-        console.error('Erro na autenticação:', event.data.error);
+        console.error('[GoogleCalendar] Erro na autenticação:', event.data.error);
         toast({
           title: "Erro na conexão",
           description: "Não foi possível conectar com o Google Calendar",
@@ -148,22 +148,28 @@ export function useGoogleCalendar() {
     try {
       setIsConnecting(true);
       
-      console.log('Iniciando autenticação com Google Calendar');
+      console.log('[GoogleCalendar] Iniciando autenticação');
 
       // Obter a sessão atual do usuário
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session) {
+        console.error('[GoogleCalendar] Erro de sessão:', sessionError);
         throw new Error('Usuário não autenticado');
       }
+
+      console.log('[GoogleCalendar] Sessão válida, obtendo URL de autenticação');
 
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
         body: { path: 'init' }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[GoogleCalendar] Erro ao obter URL:', error);
+        throw error;
+      }
 
-      console.log('URL de autenticação recebida:', data.url);
+      console.log('[GoogleCalendar] URL de autenticação recebida:', data.url);
 
       // Configurações da janela de popup
       const width = 600;
@@ -179,14 +185,15 @@ export function useGoogleCalendar() {
       );
 
       if (popup) {
-        console.log('Popup aberto com sucesso');
+        console.log('[GoogleCalendar] Popup aberto com sucesso');
         setAuthWindow(popup);
       } else {
+        console.error('[GoogleCalendar] Popup bloqueado pelo navegador');
         throw new Error('Popup bloqueado pelo navegador');
       }
 
     } catch (error) {
-      console.error('Erro ao iniciar autenticação:', error);
+      console.error('[GoogleCalendar] Erro ao iniciar autenticação:', error);
       toast({
         title: "Erro na conexão",
         description: "Não foi possível conectar com o Google Calendar. Verifique se os popups estão permitidos.",

@@ -20,15 +20,24 @@ serve(async (req) => {
   }
 
   try {
+    console.log('[OAuth] Iniciando processamento da requisição')
+    
     // Criar cliente Supabase com service_role key
     const supabaseAdmin = createClient(
       SUPABASE_URL!,
       SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    // Validar configuração
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+      console.error('[OAuth] Erro: Credenciais do Google não configuradas')
+      throw new Error('Google credentials not configured')
+    }
+
     // Obter o token de autenticação do usuário
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('[OAuth] Erro: Header de autorização ausente')
       throw new Error('No authorization header')
     }
 
@@ -38,16 +47,16 @@ serve(async (req) => {
     )
     
     if (userError || !user) {
-      console.error('Erro ao validar usuário:', userError)
+      console.error('[OAuth] Erro ao validar usuário:', userError)
       throw new Error('User not authenticated')
     }
 
-    console.log('Usuário autenticado:', user.id)
+    console.log('[OAuth] Usuário autenticado:', user.id)
 
     const { path, code } = await req.json()
 
     if (path === 'init') {
-      console.log('Iniciando fluxo de autenticação Google')
+      console.log('[OAuth] Iniciando fluxo de autenticação Google')
       
       const redirectUri = `${req.headers.get('origin')}/auth/callback`
       const scope = encodeURIComponent('https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events')
@@ -61,6 +70,8 @@ serve(async (req) => {
         `&access_type=offline` +
         `&prompt=consent`
 
+      console.log('[OAuth] URL de autenticação gerada:', googleAuthUrl)
+
       return new Response(
         JSON.stringify({ url: googleAuthUrl }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -69,10 +80,11 @@ serve(async (req) => {
 
     if (path === 'callback') {
       if (!code) {
+        console.error('[OAuth] Erro: Código não fornecido no callback')
         throw new Error('No code provided')
       }
 
-      console.log('Processando callback com código:', code)
+      console.log('[OAuth] Processando callback com código:', code)
 
       const redirectUri = `${req.headers.get('origin')}/auth/callback`
 
@@ -83,59 +95,68 @@ serve(async (req) => {
         redirectUri: redirectUri,
       });
 
-      // Trocar código por tokens
-      const { tokens } = await oauth2Client.getToken(code);
-      
-      console.log('Tokens obtidos com sucesso:', { 
-        hasAccessToken: !!tokens.access_token,
-        hasRefreshToken: !!tokens.refresh_token 
-      });
+      try {
+        // Trocar código por tokens
+        console.log('[OAuth] Trocando código por tokens')
+        const { tokens } = await oauth2Client.getToken(code);
+        
+        console.log('[OAuth] Tokens obtidos:', { 
+          hasAccessToken: !!tokens.access_token,
+          hasRefreshToken: !!tokens.refresh_token,
+          expiryDate: tokens.expiry_date
+        });
 
-      // Configurar tokens no cliente
-      oauth2Client.setCredentials(tokens);
+        // Configurar tokens no cliente
+        oauth2Client.setCredentials(tokens);
 
-      // Obter informações do usuário
-      const userInfo = await oauth2Client.userinfo.get();
-      
-      console.log('Informações do usuário obtidas:', {
-        hasEmail: !!userInfo.email,
-        emailVerified: userInfo.verified_email
-      });
+        // Obter informações do usuário
+        console.log('[OAuth] Obtendo informações do usuário Google')
+        const userInfo = await oauth2Client.userinfo.get();
+        
+        console.log('[OAuth] Informações obtidas:', {
+          hasEmail: !!userInfo.email,
+          emailVerified: userInfo.verified_email
+        });
 
-      if (!userInfo.email) {
-        throw new Error('User email not found in Google response');
+        if (!userInfo.email) {
+          throw new Error('User email not found in Google response');
+        }
+
+        // Salvar configurações
+        console.log('[OAuth] Salvando configurações do usuário')
+        const { error: insertError } = await supabaseAdmin
+          .from('user_calendar_settings')
+          .upsert({
+            user_id: user.id,
+            google_refresh_token: tokens.refresh_token,
+            google_account_email: userInfo.email,
+            sync_enabled: true,
+            selected_calendars: [],
+            calendars_metadata: [],
+            updated_at: new Date().toISOString(),
+          })
+
+        if (insertError) {
+          console.error('[OAuth] Erro ao salvar tokens:', insertError)
+          throw new Error('Failed to store refresh token')
+        }
+
+        console.log('[OAuth] Configurações salvas com sucesso')
+
+        return new Response(
+          JSON.stringify({ success: true }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      } catch (error) {
+        console.error('[OAuth] Erro ao processar tokens:', error)
+        throw error
       }
-
-      // Salvar configurações
-      const { error: insertError } = await supabaseAdmin
-        .from('user_calendar_settings')
-        .upsert({
-          user_id: user.id,
-          google_refresh_token: tokens.refresh_token,
-          google_account_email: userInfo.email,
-          sync_enabled: true,
-          selected_calendars: [],
-          calendars_metadata: [],
-          updated_at: new Date().toISOString(),
-        })
-
-      if (insertError) {
-        console.error('Erro ao salvar tokens:', insertError)
-        throw new Error('Failed to store refresh token')
-      }
-
-      console.log('Configurações salvas com sucesso')
-
-      return new Response(
-        JSON.stringify({ success: true }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
     }
 
     throw new Error('Invalid path')
 
   } catch (error) {
-    console.error('Erro na Edge Function:', error)
+    console.error('[OAuth] Erro na Edge Function:', error)
     return new Response(
       JSON.stringify({ 
         error: error.message,
@@ -148,3 +169,4 @@ serve(async (req) => {
     )
   }
 })
+
