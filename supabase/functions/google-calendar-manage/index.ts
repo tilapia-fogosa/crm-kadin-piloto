@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { google } from "https://googleapis.deno.dev/v1/calendar/v3/mod.ts";
+import { calendar_v3 } from "https://googleapis.deno.dev/v1/calendar:v3.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,12 +45,14 @@ serve(async (req) => {
 
     // Configurar cliente do Google Calendar
     const tokens = await refreshGoogleToken(settings.google_refresh_token);
-    const calendar = google.calendar({ version: 'v3', auth: tokens.access_token });
+    const calendar = new calendar_v3.Calendar({
+      auth: tokens.access_token
+    });
 
     switch (path) {
       case 'list-calendars':
         console.log('[google-calendar-manage] Listando calendários');
-        const calendarList = await calendar.calendarList.list();
+        const calendarList = await calendar.calendarList.list({});
         return new Response(
           JSON.stringify({ calendars: calendarList.items }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
