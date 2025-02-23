@@ -12,11 +12,17 @@ export type Database = {
       calendar_events: {
         Row: {
           activity_id: string | null
+          calendar_background_color: string | null
+          calendar_id: string | null
+          calendar_name: string | null
           created_at: string | null
           description: string | null
           end_time: string
           google_event_id: string | null
           id: string
+          is_recurring: boolean | null
+          last_synced_at: string | null
+          recurring_rule: string | null
           start_time: string
           sync_status: string | null
           title: string
@@ -25,11 +31,17 @@ export type Database = {
         }
         Insert: {
           activity_id?: string | null
+          calendar_background_color?: string | null
+          calendar_id?: string | null
+          calendar_name?: string | null
           created_at?: string | null
           description?: string | null
           end_time: string
           google_event_id?: string | null
           id?: string
+          is_recurring?: boolean | null
+          last_synced_at?: string | null
+          recurring_rule?: string | null
           start_time: string
           sync_status?: string | null
           title: string
@@ -38,11 +50,17 @@ export type Database = {
         }
         Update: {
           activity_id?: string | null
+          calendar_background_color?: string | null
+          calendar_id?: string | null
+          calendar_name?: string | null
           created_at?: string | null
           description?: string | null
           end_time?: string
           google_event_id?: string | null
           id?: string
+          is_recurring?: boolean | null
+          last_synced_at?: string | null
+          recurring_rule?: string | null
           start_time?: string
           sync_status?: string | null
           title?: string

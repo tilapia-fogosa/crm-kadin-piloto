@@ -239,11 +239,30 @@ export function useGoogleCalendar() {
 
   const syncCalendars = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('google-calendar-manage', {
-        body: { path: 'sync-events' }
+      console.log('Iniciando sincronização dos calendários');
+      
+      const { data: settings } = await supabase
+        .from('user_calendar_settings')
+        .select('selected_calendars')
+        .single();
+
+      const { data: response, error } = await supabase.functions.invoke('google-calendar-manage', {
+        body: { 
+          path: 'sync-events',
+          calendars: settings?.selected_calendars || []
+        }
       });
 
       if (error) throw error;
+
+      // Atualizar timestamp da última sincronização
+      await supabase
+        .from('user_calendar_settings')
+        .update({ 
+          last_sync: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
       await refetchSettings();
       
@@ -252,7 +271,7 @@ export function useGoogleCalendar() {
         description: "Calendários atualizados com sucesso!",
       });
 
-      return data.events;
+      return response.events;
     } catch (error) {
       console.error('Erro ao sincronizar calendários:', error);
       toast({

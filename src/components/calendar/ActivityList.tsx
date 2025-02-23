@@ -24,7 +24,7 @@ interface Activity {
   source: 'system' | 'google'
   calendar?: {
     id: string
-    summary: string
+    name: string
     backgroundColor: string
   }
 }
@@ -33,28 +33,35 @@ export function ActivityList({ date, filters }: ActivityListProps) {
   const { data: activities, isLoading } = useQuery({
     queryKey: ['activities', date, filters],
     queryFn: async () => {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
       const { data: events, error } = await supabase
         .from('calendar_events')
         .select('*')
-        .gte('start_time', new Date(date.setHours(0, 0, 0, 0)).toISOString())
-        .lte('start_time', new Date(date.setHours(23, 59, 59, 999)).toISOString());
+        .gte('start_time', startOfDay.toISOString())
+        .lte('start_time', endOfDay.toISOString());
 
       if (error) throw error;
 
-      // Por enquanto retornamos apenas os eventos do sistema
-      // TODO: Implementar integração com eventos do Google Calendar
-      const systemEvents: Activity[] = events.map(event => ({
+      return events.map(event => ({
         id: event.id,
         title: event.title,
         start_time: event.start_time,
         end_time: event.end_time,
         description: event.description,
-        source: 'system'
+        source: event.google_event_id ? 'google' : 'system',
+        calendar: event.calendar_id ? {
+          id: event.calendar_id,
+          name: event.calendar_name || 'Calendário Google',
+          backgroundColor: event.calendar_background_color || '#4285f4'
+        } : undefined
       }));
-
-      return systemEvents;
     }
-  })
+  });
 
   if (isLoading) {
     return (
@@ -73,7 +80,7 @@ export function ActivityList({ date, filters }: ActivityListProps) {
           </Card>
         ))}
       </div>
-    )
+    );
   }
 
   if (!activities?.length) {
@@ -82,7 +89,7 @@ export function ActivityList({ date, filters }: ActivityListProps) {
         <CalendarIcon className="h-8 w-8 mb-2" />
         <p>Nenhuma atividade para este dia</p>
       </div>
-    )
+    );
   }
 
   const filteredActivities = activities.filter(activity => {
@@ -109,19 +116,37 @@ export function ActivityList({ date, filters }: ActivityListProps) {
         <Card key={activity.id}>
           <CardContent className="p-4">
             <div className="flex justify-between items-start">
-              <div>
-                <h4 className="font-semibold">{activity.title}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {activity.description || "Sem descrição"}
-                </p>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  {activity.calendar && (
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: activity.calendar.backgroundColor }}
+                    />
+                  )}
+                  <h4 className="font-semibold">{activity.title}</h4>
+                </div>
+                {activity.description && (
+                  <p className="text-sm text-muted-foreground">
+                    {activity.description}
+                  </p>
+                )}
+                {activity.calendar && (
+                  <p className="text-xs text-muted-foreground">
+                    {activity.calendar.name}
+                  </p>
+                )}
               </div>
-              <div className="text-sm text-muted-foreground">
-                {format(new Date(activity.start_time), "HH:mm")}
+              <div className="text-sm text-muted-foreground space-y-1 text-right">
+                <div>{format(new Date(activity.start_time), "HH:mm")}</div>
+                <div className="text-xs">
+                  até {format(new Date(activity.end_time), "HH:mm")}
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       ))}
     </div>
-  )
+  );
 }
