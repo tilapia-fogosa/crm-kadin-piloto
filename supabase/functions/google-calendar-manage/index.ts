@@ -2,18 +2,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
 import { calendar_v3 } from "https://googleapis.deno.dev/v1/calendar:v3.ts"
-import { oauth2_v2 } from "https://googleapis.deno.dev/v1/oauth2:v2.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-
-// Criar cliente Supabase com service_role key
-const supabaseAdmin = createClient(
-  Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-)
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -26,6 +19,11 @@ serve(async (req) => {
     if (!authHeader) {
       throw new Error('No authorization header')
     }
+
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
 
     const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
       authHeader.replace('Bearer ', '')
@@ -50,19 +48,18 @@ serve(async (req) => {
       throw new Error('Calendar not connected')
     }
 
-    // Criar cliente do Google Calendar
+    // Inicializar cliente do Google Calendar
+    const calendarClient = new calendar_v3.Calendar({
+      auth: settings.google_refresh_token,
+    });
+
     const { path } = await req.json()
 
     if (path === 'list-calendars') {
       console.log('Listando calendários do usuário')
 
-      // Criar cliente do Google Calendar
-      const calendar = new calendar_v3.Calendar({
-        auth: settings.google_refresh_token,
-      })
-
       try {
-        const response = await calendar.calendarList.list()
+        const response = await calendarClient.calendarList.list()
         console.log(`${response.items?.length || 0} calendários encontrados`)
 
         // Atualizar metadata dos calendários
@@ -97,10 +94,6 @@ serve(async (req) => {
         )
       }
 
-      const calendar = new calendar_v3.Calendar({
-        auth: settings.google_refresh_token,
-      })
-
       const now = new Date()
       const timeMin = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).toISOString()
       const timeMax = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate()).toISOString()
@@ -113,7 +106,7 @@ serve(async (req) => {
         for (const calendarId of settings.selected_calendars) {
           console.log(`Buscando eventos do calendário ${calendarId}`)
           
-          const response = await calendar.events.list({
+          const response = await calendarClient.events.list({
             calendarId,
             timeMin,
             timeMax,

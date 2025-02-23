@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
+import { oauth2_v2 } from "https://googleapis.deno.dev/v1/oauth2:v2.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -75,92 +76,60 @@ serve(async (req) => {
 
       const redirectUri = `${req.headers.get('origin')}/auth/callback`
 
+      // Inicializar cliente OAuth2
+      const oauth2Client = new oauth2_v2.OAuth2({
+        clientId: GOOGLE_CLIENT_ID!,
+        clientSecret: GOOGLE_CLIENT_SECRET!,
+        redirectUri: redirectUri,
+      });
+
       // Trocar código por tokens
-      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          code,
-          client_id: GOOGLE_CLIENT_ID!,
-          client_secret: GOOGLE_CLIENT_SECRET!,
-          redirect_uri: redirectUri,
-          grant_type: 'authorization_code',
-        }),
-      })
-
-      const tokenData = await tokenResponse.json()
-      console.log('Token response received:', { 
-        ok: tokenResponse.ok, 
-        status: tokenResponse.status,
-        hasAccessToken: !!tokenData.access_token,
-        hasRefreshToken: !!tokenData.refresh_token
-      })
+      const { tokens } = await oauth2Client.getToken(code);
       
-      if (!tokenResponse.ok || !tokenData.access_token) {
-        console.error('Erro ao trocar código por tokens:', tokenData)
-        throw new Error('Failed to exchange code for tokens')
+      console.log('Tokens obtidos com sucesso:', { 
+        hasAccessToken: !!tokens.access_token,
+        hasRefreshToken: !!tokens.refresh_token 
+      });
+
+      // Configurar tokens no cliente
+      oauth2Client.setCredentials(tokens);
+
+      // Obter informações do usuário
+      const userInfo = await oauth2Client.userinfo.get();
+      
+      console.log('Informações do usuário obtidas:', {
+        hasEmail: !!userInfo.email,
+        emailVerified: userInfo.verified_email
+      });
+
+      if (!userInfo.email) {
+        throw new Error('User email not found in Google response');
       }
 
-      console.log('Tokens obtidos com sucesso, buscando informações do usuário')
-
-      try {
-        // Obter informações do usuário Google usando o token de acesso
-        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-          headers: {
-            'Authorization': `Bearer ${tokenData.access_token}`,
-            'Accept': 'application/json',
-          },
+      // Salvar configurações
+      const { error: insertError } = await supabaseAdmin
+        .from('user_calendar_settings')
+        .upsert({
+          user_id: user.id,
+          google_refresh_token: tokens.refresh_token,
+          google_account_email: userInfo.email,
+          sync_enabled: true,
+          selected_calendars: [],
+          calendars_metadata: [],
+          updated_at: new Date().toISOString(),
         })
 
-        console.log('User info response status:', userInfoResponse.status)
-
-        if (!userInfoResponse.ok) {
-          const errorData = await userInfoResponse.text()
-          console.error('Erro na resposta do userInfo:', errorData)
-          throw new Error('Failed to fetch user info from Google')
-        }
-
-        const userInfo = await userInfoResponse.json()
-        console.log('Informações do usuário obtidas com sucesso:', {
-          hasEmail: !!userInfo.email,
-          emailVerified: userInfo.verified_email
-        })
-
-        if (!userInfo.email) {
-          throw new Error('User email not found in Google response')
-        }
-
-        // Usar o cliente admin para salvar as configurações
-        const { error: insertError } = await supabaseAdmin
-          .from('user_calendar_settings')
-          .upsert({
-            user_id: user.id,
-            google_refresh_token: tokenData.refresh_token,
-            google_account_email: userInfo.email,
-            sync_enabled: true,
-            selected_calendars: [],
-            calendars_metadata: [],
-            updated_at: new Date().toISOString(),
-          })
-
-        if (insertError) {
-          console.error('Erro ao salvar tokens:', insertError)
-          throw new Error('Failed to store refresh token')
-        }
-
-        console.log('Configurações salvas com sucesso')
-
-        return new Response(
-          JSON.stringify({ success: true }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-
-      } catch (userInfoError) {
-        console.error('Erro ao obter/processar informações do usuário:', userInfoError)
-        throw new Error('Failed to process user information')
+      if (insertError) {
+        console.error('Erro ao salvar tokens:', insertError)
+        throw new Error('Failed to store refresh token')
       }
+
+      console.log('Configurações salvas com sucesso')
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     throw new Error('Invalid path')
