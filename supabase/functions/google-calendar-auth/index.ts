@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { oauth2_v2 } from "https://googleapis.deno.dev/v1/oauth2:v2.ts"
+import { OAuth2 } from "https://googleapis.deno.dev/v1/oauth2:v2.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -84,6 +84,13 @@ serve(async (req) => {
 
       const redirectUri = `${req.headers.get('origin')}/auth/callback`
 
+      // Configurar cliente OAuth2
+      const oauth2Client = new OAuth2({
+        clientId: Deno.env.get('GOOGLE_CLIENT_ID')!,
+        clientSecret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
+        redirectUri: redirectUri,
+      });
+
       // Trocar código por tokens
       console.log('[OAuth] Trocando código por tokens')
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -110,15 +117,6 @@ serve(async (req) => {
         hasRefreshToken: !!tokens.refresh_token,
         expiryDate: tokens.expiry_date
       })
-
-      // Configurar cliente OAuth2
-      const oauth2Client = new oauth2_v2.Oauth2({
-        clientId: Deno.env.get('GOOGLE_CLIENT_ID')!,
-        clientSecret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
-        redirectUri: redirectUri,
-      });
-
-      oauth2Client.setCredentials(tokens);
 
       // Obter informações do usuário
       console.log('[OAuth] Obtendo informações do usuário Google')
@@ -176,4 +174,3 @@ serve(async (req) => {
     )
   }
 })
-
