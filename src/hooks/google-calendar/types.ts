@@ -1,6 +1,4 @@
 
-import { Json } from '@/integrations/supabase/types';
-
 export interface AuthWindowMessage {
   type: 'google-auth-success' | 'google-auth-error';
   code?: string;
@@ -20,6 +18,7 @@ export interface CalendarSettings {
   selected_calendars: string[];
   calendars_metadata: Calendar[];
   last_sync: string | null;
+  sync_token?: string | null;
 }
 
 export interface RawCalendarSettings {
@@ -31,6 +30,8 @@ export interface RawCalendarSettings {
   selected_calendars: Json;
   calendars_metadata: Json;
   last_sync: string | null;
+  sync_token: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
+

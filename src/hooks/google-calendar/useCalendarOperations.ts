@@ -35,7 +35,8 @@ export function useCalendarOperations() {
               backgroundColor: cal.backgroundColor as string
             }))
           : [],
-        last_sync: rawData.last_sync
+        last_sync: rawData.last_sync,
+        sync_token: rawData.sync_token
       };
 
       return formattedData;
@@ -76,13 +77,14 @@ export function useCalendarOperations() {
       
       const { data: settings } = await supabase
         .from('user_calendar_settings')
-        .select('selected_calendars')
+        .select('selected_calendars, sync_token')
         .single();
 
       const { data: response, error } = await supabase.functions.invoke('google-calendar-manage', {
         body: { 
           path: 'sync-events',
-          calendars: settings?.selected_calendars || []
+          calendars: settings?.selected_calendars || [],
+          syncToken: settings?.sync_token
         },
         headers: {
           Authorization: `Bearer ${session.access_token}`
@@ -91,9 +93,11 @@ export function useCalendarOperations() {
 
       if (error) throw error;
 
+      // Atualizar o sync_token e last_sync
       await supabase
         .from('user_calendar_settings')
         .update({ 
+          sync_token: response.nextSyncToken,
           last_sync: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -124,6 +128,8 @@ export function useCalendarOperations() {
         .from('user_calendar_settings')
         .update({ 
           selected_calendars: calendarIds,
+          // Reset sync token when changing calendars to force full sync
+          sync_token: null,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id);

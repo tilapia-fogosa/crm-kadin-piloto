@@ -542,6 +542,7 @@ export type Database = {
           last_sync: string | null
           selected_calendars: Json | null
           sync_enabled: boolean | null
+          sync_token: string | null
           updated_at: string | null
           user_id: string
         }
@@ -554,6 +555,7 @@ export type Database = {
           last_sync?: string | null
           selected_calendars?: Json | null
           sync_enabled?: boolean | null
+          sync_token?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -566,6 +568,7 @@ export type Database = {
           last_sync?: string | null
           selected_calendars?: Json | null
           sync_enabled?: boolean | null
+          sync_token?: string | null
           updated_at?: string | null
           user_id?: string
         }
