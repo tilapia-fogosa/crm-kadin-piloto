@@ -84,8 +84,14 @@ export function useGoogleCalendar() {
     queryFn: async () => {
       if (!settings?.sync_enabled) return [];
 
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('No session token available');
+
       const { data, error } = await supabase.functions.invoke('google-calendar-manage', {
-        body: { path: 'list-calendars' }
+        body: { path: 'list-calendars' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
 
       if (error) throw error;
@@ -158,10 +164,18 @@ export function useGoogleCalendar() {
         throw new Error('Usuário não autenticado');
       }
 
+      if (!session.access_token) {
+        console.error('[GoogleCalendar] Token de acesso não disponível');
+        throw new Error('Token de acesso não disponível');
+      }
+
       console.log('[GoogleCalendar] Sessão válida, obtendo URL de autenticação');
 
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
-        body: { path: 'init' }
+        body: { path: 'init' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
 
       if (error) {
@@ -207,10 +221,16 @@ export function useGoogleCalendar() {
     try {
       console.log('Processando callback com código:', code);
 
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('No session token available');
+
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
         body: { 
           path: 'callback',
           code 
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
@@ -247,6 +267,9 @@ export function useGoogleCalendar() {
   const syncCalendars = async () => {
     try {
       console.log('Iniciando sincronização dos calendários');
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('No session token available');
       
       const { data: settings } = await supabase
         .from('user_calendar_settings')
@@ -257,6 +280,9 @@ export function useGoogleCalendar() {
         body: { 
           path: 'sync-events',
           calendars: settings?.selected_calendars || []
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
