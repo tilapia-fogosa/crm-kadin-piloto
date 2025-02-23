@@ -1,4 +1,6 @@
 
+import { Json } from "@/integrations/supabase/types";
+
 export interface AuthWindowMessage {
   type: 'google-auth-success' | 'google-auth-error';
   code?: string;
