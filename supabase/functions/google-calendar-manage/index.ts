@@ -1,19 +1,22 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { calendar_v3 } from "https://googleapis.deno.dev/v1/calendar:v3.ts";
+import { google } from "https://googleapis.deno.dev/v1/calendar/v3/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS'
 };
 
 serve(async (req) => {
+  // Sempre responder a requisições OPTIONS com os headers CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log('[google-calendar-manage] Iniciando processamento da requisição');
     const { path, calendars = [] } = await req.json();
 
     // Get JWT token from request header
@@ -33,20 +36,47 @@ serve(async (req) => {
       .select('*')
       .single();
 
+    console.log('[google-calendar-manage] Configurações recuperadas:', settings);
+
     if (settingsError || !settings?.google_refresh_token) {
+      console.error('[google-calendar-manage] Erro ao buscar configurações:', settingsError);
       throw new Error('Configurações do calendário não encontradas');
     }
 
+    // Configurar cliente do Google Calendar
+    const tokens = await refreshGoogleToken(settings.google_refresh_token);
+    const calendar = google.calendar({ version: 'v3', auth: tokens.access_token });
+
     switch (path) {
       case 'list-calendars':
-        const calendarList = await listCalendars(settings.google_refresh_token);
+        console.log('[google-calendar-manage] Listando calendários');
+        const calendarList = await calendar.calendarList.list();
         return new Response(
-          JSON.stringify({ calendars: calendarList }),
+          JSON.stringify({ calendars: calendarList.items }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
 
       case 'sync-events':
-        const events = await syncEvents(settings.google_refresh_token, calendars, supabaseClient);
+        console.log('[google-calendar-manage] Sincronizando eventos');
+        const now = new Date();
+        const timeMin = new Date(now.getFullYear(), now.getMonth(), 1);
+        const timeMax = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+        
+        const events = [];
+        for (const calendarId of calendars) {
+          const response = await calendar.events.list({
+            calendarId,
+            timeMin: timeMin.toISOString(),
+            timeMax: timeMax.toISOString(),
+            singleEvents: true,
+            orderBy: 'startTime',
+          });
+
+          if (response.items) {
+            events.push(...response.items);
+          }
+        }
+
         return new Response(
           JSON.stringify({ events }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -56,7 +86,7 @@ serve(async (req) => {
         throw new Error('Path não suportado');
     }
   } catch (error) {
-    console.error('Error:', error);
+    console.error('[google-calendar-manage] Erro:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
@@ -67,7 +97,7 @@ serve(async (req) => {
   }
 });
 
-async function getGoogleClient(refreshToken: string): Promise<calendar_v3.Calendar> {
+async function refreshGoogleToken(refreshToken: string): Promise<{ access_token: string }> {
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -79,80 +109,10 @@ async function getGoogleClient(refreshToken: string): Promise<calendar_v3.Calend
     }),
   });
 
-  const { access_token } = await tokenResponse.json();
-
-  return new calendar_v3.Calendar({
-    auth: access_token,
-  });
-}
-
-async function listCalendars(refreshToken: string) {
-  const googleCalendar = await getGoogleClient(refreshToken);
-  const response = await googleCalendar.calendarList.list();
-  
-  return response.items?.map(calendar => ({
-    id: calendar.id,
-    summary: calendar.summary,
-    backgroundColor: calendar.backgroundColor,
-  })) || [];
-}
-
-async function syncEvents(refreshToken: string, calendarIds: string[], supabaseClient: any) {
-  const googleCalendar = await getGoogleClient(refreshToken);
-  const now = new Date();
-  const timeMin = new Date(now.getFullYear(), now.getMonth(), 1);
-  const timeMax = new Date(now.getFullYear(), now.getMonth() + 2, 0);
-
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) throw new Error('Usuário não autenticado');
-
-  // Buscar eventos para cada calendário selecionado
-  for (const calendarId of calendarIds) {
-    const response = await googleCalendar.events.list({
-      calendarId,
-      timeMin: timeMin.toISOString(),
-      timeMax: timeMax.toISOString(),
-      singleEvents: true,
-      orderBy: 'startTime',
-    });
-
-    if (!response.items) continue;
-
-    // Buscar dados do calendário
-    const calendarInfo = await googleCalendar.calendarList.get({ calendarId });
-
-    // Processar cada evento
-    for (const event of response.items) {
-      if (!event.id || !event.start?.dateTime || !event.end?.dateTime) continue;
-
-      const eventData = {
-        user_id: user.id,
-        google_event_id: event.id,
-        title: event.summary || 'Sem título',
-        description: event.description,
-        start_time: event.start.dateTime,
-        end_time: event.end.dateTime,
-        calendar_id: calendarId,
-        calendar_name: calendarInfo.summary,
-        calendar_background_color: calendarInfo.backgroundColor,
-        is_recurring: !!event.recurrence,
-        recurring_rule: event.recurrence?.[0],
-        last_synced_at: new Date().toISOString(),
-        sync_status: 'synced'
-      };
-
-      // Upsert do evento
-      await supabaseClient
-        .from('calendar_events')
-        .upsert(
-          eventData,
-          { 
-            onConflict: 'google_event_id',
-            ignoreDuplicates: false 
-          }
-        );
-    }
+  if (!tokenResponse.ok) {
+    throw new Error('Falha ao atualizar token do Google');
   }
 
-  return { success: true };
+  return tokenResponse.json();
 }
+
