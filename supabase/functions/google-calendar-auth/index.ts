@@ -53,7 +53,6 @@ serve(async (req) => {
       console.log('[OAuth] Iniciando fluxo de autenticação Google')
       
       const redirectUri = `${req.headers.get('origin')}/auth/callback`
-      // Adicionando os escopos profile e email para acessar informações do usuário
       const scope = encodeURIComponent('https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events profile email')
       
       const googleAuthUrl = 
@@ -130,14 +129,14 @@ serve(async (req) => {
       console.log('[OAuth] Informações obtidas:', {
         hasEmail: !!userInfo.email,
         emailVerified: userInfo.verified_email,
-        responseData: userInfo // Log all user info for debugging
+        responseData: userInfo
       });
 
       if (!userInfo.email) {
         throw new Error('User email not found in Google response');
       }
 
-      // Salvar configurações
+      // Salvar configurações usando upsert com onConflict
       console.log('[OAuth] Salvando configurações do usuário')
       const { error: insertError } = await supabaseAdmin
         .from('user_calendar_settings')
@@ -149,6 +148,9 @@ serve(async (req) => {
           selected_calendars: [],
           calendars_metadata: [],
           updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id',
+          ignoreDuplicates: false
         })
 
       if (insertError) {

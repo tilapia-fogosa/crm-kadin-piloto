@@ -6,6 +6,7 @@ import type { AuthWindowMessage } from './types';
 
 export function useGoogleCalendar() {
   const processingCodeRef = useRef<string | null>(null);
+  const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const { 
     settings,
@@ -46,14 +47,22 @@ export function useGoogleCalendar() {
           return;
         }
         
+        // Limpar timeout anterior se existir
+        if (processingTimeoutRef.current) {
+          clearTimeout(processingTimeoutRef.current);
+        }
+        
         processingCodeRef.current = code;
         console.log('[GoogleCalendar] Código de autorização recebido');
         
         try {
           await handleAuthCallback(code);
         } finally {
-          // Limpar o código após processamento
-          processingCodeRef.current = null;
+          // Limpar o código após um delay para evitar duplicações
+          processingTimeoutRef.current = setTimeout(() => {
+            processingCodeRef.current = null;
+            processingTimeoutRef.current = null;
+          }, 5000); // 5 segundos de proteção contra duplicação
         }
       } else if (event.data?.type === 'google-auth-error') {
         console.error('[GoogleCalendar] Erro na autenticação:', event.data.error);
@@ -63,6 +72,10 @@ export function useGoogleCalendar() {
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
+      // Limpar timeout no cleanup
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
     };
   }, [handleAuthCallback]);
 
