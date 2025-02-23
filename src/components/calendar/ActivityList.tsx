@@ -1,7 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query"
-import { format, isSameDay } from "date-fns"
-import { ptBR } from "date-fns/locale"
+import { format } from "date-fns"
 import { supabase } from "@/integrations/supabase/client"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar as CalendarIcon } from "lucide-react"
@@ -53,7 +52,8 @@ export function ActivityList({ date, filters }: ActivityListProps) {
         start_time: event.start_time,
         end_time: event.end_time,
         description: event.description,
-        source: event.google_event_id ? 'google' : 'system',
+        // Garantir que o source seja sempre 'system' ou 'google'
+        source: event.google_event_id ? ('google' as const) : ('system' as const),
         calendar: event.calendar_id ? {
           id: event.calendar_id,
           name: event.calendar_name || 'Calendário Google',
