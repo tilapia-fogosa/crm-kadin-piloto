@@ -16,7 +16,8 @@ export function useGoogleCalendar() {
     refetchCalendars,
     syncCalendars,
     updateSelectedCalendars,
-    disconnectCalendar // Add this to destructuring
+    setDefaultCalendar,
+    disconnectCalendar
   } = useCalendarOperations();
 
   const {
@@ -107,7 +108,8 @@ export function useGoogleCalendar() {
     handleAuthCallback,
     syncCalendars,
     updateSelectedCalendars,
-    disconnectCalendar // Add this to return object
+    setDefaultCalendar,
+    disconnectCalendar
   };
 }
 

@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
 import { 
@@ -26,7 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Switch } from "@/components/ui/switch";
+import { Switch, RadioGroup, RadioGroupItem } from "@/components/ui/switch";
 import { useState } from "react";
 
 export function GoogleCalendarConnect() {
@@ -38,6 +37,7 @@ export function GoogleCalendarConnect() {
     startGoogleAuth,
     syncCalendars,
     updateSelectedCalendars,
+    setDefaultCalendar,
     disconnectCalendar
   } = useGoogleCalendar();
 
@@ -69,6 +69,10 @@ export function GoogleCalendarConnect() {
     }
 
     await updateSelectedCalendars(newSelected);
+  };
+
+  const handleDefaultCalendarSet = async (calendarId: string) => {
+    await setDefaultCalendar(calendarId);
   };
 
   if (isLoading) {
@@ -158,22 +162,36 @@ export function GoogleCalendarConnect() {
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-medium">Calendários disponíveis</h4>
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">Calendários disponíveis</h4>
+                <div className="text-sm text-muted-foreground">
+                  Calendário padrão
+                </div>
+              </div>
               <ScrollArea className="h-[300px] rounded-md border p-4">
                 <div className="space-y-4">
                   {calendars?.map((calendar) => (
                     <div key={calendar.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: calendar.backgroundColor }}
+                      <div className="flex items-center gap-4">
+                        <Switch
+                          checked={settings.selected_calendars.includes(calendar.id)}
+                          onCheckedChange={() => handleCalendarToggle(calendar.id)}
                         />
-                        <span className="text-sm">{calendar.summary}</span>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: calendar.backgroundColor }}
+                          />
+                          <span className="text-sm">{calendar.summary}</span>
+                        </div>
                       </div>
-                      <Switch
-                        checked={settings.selected_calendars.includes(calendar.id)}
-                        onCheckedChange={() => handleCalendarToggle(calendar.id)}
-                      />
+                      <RadioGroup 
+                        value={settings.default_calendar_id || ''} 
+                        onValueChange={handleDefaultCalendarSet}
+                        className="flex"
+                      >
+                        <RadioGroupItem value={calendar.id} id={`default-${calendar.id}`} />
+                      </RadioGroup>
                     </div>
                   ))}
                 </div>

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from '@tanstack/react-query';
@@ -36,7 +35,8 @@ export function useCalendarOperations() {
             }))
           : [],
         last_sync: rawData.last_sync,
-        sync_token: rawData.sync_token
+        sync_token: rawData.sync_token,
+        default_calendar_id: rawData.default_calendar_id
       };
 
       return formattedData;
@@ -65,7 +65,6 @@ export function useCalendarOperations() {
       if (error) {
         console.error('Error fetching calendars:', error);
         if (error.message.includes('token')) {
-          // Possível erro de token, tentar reconexão
           toast({
             title: "Erro de autenticação",
             description: "Por favor, reconecte sua conta do Google Calendar",
@@ -74,6 +73,27 @@ export function useCalendarOperations() {
         }
         throw error;
       }
+
+      if (data.calendars) {
+        const formattedCalendars = data.calendars.map(cal => ({
+          id: cal.id,
+          summary: cal.summary,
+          backgroundColor: cal.backgroundColor || '#4285f4'
+        }));
+
+        const { error: updateError } = await supabase
+          .from('user_calendar_settings')
+          .update({ 
+            calendars_metadata: formattedCalendars,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+        if (updateError) {
+          console.error('Error updating calendar metadata:', updateError);
+        }
+      }
+
       return data.calendars;
     },
     enabled: !!settings?.sync_enabled
@@ -142,12 +162,69 @@ export function useCalendarOperations() {
     }
   };
 
+  const updateSelectedCalendars = async (calendarIds: string[]) => {
+    try {
+      const { error } = await supabase
+        .from('user_calendar_settings')
+        .update({ 
+          selected_calendars: calendarIds,
+          sync_token: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (error) throw error;
+
+      await refetchSettings();
+      await refetchCalendars();
+
+      toast({
+        title: "Calendários atualizados",
+        description: "Suas preferências foram salvas com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar calendários:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível atualizar suas preferências",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const setDefaultCalendar = async (calendarId: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_calendar_settings')
+        .update({ 
+          default_calendar_id: calendarId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (error) throw error;
+
+      await refetchSettings();
+
+      toast({
+        title: "Calendário padrão atualizado",
+        description: "Suas preferências foram salvas com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao definir calendário padrão:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível definir o calendário padrão",
+        variant: "destructive"
+      });
+    }
+  };
+
   const disconnectCalendar = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error('No session token available');
 
-      // Revogar acesso no Google e limpar dados locais
       const { error: revokeError } = await supabase.functions.invoke('google-calendar-manage', {
         body: { path: 'revoke-access' },
         headers: {
@@ -159,7 +236,6 @@ export function useCalendarOperations() {
         console.error('Error revoking access:', revokeError);
       }
 
-      // Limpar dados locais mesmo se houver erro ao revogar
       const { error: updateError } = await supabase
         .from('user_calendar_settings')
         .update({
@@ -193,36 +269,6 @@ export function useCalendarOperations() {
     }
   };
 
-  const updateSelectedCalendars = async (calendarIds: string[]) => {
-    try {
-      const { error } = await supabase
-        .from('user_calendar_settings')
-        .update({ 
-          selected_calendars: calendarIds,
-          sync_token: null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
-
-      if (error) throw error;
-
-      await refetchSettings();
-      await refetchCalendars();
-
-      toast({
-        title: "Calendários atualizados",
-        description: "Suas preferências foram salvas com sucesso!",
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar calendários:', error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível atualizar suas preferências",
-        variant: "destructive"
-      });
-    }
-  };
-
   return {
     settings,
     calendars,
@@ -231,6 +277,7 @@ export function useCalendarOperations() {
     refetchCalendars,
     syncCalendars,
     updateSelectedCalendars,
+    setDefaultCalendar,
     disconnectCalendar
   };
 }

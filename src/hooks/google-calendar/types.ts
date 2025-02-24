@@ -12,6 +12,7 @@ export interface Calendar {
   summary: string;
   backgroundColor: string;
   selected?: boolean;
+  isDefault?: boolean;
 }
 
 export interface CalendarSettings {
@@ -21,6 +22,7 @@ export interface CalendarSettings {
   calendars_metadata: Calendar[];
   last_sync: string | null;
   sync_token?: string | null;
+  default_calendar_id?: string | null;
 }
 
 export interface RawCalendarSettings {
@@ -33,7 +35,7 @@ export interface RawCalendarSettings {
   calendars_metadata: Json;
   last_sync: string | null;
   sync_token: string | null;
+  default_calendar_id: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
-
