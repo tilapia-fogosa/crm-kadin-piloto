@@ -1,5 +1,5 @@
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Calendar } from '../types';
 import { getGoogleClient } from '../utils/auth';
 import { corsHeaders } from '../utils/cors';

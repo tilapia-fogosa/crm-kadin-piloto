@@ -1,10 +1,10 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from './utils/cors.ts';
 import { syncEvents } from './handlers/syncEvents.ts';
 import { listCalendars } from './handlers/listCalendars.ts';
 import { revokeAccess } from './handlers/revokeAccess.ts';
-import { createClient } from '@supabase/supabase-js';
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
