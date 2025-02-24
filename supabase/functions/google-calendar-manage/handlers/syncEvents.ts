@@ -1,8 +1,8 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Calendar } from '../types';
-import { getGoogleClient } from '../utils/auth';
-import { corsHeaders } from '../utils/cors';
+import { Calendar, GoogleCalendarEvent } from '../types.ts';
+import { getGoogleClient } from '../utils/auth.ts';
+import { corsHeaders } from '../utils/cors.ts';
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -40,8 +40,8 @@ export async function syncEvents(calendars: string[], syncToken: string | null, 
       console.log(`[SyncEvents] Recebidos ${events.length} eventos do calendário ${calendarId}`);
 
       const formattedEvents = events
-        .filter(event => event.id && event.start) // Filtra eventos sem ID ou data
-        .map(event => {
+        .filter((event: GoogleCalendarEvent) => event.id && event.start)
+        .map((event: GoogleCalendarEvent) => {
           const eventData = {
             id: crypto.randomUUID(),
             google_event_id: event.id,
@@ -103,7 +103,6 @@ export async function syncEvents(calendars: string[], syncToken: string | null, 
     }
   }
 
-  // Atualiza o token de sincronização
   if (latestSyncToken) {
     console.log('[SyncEvents] Atualizando token de sincronização:', latestSyncToken);
     
