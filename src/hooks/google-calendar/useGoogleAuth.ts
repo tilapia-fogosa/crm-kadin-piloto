@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AuthWindowMessage } from './types';
@@ -10,18 +10,31 @@ export function useGoogleAuth(onAuthSuccess: () => Promise<void>) {
   const { toast } = useToast();
 
   const validateSession = async (): Promise<boolean> => {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error || !session?.access_token) {
-      console.error('[GoogleCalendar] Erro de sessão:', error);
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('[GoogleCalendar] Erro ao obter sessão:', error);
+        return false;
+      }
+      if (!session?.access_token) {
+        console.error('[GoogleCalendar] Token de acesso não disponível');
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('[GoogleCalendar] Erro ao validar sessão:', error);
       return false;
     }
-    return true;
   };
 
   const startGoogleAuth = async () => {
     try {
+      if (isConnecting) {
+        console.log('[GoogleCalendar] Processo de autenticação já em andamento');
+        return;
+      }
+
       setIsConnecting(true);
-      
       console.log('[GoogleCalendar] Iniciando autenticação');
 
       const isSessionValid = await validateSession();
@@ -50,6 +63,7 @@ export function useGoogleAuth(onAuthSuccess: () => Promise<void>) {
 
       console.log('[GoogleCalendar] URL de autenticação recebida:', data.url);
 
+      // Configuração do popup
       const width = 600;
       const height = 600;
       const left = window.screenX + (window.outerWidth - width) / 2;
@@ -76,11 +90,12 @@ export function useGoogleAuth(onAuthSuccess: () => Promise<void>) {
         description: "Não foi possível conectar com o Google Calendar. Verifique se os popups estão permitidos.",
         variant: "destructive"
       });
+    } finally {
       setIsConnecting(false);
     }
   };
 
-  const handleAuthCallback = async (code: string): Promise<boolean> => {
+  const handleAuthCallback = useCallback(async (code: string): Promise<boolean> => {
     let retryCount = 0;
     const maxRetries = 3;
     const retryDelay = 1000; // 1 segundo
@@ -95,7 +110,7 @@ export function useGoogleAuth(onAuthSuccess: () => Promise<void>) {
         }
 
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.access_token) throw new Error('No session token available');
+        if (!session?.access_token) throw new Error('Token de acesso não disponível');
 
         const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
           body: { 
@@ -115,8 +130,8 @@ export function useGoogleAuth(onAuthSuccess: () => Promise<void>) {
           description: "Google Calendar conectado com sucesso!",
         });
 
-        // Pequeno delay antes de chamar onAuthSuccess para garantir que tudo está sincronizado
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Delay antes de chamar onAuthSuccess para garantir sincronização
+        await new Promise(resolve => setTimeout(resolve, 1000));
         await onAuthSuccess();
 
         return true;
@@ -148,7 +163,7 @@ export function useGoogleAuth(onAuthSuccess: () => Promise<void>) {
         setAuthWindow(null);
       }
     }
-  };
+  }, [authWindow, toast, onAuthSuccess]);
 
   return {
     isConnecting,
@@ -158,4 +173,3 @@ export function useGoogleAuth(onAuthSuccess: () => Promise<void>) {
     handleAuthCallback
   };
 }
-
