@@ -11,8 +11,8 @@ export function useCalendarList(settings: CalendarSettings | null | undefined) {
   return useQuery({
     queryKey: ['calendars'],
     queryFn: async () => {
-      const accessToken = await validateSession();
-      if (!accessToken) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
         throw new Error('No session token available');
       }
 
@@ -25,7 +25,7 @@ export function useCalendarList(settings: CalendarSettings | null | undefined) {
       const { data, error } = await supabase.functions.invoke('google-calendar-manage', {
         body: { path: 'list-calendars' },
         headers: {
-          Authorization: `Bearer ${accessToken}`
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
