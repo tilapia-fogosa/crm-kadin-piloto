@@ -176,7 +176,8 @@ serve(async (req) => {
                         calendar_background_color: event.colorId ? `#${event.colorId}` : '#4285f4',
                         user_id: userId,
                         sync_status: 'synced',
-                        last_synced_at: new Date().toISOString()
+                        last_synced_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
                       });
                     }
                   }
@@ -195,9 +196,12 @@ serve(async (req) => {
                     console.log(`[google-calendar-manage] Removing cancelled event: ${event.id}`);
                     await supabaseClient
                       .from('calendar_events')
-                      .update({ active: false })
+                      .update({ 
+                        active: false,
+                        updated_at: new Date().toISOString()
+                      })
                       .eq('google_event_id', event.id)
-                      .eq('calendar_id', calendarId);
+                      .eq('user_id', userId);
                     continue;
                   }
 
@@ -217,7 +221,8 @@ serve(async (req) => {
                       calendar_background_color: event.colorId ? `#${event.colorId}` : '#4285f4',
                       user_id: userId,
                       sync_status: 'synced',
-                      last_synced_at: new Date().toISOString()
+                      last_synced_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString()
                     });
                   }
                 }
@@ -234,8 +239,7 @@ serve(async (req) => {
           const { error: upsertError } = await supabaseClient
             .from('calendar_events')
             .upsert(allEvents, {
-              onConflict: 'google_event_id',
-              ignoreDuplicates: false
+              onConflict: 'google_event_id,user_id'
             });
 
           if (upsertError) {
