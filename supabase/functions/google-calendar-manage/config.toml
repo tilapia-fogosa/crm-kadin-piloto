@@ -6,7 +6,5 @@ enabled = true
 cors = [ "*" ]
 
 [deploy]
-allowed_imports = [
-  "https://googleapis.deno.dev/v1/calendar:v3.ts"
-]
+allowed_imports = []
 

@@ -37,16 +37,25 @@ export function GoogleCalendarConnect() {
     calendars,
     startGoogleAuth,
     syncCalendars,
-    updateSelectedCalendars
+    updateSelectedCalendars,
+    disconnectCalendar
   } = useGoogleCalendar();
 
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   const handleSync = async () => {
     setIsSyncing(true);
     await syncCalendars();
     setIsSyncing(false);
+  };
+
+  const handleDisconnect = async () => {
+    setIsDisconnecting(true);
+    await disconnectCalendar();
+    setIsDisconnecting(false);
+    setIsSheetOpen(false);
   };
 
   const handleCalendarToggle = async (calendarId: string) => {
@@ -175,10 +184,20 @@ export function GoogleCalendarConnect() {
               <Button 
                 variant="outline" 
                 className="w-full gap-2 text-destructive" 
-                onClick={startGoogleAuth}
+                onClick={handleDisconnect}
+                disabled={isDisconnecting}
               >
-                <XCircle className="h-4 w-4" />
-                Desconectar conta
+                {isDisconnecting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Desconectando...
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-4 w-4" />
+                    Desconectar conta
+                  </>
+                )}
               </Button>
             </div>
           </div>

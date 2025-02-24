@@ -1,19 +1,14 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0';
-import { corsHeaders } from '../_shared/cors.ts';
 
 const GOOGLE_CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
+const GOOGLE_OAUTH_API = 'https://oauth2.googleapis.com';
 
-interface GoogleEvent {
-  id: string;
-  summary: string;
-  description?: string;
-  start: { dateTime: string };
-  end: { dateTime: string };
-  recurringEventId?: string;
-  originalStartTime?: { dateTime: string };
-}
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -36,6 +31,7 @@ serve(async (req) => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error('User not found');
 
+    // Obter configurações do usuário
     const { data: settings } = await supabaseClient
       .from('user_calendar_settings')
       .select('google_refresh_token')
@@ -45,8 +41,8 @@ serve(async (req) => {
       throw new Error('No refresh token found');
     }
 
-    // Get new access token using refresh token
-    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    // Obter novo access token usando refresh token
+    const tokenResponse = await fetch(`${GOOGLE_OAUTH_API}/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -57,11 +53,16 @@ serve(async (req) => {
       }),
     });
 
-    const { access_token } = await tokenResponse.json();
-    if (!access_token) throw new Error('Failed to get access token');
+    const tokenData = await tokenResponse.json();
+    if (!tokenData.access_token) {
+      throw new Error('Failed to refresh access token');
+    }
+
+    const access_token = tokenData.access_token;
 
     switch (path) {
       case 'list-calendars': {
+        console.log('Listing calendars...');
         const response = await fetch(`${GOOGLE_CALENDAR_API}/users/me/calendarList`, {
           headers: { Authorization: `Bearer ${access_token}` },
         });
@@ -72,12 +73,14 @@ serve(async (req) => {
       }
 
       case 'sync-events': {
+        console.log('Syncing events...');
         const now = new Date();
         const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
         const threeMonthsAhead = new Date(now.getFullYear(), now.getMonth() + 3, 0);
 
         let nextSyncToken = null;
         const processedEvents = new Set();
+        const allEvents = [];
 
         for (const calendarId of calendars) {
           let apiUrl = `${GOOGLE_CALENDAR_API}/calendars/${calendarId}/events?`;
@@ -93,66 +96,50 @@ serve(async (req) => {
           }
 
           apiUrl += params.toString();
+          console.log(`Fetching events for calendar ${calendarId}`);
 
           const response = await fetch(apiUrl, {
             headers: { Authorization: `Bearer ${access_token}` },
           });
           const data = await response.json();
+          
+          if (data.error) {
+            console.error('Error fetching events:', data.error);
+            continue;
+          }
+
           nextSyncToken = data.nextSyncToken;
-
-          // Process events
-          const events = (data.items || []) as GoogleEvent[];
-          for (const event of events) {
-            if (processedEvents.has(event.id)) continue;
-            processedEvents.add(event.id);
-
-            // Skip cancelled events
-            if (event.status === 'cancelled') {
-              await supabaseClient
-                .from('calendar_events')
-                .delete()
-                .match({ google_event_id: event.id, user_id: user.id });
-              continue;
-            }
-
-            const calendarResponse = await fetch(
-              `${GOOGLE_CALENDAR_API}/calendars/${calendarId}`,
-              { headers: { Authorization: `Bearer ${access_token}` } }
-            );
-            const calendarData = await calendarResponse.json();
-
-            const eventData = {
-              user_id: user.id,
-              google_event_id: event.id,
-              title: event.summary,
-              description: event.description,
-              start_time: event.start.dateTime,
-              end_time: event.end.dateTime,
-              is_recurring: !!event.recurringEventId,
-              calendar_id: calendarId,
-              calendar_name: calendarData.summary,
-              calendar_background_color: calendarData.backgroundColor,
-              sync_status: 'synced',
-              last_synced_at: new Date().toISOString(),
-            };
-
-            // Upsert event
-            const { error: upsertError } = await supabaseClient
-              .from('calendar_events')
-              .upsert(eventData, {
-                onConflict: 'google_event_id,user_id',
-                ignoreDuplicates: false,
-              });
-
-            if (upsertError) {
-              console.error('Error upserting event:', upsertError);
-              throw upsertError;
-            }
+          if (data.items) {
+            allEvents.push(...data.items);
           }
         }
 
         return new Response(
-          JSON.stringify({ success: true, nextSyncToken }),
+          JSON.stringify({ 
+            success: true, 
+            nextSyncToken,
+            events: allEvents 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      case 'revoke-access': {
+        console.log('Revoking access...');
+        // Revogar o token de acesso atual
+        await fetch(`${GOOGLE_OAUTH_API}/revoke?token=${access_token}`, {
+          method: 'POST',
+        });
+
+        // Revogar o refresh token
+        if (settings.google_refresh_token) {
+          await fetch(`${GOOGLE_OAUTH_API}/revoke?token=${settings.google_refresh_token}`, {
+            method: 'POST',
+          });
+        }
+
+        return new Response(
+          JSON.stringify({ success: true }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }

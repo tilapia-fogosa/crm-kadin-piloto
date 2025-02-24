@@ -62,7 +62,18 @@ export function useCalendarOperations() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching calendars:', error);
+        if (error.message.includes('token')) {
+          // Possível erro de token, tentar reconexão
+          toast({
+            title: "Erro de autenticação",
+            description: "Por favor, reconecte sua conta do Google Calendar",
+            variant: "destructive"
+          });
+        }
+        throw error;
+      }
       return data.calendars;
     },
     enabled: !!settings?.sync_enabled
@@ -91,9 +102,18 @@ export function useCalendarOperations() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error syncing calendars:', error);
+        if (error.message.includes('token')) {
+          toast({
+            title: "Erro de autenticação",
+            description: "Por favor, reconecte sua conta do Google Calendar",
+            variant: "destructive"
+          });
+        }
+        throw error;
+      }
 
-      // Atualizar o sync_token e last_sync
       await supabase
         .from('user_calendar_settings')
         .update({ 
@@ -122,13 +142,63 @@ export function useCalendarOperations() {
     }
   };
 
+  const disconnectCalendar = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('No session token available');
+
+      // Revogar acesso no Google e limpar dados locais
+      const { error: revokeError } = await supabase.functions.invoke('google-calendar-manage', {
+        body: { path: 'revoke-access' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (revokeError) {
+        console.error('Error revoking access:', revokeError);
+      }
+
+      // Limpar dados locais mesmo se houver erro ao revogar
+      const { error: updateError } = await supabase
+        .from('user_calendar_settings')
+        .update({
+          google_account_email: null,
+          google_refresh_token: null,
+          sync_enabled: false,
+          selected_calendars: [],
+          calendars_metadata: [],
+          sync_token: null,
+          last_sync: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (updateError) throw updateError;
+
+      await refetchSettings();
+      await refetchCalendars();
+
+      toast({
+        title: "Conta desconectada",
+        description: "Sua conta do Google Calendar foi desconectada com sucesso",
+      });
+    } catch (error) {
+      console.error('Erro ao desconectar conta:', error);
+      toast({
+        title: "Erro ao desconectar",
+        description: "Não foi possível desconectar sua conta",
+        variant: "destructive"
+      });
+    }
+  };
+
   const updateSelectedCalendars = async (calendarIds: string[]) => {
     try {
       const { error } = await supabase
         .from('user_calendar_settings')
         .update({ 
           selected_calendars: calendarIds,
-          // Reset sync token when changing calendars to force full sync
           sync_token: null,
           updated_at: new Date().toISOString()
         })
@@ -160,6 +230,7 @@ export function useCalendarOperations() {
     refetchSettings,
     refetchCalendars,
     syncCalendars,
-    updateSelectedCalendars
+    updateSelectedCalendars,
+    disconnectCalendar
   };
 }
