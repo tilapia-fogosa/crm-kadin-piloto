@@ -17,13 +17,18 @@ export const validateSession = async (): Promise<string | null> => {
       return null;
     }
 
-    // Alterado para usar session.access_token para autenticação com Edge Functions
+    // Alterado para usar o token JWT para Edge Functions
+    console.log('[Session] Verificando token de autorização');
     if (!session.access_token) {
-      console.error('[Session] Token de acesso não encontrado na sessão');
+      console.error('[Session] Token de autorização não encontrado na sessão');
       return null;
     }
 
-    console.log('[Session] Sessão validada com sucesso');
+    console.log('[Session] Sessão validada com sucesso:', {
+      hasAccessToken: !!session.access_token,
+      tokenType: typeof session.access_token
+    });
+    
     return session.access_token;
   } catch (error) {
     console.error('[Session] Erro ao validar sessão:', error);
