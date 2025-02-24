@@ -17,6 +17,7 @@ serve(async (req) => {
   }
 
   try {
+    // Validação do token e extração do user_id
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('No authorization header');
@@ -32,6 +33,7 @@ serve(async (req) => {
 
     console.log('[google-calendar-manage] User ID from JWT:', userId);
 
+    // Inicialização do cliente Supabase
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -41,8 +43,10 @@ serve(async (req) => {
       }
     );
 
+    // Parsing do body da requisição
     const { path, calendars = [], syncToken = null } = await req.json();
 
+    // Busca das configurações do usuário
     const { data: settings, error: settingsError } = await supabaseClient
       .from('user_calendar_settings')
       .select('google_refresh_token')
@@ -56,6 +60,7 @@ serve(async (req) => {
 
     console.log('[google-calendar-manage] Found refresh token for user');
 
+    // Refresh do token de acesso
     const tokenResponse = await fetch(`${GOOGLE_OAUTH_API}/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -76,6 +81,7 @@ serve(async (req) => {
     const access_token = tokenData.access_token;
     console.log('[google-calendar-manage] Successfully refreshed access token');
 
+    // Rotas da API
     switch (path) {
       case 'list-calendars': {
         console.log('[google-calendar-manage] Listing calendars...');
@@ -105,7 +111,10 @@ serve(async (req) => {
         const allEvents = [];
         const processedEventIds = new Set();
 
+        // Processa cada calendário selecionado
         for (const calendarId of calendars) {
+          console.log(`[google-calendar-manage] Processing calendar: ${calendarId}`);
+          
           let apiUrl = `${GOOGLE_CALENDAR_API}/calendars/${calendarId}/events?`;
           const params = new URLSearchParams({
             singleEvents: 'true',
@@ -119,7 +128,6 @@ serve(async (req) => {
           }
 
           apiUrl += params.toString();
-          console.log(`[google-calendar-manage] Fetching events for calendar ${calendarId}`);
 
           const response = await fetch(apiUrl, {
             headers: { Authorization: `Bearer ${access_token}` },
@@ -127,18 +135,19 @@ serve(async (req) => {
           
           if (!response.ok) {
             const error = await response.text();
-            console.error('[google-calendar-manage] Error fetching events:', error);
+            console.error(`[google-calendar-manage] Error fetching events for calendar ${calendarId}:`, error);
             continue;
           }
 
           const data = await response.json();
           nextSyncToken = data.nextSyncToken;
 
+          // Processar eventos do calendário
           if (data.items) {
-            // Processar eventos do Google Calendar
             for (const event of data.items) {
+              // Tratamento de eventos excluídos
               if (event.status === 'cancelled') {
-                // Marcar evento para remoção
+                console.log(`[google-calendar-manage] Removing cancelled event: ${event.id}`);
                 await supabaseClient
                   .from('calendar_events')
                   .delete()
@@ -147,13 +156,15 @@ serve(async (req) => {
                 continue;
               }
 
-              // Verificar se é um evento válido com data
+              // Pular eventos sem data/hora definida
               if (!event.start?.dateTime || !event.end?.dateTime) {
+                console.log(`[google-calendar-manage] Skipping event without datetime: ${event.id}`);
                 continue;
               }
 
               processedEventIds.add(event.id);
 
+              // Preparar dados do evento
               const eventData = {
                 user_id: userId,
                 google_event_id: event.id,
@@ -165,7 +176,7 @@ serve(async (req) => {
                 calendar_name: event.organizer?.displayName,
                 is_recurring: !!event.recurrence,
                 recurring_rule: event.recurrence ? event.recurrence[0] : null,
-                calendar_background_color: data.backgroundColor || '#4285f4',
+                calendar_background_color: event.colorId ? `#${event.colorId}` : '#4285f4',
                 sync_status: 'synced',
                 last_synced_at: new Date().toISOString()
               };
@@ -182,14 +193,16 @@ serve(async (req) => {
 
               if (upsertError) {
                 console.error('[google-calendar-manage] Error upserting event:', upsertError);
+                continue;
               }
 
+              console.log(`[google-calendar-manage] Successfully synced event: ${event.id}`);
               allEvents.push(eventData);
             }
           }
         }
 
-        // Atualizar o sync_token e last_sync nas configurações
+        // Atualizar sync_token e timestamp da última sincronização
         const { error: updateError } = await supabaseClient
           .from('user_calendar_settings')
           .update({
@@ -201,6 +214,8 @@ serve(async (req) => {
 
         if (updateError) {
           console.error('[google-calendar-manage] Error updating sync token:', updateError);
+        } else {
+          console.log('[google-calendar-manage] Successfully updated sync token');
         }
 
         return new Response(
@@ -215,10 +230,13 @@ serve(async (req) => {
 
       case 'revoke-access': {
         console.log('[google-calendar-manage] Revoking access...');
+        
+        // Revogar access token atual
         await fetch(`${GOOGLE_OAUTH_API}/revoke?token=${access_token}`, {
           method: 'POST',
         });
 
+        // Revogar refresh token se existir
         if (settings.google_refresh_token) {
           await fetch(`${GOOGLE_OAUTH_API}/revoke?token=${settings.google_refresh_token}`, {
             method: 'POST',
