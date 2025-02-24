@@ -17,7 +17,7 @@ serve(async (req) => {
 
   try {
     // Get request body and validate path
-    const { path } = await req.json();
+    const { path, calendars, syncToken } = await req.json();
     if (!path) throw new Error('Path is required');
 
     // Get JWT token from request header
@@ -83,6 +83,118 @@ serve(async (req) => {
         return new Response(JSON.stringify({ calendars: calendars.items }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
+      }
+
+      case 'sync-events': {
+        console.log('Sincronizando eventos dos calendários:', calendars);
+        
+        if (!Array.isArray(calendars) || calendars.length === 0) {
+          throw new Error('No calendars selected for sync');
+        }
+
+        const timeMin = new Date();
+        timeMin.setMonth(timeMin.getMonth() - 1); // último mês
+        const timeMax = new Date();
+        timeMax.setMonth(timeMax.getMonth() + 3); // próximos 3 meses
+
+        let allEvents = [];
+        let nextSyncToken = null;
+
+        // Buscar eventos de cada calendário
+        for (const calendarId of calendars) {
+          console.log(`Buscando eventos do calendário: ${calendarId}`);
+          
+          const params = new URLSearchParams({
+            timeMin: timeMin.toISOString(),
+            timeMax: timeMax.toISOString(),
+            singleEvents: 'true',
+            orderBy: 'startTime',
+          });
+
+          if (syncToken) {
+            params.set('syncToken', syncToken);
+          }
+
+          const eventsResponse = await fetch(
+            `${CALENDAR_API_URL}/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
+            { headers: { 'Authorization': `Bearer ${access_token}` } }
+          );
+
+          if (!eventsResponse.ok) {
+            console.error(`Erro ao buscar eventos do calendário ${calendarId}:`, await eventsResponse.text());
+            continue;
+          }
+
+          const eventsData = await eventsResponse.json();
+          nextSyncToken = eventsData.nextSyncToken;
+
+          const calendarResponse = await fetch(
+            `${CALENDAR_API_URL}/calendars/${encodeURIComponent(calendarId)}`,
+            { headers: { 'Authorization': `Bearer ${access_token}` } }
+          );
+          
+          const calendarData = await calendarResponse.json();
+
+          // Mapear eventos com metadados do calendário
+          const eventsWithMetadata = eventsData.items.map(event => ({
+            id: event.id,
+            google_event_id: event.id,
+            calendar_id: calendarId,
+            calendar_name: calendarData.summary,
+            calendar_background_color: calendarData.backgroundColor,
+            title: event.summary || 'Sem título',
+            description: event.description,
+            start_time: event.start.dateTime || event.start.date,
+            end_time: event.end.dateTime || event.end.date,
+            is_recurring: !!event.recurringEventId,
+            recurring_rule: event.recurrence?.join('; '),
+            user_id: user.id,
+            active: true,
+            sync_status: 'synced'
+          }));
+
+          allEvents = allEvents.concat(eventsWithMetadata);
+        }
+
+        // Atualizar eventos no banco
+        if (allEvents.length > 0) {
+          const { error: upsertError } = await supabaseAdmin
+            .from('calendar_events')
+            .upsert(allEvents, { 
+              onConflict: 'google_event_id',
+              ignoreDuplicates: false 
+            });
+
+          if (upsertError) {
+            console.error('Erro ao salvar eventos:', upsertError);
+            throw new Error('Failed to save events');
+          }
+        }
+
+        // Atualizar sync token
+        if (nextSyncToken) {
+          const { error: updateError } = await supabaseAdmin
+            .from('user_calendar_settings')
+            .update({ 
+              sync_token: nextSyncToken,
+              last_sync: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id);
+
+          if (updateError) {
+            console.error('Erro ao atualizar sync token:', updateError);
+          }
+        }
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            events: allEvents.length,
+            nextSyncToken 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
       default:
