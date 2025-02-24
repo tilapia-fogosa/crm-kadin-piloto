@@ -246,11 +246,21 @@ export function useCalendarOperations() {
           calendars_metadata: [],
           sync_token: null,
           last_sync: null,
+          default_calendar_id: null,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
       if (updateError) throw updateError;
+
+      const { error: deleteError } = await supabase
+        .from('calendar_events')
+        .delete()
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (deleteError) {
+        console.error('Error cleaning up calendar events:', deleteError);
+      }
 
       await refetchSettings();
       await refetchCalendars();
