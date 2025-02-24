@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from '@tanstack/react-query';
@@ -6,6 +5,20 @@ import { CalendarSettings, RawCalendarSettings } from './types';
 
 export function useCalendarOperations() {
   const { toast } = useToast();
+
+  const validateSession = async (): Promise<string | null> => {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session?.access_token) {
+        console.error('[CalendarOperations] Erro de sessão:', error);
+        return null;
+      }
+      return session.access_token;
+    } catch (error) {
+      console.error('[CalendarOperations] Erro ao validar sessão:', error);
+      return null;
+    }
+  };
 
   const { 
     data: settings, 
@@ -15,8 +28,8 @@ export function useCalendarOperations() {
   } = useQuery({
     queryKey: ['calendar-settings'],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
+      const accessToken = await validateSession();
+      if (!accessToken) {
         throw new Error('No session token available');
       }
 
@@ -49,7 +62,9 @@ export function useCalendarOperations() {
       };
 
       return formattedData;
-    }
+    },
+    retry: 2,
+    retryDelay: 1000
   });
 
   const { 
@@ -60,34 +75,26 @@ export function useCalendarOperations() {
   } = useQuery({
     queryKey: ['calendars'],
     queryFn: async () => {
-      // Primeiro obtém a sessão
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
+      const accessToken = await validateSession();
+      if (!accessToken) {
         throw new Error('No session token available');
       }
 
-      // Obtém o ID do usuário
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) {
-        throw new Error('User ID not found');
-      }
-
-      // Só continua se tiver as configurações e a sincronização estiver habilitada
       if (!settings?.sync_enabled) {
-        console.log('Calendar sync is disabled or settings not found');
+        console.log('[CalendarOperations] Calendar sync is disabled or settings not found');
         return [];
       }
 
-      console.log('Fetching calendars from Google...');
+      console.log('[CalendarOperations] Fetching calendars from Google...');
       const { data, error } = await supabase.functions.invoke('google-calendar-manage', {
         body: { path: 'list-calendars' },
         headers: {
-          Authorization: `Bearer ${session.access_token}`
+          Authorization: `Bearer ${accessToken}`
         }
       });
 
       if (error) {
-        console.error('Error fetching calendars:', error);
+        console.error('[CalendarOperations] Error fetching calendars:', error);
         if (error.message.includes('token')) {
           toast({
             title: "Erro de autenticação",
@@ -105,7 +112,11 @@ export function useCalendarOperations() {
           backgroundColor: cal.backgroundColor || '#4285f4'
         }));
 
-        // Atualiza os metadados dos calendários
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id) {
+          throw new Error('User ID not found');
+        }
+
         try {
           const { error: updateError } = await supabase
             .from('user_calendar_settings')
@@ -116,10 +127,10 @@ export function useCalendarOperations() {
             .eq('user_id', user.id);
 
           if (updateError) {
-            console.error('Error updating calendar metadata:', updateError);
+            console.error('[CalendarOperations] Error updating calendar metadata:', updateError);
           }
         } catch (updateError) {
-          console.error('Failed to update calendar metadata:', updateError);
+          console.error('[CalendarOperations] Failed to update calendar metadata:', updateError);
         }
 
         return formattedCalendars;
@@ -128,7 +139,8 @@ export function useCalendarOperations() {
       return [];
     },
     enabled: !!settings?.sync_enabled && !!settings?.google_account_email,
-    retry: 1
+    retry: 2,
+    retryDelay: 1000
   });
 
   const syncCalendars = async () => {
