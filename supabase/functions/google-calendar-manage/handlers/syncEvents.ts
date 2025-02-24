@@ -3,6 +3,11 @@ import { CALENDAR_API_URL } from '../constants.ts';
 import { addDays, subDays } from "https://esm.sh/date-fns@2.30.0";
 
 export const syncEvents = async (accessToken: string, calendars: string[], syncToken: string | null, supabaseClient: any, userId: string) => {
+  console.log('[syncEvents] Iniciando sincronização', {
+    calendarCount: calendars.length,
+    hasSyncToken: !!syncToken
+  });
+
   const now = new Date();
   const timeMin = subDays(now, 7).toISOString();
   const timeMax = addDays(now, 30).toISOString();
@@ -11,6 +16,11 @@ export const syncEvents = async (accessToken: string, calendars: string[], syncT
   let nextSyncToken = null;
 
   const processEvents = (events: any[], calendarId: string, calendarName: string, backgroundColor: string) => {
+    console.log('[syncEvents] Processando eventos do calendário:', {
+      calendarId,
+      eventCount: events.length
+    });
+
     return events.map(event => ({
       id: event.id,
       google_event_id: event.id,
@@ -32,6 +42,7 @@ export const syncEvents = async (accessToken: string, calendars: string[], syncT
   };
 
   const cleanupOldEvents = async () => {
+    console.log('[syncEvents] Limpando eventos antigos');
     const { error: cleanupError } = await supabaseClient
       .from('calendar_events')
       .delete()
@@ -39,11 +50,13 @@ export const syncEvents = async (accessToken: string, calendars: string[], syncT
       .eq('user_id', userId);
 
     if (cleanupError) {
-      console.error('[google-calendar-manage] Error cleaning up old events:', cleanupError);
+      console.error('[syncEvents] Erro ao limpar eventos antigos:', cleanupError);
     }
   };
 
   for (const calendarId of calendars) {
+    console.log('[syncEvents] Iniciando sincronização do calendário:', calendarId);
+    
     let params = new URLSearchParams({
       timeMin,
       timeMax,
@@ -69,8 +82,13 @@ export const syncEvents = async (accessToken: string, calendars: string[], syncT
 
     if (!eventsResponse.ok) {
       const errorData = await eventsResponse.json();
+      console.error('[syncEvents] Erro na resposta do Google:', {
+        status: eventsResponse.status,
+        error: errorData
+      });
       
       if (errorData.error?.code === 410) {
+        console.log('[syncEvents] Token de sincronização expirado, realizando sincronização completa');
         params = new URLSearchParams({
           timeMin,
           timeMax,
@@ -88,6 +106,7 @@ export const syncEvents = async (accessToken: string, calendars: string[], syncT
         );
         
         if (!fullSyncResponse.ok) {
+          console.error('[syncEvents] Falha na sincronização completa:', await fullSyncResponse.text());
           throw new Error(`Failed to fetch events after sync token expired: ${await fullSyncResponse.text()}`);
         }
         
@@ -96,6 +115,11 @@ export const syncEvents = async (accessToken: string, calendars: string[], syncT
         
         if (data.items?.length) {
           const calendarInfo = data.items[0]?.organizer || {};
+          console.log('[syncEvents] Eventos obtidos após sincronização completa:', {
+            calendarId,
+            eventCount: data.items.length
+          });
+          
           allEvents = [
             ...allEvents,
             ...processEvents(
@@ -115,6 +139,11 @@ export const syncEvents = async (accessToken: string, calendars: string[], syncT
       
       if (data.items?.length) {
         const calendarInfo = data.items[0]?.organizer || {};
+        console.log('[syncEvents] Eventos obtidos com sucesso:', {
+          calendarId,
+          eventCount: data.items.length
+        });
+        
         allEvents = [
           ...allEvents,
           ...processEvents(
@@ -131,6 +160,10 @@ export const syncEvents = async (accessToken: string, calendars: string[], syncT
   await cleanupOldEvents();
 
   if (allEvents.length > 0) {
+    console.log('[syncEvents] Salvando eventos no banco de dados:', {
+      totalEvents: allEvents.length
+    });
+    
     const { error: upsertError } = await supabaseClient
       .from('calendar_events')
       .upsert(allEvents, {
@@ -138,9 +171,15 @@ export const syncEvents = async (accessToken: string, calendars: string[], syncT
       });
 
     if (upsertError) {
+      console.error('[syncEvents] Erro ao salvar eventos:', upsertError);
       throw new Error(`Failed to upsert events: ${upsertError.message}`);
     }
   }
+
+  console.log('[syncEvents] Sincronização concluída com sucesso:', {
+    totalEvents: allEvents.length,
+    hasSyncToken: !!nextSyncToken
+  });
 
   return { events: allEvents, nextSyncToken };
 };

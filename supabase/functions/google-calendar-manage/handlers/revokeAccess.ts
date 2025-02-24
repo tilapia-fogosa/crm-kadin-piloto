@@ -1,5 +1,7 @@
 
 export const revokeAccess = async (refreshToken: string) => {
+  console.log('[revokeAccess] Iniciando revogação de token');
+
   const revokeResponse = await fetch(
     `https://oauth2.googleapis.com/revoke?token=${refreshToken}`,
     {
@@ -11,8 +13,13 @@ export const revokeAccess = async (refreshToken: string) => {
   );
 
   if (!revokeResponse.ok) {
-    console.error('Failed to revoke token:', await revokeResponse.text());
+    const errorText = await revokeResponse.text();
+    console.error('[revokeAccess] Falha ao revogar token:', {
+      status: revokeResponse.status,
+      error: errorText
+    });
   }
 
+  console.log('[revokeAccess] Token revogado com sucesso');
   return { success: true };
 };
