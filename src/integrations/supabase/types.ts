@@ -536,6 +536,7 @@ export type Database = {
         Row: {
           calendars_metadata: Json | null
           created_at: string | null
+          default_calendar_id: string | null
           google_account_email: string | null
           google_refresh_token: string | null
           id: string
@@ -549,6 +550,7 @@ export type Database = {
         Insert: {
           calendars_metadata?: Json | null
           created_at?: string | null
+          default_calendar_id?: string | null
           google_account_email?: string | null
           google_refresh_token?: string | null
           id?: string
@@ -562,6 +564,7 @@ export type Database = {
         Update: {
           calendars_metadata?: Json | null
           created_at?: string | null
+          default_calendar_id?: string | null
           google_account_email?: string | null
           google_refresh_token?: string | null
           id?: string
