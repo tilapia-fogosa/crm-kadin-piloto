@@ -1,8 +1,7 @@
-
 import { useEffect, useRef, useCallback } from 'react';
 import { useGoogleAuth } from './useGoogleAuth';
 import { useCalendarOperations } from './useCalendarOperations';
-import type { AuthWindowMessage } from './types';
+import { AuthWindowMessage } from './types';
 
 export function useGoogleCalendar() {
   const processingCodeRef = useRef<string | null>(null);

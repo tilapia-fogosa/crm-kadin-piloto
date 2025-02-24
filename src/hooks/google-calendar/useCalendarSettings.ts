@@ -40,14 +40,15 @@ export function useCalendarSettings() {
       const formattedData: CalendarSettings = {
         google_account_email: rawData.google_account_email,
         sync_enabled: rawData.sync_enabled,
+        google_refresh_token: rawData.google_refresh_token,
         selected_calendars: Array.isArray(rawData.selected_calendars) 
-          ? rawData.selected_calendars as string[]
+          ? rawData.selected_calendars
           : [],
         calendars_metadata: Array.isArray(rawData.calendars_metadata) 
-          ? (rawData.calendars_metadata as any[]).map(cal => ({
-              id: cal.id as string,
-              summary: cal.summary as string,
-              backgroundColor: cal.backgroundColor as string
+          ? rawData.calendars_metadata.map(cal => ({
+              id: cal.id,
+              summary: cal.summary,
+              backgroundColor: cal.backgroundColor
             }))
           : [],
         last_sync: rawData.last_sync,
@@ -60,7 +61,6 @@ export function useCalendarSettings() {
     },
     retry: 2,
     retryDelay: 1000,
-    // Adiciona um callback de erro para logging
     meta: {
       onError: (error: Error) => {
         console.error('[CalendarSettings] Erro na query:', error);
