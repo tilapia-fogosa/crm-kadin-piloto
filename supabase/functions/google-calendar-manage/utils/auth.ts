@@ -83,17 +83,4 @@ export const validateUserAndSettings = async (clients: ReturnType<typeof getAuth
       userId: user.id,
       hasGoogleAccount: !!settings.google_account_email,
       syncEnabled: settings.sync_enabled,
-      hasRefreshToken: !!settings.google_refresh_token
-    });
-
-    return { user, settings };
-  } catch (error) {
-    console.error('[auth] Erro detalhado na validação:', {
-      error,
-      message: error.message,
-      stack: error.stack
-    });
-    throw error;
-  }
-};
-
+      hasRefreshToken: !!
