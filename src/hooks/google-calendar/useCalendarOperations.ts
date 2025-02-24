@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from '@tanstack/react-query';
@@ -9,16 +10,24 @@ export function useCalendarOperations() {
   const { 
     data: settings, 
     isLoading: isLoadingSettings, 
-    refetch: refetchSettings 
+    refetch: refetchSettings,
+    error: settingsError 
   } = useQuery({
     queryKey: ['calendar-settings'],
     queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No session token available');
+      }
+
       const { data, error } = await supabase
         .from('user_calendar_settings')
         .select('*')
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      
+      if (!data) return null;
       
       const rawData = data as RawCalendarSettings;
       const formattedData: CalendarSettings = {
@@ -46,15 +55,30 @@ export function useCalendarOperations() {
   const { 
     data: calendars, 
     isLoading: isLoadingCalendars, 
-    refetch: refetchCalendars 
+    refetch: refetchCalendars,
+    error: calendarsError 
   } = useQuery({
     queryKey: ['calendars'],
     queryFn: async () => {
-      if (!settings?.sync_enabled) return [];
-
+      // Primeiro obtém a sessão
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error('No session token available');
+      if (!session?.access_token) {
+        throw new Error('No session token available');
+      }
 
+      // Obtém o ID do usuário
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) {
+        throw new Error('User ID not found');
+      }
+
+      // Só continua se tiver as configurações e a sincronização estiver habilitada
+      if (!settings?.sync_enabled) {
+        console.log('Calendar sync is disabled or settings not found');
+        return [];
+      }
+
+      console.log('Fetching calendars from Google...');
       const { data, error } = await supabase.functions.invoke('google-calendar-manage', {
         body: { path: 'list-calendars' },
         headers: {
@@ -81,22 +105,30 @@ export function useCalendarOperations() {
           backgroundColor: cal.backgroundColor || '#4285f4'
         }));
 
-        const { error: updateError } = await supabase
-          .from('user_calendar_settings')
-          .update({ 
-            calendars_metadata: formattedCalendars,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        // Atualiza os metadados dos calendários
+        try {
+          const { error: updateError } = await supabase
+            .from('user_calendar_settings')
+            .update({ 
+              calendars_metadata: formattedCalendars,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id);
 
-        if (updateError) {
-          console.error('Error updating calendar metadata:', updateError);
+          if (updateError) {
+            console.error('Error updating calendar metadata:', updateError);
+          }
+        } catch (updateError) {
+          console.error('Failed to update calendar metadata:', updateError);
         }
+
+        return formattedCalendars;
       }
 
-      return data.calendars;
+      return [];
     },
-    enabled: !!settings?.sync_enabled
+    enabled: !!settings?.sync_enabled && !!settings?.google_account_email,
+    retry: 1
   });
 
   const syncCalendars = async () => {
@@ -106,10 +138,18 @@ export function useCalendarOperations() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error('No session token available');
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) throw new Error('User ID not found');
+      
       const { data: settings } = await supabase
         .from('user_calendar_settings')
         .select('selected_calendars, sync_token')
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!settings) {
+        throw new Error('Calendar settings not found');
+      }
 
       const { data: response, error } = await supabase.functions.invoke('google-calendar-manage', {
         body: { 
@@ -141,7 +181,7 @@ export function useCalendarOperations() {
           last_sync: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('user_id', user.id);
 
       await refetchSettings();
       
@@ -164,6 +204,9 @@ export function useCalendarOperations() {
 
   const updateSelectedCalendars = async (calendarIds: string[]) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) throw new Error('User ID not found');
+
       const { error } = await supabase
         .from('user_calendar_settings')
         .update({ 
@@ -171,7 +214,7 @@ export function useCalendarOperations() {
           sync_token: null,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -194,13 +237,16 @@ export function useCalendarOperations() {
 
   const setDefaultCalendar = async (calendarId: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) throw new Error('User ID not found');
+
       const { error } = await supabase
         .from('user_calendar_settings')
         .update({ 
           default_calendar_id: calendarId,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -227,8 +273,8 @@ export function useCalendarOperations() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error('No session token available');
 
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (!userId) throw new Error('User ID not found');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) throw new Error('User ID not found');
 
       // 1. Primeiro revoga o acesso no Google
       console.log('Revogando acesso no Google');
@@ -248,7 +294,7 @@ export function useCalendarOperations() {
       const { error: eventsError } = await supabase
         .from('calendar_events')
         .delete()
-        .eq('user_id', userId);
+        .eq('user_id', user.id);
 
       if (eventsError) {
         console.error('Error deleting calendar events:', eventsError);
@@ -259,7 +305,7 @@ export function useCalendarOperations() {
       const { error: settingsError } = await supabase
         .from('user_calendar_settings')
         .delete()
-        .eq('user_id', userId);
+        .eq('user_id', user.id);
 
       if (settingsError) {
         console.error('Error deleting calendar settings:', settingsError);
