@@ -12,13 +12,11 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Extrair o token JWT do header Authorization
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('No authorization header');
@@ -45,7 +43,6 @@ serve(async (req) => {
 
     const { path, calendars = [], syncToken = null } = await req.json();
 
-    // Obter configurações do usuário usando o userId extraído do JWT
     const { data: settings, error: settingsError } = await supabaseClient
       .from('user_calendar_settings')
       .select('google_refresh_token')
@@ -59,7 +56,6 @@ serve(async (req) => {
 
     console.log('[google-calendar-manage] Found refresh token for user');
 
-    // Obter novo access token usando refresh token
     const tokenResponse = await fetch(`${GOOGLE_OAUTH_API}/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -107,6 +103,7 @@ serve(async (req) => {
 
         let nextSyncToken = null;
         const allEvents = [];
+        const processedEventIds = new Set();
 
         for (const calendarId of calendars) {
           let apiUrl = `${GOOGLE_CALENDAR_API}/calendars/${calendarId}/events?`;
@@ -136,9 +133,74 @@ serve(async (req) => {
 
           const data = await response.json();
           nextSyncToken = data.nextSyncToken;
+
           if (data.items) {
-            allEvents.push(...data.items);
+            // Processar eventos do Google Calendar
+            for (const event of data.items) {
+              if (event.status === 'cancelled') {
+                // Marcar evento para remoção
+                await supabaseClient
+                  .from('calendar_events')
+                  .delete()
+                  .eq('google_event_id', event.id)
+                  .eq('calendar_id', calendarId);
+                continue;
+              }
+
+              // Verificar se é um evento válido com data
+              if (!event.start?.dateTime || !event.end?.dateTime) {
+                continue;
+              }
+
+              processedEventIds.add(event.id);
+
+              const eventData = {
+                user_id: userId,
+                google_event_id: event.id,
+                title: event.summary || 'Sem título',
+                description: event.description,
+                start_time: event.start.dateTime,
+                end_time: event.end.dateTime,
+                calendar_id: calendarId,
+                calendar_name: event.organizer?.displayName,
+                is_recurring: !!event.recurrence,
+                recurring_rule: event.recurrence ? event.recurrence[0] : null,
+                calendar_background_color: data.backgroundColor || '#4285f4',
+                sync_status: 'synced',
+                last_synced_at: new Date().toISOString()
+              };
+
+              // Upsert do evento
+              const { error: upsertError } = await supabaseClient
+                .from('calendar_events')
+                .upsert({
+                  ...eventData,
+                  updated_at: new Date().toISOString()
+                }, {
+                  onConflict: 'google_event_id'
+                });
+
+              if (upsertError) {
+                console.error('[google-calendar-manage] Error upserting event:', upsertError);
+              }
+
+              allEvents.push(eventData);
+            }
           }
+        }
+
+        // Atualizar o sync_token e last_sync nas configurações
+        const { error: updateError } = await supabaseClient
+          .from('user_calendar_settings')
+          .update({
+            sync_token: nextSyncToken,
+            last_sync: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId);
+
+        if (updateError) {
+          console.error('[google-calendar-manage] Error updating sync token:', updateError);
         }
 
         return new Response(
@@ -153,12 +215,10 @@ serve(async (req) => {
 
       case 'revoke-access': {
         console.log('[google-calendar-manage] Revoking access...');
-        // Revogar o token de acesso atual
         await fetch(`${GOOGLE_OAUTH_API}/revoke?token=${access_token}`, {
           method: 'POST',
         });
 
-        // Revogar o refresh token
         if (settings.google_refresh_token) {
           await fetch(`${GOOGLE_OAUTH_API}/revoke?token=${settings.google_refresh_token}`, {
             method: 'POST',
@@ -188,4 +248,3 @@ serve(async (req) => {
     );
   }
 });
-
