@@ -8,7 +8,6 @@ export function useCalendarSettings() {
   return useQuery({
     queryKey: ['calendar-settings'],
     queryFn: async () => {
-      // Log para debug da chamada
       console.log('[CalendarSettings] Iniciando busca de configurações');
 
       const accessToken = await validateSession();
@@ -36,24 +35,24 @@ export function useCalendarSettings() {
       
       console.log('[CalendarSettings] Configurações encontradas, formatando dados');
       
-      const rawData = data as RawCalendarSettings;
+      // Fazer cast explícito dos dados JSON para os tipos corretos
       const formattedData: CalendarSettings = {
-        google_account_email: rawData.google_account_email,
-        sync_enabled: rawData.sync_enabled,
-        google_refresh_token: rawData.google_refresh_token,
-        selected_calendars: Array.isArray(rawData.selected_calendars) 
-          ? rawData.selected_calendars
+        google_account_email: data.google_account_email,
+        sync_enabled: Boolean(data.sync_enabled),
+        google_refresh_token: data.google_refresh_token,
+        selected_calendars: Array.isArray(data.selected_calendars) 
+          ? data.selected_calendars as string[]
           : [],
-        calendars_metadata: Array.isArray(rawData.calendars_metadata) 
-          ? rawData.calendars_metadata.map(cal => ({
-              id: cal.id,
-              summary: cal.summary,
-              backgroundColor: cal.backgroundColor
+        calendars_metadata: Array.isArray(data.calendars_metadata) 
+          ? (data.calendars_metadata as any[]).map(cal => ({
+              id: String(cal.id),
+              summary: String(cal.summary),
+              backgroundColor: String(cal.backgroundColor)
             }))
           : [],
-        last_sync: rawData.last_sync,
-        sync_token: rawData.sync_token,
-        default_calendar_id: rawData.default_calendar_id
+        last_sync: data.last_sync,
+        sync_token: data.sync_token,
+        default_calendar_id: data.default_calendar_id
       };
 
       console.log('[CalendarSettings] Dados formatados com sucesso');
