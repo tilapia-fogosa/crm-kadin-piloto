@@ -175,8 +175,8 @@ serve(async (req) => {
                         recurring_rule: event.recurrence ? event.recurrence[0] : null,
                         calendar_background_color: event.colorId ? `#${event.colorId}` : '#4285f4',
                         user_id: userId,
-                        active: true,
-                        updated_at: new Date().toISOString()
+                        sync_status: 'synced',
+                        last_synced_at: new Date().toISOString()
                       });
                     }
                   }
@@ -195,7 +195,7 @@ serve(async (req) => {
                     console.log(`[google-calendar-manage] Removing cancelled event: ${event.id}`);
                     await supabaseClient
                       .from('calendar_events')
-                      .delete()
+                      .update({ active: false })
                       .eq('google_event_id', event.id)
                       .eq('calendar_id', calendarId);
                     continue;
@@ -216,8 +216,8 @@ serve(async (req) => {
                       recurring_rule: event.recurrence ? event.recurrence[0] : null,
                       calendar_background_color: event.colorId ? `#${event.colorId}` : '#4285f4',
                       user_id: userId,
-                      active: true,
-                      updated_at: new Date().toISOString()
+                      sync_status: 'synced',
+                      last_synced_at: new Date().toISOString()
                     });
                   }
                 }

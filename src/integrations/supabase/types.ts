@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       calendar_events: {
         Row: {
+          active: boolean
           activity_id: string | null
           calendar_background_color: string | null
           calendar_id: string | null
@@ -30,6 +31,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          active?: boolean
           activity_id?: string | null
           calendar_background_color?: string | null
           calendar_id?: string | null
@@ -49,6 +51,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          active?: boolean
           activity_id?: string | null
           calendar_background_color?: string | null
           calendar_id?: string | null
