@@ -12,8 +12,16 @@ export const listCalendars = async (req: Request) => {
     const clients = getAuthenticatedClient(authHeader);
     
     // Validate user and get settings
-    const { user } = await validateUserAndSettings(clients);
+    const { user, settings } = await validateUserAndSettings(clients);
     console.log('[listCalendars] Usuário validado:', user.id);
+    
+    if (!settings.sync_enabled) {
+      console.log('[listCalendars] Sincronização desabilitada para usuário:', user.id);
+      return new Response(
+        JSON.stringify({ calendars: [] }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
     
     // Get Google access token
     const googleToken = await getAccessToken(clients, user.id);

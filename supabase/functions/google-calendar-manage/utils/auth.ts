@@ -79,6 +79,11 @@ export const validateUserAndSettings = async (clients: ReturnType<typeof getAuth
       throw new Error('Calendar settings not found');
     }
 
+    if (!settings.google_refresh_token) {
+      console.error('[auth] Refresh token não encontrado para usuário:', user.id);
+      throw new Error('Google refresh token not found');
+    }
+
     console.log('[auth] Configurações obtidas com sucesso:', { 
       userId: user.id,
       hasGoogleAccount: !!settings.google_account_email,
