@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
-import { CalendarSettings, RawCalendarSettings } from '../types';
+import { CalendarSettings, RawCalendarSettings } from './types';
 import { validateSession } from './utils/session';
 
 export function useCalendarSettings() {
