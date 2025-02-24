@@ -1,10 +1,4 @@
 
 project_id = "hkvjdxxndapxpslovrlc"
-
-[api]
-enabled = true
-cors = [ "*" ]
-
-[deploy]
-allowed_imports = []
-
+[build]
+engine = "deno"
