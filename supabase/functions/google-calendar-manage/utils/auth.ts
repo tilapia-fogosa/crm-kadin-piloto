@@ -83,4 +83,71 @@ export const validateUserAndSettings = async (clients: ReturnType<typeof getAuth
       userId: user.id,
       hasGoogleAccount: !!settings.google_account_email,
       syncEnabled: settings.sync_enabled,
-      hasRefreshToken: !!
+      hasRefreshToken: !!settings.google_refresh_token
+    });
+
+    return { user, settings };
+  } catch (error) {
+    console.error('[auth] Erro detalhado na validação:', {
+      error,
+      message: error.message,
+      stack: error.stack
+    });
+    throw error;
+  }
+};
+
+export const getAccessToken = async (clients: ReturnType<typeof getAuthenticatedClient>, userId: string): Promise<string> => {
+  console.log('[auth] Iniciando obtenção do access token para usuário:', userId);
+
+  try {
+    // Usar service client para buscar as configurações
+    const { data: settings, error: settingsError } = await clients.serviceClient
+      .from('user_calendar_settings')
+      .select('google_refresh_token')
+      .eq('user_id', userId)
+      .single();
+
+    if (settingsError) {
+      console.error('[auth] Erro ao buscar refresh token:', settingsError);
+      throw new Error(`Failed to fetch refresh token: ${settingsError.message}`);
+    }
+
+    if (!settings?.google_refresh_token) {
+      console.error('[auth] Refresh token não encontrado para usuário:', userId);
+      throw new Error('No refresh token found');
+    }
+
+    // Fazer a requisição para o Google usando o refresh token
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: Deno.env.get('GOOGLE_CLIENT_ID') ?? '',
+        client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET') ?? '',
+        refresh_token: settings.google_refresh_token,
+        grant_type: 'refresh_token',
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('[auth] Erro ao obter novo access token:', errorData);
+      throw new Error(`Failed to refresh token: ${errorData}`);
+    }
+
+    const data = await response.json();
+    console.log('[auth] Novo access token obtido com sucesso');
+
+    return data.access_token;
+  } catch (error) {
+    console.error('[auth] Erro detalhado ao obter access token:', {
+      error,
+      message: error.message,
+      stack: error.stack
+    });
+    throw error;
+  }
+};
