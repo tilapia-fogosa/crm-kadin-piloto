@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { corsHeaders } from "./utils/cors.ts";
 import { listCalendars } from "./handlers/listCalendars.ts";
 import { syncEvents } from "./handlers/syncEvents.ts";
@@ -16,41 +15,20 @@ serve(async (req) => {
     // Get request body
     const { path, ...body } = await req.json();
 
-    // Get authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('Missing authorization header');
-    }
-
     // Log para debug
-    console.log('[google-calendar-manage] Headers recebidos:', {
-      auth: !!authHeader,
-      authType: typeof authHeader,
-      authLength: authHeader?.length
+    console.log('[google-calendar-manage] Request recebido:', {
+      path,
+      hasAuth: !!req.headers.get('Authorization')
     });
-
-    // Create authenticated Supabase client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader }
-        }
-      }
-    );
-
-    // Log para debug da criação do cliente
-    console.log('[google-calendar-manage] Cliente Supabase criado');
 
     // Route request based on path
     switch (path) {
       case 'list-calendars':
-        return await listCalendars(supabase, body);
+        return await listCalendars(req);
       case 'sync-events':
-        return await syncEvents(supabase, body);
+        return await syncEvents(req);
       case 'revoke-access':
-        return await revokeAccess(supabase);
+        return await revokeAccess(req);
       default:
         throw new Error(`Unknown path: ${path}`);
     }
