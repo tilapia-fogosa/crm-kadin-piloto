@@ -17,6 +17,7 @@ export const validateSession = async (): Promise<string | null> => {
       return null;
     }
 
+    // Alterado para usar session.access_token para autenticação com Edge Functions
     if (!session.access_token) {
       console.error('[Session] Token de acesso não encontrado na sessão');
       return null;
