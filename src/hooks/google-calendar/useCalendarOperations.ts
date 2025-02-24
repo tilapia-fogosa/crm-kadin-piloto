@@ -222,9 +222,16 @@ export function useCalendarOperations() {
 
   const disconnectCalendar = async () => {
     try {
+      console.log('Iniciando processo de desconexão do Google Calendar');
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error('No session token available');
 
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) throw new Error('User ID not found');
+
+      // 1. Primeiro revoga o acesso no Google
+      console.log('Revogando acesso no Google');
       const { error: revokeError } = await supabase.functions.invoke('google-calendar-manage', {
         body: { path: 'revoke-access' },
         headers: {
@@ -236,30 +243,27 @@ export function useCalendarOperations() {
         console.error('Error revoking access:', revokeError);
       }
 
-      const { error: updateError } = await supabase
-        .from('user_calendar_settings')
-        .update({
-          google_account_email: null,
-          google_refresh_token: null,
-          sync_enabled: false,
-          selected_calendars: [],
-          calendars_metadata: [],
-          sync_token: null,
-          last_sync: null,
-          default_calendar_id: null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
-
-      if (updateError) throw updateError;
-
-      const { error: deleteError } = await supabase
+      // 2. Deleta todos os eventos do calendário
+      console.log('Deletando eventos do calendário');
+      const { error: eventsError } = await supabase
         .from('calendar_events')
         .delete()
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('user_id', userId);
 
-      if (deleteError) {
-        console.error('Error cleaning up calendar events:', deleteError);
+      if (eventsError) {
+        console.error('Error deleting calendar events:', eventsError);
+      }
+
+      // 3. Deleta as configurações do usuário
+      console.log('Deletando configurações do calendário');
+      const { error: settingsError } = await supabase
+        .from('user_calendar_settings')
+        .delete()
+        .eq('user_id', userId);
+
+      if (settingsError) {
+        console.error('Error deleting calendar settings:', settingsError);
+        throw settingsError;
       }
 
       await refetchSettings();
@@ -267,13 +271,13 @@ export function useCalendarOperations() {
 
       toast({
         title: "Conta desconectada",
-        description: "Sua conta do Google Calendar foi desconectada com sucesso",
+        description: "Sua conta do Google Calendar foi completamente desconectada",
       });
     } catch (error) {
       console.error('Erro ao desconectar conta:', error);
       toast({
         title: "Erro ao desconectar",
-        description: "Não foi possível desconectar sua conta",
+        description: "Não foi possível desconectar sua conta completamente",
         variant: "destructive"
       });
     }
