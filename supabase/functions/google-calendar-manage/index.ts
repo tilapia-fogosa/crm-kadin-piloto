@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0';
 
@@ -161,7 +160,7 @@ serve(async (req) => {
           const { error: upsertError } = await supabaseAdmin
             .from('calendar_events')
             .upsert(allEvents, { 
-              onConflict: 'google_event_id',
+              onConflict: 'unique_google_event_user',
               ignoreDuplicates: false 
             });
 
