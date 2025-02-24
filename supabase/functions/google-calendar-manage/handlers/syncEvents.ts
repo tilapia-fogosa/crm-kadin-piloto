@@ -1,185 +1,135 @@
 
-import { CALENDAR_API_URL } from '../constants.ts';
-import { addDays, subDays } from "https://esm.sh/date-fns@2.30.0";
+import { createClient } from '@supabase/supabase-js';
+import { Calendar } from '../types';
+import { getGoogleClient } from '../utils/auth';
+import { corsHeaders } from '../utils/cors';
 
-export const syncEvents = async (accessToken: string, calendars: string[], syncToken: string | null, supabaseClient: any, userId: string) => {
-  console.log('[syncEvents] Iniciando sincronização', {
-    calendarCount: calendars.length,
-    hasSyncToken: !!syncToken
-  });
+const supabaseAdmin = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+);
 
-  const now = new Date();
-  const timeMin = subDays(now, 7).toISOString();
-  const timeMax = addDays(now, 30).toISOString();
-  
-  let allEvents = [];
-  let nextSyncToken = null;
+export async function syncEvents(calendars: string[], syncToken: string | null, userId: string) {
+  console.log('[SyncEvents] Iniciando sincronização para usuário:', userId);
+  console.log('[SyncEvents] Calendários:', calendars);
+  console.log('[SyncEvents] Token de sincronização:', syncToken);
 
-  const processEvents = (events: any[], calendarId: string, calendarName: string, backgroundColor: string) => {
-    console.log('[syncEvents] Processando eventos do calendário:', {
-      calendarId,
-      eventCount: events.length
-    });
-
-    return events.map(event => ({
-      id: event.id,
-      google_event_id: event.id,
-      calendar_id: calendarId,
-      calendar_name: calendarName,
-      calendar_background_color: backgroundColor,
-      title: event.summary || '(Sem título)',
-      description: event.description,
-      start_time: event.start?.dateTime || event.start?.date,
-      end_time: event.end?.dateTime || event.end?.date,
-      is_recurring: !!event.recurrence,
-      recurring_rule: event.recurrence?.[0],
-      user_id: userId,
-      sync_status: 'synced',
-      last_synced_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      active: true
-    }));
-  };
-
-  const cleanupOldEvents = async () => {
-    console.log('[syncEvents] Limpando eventos antigos');
-    const { error: cleanupError } = await supabaseClient
-      .from('calendar_events')
-      .delete()
-      .or(`start_time.lt.${timeMin},end_time.gt.${timeMax}`)
-      .eq('user_id', userId);
-
-    if (cleanupError) {
-      console.error('[syncEvents] Erro ao limpar eventos antigos:', cleanupError);
-    }
-  };
+  const googleClient = await getGoogleClient(userId);
+  const allEvents = [];
+  let latestSyncToken = null;
 
   for (const calendarId of calendars) {
-    console.log('[syncEvents] Iniciando sincronização do calendário:', calendarId);
+    console.log(`[SyncEvents] Processando calendário: ${calendarId}`);
     
-    let params = new URLSearchParams({
-      timeMin,
-      timeMax,
-      singleEvents: 'true',
-      maxResults: '2500',
-    });
-
-    if (syncToken) {
-      params = new URLSearchParams({
-        syncToken,
-        maxResults: '2500',
-      });
-    }
-
-    const eventsResponse = await fetch(
-      `${CALENDAR_API_URL}/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    if (!eventsResponse.ok) {
-      const errorData = await eventsResponse.json();
-      console.error('[syncEvents] Erro na resposta do Google:', {
-        status: eventsResponse.status,
-        error: errorData
-      });
-      
-      if (errorData.error?.code === 410) {
-        console.log('[syncEvents] Token de sincronização expirado, realizando sincronização completa');
-        params = new URLSearchParams({
-          timeMin,
-          timeMax,
-          singleEvents: 'true',
-          maxResults: '2500',
-        });
-        
-        const fullSyncResponse = await fetch(
-          `${CALENDAR_API_URL}/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-            },
-          }
-        );
-        
-        if (!fullSyncResponse.ok) {
-          console.error('[syncEvents] Falha na sincronização completa:', await fullSyncResponse.text());
-          throw new Error(`Failed to fetch events after sync token expired: ${await fullSyncResponse.text()}`);
+    try {
+      const response = await googleClient.request({
+        url: `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`,
+        params: {
+          syncToken: syncToken,
+          showDeleted: true,
+          singleEvents: true,
+          maxResults: 2500
         }
-        
-        const data = await fullSyncResponse.json();
-        nextSyncToken = data.nextSyncToken;
-        
-        if (data.items?.length) {
-          const calendarInfo = data.items[0]?.organizer || {};
-          console.log('[syncEvents] Eventos obtidos após sincronização completa:', {
-            calendarId,
-            eventCount: data.items.length
+      });
+
+      const events = response.data.items || [];
+      const calendarInfo = await googleClient.request({
+        url: `https://www.googleapis.com/calendar/v3/calendars/${calendarId}`
+      });
+
+      console.log(`[SyncEvents] Recebidos ${events.length} eventos do calendário ${calendarId}`);
+
+      const formattedEvents = events
+        .filter(event => event.id && event.start) // Filtra eventos sem ID ou data
+        .map(event => {
+          const eventData = {
+            id: crypto.randomUUID(),
+            google_event_id: event.id,
+            user_id: userId,
+            calendar_id: calendarId,
+            calendar_name: calendarInfo.data.summary,
+            calendar_background_color: calendarInfo.data.backgroundColor,
+            title: event.summary || 'Sem título',
+            description: event.description,
+            start_time: event.start.dateTime || event.start.date,
+            end_time: event.end.dateTime || event.end.date,
+            is_recurring: !!event.recurrence,
+            recurring_rule: event.recurrence?.[0],
+            sync_status: event.status === 'cancelled' ? 'deleted' : 'synced',
+            active: event.status !== 'cancelled',
+            last_synced_at: new Date().toISOString()
+          };
+
+          console.log(`[SyncEvents] Evento formatado:`, {
+            id: eventData.id,
+            google_event_id: eventData.google_event_id,
+            title: eventData.title,
+            calendar: eventData.calendar_id
           });
-          
-          allEvents = [
-            ...allEvents,
-            ...processEvents(
-              data.items,
-              calendarId,
-              calendarInfo.displayName || 'Calendário Google',
-              '#4285f4'
-            ),
-          ];
-        }
-      } else {
-        throw new Error(`Failed to fetch events: ${await eventsResponse.text()}`);
-      }
-    } else {
-      const data = await eventsResponse.json();
-      nextSyncToken = data.nextSyncToken;
-      
-      if (data.items?.length) {
-        const calendarInfo = data.items[0]?.organizer || {};
-        console.log('[syncEvents] Eventos obtidos com sucesso:', {
-          calendarId,
-          eventCount: data.items.length
+
+          return eventData;
         });
-        
-        allEvents = [
-          ...allEvents,
-          ...processEvents(
-            data.items,
-            calendarId,
-            calendarInfo.displayName || 'Calendário Google',
-            '#4285f4'
-          ),
-        ];
-      }
+
+      allEvents.push(...formattedEvents);
+      latestSyncToken = response.data.nextSyncToken;
+      
+      console.log(`[SyncEvents] Eventos formatados para ${calendarId}:`, formattedEvents.length);
+    } catch (error) {
+      console.error(`[SyncEvents] Erro ao buscar eventos do calendário ${calendarId}:`, error);
+      throw error;
     }
   }
-
-  await cleanupOldEvents();
 
   if (allEvents.length > 0) {
-    console.log('[syncEvents] Salvando eventos no banco de dados:', {
-      totalEvents: allEvents.length
-    });
+    console.log('[SyncEvents] Iniciando upsert de', allEvents.length, 'eventos');
     
-    const { error: upsertError } = await supabaseClient
-      .from('calendar_events')
-      .upsert(allEvents, {
-        onConflict: 'google_event_id,user_id'
-      });
+    try {
+      const { error: upsertError } = await supabaseAdmin
+        .from('calendar_events')
+        .upsert(allEvents, {
+          onConflict: 'google_event_id,user_id',
+          ignoreDuplicates: false
+        });
 
-    if (upsertError) {
-      console.error('[syncEvents] Erro ao salvar eventos:', upsertError);
-      throw new Error(`Failed to upsert events: ${upsertError.message}`);
+      if (upsertError) {
+        console.error('[SyncEvents] Erro no upsert:', upsertError);
+        throw upsertError;
+      }
+
+      console.log('[SyncEvents] Eventos salvos com sucesso');
+    } catch (error) {
+      console.error('[SyncEvents] Erro ao salvar eventos:', error);
+      throw error;
     }
   }
 
-  console.log('[syncEvents] Sincronização concluída com sucesso:', {
-    totalEvents: allEvents.length,
-    hasSyncToken: !!nextSyncToken
-  });
+  // Atualiza o token de sincronização
+  if (latestSyncToken) {
+    console.log('[SyncEvents] Atualizando token de sincronização:', latestSyncToken);
+    
+    try {
+      const { error: updateError } = await supabaseAdmin
+        .from('user_calendar_settings')
+        .update({ 
+          sync_token: latestSyncToken,
+          last_sync: new Date().toISOString()
+        })
+        .eq('user_id', userId);
 
-  return { events: allEvents, nextSyncToken };
-};
+      if (updateError) {
+        console.error('[SyncEvents] Erro ao atualizar token:', updateError);
+        throw updateError;
+      }
+
+      console.log('[SyncEvents] Token atualizado com sucesso');
+    } catch (error) {
+      console.error('[SyncEvents] Erro ao atualizar token:', error);
+      throw error;
+    }
+  }
+
+  return {
+    events_processed: allEvents.length,
+    sync_token: latestSyncToken
+  };
+}
