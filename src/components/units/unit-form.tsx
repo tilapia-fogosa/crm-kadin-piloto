@@ -93,6 +93,7 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
 
         if (error) throw error;
       } else {
+        // O unit_number será definido automaticamente pelo trigger do banco de dados
         const { error } = await supabase
           .from('units')
           .insert({
