@@ -5,6 +5,7 @@ import { Sale, PaymentMethod, DueDay } from "./types"
 import { ImportantInfo } from "./components/sale-form/ImportantInfo"
 import { PaymentSection } from "./components/sale-form/PaymentSection"
 import { MonthlyFeeSection } from "./components/sale-form/MonthlyFeeSection"
+import { PhotoUpload } from "./components/sale-form/PhotoUpload"
 
 interface SaleFormProps {
   onSubmit: (sale: Sale) => Promise<void>
@@ -49,6 +50,14 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
     await onSubmit(sale as Sale)
   }
 
+  const handlePhotoUploaded = ({ photo_url, photo_thumbnail_url }: { photo_url: string; photo_thumbnail_url: string }) => {
+    setSale(prev => ({
+      ...prev,
+      photo_url,
+      photo_thumbnail_url
+    }))
+  }
+
   const isFormValid = () => {
     const requiredFields: (keyof Sale)[] = [
       'enrollment_amount',
@@ -81,6 +90,8 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
         value={sale.important_info || ''}
         onChange={value => setSale(prev => ({ ...prev, important_info: value }))}
       />
+
+      <PhotoUpload onPhotoUploaded={handlePhotoUploaded} />
 
       <div className="grid grid-cols-2 gap-4">
         <PaymentSection
