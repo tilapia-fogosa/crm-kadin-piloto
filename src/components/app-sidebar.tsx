@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,6 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   KanbanSquare,
-  Calendar,
   Users,
   FileCode,
   Menu,
@@ -20,7 +18,6 @@ import { useSidebar } from "./ui/sidebar";
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Painel do Consultor", href: "/kanban", icon: KanbanSquare },
-  { name: "Agenda", href: "/agenda", icon: Calendar },
   { 
     name: "Clientes", 
     href: "/clients", 

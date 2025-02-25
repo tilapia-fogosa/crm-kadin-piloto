@@ -8,7 +8,6 @@ import { ProtectedLayout } from "./components/layouts/ProtectedLayout";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
 import Kanban from "@/pages/Kanban";
-import Agenda from "@/pages/Agenda";
 import NewClient from "@/pages/clients/new";
 import ClientsPage from "@/pages/clients";
 import LeadSourcesPage from "@/pages/clients/sources";
@@ -62,7 +61,6 @@ function App() {
               }>
                 <Route path="/dashboard" element={<Index />} />
                 <Route path="/kanban" element={<Kanban />} />
-                <Route path="/agenda" element={<Agenda />} />
                 <Route path="/clients/new" element={<NewClient />} />
                 <Route path="/clients" element={<ClientsPage />} />
                 <Route path="/clients/sources" element={<LeadSourcesPage />} />
