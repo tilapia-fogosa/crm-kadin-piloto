@@ -1,14 +1,10 @@
 
-import { useState, useEffect } from "react";
-import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Command,
   CommandEmpty,
-  CommandGroup,
   CommandInput,
-  CommandItem,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -16,20 +12,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-
-interface Unit {
-  id: string;
-  name: string;
-  city: string;
-}
-
-interface MultipleUnitSelectProps {
-  selectedUnits: string[] | undefined;
-  onUnitsChange: (units: string[]) => void;
-  disabled?: boolean;
-}
+import { MultipleUnitSelectProps } from "./types/unit-select.types";
+import { useUnits } from "./hooks/useUnits";
+import { UnitList } from "./components/UnitList";
 
 export function MultipleUnitSelect({ 
   selectedUnits: initialSelectedUnits, 
@@ -37,38 +22,10 @@ export function MultipleUnitSelect({
   disabled = false 
 }: MultipleUnitSelectProps) {
   const [open, setOpen] = useState(false);
-  const [units, setUnits] = useState<Unit[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const { units, loading } = useUnits();
 
   // Garantir que selectedUnits seja sempre um array
   const selectedUnits = initialSelectedUnits || [];
-
-  useEffect(() => {
-    const fetchUnits = async () => {
-      try {
-        const { data: unitsData, error } = await supabase
-          .from('units')
-          .select('id, name, city')
-          .eq('active', true)
-          .order('name');
-
-        if (error) throw error;
-        setUnits(unitsData || []);
-      } catch (error) {
-        console.error('Erro ao carregar unidades:', error);
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível carregar as unidades",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUnits();
-  }, [toast]);
 
   const toggleUnit = (unitId: string) => {
     const newSelectedUnits = selectedUnits.includes(unitId)
@@ -124,24 +81,11 @@ export function MultipleUnitSelect({
               Carregando unidades...
             </div>
           ) : (
-            <CommandGroup>
-              {units.map((unit) => (
-                <CommandItem
-                  key={unit.id}
-                  value={`${unit.name}-${unit.city}`}
-                  onSelect={() => toggleUnit(unit.id)}
-                  aria-selected={selectedUnits.includes(unit.id)}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedUnits.includes(unit.id) ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {unit.name} - {unit.city}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            <UnitList 
+              units={units}
+              selectedUnits={selectedUnits}
+              onToggleUnit={toggleUnit}
+            />
           )}
         </Command>
       </PopoverContent>
