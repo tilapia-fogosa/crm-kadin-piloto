@@ -475,6 +475,7 @@ export type Database = {
           state: string
           street: string
           trading_name: string | null
+          unit_number: number
           updated_at: string
         }
         Insert: {
@@ -499,6 +500,7 @@ export type Database = {
           state: string
           street: string
           trading_name?: string | null
+          unit_number: number
           updated_at?: string
         }
         Update: {
@@ -523,6 +525,7 @@ export type Database = {
           state?: string
           street?: string
           trading_name?: string | null
+          unit_number?: number
           updated_at?: string
         }
         Relationships: [
