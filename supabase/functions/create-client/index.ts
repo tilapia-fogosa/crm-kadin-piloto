@@ -1,266 +1,154 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { corsHeaders } from '../_shared/cors.ts'
-import { Pool } from 'https://deno.land/x/postgres@v0.17.0/mod.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
 
-console.log("Create Client Function initialized")
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 interface ClientPayload {
   name: string
   phone_number: string
-  email?: string
   lead_source?: string
   observations?: string
   meta_id?: string
   original_ad?: string
   original_adset?: string
   age_range?: string
-}
-
-const leadSourceMapping: Record<string, string> = {
-  'fb': 'facebook',
-  'ig': 'instagram',
-  'website': 'website',
-  'whatsapp': 'whatsapp',
-  'webhook': 'webhook',
-  'indicacao': 'indicacao',
-  'outros': 'outros'
-}
-
-// Função para verificar Basic Auth
-async function checkBasicAuth(req: Request): Promise<boolean> {
-  const authHeader = req.headers.get('authorization')
-  
-  // Se não houver header de autorização, retorna falso
-  if (!authHeader) return false
-  
-  // Verifica se é Basic Auth
-  const match = authHeader.match(/^Basic (.+)$/)
-  if (!match) return false
-
-  try {
-    const credentials = atob(match[1])
-    const [username, password] = credentials.split(':')
-
-    if (!username || !password) return false
-
-    // Conectar ao banco usando a URL do banco
-    const pool = new Pool(Deno.env.get('SUPABASE_DB_URL') ?? '', 1)
-    
-    try {
-      const client = await pool.connect()
-      try {
-        console.log('Verificando credenciais para usuário:', username)
-        
-        const result = await client.queryObject<{ exists: boolean }>(
-          `SELECT EXISTS (
-            SELECT 1 
-            FROM webhook_credentials 
-            WHERE username = $1 
-            AND password_hash = crypt($2, password_hash)
-            AND active = true
-          )`,
-          [username, password]
-        )
-        
-        const isValid = result.rows[0]?.exists ?? false
-        console.log('Credenciais válidas:', isValid)
-        
-        return isValid
-      } finally {
-        client.release()
-      }
-    } catch (error) {
-      console.error('Erro ao verificar credenciais:', error)
-      return false
-    } finally {
-      await pool.end()
-    }
-  } catch (error) {
-    console.error('Erro ao decodificar credenciais:', error)
-    return false
-  }
+  unit_number?: number
 }
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    console.log('Recebendo nova requisição POST')
-    
-    // Verificar autenticação
-    const authHeader = req.headers.get('authorization')
-    const apiKey = req.headers.get('apikey')
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-    console.log('Auth Header recebido:', authHeader)
-    
-    // Primeiro tenta Basic Auth
-    const isBasicAuthValid = await checkBasicAuth(req)
-    
-    // Se Basic Auth falhar, verifica se tem Bearer token válido
-    const hasBearerToken = authHeader?.startsWith('Bearer ')
-    const isValidBearerAuth = hasBearerToken && apiKey === Deno.env.get('SUPABASE_ANON_KEY')
-
-    console.log('Resultado da autenticação:')
-    console.log('- Basic Auth válido:', isBasicAuthValid)
-    console.log('- Bearer token válido:', isValidBearerAuth)
-
-    // Se ambas as autenticações falharem, retorna erro
-    if (!isBasicAuthValid && !isValidBearerAuth) {
-      console.error('Erro de autenticação - nenhum método válido')
-      return new Response(
-        JSON.stringify({ 
-          error: 'Não autorizado',
-          message: 'Credenciais inválidas'
-        }),
-        { 
-          status: 401,
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        }
-      )
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing environment variables')
     }
 
-    const payload = await req.json()
-    console.log('Payload recebido:', payload)
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Validar campos obrigatórios
-    if (!payload.name) {
-      console.error('Campo obrigatório ausente: name')
+    // Get request body
+    const payload: ClientPayload = await req.json()
+    console.log('Received payload:', payload)
+
+    // Validate required fields
+    if (!payload.name || !payload.phone_number) {
       return new Response(
-        JSON.stringify({ 
-          error: 'Campo obrigatório ausente: name',
-          received_payload: payload 
+        JSON.stringify({
+          error: 'Campos obrigatórios ausentes',
+          received_payload: payload
         }),
-        { 
+        {
           status: 400,
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
 
-    if (!payload.phone_number) {
-      console.error('Campo obrigatório ausente: phone_number')
-      return new Response(
-        JSON.stringify({ 
-          error: 'Campo obrigatório ausente: phone_number',
-          received_payload: payload 
-        }),
-        { 
-          status: 400,
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        }
-      )
+    // Normalize lead source
+    const normalizedSource = normalizeLead(payload.lead_source)
+    console.log('Normalized lead source:', normalizedSource)
+
+    // Try to find unit by unit_number if provided
+    let unitId = '0df79a04-444e-46ee-b218-59e4b1835f4a' // Default unit ID
+    if (payload.unit_number) {
+      console.log('Looking for unit with number:', payload.unit_number)
+      const { data: unit, error: unitError } = await supabase
+        .from('units')
+        .select('id')
+        .eq('unit_number', payload.unit_number)
+        .eq('active', true)
+        .single()
+
+      if (unitError) {
+        console.log('Error finding unit:', unitError)
+      } else if (unit) {
+        console.log('Found unit:', unit)
+        unitId = unit.id
+      } else {
+        console.log('No unit found with number', payload.unit_number, 'using default unit')
+      }
     }
 
-    // Log dos campos recebidos
-    console.log('Campos recebidos:')
-    console.log('name:', payload.name)
-    console.log('phone_number:', payload.phone_number)
-    console.log('email:', payload.email)
-    console.log('lead_source:', payload.lead_source)
-    console.log('observations:', payload.observations)
-    console.log('meta_id:', payload.meta_id)
-    console.log('original_ad:', payload.original_ad)
-    console.log('original_adset:', payload.original_adset)
-    console.log('age_range:', payload.age_range)
+    // Insert client
+    const { data, error } = await supabase
+      .from('clients')
+      .insert({
+        name: payload.name,
+        phone_number: payload.phone_number,
+        lead_source: normalizedSource,
+        observations: payload.observations,
+        created_by: '00000000-0000-0000-0000-000000000000',
+        status: 'novo-cadastro',
+        meta_id: payload.meta_id,
+        original_ad: payload.original_ad,
+        original_adset: payload.original_adset,
+        age_range: payload.age_range,
+        unit_id: unitId
+      })
+      .select()
+      .single()
 
-    // Normalizar o lead source
-    let normalizedSource = 'outros'
-    if (payload.lead_source) {
-      const sourceLower = payload.lead_source.toLowerCase().trim()
-      normalizedSource = leadSourceMapping[sourceLower] || 'outros'
-      console.log('Lead source normalizado:', normalizedSource)
+    if (error) {
+      console.error('Error inserting client:', error)
+      throw error
     }
 
-    // Criar o objeto do cliente com todos os campos
-    const client = {
-      name: payload.name,
-      phone_number: payload.phone_number,
-      lead_source: normalizedSource,
-      observations: payload.observations,
-      meta_id: payload.meta_id,
-      original_ad: payload.original_ad,
-      original_adset: payload.original_adset,
-      age_range: payload.age_range,
-      status: 'novo-cadastro'
-    }
+    console.log('Client created successfully:', data)
 
-    console.log('Tentando inserir cliente:', client)
-
-    // Criar cliente usando o service_role key
-    const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/clients`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'apikey': SUPABASE_SERVICE_ROLE_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(client)
-    })
-
-    if (!response.ok) {
-      const error = await response.text()
-      console.error('Erro ao inserir cliente:', error)
-      return new Response(
-        JSON.stringify({ 
-          error: 'Erro ao inserir cliente no banco de dados',
-          details: error 
-        }),
-        { 
-          status: 500,
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        }
-      )
-    }
-
-    console.log('Cliente inserido com sucesso!')
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: true,
         message: 'Cliente registrado com sucesso',
-        normalized_source: normalizedSource 
+        normalized_source: normalizedSource,
+        unit_id: unitId
       }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+      {
+        status: 201,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )
 
   } catch (error) {
-    console.error('Erro ao processar requisição:', error)
+    console.error('Error processing request:', error)
+
     return new Response(
-      JSON.stringify({ 
-        error: 'Erro ao processar requisição',
+      JSON.stringify({
+        error: 'Erro ao processar solicitação',
         details: error.message
-      }), 
-      { 
+      }),
+      {
         status: 500,
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )
   }
 })
+
+function normalizeLead(source?: string): string {
+  if (!source) return 'outros'
+  
+  const normalized = source.toLowerCase().trim()
+  
+  switch (normalized) {
+    case 'fb':
+      return 'facebook'
+    case 'ig':
+      return 'instagram'
+    case 'website':
+    case 'whatsapp':
+    case 'webhook':
+    case 'indicacao':
+      return normalized
+    default:
+      return 'outros'
+  }
+}
