@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,6 +25,7 @@ import {
 import { useEffect, useState } from "react";
 import { useUserOperations } from "@/hooks/useUserOperations";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { MultipleUnitSelect } from "../auth/MultipleUnitSelect";
 
 interface Unit {
   id: string;
@@ -42,7 +42,7 @@ interface UnitUser {
 const formSchema = z.object({
   full_name: z.string().min(1, "Nome é obrigatório"),
   email: z.string().email("Email inválido"),
-  unit_id: z.string().min(1, "Unidade é obrigatória"),
+  unitIds: z.array(z.string()).min(1, "Selecione pelo menos uma unidade"),
   role: z.enum(['consultor', 'franqueado', 'admin']),
 });
 
@@ -75,13 +75,13 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
     defaultValues: {
       full_name: user.full_name,
       email: user.email,
-      unit_id: '',
+      unitIds: [],
       role: 'consultor',
     },
   });
 
   useEffect(() => {
-    const fetchUnits = async () => {
+    const fetchData = async () => {
       try {
         // Buscar unidades ativas
         const { data: unitsData, error: unitsError } = await supabase
@@ -93,20 +93,20 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
         if (unitsError) throw unitsError;
         setUnits(unitsData || []);
 
-        // Buscar associação atual do usuário com unidade
-        const { data: unitUserData, error: unitUserError } = await supabase
+        // Buscar associações atuais do usuário com unidades
+        const { data: unitUsersData, error: unitUsersError } = await supabase
           .from('unit_users')
           .select('unit_id, role')
           .eq('user_id', user.id)
-          .eq('active', true)
-          .single();
+          .eq('active', true);
 
-        if (unitUserError && unitUserError.code !== 'PGRST116') throw unitUserError;
+        if (unitUsersError) throw unitUsersError;
         
-        if (unitUserData) {
-          setCurrentUnitUser({ ...unitUserData, active: true });
-          form.setValue('unit_id', unitUserData.unit_id);
-          form.setValue('role', unitUserData.role);
+        if (unitUsersData?.length > 0) {
+          const firstUnitUser = unitUsersData[0];
+          setCurrentUnitUser(firstUnitUser);
+          form.setValue('unitIds', unitUsersData.map(uu => uu.unit_id));
+          form.setValue('role', firstUnitUser.role);
         }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
@@ -121,9 +121,9 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
     };
 
     if (open) {
-      fetchUnits();
+      fetchData();
     }
-  }, [open, user.id, form]);
+  }, [open, user.id, form, toast]);
 
   const handleSubmit = async (values: FormValues) => {
     // Se a role selecionada for admin e não estiver confirmada, mostrar diálogo
@@ -136,12 +136,7 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
   };
 
   const submitForm = async (values: FormValues) => {
-    const success = await updateUser(
-      user.id, 
-      values,
-      currentUnitUser?.unit_id
-    );
-
+    const success = await updateUser(user.id, values);
     if (success) {
       onOpenChange(false);
     }
@@ -198,24 +193,17 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
 
               <FormField
                 control={form.control}
-                name="unit_id"
+                name="unitIds"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Unidade</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione uma unidade" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {units.map((unit) => (
-                          <SelectItem key={unit.id} value={unit.id}>
-                            {unit.name} - {unit.city}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Unidades</FormLabel>
+                    <FormControl>
+                      <MultipleUnitSelect
+                        selectedUnits={field.value}
+                        onUnitsChange={field.onChange}
+                        disabled={form.formState.isSubmitting}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

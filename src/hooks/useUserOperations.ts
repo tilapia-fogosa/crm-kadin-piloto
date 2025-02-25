@@ -15,7 +15,7 @@ interface User {
 interface UserUpdateData {
   full_name: string;
   email: string;
-  unit_id: string;
+  unitIds: string[];
   role: 'consultor' | 'franqueado' | 'admin';
 }
 
@@ -24,7 +24,7 @@ export function useUserOperations() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
 
-  const updateUser = async (userId: string, data: UserUpdateData, currentUnitId?: string) => {
+  const updateUser = async (userId: string, data: UserUpdateData) => {
     setIsLoading(true);
     try {
       // Atualizar perfil do usuário
@@ -39,30 +39,56 @@ export function useUserOperations() {
 
       if (profileError) throw profileError;
 
-      // Se houver mudança na unidade ou função
-      if (currentUnitId !== data.unit_id || currentUnitId === undefined) {
-        // Desativar associação atual se existir
-        if (currentUnitId) {
-          const { error: deactivateError } = await supabase
-            .from('unit_users')
-            .update({ active: false })
-            .eq('user_id', userId)
-            .eq('unit_id', currentUnitId);
+      // Buscar unidades ativas atuais do usuário
+      const { data: currentUnitUsers, error: fetchError } = await supabase
+        .from('unit_users')
+        .select('unit_id')
+        .eq('user_id', userId)
+        .eq('active', true);
 
-          if (deactivateError) throw deactivateError;
-        }
+      if (fetchError) throw fetchError;
 
-        // Criar nova associação
-        const { error: createError } = await supabase
+      const currentUnitIds = currentUnitUsers?.map(uu => uu.unit_id) || [];
+
+      // Desativar unidades que não estão mais na lista
+      const unitsToDeactivate = currentUnitIds.filter(id => !data.unitIds.includes(id));
+      if (unitsToDeactivate.length > 0) {
+        const { error: deactivateError } = await supabase
           .from('unit_users')
-          .insert({
-            user_id: userId,
-            unit_id: data.unit_id,
-            role: data.role,
-            active: true
-          });
+          .update({ active: false })
+          .eq('user_id', userId)
+          .in('unit_id', unitsToDeactivate);
 
-        if (createError) throw createError;
+        if (deactivateError) throw deactivateError;
+      }
+
+      // Adicionar novas unidades
+      const unitsToAdd = data.unitIds.filter(id => !currentUnitIds.includes(id));
+      if (unitsToAdd.length > 0) {
+        const newUnitUsers = unitsToAdd.map(unitId => ({
+          user_id: userId,
+          unit_id: unitId,
+          role: data.role,
+          active: true
+        }));
+
+        const { error: insertError } = await supabase
+          .from('unit_users')
+          .insert(newUnitUsers);
+
+        if (insertError) throw insertError;
+      }
+
+      // Atualizar role nas unidades existentes que permaneceram
+      const unitsToUpdate = data.unitIds.filter(id => currentUnitIds.includes(id));
+      if (unitsToUpdate.length > 0) {
+        const { error: updateError } = await supabase
+          .from('unit_users')
+          .update({ role: data.role })
+          .eq('user_id', userId)
+          .in('unit_id', unitsToUpdate);
+
+        if (updateError) throw updateError;
       }
 
       await queryClient.invalidateQueries({ queryKey: ['users'] });
