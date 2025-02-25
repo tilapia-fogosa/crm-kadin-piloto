@@ -8,6 +8,7 @@ import { format, startOfMonth, endOfMonth, getYear, setYear, setMonth, isAfter, 
 import { ptBR } from "date-fns/locale";
 import { LineChart } from "lucide-react";
 import { useState } from "react";
+import { useUserUnit } from "./hooks/useUserUnit";
 
 interface DailyStats {
   date: Date;
@@ -71,6 +72,7 @@ export function ActivityDashboard() {
   const [selectedSource, setSelectedSource] = useState<string>("todos");
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().getMonth().toString());
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const { data: userUnits } = useUserUnit();
 
   const {
     data: leadSources
@@ -90,23 +92,26 @@ export function ActivityDashboard() {
     data: stats,
     isLoading
   } = useQuery({
-    queryKey: ['activity-dashboard', selectedSource, selectedMonth, selectedYear],
+    queryKey: ['activity-dashboard', selectedSource, selectedMonth, selectedYear, userUnits?.map(u => u.unit_id)],
     queryFn: async () => {
       const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
       const endDate = endOfMonth(startDate);
+      const unitIds = userUnits?.map(u => u.unit_id) || [];
 
       const [clientsResult, activitiesResult] = await Promise.all([
         supabase.from('clients')
           .select('*')
-          .eq('active', true) // Filtra apenas clientes ativos
+          .eq('active', true)
+          .in('unit_id', unitIds)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
           .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
         
         supabase.from('client_activities')
           .select('*, clients!inner(*)')
-          .eq('active', true) // Filtra apenas atividades ativas
-          .eq('clients.active', true) // Filtra apenas clientes ativos
+          .eq('active', true)
+          .eq('clients.active', true)
+          .in('clients.unit_id', unitIds)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
           .eq(selectedSource !== 'todos' ? 'clients.lead_source' : '', selectedSource !== 'todos' ? selectedSource : '')
@@ -184,10 +189,10 @@ export function ActivityDashboard() {
         };
       });
 
-      // Filtra apenas as datas até hoje
       const today = startOfDay(new Date());
       return dailyStats.filter(day => !isAfter(startOfDay(day.date), today));
     },
+    enabled: userUnits !== undefined && userUnits.length > 0,
     refetchInterval: 5000
   });
 
@@ -202,7 +207,6 @@ export function ActivityDashboard() {
       awaitingVisits: acc.awaitingVisits + day.awaitingVisits,
       completedVisits: acc.completedVisits + day.completedVisits,
       enrollments: acc.enrollments + day.enrollments,
-      // Calcular as médias das taxas de conversão
       ceConversionRate: acc.contactAttempts > 0 ? (acc.effectiveContacts / acc.contactAttempts) * 100 : 0,
       agConversionRate: acc.effectiveContacts > 0 ? (acc.scheduledVisits / acc.effectiveContacts) * 100 : 0,
       atConversionRate: acc.awaitingVisits > 0 ? (acc.completedVisits / acc.awaitingVisits) * 100 : 0,
@@ -335,7 +339,6 @@ export function ActivityDashboard() {
                       <TableCell className="text-center text-xs py-[5px]">{day.enrollments}</TableCell>
                     </TableRow>)}
                     
-                    {/* Linha de totais */}
                     {totals && (
                       <TableRow className="hover:bg-muted/50 [&>td]:px-2.5 font-bold border-t-2">
                         <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">TOTAL</TableCell>

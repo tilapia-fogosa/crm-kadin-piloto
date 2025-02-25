@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { format, getDaysInMonth, startOfMonth, getDay, addMonths, subMonths } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { useState } from "react"
+import { useUserUnit } from "./hooks/useUserUnit"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,17 +25,20 @@ interface ScheduledLead {
 
 export function CalendarDashboard() {
   const [currentDate, setCurrentDate] = useState(new Date())
+  const { data: userUnits } = useUserUnit()
 
   const { data: scheduledLeads } = useQuery({
-    queryKey: ['scheduled-leads', format(currentDate, 'yyyy-MM')],
+    queryKey: ['scheduled-leads', format(currentDate, 'yyyy-MM'), userUnits?.map(u => u.unit_id)],
     queryFn: async () => {
       const startOfMonthDate = startOfMonth(currentDate)
       const endOfMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+      const unitIds = userUnits?.map(u => u.unit_id) || []
       
       const { data, error } = await supabase
         .from('clients')
         .select('id, name, scheduled_date, status')
         .not('scheduled_date', 'is', null)
+        .in('unit_id', unitIds)
         .gte('scheduled_date', startOfMonthDate.toISOString())
         .lte('scheduled_date', endOfMonthDate.toISOString())
         .order('scheduled_date')
@@ -43,7 +47,8 @@ export function CalendarDashboard() {
       return data as ScheduledLead[]
     },
     refetchInterval: 5000,
-    refetchOnMount: true
+    refetchOnMount: true,
+    enabled: userUnits !== undefined && userUnits.length > 0
   })
 
   const currentMonth = format(currentDate, 'MMM', { locale: ptBR }).toUpperCase()
