@@ -1,5 +1,5 @@
 
-import { getAuthenticatedClient, validateUserAndSettings, getAccessToken } from './auth';
+import { getAuthenticatedClient, validateUserAndSettings, getAccessToken } from './auth.ts';
 
 interface GoogleClientConfig {
   url: string;
