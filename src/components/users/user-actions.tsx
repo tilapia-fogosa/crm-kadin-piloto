@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Lock, Unlock, Ban, CheckCircle } from "lucide-react";
+import { Lock, Unlock, Ban, CheckCircle, Edit2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { EditUserDialog } from "./edit-user-dialog";
 
 interface User {
   id: string;
@@ -30,6 +31,7 @@ interface UserActionsProps {
 
 export function UserActions({ user }: UserActionsProps) {
   const [showBlockDialog, setShowBlockDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -150,6 +152,15 @@ export function UserActions({ user }: UserActionsProps) {
         <Lock className="h-4 w-4" />
       </Button>
 
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => setShowEditDialog(true)}
+        disabled={isLoading}
+      >
+        <Edit2 className="h-4 w-4" />
+      </Button>
+
       <AlertDialog open={showBlockDialog} onOpenChange={setShowBlockDialog}>
         <Button
           variant={user.access_blocked ? "outline" : "destructive"}
@@ -183,6 +194,12 @@ export function UserActions({ user }: UserActionsProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <EditUserDialog 
+        open={showEditDialog} 
+        onOpenChange={setShowEditDialog}
+        user={user}
+      />
     </div>
   );
 }
