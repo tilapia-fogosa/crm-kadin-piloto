@@ -4,6 +4,7 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { LeadsChart } from "@/components/dashboard/LeadsChart";
 import LeadsTable from "@/components/leads/LeadsTable";
 import { useLeadsStats } from "@/hooks/useLeadsStats";
+import { RecentContractPhotos } from "@/components/dashboard/RecentContractPhotos";
 
 const Index = () => {
   const { data: stats, isLoading } = useLeadsStats();
@@ -48,13 +49,16 @@ const Index = () => {
         />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 w-full">
-        <LeadsChart />
-        <div className="col-span-4 lg:col-span-3">
-          <div className="flex items-center justify-between space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight">Leads Recentes</h2>
-          </div>
-          <LeadsTable />
+        <div className="col-span-2 lg:col-span-4">
+          <LeadsChart />
         </div>
+        <RecentContractPhotos />
+      </div>
+      <div className="w-full">
+        <div className="flex items-center justify-between space-y-2">
+          <h2 className="text-2xl font-bold tracking-tight">Leads Recentes</h2>
+        </div>
+        <LeadsTable />
       </div>
     </div>
   );
