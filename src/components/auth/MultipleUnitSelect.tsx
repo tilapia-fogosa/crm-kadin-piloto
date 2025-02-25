@@ -1,33 +1,29 @@
 
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Command,
-  CommandEmpty,
-  CommandInput,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MultipleUnitSelectProps } from "./types/unit-select.types";
 import { useUnits } from "./hooks/useUnits";
-import { UnitList } from "./components/UnitList";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function MultipleUnitSelect({ 
-  selectedUnits: initialSelectedUnits, 
+  selectedUnits: externalSelectedUnits, 
   onUnitsChange,
   disabled = false 
 }: MultipleUnitSelectProps) {
   const [open, setOpen] = useState(false);
   const { units, loading } = useUnits();
+  const selectedUnits = externalSelectedUnits || [];
 
-  // Garantir que selectedUnits seja sempre um array
-  const selectedUnits = initialSelectedUnits || [];
-
+  // Função simplificada para alternar seleção
   const toggleUnit = (unitId: string) => {
+    console.log('Toggling unit:', unitId);
     const newSelectedUnits = selectedUnits.includes(unitId)
       ? selectedUnits.filter(id => id !== unitId)
       : [...selectedUnits, unitId];
@@ -35,60 +31,68 @@ export function MultipleUnitSelect({
     onUnitsChange(newSelectedUnits);
   };
 
+  // Obtém os nomes das unidades selecionadas
   const selectedUnitNames = units
     .filter(unit => selectedUnits.includes(unit.id))
     .map(unit => `${unit.name} - ${unit.city}`);
 
-  const selectButtonAriaLabel = selectedUnits.length > 0
-    ? `${selectedUnits.length} unidades selecionadas: ${selectedUnitNames.join(", ")}`
-    : "Nenhuma unidade selecionada";
-
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          aria-label={selectButtonAriaLabel}
-          className="min-h-[40px] h-auto flex flex-wrap gap-1"
-          disabled={disabled}
-        >
+    <Select
+      open={open}
+      onOpenChange={setOpen}
+      value={selectedUnits.join(',')} // Usado apenas para controle interno
+      onValueChange={() => {}} // Não precisamos disso pois usamos o checkbox
+    >
+      <SelectTrigger className="w-full min-h-[40px] h-auto flex flex-wrap gap-1" disabled={disabled}>
+        <SelectValue placeholder="Selecione as unidades...">
           {selectedUnits.length > 0 ? (
-            selectedUnitNames.map((name) => (
-              <Badge 
-                variant="secondary" 
-                key={name}
-                className="mr-1 mb-1"
-              >
-                {name}
-              </Badge>
-            ))
+            <div className="flex flex-wrap gap-1">
+              {selectedUnitNames.map((name) => (
+                <Badge 
+                  variant="secondary" 
+                  key={name}
+                  className="mr-1 mb-1"
+                >
+                  {name}
+                </Badge>
+              ))}
+            </div>
           ) : (
             "Selecione as unidades..."
           )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent 
-        className="w-[400px] p-0"
-        aria-label="Lista de unidades disponíveis"
-      >
-        <Command aria-label="Comando de busca de unidades">
-          <CommandInput placeholder="Buscar unidade..." className="h-9" />
-          <CommandEmpty>Nenhuma unidade encontrada.</CommandEmpty>
-          {loading ? (
-            <div className="p-4 text-sm text-muted-foreground">
-              Carregando unidades...
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent className="w-[400px]">
+        {loading ? (
+          <div className="p-4 text-sm text-muted-foreground">
+            Carregando unidades...
+          </div>
+        ) : (
+          <ScrollArea className="h-[200px]">
+            <div className="p-2 space-y-2">
+              {units.map((unit) => (
+                <div
+                  key={unit.id}
+                  className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md cursor-pointer"
+                  onClick={() => toggleUnit(unit.id)}
+                >
+                  <Checkbox 
+                    checked={selectedUnits.includes(unit.id)}
+                    onCheckedChange={() => toggleUnit(unit.id)}
+                    id={`unit-${unit.id}`}
+                  />
+                  <label
+                    htmlFor={`unit-${unit.id}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-grow"
+                  >
+                    {unit.name} - {unit.city}
+                  </label>
+                </div>
+              ))}
             </div>
-          ) : (
-            <UnitList 
-              units={units}
-              selectedUnits={selectedUnits}
-              onToggleUnit={toggleUnit}
-            />
-          )}
-        </Command>
-      </PopoverContent>
-    </Popover>
+          </ScrollArea>
+        )}
+      </SelectContent>
+    </Select>
   );
 }

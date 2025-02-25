@@ -12,13 +12,19 @@ export function useUnits() {
   useEffect(() => {
     const fetchUnits = async () => {
       try {
+        console.log('Iniciando busca de unidades...');
         const { data: unitsData, error } = await supabase
           .from('units')
           .select('id, name, city')
           .eq('active', true)
           .order('name');
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao buscar unidades:', error);
+          throw error;
+        }
+
+        console.log('Unidades carregadas com sucesso:', unitsData?.length);
         setUnits(unitsData || []);
       } catch (error) {
         console.error('Erro ao carregar unidades:', error);
