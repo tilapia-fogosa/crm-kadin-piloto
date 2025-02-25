@@ -2,6 +2,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sale, PaymentMethod, DueDay } from "./types"
+import { StudentInfo } from "./components/sale-form/StudentInfo"
 import { ImportantInfo } from "./components/sale-form/ImportantInfo"
 import { PaymentSection } from "./components/sale-form/PaymentSection"
 import { MonthlyFeeSection } from "./components/sale-form/MonthlyFeeSection"
@@ -50,16 +51,17 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
     await onSubmit(sale as Sale)
   }
 
-  const handlePhotoUploaded = ({ photo_url, photo_thumbnail_url }: { photo_url: string; photo_thumbnail_url: string }) => {
+  const handlePhotoUploaded = ({ student_photo_url, student_photo_thumbnail_url }: { student_photo_url: string; student_photo_thumbnail_url: string }) => {
     setSale(prev => ({
       ...prev,
-      photo_url,
-      photo_thumbnail_url
+      student_photo_url,
+      student_photo_thumbnail_url
     }))
   }
 
   const isFormValid = () => {
     const requiredFields: (keyof Sale)[] = [
+      'student_name',
       'enrollment_amount',
       'enrollment_payment_method',
       'enrollment_installments',
@@ -86,6 +88,11 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
 
   return (
     <div className="space-y-6 py-4">
+      <StudentInfo
+        value={sale.student_name || ''}
+        onChange={value => setSale(prev => ({ ...prev, student_name: value }))}
+      />
+
       <ImportantInfo
         value={sale.important_info || ''}
         onChange={value => setSale(prev => ({ ...prev, important_info: value }))}
@@ -144,3 +151,4 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
     </div>
   )
 }
+

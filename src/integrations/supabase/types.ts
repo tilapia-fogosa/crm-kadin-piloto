@@ -314,6 +314,7 @@ export type Database = {
           attendance_activity_id: string
           client_id: string
           created_at: string
+          created_by: string | null
           enrollment_amount: number
           enrollment_installments: number
           enrollment_payment_date: string
@@ -330,6 +331,9 @@ export type Database = {
           monthly_fee_payment_method: Database["public"]["Enums"]["payment_method"]
           photo_thumbnail_url: string | null
           photo_url: string | null
+          student_name: string
+          student_photo_thumbnail_url: string | null
+          student_photo_url: string | null
           unit_id: string
           updated_at: string
         }
@@ -338,6 +342,7 @@ export type Database = {
           attendance_activity_id: string
           client_id: string
           created_at?: string
+          created_by?: string | null
           enrollment_amount: number
           enrollment_installments: number
           enrollment_payment_date: string
@@ -354,6 +359,9 @@ export type Database = {
           monthly_fee_payment_method: Database["public"]["Enums"]["payment_method"]
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          student_name: string
+          student_photo_thumbnail_url?: string | null
+          student_photo_url?: string | null
           unit_id: string
           updated_at?: string
         }
@@ -362,6 +370,7 @@ export type Database = {
           attendance_activity_id?: string
           client_id?: string
           created_at?: string
+          created_by?: string | null
           enrollment_amount?: number
           enrollment_installments?: number
           enrollment_payment_date?: string
@@ -378,6 +387,9 @@ export type Database = {
           monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          student_name?: string
+          student_photo_thumbnail_url?: string | null
+          student_photo_url?: string | null
           unit_id?: string
           updated_at?: string
         }

@@ -30,9 +30,14 @@ export function useSale() {
         throw new Error('Unidade não encontrada')
       }
 
+      // Obter o usuário atual
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Usuário não autenticado')
+
       const saleData = {
         ...sale,
         unit_id: userUnit.unit_id,
+        created_by: user.id,
         enrollment_payment_date: format(sale.enrollment_payment_date, 'yyyy-MM-dd'),
         material_payment_date: format(sale.material_payment_date, 'yyyy-MM-dd'),
         first_monthly_fee_date: format(sale.first_monthly_fee_date, 'yyyy-MM-dd')
@@ -58,3 +63,4 @@ export function useSale() {
     isLoading
   }
 }
+

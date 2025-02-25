@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'sonner'
 
 interface PhotoUploadProps {
-  onPhotoUploaded: (urls: { photo_url: string; photo_thumbnail_url: string }) => void
+  onPhotoUploaded: (urls: { student_photo_url: string; student_photo_thumbnail_url: string }) => void
 }
 
 export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
@@ -15,14 +15,12 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
 
   const processImage = async (file: File) => {
-    // Criar um canvas para redimensionar a imagem
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     const img = new Image()
 
     return new Promise<Blob>((resolve, reject) => {
       img.onload = () => {
-        // Calcular dimensões mantendo proporção
         let width = img.width
         let height = img.height
         const maxSize = 400
@@ -56,13 +54,11 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
   const uploadPhoto = async (file: File) => {
     try {
       setIsUploading(true)
-      console.log('Iniciando upload da foto')
+      console.log('Iniciando upload da foto do aluno')
 
-      // Processar imagem principal
       const processedBlob = await processImage(file)
       const mainFileName = `${crypto.randomUUID()}.jpg`
       
-      // Upload da imagem principal
       const { data: mainUpload, error: mainError } = await supabase.storage
         .from('sales-photos')
         .upload(mainFileName, processedBlob, {
@@ -71,19 +67,16 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
         })
 
       if (mainError) throw mainError
-      console.log('Upload da foto principal concluído:', mainUpload)
+      console.log('Upload da foto do aluno concluído:', mainUpload)
 
-      // Gerar URLs públicas
       const { data: { publicUrl: photoUrl } } = supabase.storage
         .from('sales-photos')
         .getPublicUrl(mainFileName)
 
-      // Por enquanto, usando a mesma imagem como thumbnail
-      // Em uma implementação futura, podemos gerar um thumbnail real
-      const photoThumbnailUrl = photoUrl
+      const photoThumbnailUrl = photoUrl // Por enquanto usando a mesma URL
 
-      onPhotoUploaded({ photo_url: photoUrl, photo_thumbnail_url: photoThumbnailUrl })
-      toast.success('Foto enviada com sucesso!')
+      onPhotoUploaded({ student_photo_url: photoUrl, student_photo_thumbnail_url: photoThumbnailUrl })
+      toast.success('Foto do aluno enviada com sucesso!')
       
     } catch (error) {
       console.error('Erro no upload:', error)
@@ -97,20 +90,16 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
     const file = acceptedFiles[0]
     if (!file) return
 
-    // Validar tamanho (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Arquivo muito grande. Máximo 5MB.')
       return
     }
 
-    // Criar preview
     const objectUrl = URL.createObjectURL(file)
     setPreview(objectUrl)
 
-    // Iniciar upload
     await uploadPhoto(file)
 
-    // Limpar preview
     return () => URL.revokeObjectURL(objectUrl)
   }, [])
 
@@ -129,7 +118,7 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
 
   return (
     <div className="space-y-4">
-      <h4 className="text-sm font-medium">Foto do Contrato</h4>
+      <h4 className="text-sm font-medium">Foto do Aluno</h4>
       
       {preview ? (
         <div className="relative">
@@ -160,7 +149,7 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
           <input {...getInputProps()} />
           <Camera className="mx-auto h-12 w-12 text-muted-foreground" />
           <p className="mt-2 text-sm text-muted-foreground">
-            Arraste uma foto ou clique para selecionar
+            Arraste uma foto do aluno ou clique para selecionar
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             JPG ou PNG até 5MB
@@ -170,3 +159,4 @@ export function PhotoUpload({ onPhotoUploaded }: PhotoUploadProps) {
     </div>
   )
 }
+

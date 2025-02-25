@@ -54,6 +54,7 @@ export type DueDay = '5' | '10' | '15' | '20' | '25';
 export type Sale = {
   client_id: string
   attendance_activity_id: string
+  student_name: string
   important_info?: string
   enrollment_amount: number
   enrollment_payment_method: PaymentMethod
@@ -67,6 +68,7 @@ export type Sale = {
   monthly_fee_payment_method: PaymentMethod
   first_monthly_fee_date: Date
   monthly_fee_due_day?: DueDay
-  photo_url?: string
-  photo_thumbnail_url?: string
+  student_photo_url?: string
+  student_photo_thumbnail_url?: string
 }
+
