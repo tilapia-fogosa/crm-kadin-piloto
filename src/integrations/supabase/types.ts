@@ -144,6 +144,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           deleted_at: string | null
+          email: string | null
           id: string
           lead_source: string
           meta_id: string | null
@@ -164,6 +165,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
+          email?: string | null
           id?: string
           lead_source: string
           meta_id?: string | null
@@ -184,6 +186,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
+          email?: string | null
           id?: string
           lead_source?: string
           meta_id?: string | null
