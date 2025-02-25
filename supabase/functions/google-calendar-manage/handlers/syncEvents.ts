@@ -1,7 +1,7 @@
 
 import { corsHeaders } from '../utils/cors';
 import { getGoogleClient } from '../utils/googleClient';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 // Interface para tipagem dos eventos do Google Calendar
 interface GoogleEvent {
