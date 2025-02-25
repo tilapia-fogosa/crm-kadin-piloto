@@ -328,6 +328,9 @@ export type Database = {
           monthly_fee_amount: number
           monthly_fee_due_day: Database["public"]["Enums"]["due_day"] | null
           monthly_fee_payment_method: Database["public"]["Enums"]["payment_method"]
+          photo_thumbnail_url: string | null
+          photo_url: string | null
+          unit_id: string
           updated_at: string
         }
         Insert: {
@@ -349,6 +352,9 @@ export type Database = {
           monthly_fee_amount: number
           monthly_fee_due_day?: Database["public"]["Enums"]["due_day"] | null
           monthly_fee_payment_method: Database["public"]["Enums"]["payment_method"]
+          photo_thumbnail_url?: string | null
+          photo_url?: string | null
+          unit_id: string
           updated_at?: string
         }
         Update: {
@@ -370,6 +376,9 @@ export type Database = {
           monthly_fee_amount?: number
           monthly_fee_due_day?: Database["public"]["Enums"]["due_day"] | null
           monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+          photo_thumbnail_url?: string | null
+          photo_url?: string | null
+          unit_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -385,6 +394,61 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_history: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          ip_address: string | null
+          new_data: Json | null
+          old_data: Json | null
+          sale_id: string
+          unit_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          sale_id: string
+          unit_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          sale_id?: string
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_history_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_history_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
