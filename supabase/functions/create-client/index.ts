@@ -10,6 +10,7 @@ const corsHeaders = {
 interface ClientPayload {
   name: string
   phone_number: string
+  email?: string
   lead_source?: string
   observations?: string
   meta_id?: string
@@ -37,7 +38,7 @@ serve(async (req) => {
 
     // Get request body
     const payload: ClientPayload = await req.json()
-    console.log('Received payload:', payload)
+    console.log('Payload recebido:', payload)
 
     // Validate required fields
     if (!payload.name || !payload.phone_number) {
@@ -55,12 +56,12 @@ serve(async (req) => {
 
     // Normalize lead source
     const normalizedSource = normalizeLead(payload.lead_source)
-    console.log('Normalized lead source:', normalizedSource)
+    console.log('Lead source normalizado:', normalizedSource)
 
     // Try to find unit by unit_number if provided
     let unitId = '0df79a04-444e-46ee-b218-59e4b1835f4a' // Default unit ID
     if (payload.unit_number) {
-      console.log('Looking for unit with number:', payload.unit_number)
+      console.log('Buscando unidade com número:', payload.unit_number)
       const { data: unit, error: unitError } = await supabase
         .from('units')
         .select('id')
@@ -69,40 +70,46 @@ serve(async (req) => {
         .single()
 
       if (unitError) {
-        console.log('Error finding unit:', unitError)
+        console.log('Erro ao buscar unidade:', unitError)
       } else if (unit) {
-        console.log('Found unit:', unit)
+        console.log('Unidade encontrada:', unit)
         unitId = unit.id
       } else {
-        console.log('No unit found with number', payload.unit_number, 'using default unit')
+        console.log('Nenhuma unidade encontrada com número', payload.unit_number, 'usando unidade padrão')
       }
     }
+
+    // Prepare client data for insertion
+    const clientData = {
+      name: payload.name,
+      phone_number: payload.phone_number,
+      lead_source: normalizedSource,
+      observations: payload.observations,
+      created_by: '00000000-0000-0000-0000-000000000000',
+      status: 'novo-cadastro',
+      meta_id: payload.meta_id,
+      original_ad: payload.original_ad,
+      original_adset: payload.original_adset,
+      age_range: payload.age_range,
+      unit_id: unitId,
+      email: payload.email
+    }
+
+    console.log('Tentando inserir cliente:', clientData)
 
     // Insert client
     const { data, error } = await supabase
       .from('clients')
-      .insert({
-        name: payload.name,
-        phone_number: payload.phone_number,
-        lead_source: normalizedSource,
-        observations: payload.observations,
-        created_by: '00000000-0000-0000-0000-000000000000',
-        status: 'novo-cadastro',
-        meta_id: payload.meta_id,
-        original_ad: payload.original_ad,
-        original_adset: payload.original_adset,
-        age_range: payload.age_range,
-        unit_id: unitId
-      })
+      .insert(clientData)
       .select()
       .single()
 
     if (error) {
-      console.error('Error inserting client:', error)
+      console.error('Erro ao inserir cliente:', error)
       throw error
     }
 
-    console.log('Client created successfully:', data)
+    console.log('Cliente criado com sucesso:', data)
 
     return new Response(
       JSON.stringify({
@@ -118,7 +125,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error processing request:', error)
+    console.error('Erro ao processar solicitação:', error)
 
     return new Response(
       JSON.stringify({
