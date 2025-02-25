@@ -40,8 +40,8 @@ export function MultipleUnitSelect({
     <Select
       open={open}
       onOpenChange={setOpen}
-      value={selectedUnits.join(',')} // Usado apenas para controle interno
-      onValueChange={() => {}} // Não precisamos disso pois usamos o checkbox
+      value={selectedUnits.join(',')}
+      onValueChange={() => {}}
     >
       <SelectTrigger className="w-full min-h-[40px] h-auto flex flex-wrap gap-1" disabled={disabled}>
         <SelectValue placeholder="Selecione as unidades...">
@@ -49,9 +49,9 @@ export function MultipleUnitSelect({
             <div className="flex flex-wrap gap-1">
               {selectedUnitNames.map((name) => (
                 <Badge 
-                  variant="secondary" 
+                  variant="default" // Mudado para variant default para melhor contraste
                   key={name}
-                  className="mr-1 mb-1"
+                  className="mr-1 mb-1 bg-primary text-primary-foreground" // Cores ajustadas para melhor visibilidade
                 >
                   {name}
                 </Badge>

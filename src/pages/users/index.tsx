@@ -77,10 +77,11 @@ export default function UsersPage() {
 
       // Mapear os resultados para o formato esperado
       const formattedUsers = (data || []).map((profile: Profile) => {
-        // Encontrar o primeiro unit_user ativo
-        const activeUnitUser = profile.unit_users?.find(uu => uu.active && uu.units?.name);
+        // Encontrar TODAS as unit_users ativas
+        const activeUnitUsers = profile.unit_users?.filter(uu => uu.active && uu.units?.name) || [];
+        const unitNames = activeUnitUsers.map(uu => uu.units.name).join(', ');
         
-        console.log('Profile:', profile.email, 'Active unit user:', activeUnitUser);
+        console.log('Profile:', profile.email, 'Active units:', unitNames);
         
         return {
           id: profile.id,
@@ -88,8 +89,8 @@ export default function UsersPage() {
           email: profile.email,
           access_blocked: profile.access_blocked,
           email_confirmed: profile.email_confirmed,
-          role: activeUnitUser?.role || 'consultor',
-          unit_name: activeUnitUser?.units?.name || 'Unidade Padrão'
+          role: activeUnitUsers[0]?.role || 'consultor',
+          unit_name: unitNames || 'Unidade Padrão'
         };
       });
 
