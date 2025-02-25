@@ -26,13 +26,13 @@ interface Unit {
 }
 
 interface MultipleUnitSelectProps {
-  selectedUnits: string[];
+  selectedUnits: string[] | undefined;
   onUnitsChange: (units: string[]) => void;
   disabled?: boolean;
 }
 
 export function MultipleUnitSelect({ 
-  selectedUnits, 
+  selectedUnits: initialSelectedUnits, 
   onUnitsChange,
   disabled = false 
 }: MultipleUnitSelectProps) {
@@ -40,6 +40,9 @@ export function MultipleUnitSelect({
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  // Garantir que selectedUnits seja sempre um array
+  const selectedUnits = initialSelectedUnits || [];
 
   useEffect(() => {
     const fetchUnits = async () => {
@@ -68,16 +71,20 @@ export function MultipleUnitSelect({
   }, [toast]);
 
   const toggleUnit = (unitId: string) => {
-    if (selectedUnits.includes(unitId)) {
-      onUnitsChange(selectedUnits.filter(id => id !== unitId));
-    } else {
-      onUnitsChange([...selectedUnits, unitId]);
-    }
+    const newSelectedUnits = selectedUnits.includes(unitId)
+      ? selectedUnits.filter(id => id !== unitId)
+      : [...selectedUnits, unitId];
+    
+    onUnitsChange(newSelectedUnits);
   };
 
   const selectedUnitNames = units
     .filter(unit => selectedUnits.includes(unit.id))
     .map(unit => `${unit.name} - ${unit.city}`);
+
+  const selectButtonAriaLabel = selectedUnits.length > 0
+    ? `${selectedUnits.length} unidades selecionadas: ${selectedUnitNames.join(", ")}`
+    : "Nenhuma unidade selecionada";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -86,6 +93,7 @@ export function MultipleUnitSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label={selectButtonAriaLabel}
           className="min-h-[40px] h-auto flex flex-wrap gap-1"
           disabled={disabled}
         >
@@ -104,8 +112,11 @@ export function MultipleUnitSelect({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0">
-        <Command>
+      <PopoverContent 
+        className="w-[400px] p-0"
+        aria-label="Lista de unidades disponíveis"
+      >
+        <Command aria-label="Comando de busca de unidades">
           <CommandInput placeholder="Buscar unidade..." className="h-9" />
           <CommandEmpty>Nenhuma unidade encontrada.</CommandEmpty>
           {loading ? (
@@ -119,6 +130,7 @@ export function MultipleUnitSelect({
                   key={unit.id}
                   value={`${unit.name}-${unit.city}`}
                   onSelect={() => toggleUnit(unit.id)}
+                  aria-selected={selectedUnits.includes(unit.id)}
                 >
                   <Check
                     className={cn(
