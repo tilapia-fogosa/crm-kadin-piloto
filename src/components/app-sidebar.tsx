@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,9 +12,12 @@ import {
   Menu,
   Plus,
   Link2,
+  LogOut,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { useSidebar } from "./ui/sidebar";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -35,10 +39,27 @@ export function AppSidebar() {
   const { openMobile, setOpenMobile } = useSidebar();
   const location = useLocation();
   const [isClient, setIsClient] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Erro ao fazer logout",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Logout realizado com sucesso",
+        description: "Redirecionando para a página de login...",
+      });
+    }
+  };
 
   const sidebar = (
     <div className="flex h-full flex-col gap-4">
@@ -95,6 +116,19 @@ export function AppSidebar() {
           </div>
         </div>
       </ScrollArea>
+      <div className="p-4 border-t border-white/10">
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start text-white",
+            "hover:bg-[#FF6B00] hover:text-white transition-colors duration-200"
+          )}
+          onClick={handleLogout}
+        >
+          <LogOut className="mr-2 h-5 w-5" />
+          Sair
+        </Button>
+      </div>
     </div>
   );
 
