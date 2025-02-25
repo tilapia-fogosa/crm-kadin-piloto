@@ -13,9 +13,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Unit } from "@/types/unit";
 
 export default function UnitsPage() {
   const [showNewUnitDialog, setShowNewUnitDialog] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const { toast } = useToast();
 
   const { data: units, isLoading } = useQuery({
@@ -25,8 +27,7 @@ export default function UnitsPage() {
         .from('units')
         .select(`
           *,
-          region:regions(name),
-          address:unit_addresses(*)
+          region:regions(name)
         `)
         .eq('active', true)
         .order('name');
@@ -35,6 +36,34 @@ export default function UnitsPage() {
       return data;
     },
   });
+
+  const handleEdit = (unit: Unit) => {
+    setSelectedUnit(unit);
+    setShowNewUnitDialog(true);
+  };
+
+  const handleDelete = async (unit: Unit) => {
+    try {
+      const { error } = await supabase
+        .from('units')
+        .update({ active: false })
+        .eq('id', unit.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Unidade removida",
+        description: "A unidade foi removida com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao remover unidade:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao remover",
+        description: "Ocorreu um erro ao tentar remover a unidade.",
+      });
+    }
+  };
 
   if (isLoading) {
     return <div>Carregando...</div>;
@@ -53,21 +82,32 @@ export default function UnitsPage() {
       <Dialog open={showNewUnitDialog} onOpenChange={setShowNewUnitDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Nova Unidade</DialogTitle>
+            <DialogTitle>
+              {selectedUnit ? "Editar Unidade" : "Nova Unidade"}
+            </DialogTitle>
           </DialogHeader>
           <UnitForm
+            initialData={selectedUnit}
+            isEditing={!!selectedUnit}
             onSuccess={() => {
               setShowNewUnitDialog(false);
+              setSelectedUnit(null);
               toast({
-                title: "Unidade criada",
-                description: "A unidade foi criada com sucesso.",
+                title: selectedUnit ? "Unidade atualizada" : "Unidade criada",
+                description: selectedUnit 
+                  ? "A unidade foi atualizada com sucesso."
+                  : "A unidade foi criada com sucesso.",
               });
             }}
           />
         </DialogContent>
       </Dialog>
 
-      <UnitsTable units={units || []} />
+      <UnitsTable 
+        units={units || []} 
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

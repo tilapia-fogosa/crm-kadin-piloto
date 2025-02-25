@@ -5,9 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Unit } from "@/types/unit";
+import { useToast } from "@/hooks/use-toast";
 
 export default function UnitsPage() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const { data: units, isLoading } = useQuery({
     queryKey: ['units'],
@@ -26,6 +29,33 @@ export default function UnitsPage() {
     },
   });
 
+  const handleEdit = (unit: Unit) => {
+    navigate(`/regions/units/${unit.id}/edit`);
+  };
+
+  const handleDelete = async (unit: Unit) => {
+    try {
+      const { error } = await supabase
+        .from('units')
+        .update({ active: false })
+        .eq('id', unit.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Unidade removida",
+        description: "A unidade foi removida com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao remover unidade:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao remover",
+        description: "Ocorreu um erro ao tentar remover a unidade.",
+      });
+    }
+  };
+
   if (isLoading) {
     return <div>Carregando...</div>;
   }
@@ -40,7 +70,11 @@ export default function UnitsPage() {
         </Button>
       </div>
 
-      <UnitsTable units={units || []} />
+      <UnitsTable 
+        units={units || []} 
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

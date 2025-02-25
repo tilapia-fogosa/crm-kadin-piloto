@@ -85,6 +85,7 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
         city: data.city,
         state: data.state,
         postal_code: data.postal_code,
+        active: true, // Adicionando campo obrigatório
       };
 
       if (isEditing && initialData?.id) {

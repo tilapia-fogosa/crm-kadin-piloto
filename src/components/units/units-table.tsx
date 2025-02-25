@@ -12,11 +12,11 @@ import { UnitActions } from "./unit-actions";
 
 interface UnitsTableProps {
   units: Unit[];
-  onEdit: (unit: Unit) => void;
-  onDelete: (unit: Unit) => void;
+  onEdit?: (unit: Unit) => void;
+  onDelete?: (unit: Unit) => void;
 }
 
-export function UnitsTable({ units, onEdit, onDelete }: UnitsTableProps) {
+export function UnitsTable({ units, onEdit = () => {}, onDelete = () => {} }: UnitsTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
