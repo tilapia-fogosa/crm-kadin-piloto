@@ -47,7 +47,6 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
     },
   });
 
-  // Atualiza o formulário quando receber dados iniciais
   useEffect(() => {
     if (initialData) {
       const formattedData = {
