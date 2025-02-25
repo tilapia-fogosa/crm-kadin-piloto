@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -104,7 +103,11 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
         if (unitUsersError) throw unitUsersError;
         
         if (unitUsersData?.length > 0) {
-          const firstUnitUser = unitUsersData[0];
+          const firstUnitUser: UnitUser = {
+            unit_id: unitUsersData[0].unit_id,
+            role: unitUsersData[0].role,
+            active: true
+          };
           setCurrentUnitUser(firstUnitUser);
           form.setValue('unitIds', unitUsersData.map(uu => uu.unit_id));
           form.setValue('role', firstUnitUser.role);
