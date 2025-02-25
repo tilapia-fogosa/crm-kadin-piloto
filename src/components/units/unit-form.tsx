@@ -66,26 +66,32 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
 
   const onSubmit = async (data: UnitFormData) => {
     try {
-      // Removendo campos do formData que serão gerados automaticamente
+      const { 
+        name, company_name, cnpj, trading_name, region_id,
+        enrollment_fee, material_fee, monthly_fee,
+        email, phone, legal_representative,
+        street, number, complement, neighborhood, city, state, postal_code
+      } = data;
+
       const formData = {
-        name: data.name,
-        company_name: data.company_name,
-        cnpj: data.cnpj,
-        trading_name: data.trading_name || null,
-        region_id: data.region_id,
-        enrollment_fee: data.enrollment_fee,
-        material_fee: data.material_fee,
-        monthly_fee: data.monthly_fee,
-        email: data.email || null,
-        phone: data.phone || null,
-        legal_representative: data.legal_representative || null,
-        street: data.street,
-        number: data.number,
-        complement: data.complement || null,
-        neighborhood: data.neighborhood,
-        city: data.city,
-        state: data.state,
-        postal_code: data.postal_code,
+        name,
+        company_name,
+        cnpj,
+        trading_name: trading_name || null,
+        region_id,
+        enrollment_fee,
+        material_fee,
+        monthly_fee,
+        email: email || null,
+        phone: phone || null,
+        legal_representative: legal_representative || null,
+        street,
+        number,
+        complement: complement || null,
+        neighborhood,
+        city,
+        state,
+        postal_code,
         active: true
       };
 
