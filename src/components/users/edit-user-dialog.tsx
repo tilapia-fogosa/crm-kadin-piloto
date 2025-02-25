@@ -1,4 +1,5 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -146,6 +147,12 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-[720px]">
+          <DialogHeader>
+            <DialogTitle>Carregando Dados do Usuário</DialogTitle>
+            <DialogDescription>
+              Aguarde enquanto carregamos as informações do usuário...
+            </DialogDescription>
+          </DialogHeader>
           <div className="flex items-center justify-center p-4">
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
@@ -160,6 +167,9 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
         <DialogContent className="max-w-[720px]">
           <DialogHeader>
             <DialogTitle>Editar Usuário: {user.full_name}</DialogTitle>
+            <DialogDescription>
+              Faça as alterações necessárias nos dados do usuário. Todas as alterações serão salvas automaticamente.
+            </DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
