@@ -3,9 +3,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { RealtimePostgresInsertPayload, RealtimePostgresUpdatePayload } from "@supabase/supabase-js"
 import { useEffect } from "react"
+import { useUserUnit } from "./useUserUnit"
 
 export function useClientData() {
   const queryClient = useQueryClient()
+  const { data: userUnit } = useUserUnit()
 
   // Enable realtime subscription when the hook is mounted
   useEffect(() => {
@@ -51,12 +53,12 @@ export function useClientData() {
   }, [queryClient])
 
   return useQuery({
-    queryKey: ['clients'],
+    queryKey: ['clients', userUnit?.unit_id],
     queryFn: async () => {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      console.log('Fetching clients data...')
+      console.log('Fetching clients data for unit:', userUnit?.unit_id)
       
       const { data, error } = await supabase
         .from('clients')
@@ -82,6 +84,7 @@ export function useClientData() {
           )
         `)
         .eq('active', true)
+        .eq('unit_id', userUnit?.unit_id)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -116,6 +119,7 @@ export function useClientData() {
 
       console.log('Total processed active clients:', clientsWithActivities?.length)
       return clientsWithActivities
-    }
+    },
+    enabled: !!userUnit?.unit_id
   })
 }
