@@ -1,92 +1,138 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Check, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Unit {
   id: string;
   name: string;
+  city: string;
 }
 
 interface MultipleUnitSelectProps {
-  units: Unit[];
-  value: string[];
-  onChange: (value: string[]) => void;
+  selectedUnits: string[];
+  onUnitsChange: (units: string[]) => void;
+  disabled?: boolean;
 }
 
-export function MultipleUnitSelect({ units, value, onChange }: MultipleUnitSelectProps) {
-  const [search, setSearch] = useState("");
+export function MultipleUnitSelect({ 
+  selectedUnits, 
+  onUnitsChange,
+  disabled = false 
+}: MultipleUnitSelectProps) {
+  const [open, setOpen] = useState(false);
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const selectedUnits = units.filter((unit) => value.includes(unit.id));
-  const availableUnits = units.filter(
-    (unit) => 
-      !value.includes(unit.id) && 
-      unit.name.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchUnits = async () => {
+      try {
+        const { data: unitsData, error } = await supabase
+          .from('units')
+          .select('id, name, city')
+          .eq('active', true)
+          .order('name');
 
-  const handleSelect = (unitId: string) => {
-    onChange([...value, unitId]);
+        if (error) throw error;
+        setUnits(unitsData || []);
+      } catch (error) {
+        console.error('Erro ao carregar unidades:', error);
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível carregar as unidades",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUnits();
+  }, [toast]);
+
+  const toggleUnit = (unitId: string) => {
+    if (selectedUnits.includes(unitId)) {
+      onUnitsChange(selectedUnits.filter(id => id !== unitId));
+    } else {
+      onUnitsChange([...selectedUnits, unitId]);
+    }
   };
 
-  const handleRemove = (unitId: string) => {
-    onChange(value.filter((id) => id !== unitId));
-  };
+  const selectedUnitNames = units
+    .filter(unit => selectedUnits.includes(unit.id))
+    .map(unit => `${unit.name} - ${unit.city}`);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {selectedUnits.map((unit) => (
-          <div
-            key={unit.id}
-            className="flex items-center gap-1 bg-primary/10 text-primary rounded-full px-3 py-1"
-          >
-            <span className="text-sm">{unit.name}</span>
-            <button
-              type="button"
-              onClick={() => handleRemove(unit.id)}
-              className="text-primary/60 hover:text-primary"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div className="space-y-2">
-        <Input
-          type="search"
-          placeholder="Buscar unidades..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        <ScrollArea className="h-[200px] rounded-md border">
-          <div className="p-4 space-y-2">
-            {availableUnits.map((unit) => (
-              <Button
-                key={unit.id}
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => handleSelect(unit.id)}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="min-h-[40px] h-auto flex flex-wrap gap-1"
+          disabled={disabled}
+        >
+          {selectedUnits.length > 0 ? (
+            selectedUnitNames.map((name) => (
+              <Badge 
+                variant="secondary" 
+                key={name}
+                className="mr-1 mb-1"
               >
-                <Check
-                  className={`mr-2 h-4 w-4 ${
-                    value.includes(unit.id) ? "opacity-100" : "opacity-0"
-                  }`}
-                />
-                {unit.name}
-              </Button>
-            ))}
-            {availableUnits.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhuma unidade encontrada
-              </p>
-            )}
-          </div>
-        </ScrollArea>
-      </div>
-    </div>
+                {name}
+              </Badge>
+            ))
+          ) : (
+            "Selecione as unidades..."
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[400px] p-0">
+        <Command>
+          <CommandInput placeholder="Buscar unidade..." className="h-9" />
+          <CommandEmpty>Nenhuma unidade encontrada.</CommandEmpty>
+          {loading ? (
+            <div className="p-4 text-sm text-muted-foreground">
+              Carregando unidades...
+            </div>
+          ) : (
+            <CommandGroup>
+              {units.map((unit) => (
+                <CommandItem
+                  key={unit.id}
+                  value={`${unit.name}-${unit.city}`}
+                  onSelect={() => toggleUnit(unit.id)}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedUnits.includes(unit.id) ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {unit.name} - {unit.city}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
