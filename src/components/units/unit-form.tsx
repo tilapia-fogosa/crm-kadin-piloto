@@ -66,6 +66,7 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
 
   const onSubmit = async (data: UnitFormData) => {
     try {
+      // Removendo campos do formData que serão gerados automaticamente
       const formData = {
         name: data.name,
         company_name: data.company_name,
@@ -85,7 +86,7 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
         city: data.city,
         state: data.state,
         postal_code: data.postal_code,
-        active: true, // Adicionando campo obrigatório
+        active: true
       };
 
       if (isEditing && initialData?.id) {

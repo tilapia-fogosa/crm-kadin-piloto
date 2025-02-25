@@ -1,5 +1,5 @@
 
-import { corsHeaders } from '../utils/cors';
+import { corsHeaders } from '../utils/cors.ts';
 import { getGoogleClient } from '../utils/googleClient';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
