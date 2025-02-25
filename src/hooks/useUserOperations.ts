@@ -25,6 +25,7 @@ export function useUserOperations() {
   const [isLoading, setIsLoading] = useState(false);
 
   const updateUser = async (userId: string, data: UserUpdateData) => {
+    console.log('Iniciando atualização do usuário:', { userId, data });
     setIsLoading(true);
     try {
       // Atualizar perfil do usuário
@@ -37,7 +38,11 @@ export function useUserOperations() {
         })
         .eq('id', userId);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Erro ao atualizar perfil:', profileError);
+        throw profileError;
+      }
+      console.log('Perfil atualizado com sucesso');
 
       // Buscar unidades ativas atuais do usuário
       const { data: currentUnitUsers, error: fetchError } = await supabase
@@ -46,25 +51,34 @@ export function useUserOperations() {
         .eq('user_id', userId)
         .eq('active', true);
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error('Erro ao buscar unidades atuais:', fetchError);
+        throw fetchError;
+      }
+      console.log('Unidades atuais recuperadas:', currentUnitUsers);
 
       const currentUnitIds = currentUnitUsers?.map(uu => uu.unit_id) || [];
 
       // Desativar unidades que não estão mais na lista
       const unitsToDeactivate = currentUnitIds.filter(id => !data.unitIds.includes(id));
       if (unitsToDeactivate.length > 0) {
+        console.log('Desativando unidades:', unitsToDeactivate);
         const { error: deactivateError } = await supabase
           .from('unit_users')
           .update({ active: false })
           .eq('user_id', userId)
           .in('unit_id', unitsToDeactivate);
 
-        if (deactivateError) throw deactivateError;
+        if (deactivateError) {
+          console.error('Erro ao desativar unidades:', deactivateError);
+          throw deactivateError;
+        }
       }
 
       // Adicionar novas unidades
       const unitsToAdd = data.unitIds.filter(id => !currentUnitIds.includes(id));
       if (unitsToAdd.length > 0) {
+        console.log('Adicionando novas unidades:', unitsToAdd);
         const newUnitUsers = unitsToAdd.map(unitId => ({
           user_id: userId,
           unit_id: unitId,
@@ -76,22 +90,30 @@ export function useUserOperations() {
           .from('unit_users')
           .insert(newUnitUsers);
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('Erro ao inserir novas unidades:', insertError);
+          throw insertError;
+        }
       }
 
       // Atualizar role nas unidades existentes que permaneceram
       const unitsToUpdate = data.unitIds.filter(id => currentUnitIds.includes(id));
       if (unitsToUpdate.length > 0) {
+        console.log('Atualizando role nas unidades existentes:', unitsToUpdate);
         const { error: updateError } = await supabase
           .from('unit_users')
           .update({ role: data.role })
           .eq('user_id', userId)
           .in('unit_id', unitsToUpdate);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Erro ao atualizar roles:', updateError);
+          throw updateError;
+        }
       }
 
       await queryClient.invalidateQueries({ queryKey: ['users'] });
+      console.log('Cache de usuários invalidado');
 
       toast({
         title: "Sucesso",

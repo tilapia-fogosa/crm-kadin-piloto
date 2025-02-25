@@ -73,8 +73,8 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      full_name: user.full_name,
-      email: user.email,
+      full_name: user.full_name || '',
+      email: user.email || '',
       unitIds: [],
       role: 'consultor',
     },
@@ -82,6 +82,7 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log('Iniciando busca de dados do usuário');
       try {
         const { data: unitsData, error: unitsError } = await supabase
           .from('units')
@@ -89,7 +90,11 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
           .eq('active', true)
           .order('name');
 
-        if (unitsError) throw unitsError;
+        if (unitsError) {
+          console.error('Erro ao buscar unidades:', unitsError);
+          throw unitsError;
+        }
+        console.log('Unidades recuperadas:', unitsData?.length);
         setUnits(unitsData || []);
 
         const { data: unitUsersData, error: unitUsersError } = await supabase
@@ -98,9 +103,13 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
           .eq('user_id', user.id)
           .eq('active', true);
 
-        if (unitUsersError) throw unitUsersError;
+        if (unitUsersError) {
+          console.error('Erro ao buscar associações de unidade:', unitUsersError);
+          throw unitUsersError;
+        }
         
         if (unitUsersData?.length > 0) {
+          console.log('Dados de unidade do usuário encontrados:', unitUsersData);
           const firstUnitUser = unitUsersData[0];
           setCurrentUnitUser({
             unit_id: firstUnitUser.unit_id,
@@ -128,6 +137,7 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
   }, [open, user.id, form, toast]);
 
   const handleSubmit = async (values: FormValues) => {
+    console.log('Iniciando submissão do formulário:', values);
     if (values.role === 'admin' && currentUnitUser?.role !== 'admin') {
       setShowAdminConfirmation(true);
       return;
@@ -137,6 +147,7 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
   };
 
   const submitForm = async (values: FormValues) => {
+    console.log('Submetendo formulário com valores:', values);
     const success = await updateUser(user.id, values);
     if (success) {
       onOpenChange(false);
