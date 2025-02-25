@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -13,15 +14,18 @@ interface UnitListProps {
   onToggleUnit: (unitId: string) => void;
 }
 
-export function UnitList({ units, selectedUnits, onToggleUnit }: UnitListProps) {
+function UnitListComponent({ units, selectedUnits, onToggleUnit }: UnitListProps) {
   return (
     <CommandGroup>
       {units.map((unit) => (
         <CommandItem
           key={unit.id}
           value={`${unit.name}-${unit.city}`}
-          onSelect={() => onToggleUnit(unit.id)}
+          onSelect={(currentValue) => {
+            onToggleUnit(unit.id);
+          }}
           aria-selected={selectedUnits.includes(unit.id)}
+          className="cursor-pointer"
         >
           <Check
             className={cn(
@@ -35,3 +39,5 @@ export function UnitList({ units, selectedUnits, onToggleUnit }: UnitListProps) 
     </CommandGroup>
   );
 }
+
+export const UnitList = memo(UnitListComponent);
