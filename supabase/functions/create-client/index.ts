@@ -85,7 +85,7 @@ serve(async (req) => {
       phone_number: payload.phone_number,
       lead_source: normalizedSource,
       observations: payload.observations,
-      created_by: '00000000-0000-0000-0000-000000000000',
+      created_by: null, // Alterado para null ao invés do UUID zero
       status: 'novo-cadastro',
       meta_id: payload.meta_id,
       original_ad: payload.original_ad,
