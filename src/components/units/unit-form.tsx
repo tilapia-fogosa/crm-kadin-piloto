@@ -93,6 +93,7 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
 
         if (error) throw error;
       } else {
+        // O unit_number será definido automaticamente pelo trigger do banco de dados
         const { error } = await supabase
           .from('units')
           .insert({
@@ -114,8 +115,7 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
             city: data.city,
             state: data.state,
             postal_code: data.postal_code,
-            active: true,
-            // unit_number will be set by the database trigger
+            active: true
           });
 
         if (error) throw error;
