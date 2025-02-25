@@ -16,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   Select,
   SelectContent,
@@ -25,6 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
+import { useUserOperations } from "@/hooks/useUserOperations";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface Unit {
   id: string;
@@ -63,10 +64,11 @@ interface EditUserDialogProps {
 
 export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [units, setUnits] = useState<Unit[]>([]);
   const [currentUnitUser, setCurrentUnitUser] = useState<UnitUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAdminConfirmation, setShowAdminConfirmation] = useState(false);
+  const { updateUser } = useUserOperations();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -102,7 +104,7 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
         if (unitUserError && unitUserError.code !== 'PGRST116') throw unitUserError;
         
         if (unitUserData) {
-          setCurrentUnitUser(unitUserData);
+          setCurrentUnitUser({ ...unitUserData, active: true });
           form.setValue('unit_id', unitUserData.unit_id);
           form.setValue('role', unitUserData.role);
         }
@@ -123,60 +125,25 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
     }
   }, [open, user.id, form]);
 
-  const onSubmit = async (values: FormValues) => {
-    try {
-      // Atualizar perfil do usuário
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          full_name: values.full_name,
-          email: values.email,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+  const handleSubmit = async (values: FormValues) => {
+    // Se a role selecionada for admin e não estiver confirmada, mostrar diálogo
+    if (values.role === 'admin' && currentUnitUser?.role !== 'admin') {
+      setShowAdminConfirmation(true);
+      return;
+    }
 
-      if (profileError) throw profileError;
+    await submitForm(values);
+  };
 
-      // Se houver mudança na unidade ou função
-      if (currentUnitUser?.unit_id !== values.unit_id || currentUnitUser?.role !== values.role) {
-        // Desativar associação atual se existir
-        if (currentUnitUser) {
-          const { error: deactivateError } = await supabase
-            .from('unit_users')
-            .update({ active: false })
-            .eq('user_id', user.id)
-            .eq('unit_id', currentUnitUser.unit_id);
+  const submitForm = async (values: FormValues) => {
+    const success = await updateUser(
+      user.id, 
+      values,
+      currentUnitUser?.unit_id
+    );
 
-          if (deactivateError) throw deactivateError;
-        }
-
-        // Criar nova associação
-        const { error: createError } = await supabase
-          .from('unit_users')
-          .insert({
-            user_id: user.id,
-            unit_id: values.unit_id,
-            role: values.role,
-          });
-
-        if (createError) throw createError;
-      }
-
-      await queryClient.invalidateQueries({ queryKey: ['users'] });
-
-      toast({
-        title: "Sucesso",
-        description: "Usuário atualizado com sucesso",
-      });
-
+    if (success) {
       onOpenChange(false);
-    } catch (error: any) {
-      console.error('Erro ao atualizar usuário:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Ocorreu um erro ao atualizar o usuário",
-      });
     }
   };
 
@@ -193,114 +160,139 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[720px]">
-        <DialogHeader>
-          <DialogTitle>Editar Usuário: {user.full_name}</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="full_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome Completo</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="unit_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Unidade</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-[720px]">
+          <DialogHeader>
+            <DialogTitle>Editar Usuário: {user.full_name}</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="full_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome Completo</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma unidade" />
-                      </SelectTrigger>
+                      <Input {...field} />
                     </FormControl>
-                    <SelectContent>
-                      {units.map((unit) => (
-                        <SelectItem key={unit.id} value={unit.id}>
-                          {unit.name} - {unit.city}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Função</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma função" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="consultor">Consultor</SelectItem>
-                      <SelectItem value="franqueado">Franqueado</SelectItem>
-                      <SelectItem value="admin">Administrador</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end gap-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                type="submit"
-                disabled={form.formState.isSubmitting}
-              >
-                {form.formState.isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  'Salvar'
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unit_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unidade</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma unidade" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {units.map((unit) => (
+                          <SelectItem key={unit.id} value={unit.id}>
+                            {unit.name} - {unit.city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Função</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma função" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="consultor">Consultor</SelectItem>
+                        <SelectItem value="franqueado">Franqueado</SelectItem>
+                        <SelectItem value="admin">Administrador</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => onOpenChange(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    'Salvar'
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showAdminConfirmation} onOpenChange={setShowAdminConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Permissão de Administrador</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você está prestes a dar permissões de administrador para este usuário. 
+              Esta ação permite que ele tenha acesso completo ao sistema. Tem certeza?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowAdminConfirmation(false);
+                submitForm(form.getValues());
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
