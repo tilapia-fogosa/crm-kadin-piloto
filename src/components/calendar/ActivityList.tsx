@@ -32,34 +32,56 @@ export function ActivityList({ date, filters }: ActivityListProps) {
   const { data: activities, isLoading } = useQuery({
     queryKey: ['activities', date, filters],
     queryFn: async () => {
+      console.log('[ActivityList] Buscando atividades para:', date);
+      
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
       
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
 
+      // Buscar eventos do Google Calendar
       const { data: events, error } = await supabase
         .from('calendar_events')
-        .select('*')
+        .select(`
+          id,
+          title,
+          description,
+          start_time,
+          end_time,
+          google_event_id,
+          calendar_id,
+          calendar_name,
+          calendar_background_color,
+          active,
+          sync_status
+        `)
+        .eq('active', true)
+        .neq('sync_status', 'deleted')
         .gte('start_time', startOfDay.toISOString())
-        .lte('start_time', endOfDay.toISOString());
+        .lte('start_time', endOfDay.toISOString())
+        .order('start_time', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[ActivityList] Erro ao buscar eventos:', error);
+        throw error;
+      }
 
-      return events.map(event => ({
+      console.log('[ActivityList] Eventos encontrados:', events?.length || 0);
+
+      return events?.map(event => ({
         id: event.id,
         title: event.title,
         start_time: event.start_time,
         end_time: event.end_time,
         description: event.description,
-        // Garantir que o source seja sempre 'system' ou 'google'
         source: event.google_event_id ? ('google' as const) : ('system' as const),
         calendar: event.calendar_id ? {
           id: event.calendar_id,
           name: event.calendar_name || 'Calendário Google',
           backgroundColor: event.calendar_background_color || '#4285f4'
         } : undefined
-      }));
+      })) || [];
     }
   });
 
