@@ -66,39 +66,56 @@ export function UnitForm({ onSuccess, initialData, isEditing = false }: UnitForm
 
   const onSubmit = async (data: UnitFormData) => {
     try {
-      const formData = {
-        name: data.name,
-        company_name: data.company_name,
-        cnpj: data.cnpj,
-        trading_name: data.trading_name || null,
-        region_id: data.region_id,
-        enrollment_fee: data.enrollment_fee,
-        material_fee: data.material_fee,
-        monthly_fee: data.monthly_fee,
-        email: data.email || null,
-        phone: data.phone || null,
-        legal_representative: data.legal_representative || null,
-        street: data.street,
-        number: data.number,
-        complement: data.complement || null,
-        neighborhood: data.neighborhood,
-        city: data.city,
-        state: data.state,
-        postal_code: data.postal_code,
-        active: true
-      } as const;
-
       if (isEditing && initialData?.id) {
         const { error } = await supabase
           .from('units')
-          .update(formData)
+          .update({
+            name: data.name,
+            company_name: data.company_name,
+            cnpj: data.cnpj,
+            trading_name: data.trading_name || null,
+            region_id: data.region_id,
+            enrollment_fee: data.enrollment_fee,
+            material_fee: data.material_fee,
+            monthly_fee: data.monthly_fee,
+            email: data.email || null,
+            phone: data.phone || null,
+            legal_representative: data.legal_representative || null,
+            street: data.street,
+            number: data.number,
+            complement: data.complement || null,
+            neighborhood: data.neighborhood,
+            city: data.city,
+            state: data.state,
+            postal_code: data.postal_code,
+          })
           .eq('id', initialData.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('units')
-          .insert(formData);
+          .insert({
+            name: data.name,
+            company_name: data.company_name,
+            cnpj: data.cnpj,
+            trading_name: data.trading_name || null,
+            region_id: data.region_id,
+            enrollment_fee: data.enrollment_fee,
+            material_fee: data.material_fee,
+            monthly_fee: data.monthly_fee,
+            email: data.email || null,
+            phone: data.phone || null,
+            legal_representative: data.legal_representative || null,
+            street: data.street,
+            number: data.number,
+            complement: data.complement || null,
+            neighborhood: data.neighborhood,
+            city: data.city,
+            state: data.state,
+            postal_code: data.postal_code,
+            active: true
+          });
 
         if (error) throw error;
       }
