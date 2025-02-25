@@ -7,7 +7,7 @@ import { useUserUnit } from "./useUserUnit"
 
 export function useClientData() {
   const queryClient = useQueryClient()
-  const { data: userUnit } = useUserUnit()
+  const { data: userUnits } = useUserUnit()
 
   // Enable realtime subscription when the hook is mounted
   useEffect(() => {
@@ -53,12 +53,13 @@ export function useClientData() {
   }, [queryClient])
 
   return useQuery({
-    queryKey: ['clients', userUnit?.unit_id],
+    queryKey: ['clients', userUnits?.map(u => u.unit_id)],
     queryFn: async () => {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      console.log('Fetching clients data for unit:', userUnit?.unit_id)
+      const unitIds = userUnits?.map(u => u.unit_id) || []
+      console.log('Fetching clients data for units:', unitIds)
       
       const { data, error } = await supabase
         .from('clients')
@@ -84,7 +85,7 @@ export function useClientData() {
           )
         `)
         .eq('active', true)
-        .eq('unit_id', userUnit?.unit_id)
+        .in('unit_id', unitIds)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -120,6 +121,6 @@ export function useClientData() {
       console.log('Total processed active clients:', clientsWithActivities?.length)
       return clientsWithActivities
     },
-    enabled: !!userUnit?.unit_id
+    enabled: userUnits !== undefined && userUnits.length > 0
   })
 }

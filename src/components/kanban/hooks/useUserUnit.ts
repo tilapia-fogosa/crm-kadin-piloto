@@ -18,8 +18,7 @@ export function useUserUnit() {
           )
         `)
         .eq('user_id', session.user.id)
-        .eq('active', true)
-        .single();
+        .eq('active', true);
 
       if (error) {
         console.error('Error fetching user unit:', error);
