@@ -1,3 +1,4 @@
+
 export type KanbanColumn = {
   id: string
   title: string
@@ -66,4 +67,6 @@ export type Sale = {
   monthly_fee_payment_method: PaymentMethod
   first_monthly_fee_date: Date
   monthly_fee_due_day?: DueDay
+  photo_url?: string
+  photo_thumbnail_url?: string
 }

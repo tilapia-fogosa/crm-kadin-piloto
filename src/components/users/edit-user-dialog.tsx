@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -84,7 +83,6 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Buscar unidades ativas
         const { data: unitsData, error: unitsError } = await supabase
           .from('units')
           .select('id, name, city')
@@ -94,7 +92,6 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
         if (unitsError) throw unitsError;
         setUnits(unitsData || []);
 
-        // Buscar associações atuais do usuário com unidades
         const { data: unitUsersData, error: unitUsersError } = await supabase
           .from('unit_users')
           .select('unit_id, role')
@@ -105,7 +102,11 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
         
         if (unitUsersData?.length > 0) {
           const firstUnitUser = unitUsersData[0];
-          setCurrentUnitUser(firstUnitUser);
+          setCurrentUnitUser({
+            unit_id: firstUnitUser.unit_id,
+            role: firstUnitUser.role,
+            active: true
+          });
           form.setValue('unitIds', unitUsersData.map(uu => uu.unit_id));
           form.setValue('role', firstUnitUser.role);
         }
@@ -127,7 +128,6 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
   }, [open, user.id, form, toast]);
 
   const handleSubmit = async (values: FormValues) => {
-    // Se a role selecionada for admin e não estiver confirmada, mostrar diálogo
     if (values.role === 'admin' && currentUnitUser?.role !== 'admin') {
       setShowAdminConfirmation(true);
       return;
