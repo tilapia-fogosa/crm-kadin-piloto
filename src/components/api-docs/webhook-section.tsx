@@ -34,6 +34,7 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
           <li><code>original_ad</code> - Nome do anúncio original</li>
           <li><code>original_adset</code> - Nome do conjunto de anúncios (segmentação)</li>
           <li><code>age_range</code> - Faixa etária do cliente</li>
+          <li><code>unit_number</code> - Número da unidade para direcionamento do lead (ex: 1, 2, 3). Se não informado, o lead será direcionado para a unidade padrão</li>
         </ul>
 
         <div className="mt-6">
@@ -87,7 +88,8 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
 {JSON.stringify({
   success: true,
   message: 'Cliente registrado com sucesso',
-  normalized_source: 'facebook'
+  normalized_source: 'facebook',
+  unit_id: '0df79a04-444e-46ee-b218-59e4b1835f4a'
 }, null, 2)}
               </pre>
             </div>
@@ -124,7 +126,9 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
           <ol className="list-decimal pl-6 space-y-2 mt-2">
             <li>A requisição é validada para garantir que todos os campos obrigatórios estão presentes</li>
             <li>A origem do cliente é normalizada (ex: 'fb' → 'facebook')</li>
-            <li>O cliente é registrado diretamente na tabela <code>clients</code></li>
+            <li>Se informado, o sistema busca a unidade pelo número fornecido em <code>unit_number</code></li>
+            <li>Caso a unidade não seja encontrada ou <code>unit_number</code> não seja informado, o cliente é vinculado à unidade padrão</li>
+            <li>O cliente é registrado na tabela <code>clients</code> com a unidade apropriada</li>
             <li>O cliente é marcado com status <code>novo-cadastro</code></li>
             <li>Os dados de campanha (meta_id, original_ad, original_adset) são preservados</li>
           </ol>

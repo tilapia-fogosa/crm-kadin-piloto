@@ -8,5 +8,6 @@ export const webhookExample = {
   meta_id: "123456789",
   original_ad: "Anúncio Principal - Curso de Inglês",
   original_adset: "Segmentação - 25-35 anos - São Paulo",
-  age_range: "25-35"
+  age_range: "25-35",
+  unit_number: 1
 }
