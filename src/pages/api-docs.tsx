@@ -22,7 +22,7 @@ const ApiDocsPage = () => {
       
       <Tabs defaultValue="webhook">
         <TabsList>
-          <TabsTrigger value="webhook">Webhook de Entrada</TabsTrigger>
+          <TabsTrigger value="webhook">Webhooks</TabsTrigger>
           <TabsTrigger value="make">Integração Make</TabsTrigger>
           <TabsTrigger value="api">API REST</TabsTrigger>
         </TabsList>

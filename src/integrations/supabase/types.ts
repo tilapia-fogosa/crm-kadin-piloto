@@ -308,6 +308,50 @@ export type Database = {
         }
         Relationships: []
       }
+      sale_webhooks: {
+        Row: {
+          active: boolean
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          last_failure: string | null
+          last_success: string | null
+          unit_id: string | null
+          url: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_failure?: string | null
+          last_success?: string | null
+          unit_id?: string | null
+          url: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_failure?: string | null
+          last_success?: string | null
+          unit_id?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_webhooks_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales: {
         Row: {
           active: boolean
@@ -700,6 +744,60 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_logs: {
+        Row: {
+          attempt_count: number
+          created_at: string | null
+          error_message: string | null
+          id: string
+          last_attempt: string | null
+          next_retry: string | null
+          payload: Json
+          sale_id: string
+          status: string
+          webhook_id: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          last_attempt?: string | null
+          next_retry?: string | null
+          payload: Json
+          sale_id: string
+          status: string
+          webhook_id: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          last_attempt?: string | null
+          next_retry?: string | null
+          payload?: Json
+          sale_id?: string
+          status?: string
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_logs_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_logs_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "sale_webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -771,6 +869,10 @@ export type Database = {
           user_id: string
         }
         Returns: boolean
+      }
+      retry_failed_webhooks: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       user_has_unit_access: {
         Args: {
