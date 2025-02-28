@@ -1,24 +1,21 @@
+
 import { format } from "date-fns"
 
 export const transformClientsToColumnData = (clients: any[] | null) => {
   console.log('transformClientsToColumnData received clients:', clients?.length)
   
-  // Log detalhado para o cliente específico
-  const jerriClient = clients?.find(client => client.id === '782daee7-d994-41d9-becc-5f5ef236cef3')
-  if (jerriClient) {
-    console.log('Dados do cliente Jerri:', {
-      id: jerriClient.id,
-      name: jerriClient.name,
-      original_ad: jerriClient.original_ad,
-      original_adset: jerriClient.original_adset
-    })
-  }
+  // Filtra clientes com status "matriculado" ou "perdido"
+  const filteredClients = clients?.filter(client => 
+    client.status !== 'matriculado' && client.status !== 'perdido'
+  )
   
+  console.log('Clients after status filtering:', filteredClients?.length)
+
   const columns = [
     {
       id: "novo-cadastro",
       title: "Novo Cadastro",
-      cards: clients
+      cards: filteredClients
         ?.filter(client => {
           const isInColumn = client.status === 'novo-cadastro'
           if (client.id === '782daee7-d994-41d9-becc-5f5ef236cef3') {
@@ -51,17 +48,8 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
     {
       id: "tentativa-contato",
       title: "Em tentativa de Contato",
-      cards: clients
-        ?.filter(client => {
-          const isInColumn = client.status === 'tentativa-contato'
-          if (client.id === '782daee7-d994-41d9-becc-5f5ef236cef3') {
-            console.log('Mapeamento do cliente Jerri para card (tentativa-contato):', {
-              original_ad: client.original_ad,
-              original_adset: client.original_adset
-            })
-          }
-          return isInColumn
-        })
+      cards: filteredClients
+        ?.filter(client => client.status === 'tentativa-contato')
         .map(client => ({
           id: client.id,
           clientName: client.name,
@@ -78,11 +66,8 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
     {
       id: "contato-efetivo",
       title: "Contato Efetivo",
-      cards: clients
-        ?.filter(client => {
-          const isInColumn = client.status === 'contato-efetivo'
-          return isInColumn
-        })
+      cards: filteredClients
+        ?.filter(client => client.status === 'contato-efetivo')
         .map(client => ({
           id: client.id,
           clientName: client.name,
@@ -99,11 +84,8 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
     {
       id: "atendimento-agendado",
       title: "Atendimento Agendado",
-      cards: clients
-        ?.filter(client => {
-          const isInColumn = client.status === 'atendimento-agendado'
-          return isInColumn
-        })
+      cards: filteredClients
+        ?.filter(client => client.status === 'atendimento-agendado')
         .map(client => ({
           id: client.id,
           clientName: client.name,
@@ -120,11 +102,8 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
     {
       id: "atendimento-realizado",
       title: "Atendimento Realizado",
-      cards: clients
-        ?.filter(client => {
-          const isInColumn = client.status === 'atendimento-realizado'
-          return isInColumn
-        })
+      cards: filteredClients
+        ?.filter(client => client.status === 'atendimento-realizado')
         .map(client => ({
           id: client.id,
           clientName: client.name,
@@ -142,13 +121,6 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
 
   // Log final column counts
   columns.forEach(column => {
-    const jerriCard = column.cards.find(card => card.id === '782daee7-d994-41d9-becc-5f5ef236cef3')
-    if (jerriCard) {
-      console.log(`Cliente Jerri encontrado na coluna ${column.title}:`, {
-        original_ad: jerriCard.original_ad,
-        original_adset: jerriCard.original_adset
-      })
-    }
     console.log(`Column ${column.title} has ${column.cards.length} cards`)
   })
 

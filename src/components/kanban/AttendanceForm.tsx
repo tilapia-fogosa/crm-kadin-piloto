@@ -14,20 +14,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { CalendarIcon } from "lucide-react"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
 
 interface AttendanceFormProps {
   onSubmit: (attendance: Attendance) => void
   cardId: string
+  clientName: string
 }
 
-export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
+export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormProps) {
   const [selectedResult, setSelectedResult] = useState<'matriculado' | 'negociacao' | 'perdido' | undefined>(undefined)
   const [showSaleForm, setShowSaleForm] = useState(false)
   const [selectedReasons, setSelectedReasons] = useState<string[]>([])
   const [observations, setObservations] = useState("")
   const [qualityScore, setQualityScore] = useState<string>("")
+  const [nextContactDate, setNextContactDate] = useState<Date>()
+  const [showLossConfirmation, setShowLossConfirmation] = useState(false)
   const { registerSale, isLoading } = useSale()
   const { toast } = useToast()
 
@@ -39,14 +58,38 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
         result: selectedResult,
         qualityScore,
         selectedReasons,
-        observations
+        observations,
+        nextContactDate
       })
+
+      // Validações específicas por tipo
+      if (selectedResult === 'negociacao' && !nextContactDate) {
+        toast({
+          variant: "destructive",
+          title: "Data de próximo contato é obrigatória",
+          description: "Por favor, selecione uma data para o próximo contato."
+        })
+        return
+      }
+
+      if (selectedResult === 'perdido' && selectedReasons.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "Motivo da perda é obrigatório",
+          description: "Por favor, selecione pelo menos um motivo da perda."
+        })
+        return
+      }
 
       // Atualizar quality score do cliente
       if (qualityScore) {
         const { error: scoreError } = await supabase
           .from('clients')
-          .update({ lead_quality_score: parseInt(qualityScore) })
+          .update({ 
+            lead_quality_score: parseInt(qualityScore),
+            next_contact_date: nextContactDate,
+            observations: observations || undefined
+          })
           .eq('id', cardId)
 
         if (scoreError) throw scoreError
@@ -65,11 +108,6 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
           .insert(reasonEntries)
 
         if (reasonsError) throw reasonsError
-      }
-
-      if (selectedResult === 'matriculado') {
-        setShowSaleForm(true)
-        return
       }
 
       onSubmit({
@@ -91,15 +129,11 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
     }
   }
 
-  const handleSaleSubmit = async (sale: Sale) => {
-    try {
-      await registerSale(sale)
-      onSubmit({
-        result: 'matriculado',
-        cardId
-      })
-    } catch (error) {
-      console.error('Erro ao processar venda:', error)
+  const handleResultSelect = (result: 'matriculado' | 'negociacao' | 'perdido') => {
+    if (result === 'perdido') {
+      setShowLossConfirmation(true)
+    } else {
+      setSelectedResult(result)
     }
   }
 
@@ -117,7 +151,7 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
     <div className="space-y-4">
       <div className="flex flex-col gap-2">
         <Button
-          onClick={() => setSelectedResult('matriculado')}
+          onClick={() => handleResultSelect('matriculado')}
           className={`w-full ${
             selectedResult === 'matriculado' 
               ? 'bg-green-500 hover:bg-green-600 ring-2 ring-green-700' 
@@ -129,7 +163,7 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
         </Button>
         
         <Button
-          onClick={() => setSelectedResult('negociacao')}
+          onClick={() => handleResultSelect('negociacao')}
           className={`w-full ${
             selectedResult === 'negociacao'
               ? 'bg-yellow-500 hover:bg-yellow-600 ring-2 ring-yellow-700 text-yellow-950'
@@ -141,7 +175,7 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
         </Button>
         
         <Button
-          onClick={() => setSelectedResult('perdido')}
+          onClick={() => handleResultSelect('perdido')}
           className={`w-full ${
             selectedResult === 'perdido'
               ? 'bg-red-500 hover:bg-red-600 ring-2 ring-red-700 text-white'
@@ -171,6 +205,51 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
             </Select>
           </div>
 
+          {selectedResult === 'matriculado' && (
+            <div className="p-4 border rounded-md bg-red-50 text-red-800">
+              Você irá fazer a matrícula de {clientName}, ele irá para a tela de pré-venda onde poderá ser preenchido a Ficha de Matrícula do Aluno com Todos dados.
+            </div>
+          )}
+
+          {selectedResult === 'negociacao' && (
+            <>
+              <div className="space-y-2">
+                <Label>Data do Próximo Contato</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !nextContactDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {nextContactDate ? format(nextContactDate, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={nextContactDate}
+                      onSelect={setNextContactDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Observações</Label>
+                <Textarea
+                  value={observations}
+                  onChange={(e) => setObservations(e.target.value)}
+                  placeholder="Digite suas observações..."
+                />
+              </div>
+            </>
+          )}
+
           {selectedResult === 'perdido' && (
             <>
               <div className="space-y-2">
@@ -192,7 +271,7 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
                 <Textarea
                   value={observations}
                   onChange={(e) => setObservations(e.target.value)}
-                  placeholder="Digite suas observações..."
+                  placeholder="Digite suas observações (opcional)..."
                 />
               </div>
             </>
@@ -203,10 +282,35 @@ export function AttendanceForm({ onSubmit, cardId }: AttendanceFormProps) {
       <Button 
         onClick={handleSubmit}
         className="w-full"
-        disabled={!selectedResult || isLoading || (selectedResult === 'perdido' && selectedReasons.length === 0)}
+        disabled={!selectedResult || isLoading || 
+          (selectedResult === 'perdido' && selectedReasons.length === 0) ||
+          (selectedResult === 'negociacao' && !nextContactDate)}
       >
         {isLoading ? "Processando..." : "Cadastrar Atendimento"}
       </Button>
+
+      <AlertDialog open={showLossConfirmation} onOpenChange={setShowLossConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar cliente como perdido?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ao marcar o cliente como perdido, ele será removido do Kanban. O histórico será mantido e você poderá acessá-lo na lista de clientes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowLossConfirmation(false)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                setShowLossConfirmation(false)
+                setSelectedResult('perdido')
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
+

@@ -74,7 +74,6 @@ export function CardSheet({
       </SheetTrigger>
       <SheetContent 
         className="w-[900px] sm:max-w-[900px] overflow-y-auto"
-        // Removido onPointerDownOutside para permitir interações naturais
       >
         <SheetHeader>
           <SheetTitle>Atividades - {card.clientName}</SheetTitle>
@@ -119,6 +118,7 @@ export function CardSheet({
             <ActivityDetails
               selectedActivity={selectedActivity}
               cardId={card.id}
+              clientName={card.clientName}
               onRegisterAttempt={onRegisterAttempt}
               onRegisterEffectiveContact={onRegisterEffectiveContact}
               onRegisterScheduling={onRegisterScheduling}

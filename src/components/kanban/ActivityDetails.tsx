@@ -8,6 +8,7 @@ import { ContactAttempt, EffectiveContact, Scheduling, Attendance } from "./type
 interface ActivityDetailsProps {
   selectedActivity: string | null
   cardId: string
+  clientName: string
   onRegisterAttempt: (attempt: ContactAttempt) => Promise<void>
   onRegisterEffectiveContact: (contact: EffectiveContact) => Promise<void>
   onRegisterScheduling?: (scheduling: Scheduling) => Promise<void>
@@ -17,6 +18,7 @@ interface ActivityDetailsProps {
 export function ActivityDetails({
   selectedActivity,
   cardId,
+  clientName,
   onRegisterAttempt,
   onRegisterEffectiveContact,
   onRegisterScheduling,
@@ -44,6 +46,7 @@ export function ActivityDetails({
         <AttendanceForm
           onSubmit={onRegisterAttendance}
           cardId={cardId}
+          clientName={clientName}
         />
       ) : (
         <p className="text-sm text-muted-foreground">
