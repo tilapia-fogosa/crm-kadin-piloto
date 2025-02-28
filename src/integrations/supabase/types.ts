@@ -137,6 +137,45 @@ export type Database = {
           },
         ]
       }
+      client_loss_reasons: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          id: string
+          observations: string | null
+          reason_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          observations?: string | null
+          reason_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          observations?: string | null
+          reason_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_loss_reasons_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_loss_reasons_reason_id_fkey"
+            columns: ["reason_id"]
+            isOneToOne: false
+            referencedRelation: "loss_reasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           active: boolean
@@ -146,6 +185,7 @@ export type Database = {
           deleted_at: string | null
           email: string | null
           id: string
+          lead_quality_score: number | null
           lead_source: string
           meta_id: string | null
           name: string
@@ -167,6 +207,7 @@ export type Database = {
           deleted_at?: string | null
           email?: string | null
           id?: string
+          lead_quality_score?: number | null
           lead_source: string
           meta_id?: string | null
           name: string
@@ -188,6 +229,7 @@ export type Database = {
           deleted_at?: string | null
           email?: string | null
           id?: string
+          lead_quality_score?: number | null
           lead_source?: string
           meta_id?: string | null
           name?: string
@@ -241,6 +283,62 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      loss_reason_categories: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      loss_reasons: {
+        Row: {
+          active: boolean | null
+          category_id: string | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean | null
+          category_id?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean | null
+          category_id?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loss_reasons_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "loss_reason_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
