@@ -87,7 +87,7 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
           .from('clients')
           .update({ 
             lead_quality_score: parseInt(qualityScore),
-            next_contact_date: nextContactDate,
+            next_contact_date: nextContactDate ? format(nextContactDate, 'yyyy-MM-dd') : undefined,
             observations: observations || undefined
           })
           .eq('id', cardId)
@@ -140,7 +140,7 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
   if (showSaleForm) {
     return (
       <SaleForm
-        onSubmit={handleSaleSubmit}
+        onSubmit={registerSale}
         clientId={cardId}
         activityId="placeholder"
       />
