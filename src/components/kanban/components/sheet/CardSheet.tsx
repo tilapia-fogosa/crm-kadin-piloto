@@ -7,7 +7,7 @@ import { ActivityDetails } from "../../ActivityDetails"
 import { CompactHistory } from "../history/CompactHistory"
 import { ClientInformation } from "./ClientInformation"
 import { KanbanCard } from "../../types"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ContactAttempt, EffectiveContact, Scheduling, Attendance } from "../../types"
 
 interface CardSheetProps {
@@ -36,23 +36,46 @@ export function CardSheet({
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(true)
 
+  // Log de ciclo de vida do componente
+  useEffect(() => {
+    console.log('CardSheet - Estado do sheet:', isOpen ? 'aberto' : 'fechado')
+    
+    // Cleanup quando o sheet é fechado
+    return () => {
+      if (!isOpen) {
+        console.log('CardSheet - Limpando estados ao fechar')
+        setSelectedActivity(null)
+        setIsHistoryExpanded(true)
+      }
+    }
+  }, [isOpen])
+
   const handleActivitySelect = (activityId: string) => {
+    console.log('CardSheet - Selecionando atividade:', activityId)
     setSelectedActivity(activityId)
     setIsHistoryExpanded(false)
   }
 
+  const handleSheetOpenChange = (open: boolean) => {
+    console.log('CardSheet - Mudança de estado do sheet:', open ? 'abrindo' : 'fechando')
+    onOpenChange(open)
+  }
+
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+    <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
       <SheetTrigger asChild>
         <div>
           <KanbanCardComponent
             card={card}
-            onClick={() => onOpenChange(true)}
+            onClick={() => handleSheetOpenChange(true)}
             onWhatsAppClick={onWhatsAppClick}
           />
         </div>
       </SheetTrigger>
-      <SheetContent className="w-[900px] sm:max-w-[900px] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()}>
+      <SheetContent 
+        className="w-[900px] sm:max-w-[900px] overflow-y-auto"
+        // Removido onPointerDownOutside para permitir interações naturais
+      >
         <SheetHeader>
           <SheetTitle>Atividades - {card.clientName}</SheetTitle>
         </SheetHeader>
