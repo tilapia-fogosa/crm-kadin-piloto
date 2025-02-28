@@ -375,6 +375,8 @@ export type Database = {
           monthly_fee_payment_method: Database["public"]["Enums"]["payment_method"]
           photo_thumbnail_url: string | null
           photo_url: string | null
+          sale_type: Database["public"]["Enums"]["sale_type"]
+          student_id: string | null
           student_name: string
           student_photo_thumbnail_url: string | null
           student_photo_url: string | null
@@ -403,6 +405,8 @@ export type Database = {
           monthly_fee_payment_method: Database["public"]["Enums"]["payment_method"]
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          sale_type?: Database["public"]["Enums"]["sale_type"]
+          student_id?: string | null
           student_name: string
           student_photo_thumbnail_url?: string | null
           student_photo_url?: string | null
@@ -431,6 +435,8 @@ export type Database = {
           monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          sale_type?: Database["public"]["Enums"]["sale_type"]
+          student_id?: string | null
           student_name?: string
           student_photo_thumbnail_url?: string | null
           student_photo_url?: string | null
@@ -450,6 +456,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
           {
@@ -505,6 +518,121 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_logs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          ip_address: string | null
+          new_data: Json | null
+          old_data: Json | null
+          operation: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          operation: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          operation?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_logs_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          active: boolean
+          address_city: string
+          address_complement: string | null
+          address_neighborhood: string
+          address_number: string
+          address_postal_code: string
+          address_state: string
+          address_street: string
+          birth_date: string
+          client_id: string
+          cpf: string
+          created_at: string
+          created_by: string | null
+          full_name: string
+          id: string
+          photo_thumbnail_url: string | null
+          photo_url: string | null
+          rg: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address_city: string
+          address_complement?: string | null
+          address_neighborhood: string
+          address_number: string
+          address_postal_code: string
+          address_state: string
+          address_street: string
+          birth_date: string
+          client_id: string
+          cpf: string
+          created_at?: string
+          created_by?: string | null
+          full_name: string
+          id?: string
+          photo_thumbnail_url?: string | null
+          photo_url?: string | null
+          rg?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address_city?: string
+          address_complement?: string | null
+          address_neighborhood?: string
+          address_number?: string
+          address_postal_code?: string
+          address_state?: string
+          address_street?: string
+          birth_date?: string
+          client_id?: string
+          cpf?: string
+          created_at?: string
+          created_by?: string | null
+          full_name?: string
+          id?: string
+          photo_thumbnail_url?: string | null
+          photo_url?: string | null
+          rg?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
@@ -897,6 +1025,7 @@ export type Database = {
         | "cartao_debito"
         | "boleto"
         | "recorrencia"
+      sale_type: "matricula" | "outros"
       user_role: "consultor" | "franqueado" | "admin"
       user_role_old: "consultor" | "franqueado" | "gestor_comercial"
     }

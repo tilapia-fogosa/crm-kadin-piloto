@@ -1,4 +1,3 @@
-
 export type KanbanColumn = {
   id: string
   title: string
@@ -51,9 +50,13 @@ export type Attendance = {
 export type PaymentMethod = 'dinheiro' | 'pix' | 'cartao_credito' | 'cartao_debito' | 'boleto' | 'recorrencia';
 export type DueDay = '5' | '10' | '15' | '20' | '25';
 
-export type Sale = {
+export type SaleType = 'matricula' | 'outros'
+
+export interface Sale {
+  id: string
   client_id: string
-  attendance_activity_id: string
+  student_id?: string
+  sale_type: SaleType
   student_name: string
   important_info?: string
   enrollment_amount: number
@@ -70,5 +73,11 @@ export type Sale = {
   monthly_fee_due_day?: DueDay
   student_photo_url?: string
   student_photo_thumbnail_url?: string
+  photo_url?: string
+  photo_thumbnail_url?: string
+  unit_id: string
+  created_by?: string
+  created_at: string
+  updated_at: string
+  active: boolean
 }
-

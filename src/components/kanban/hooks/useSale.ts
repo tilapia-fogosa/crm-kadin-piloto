@@ -26,6 +26,7 @@ export function useSale() {
   })
 
   const registerSale = async (sale: Sale) => {
+    console.log('Iniciando registro de venda:', sale)
     setIsLoading(true)
     try {
       if (!userUnit?.unit_id) {
@@ -52,7 +53,10 @@ export function useSale() {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao registrar venda:', error)
+        throw error
+      }
 
       // Disparar webhooks
       await supabase.functions.invoke('process-sale-webhooks', {
@@ -64,10 +68,11 @@ export function useSale() {
         title: "Venda registrada com sucesso!",
         duration: 3000
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao registrar venda:', error)
       toast({
         title: "Erro ao registrar venda",
+        description: error.message || "Ocorreu um erro ao registrar a venda",
         variant: "destructive",
         duration: 3000
       })
