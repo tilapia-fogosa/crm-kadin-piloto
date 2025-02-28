@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,8 +47,6 @@ const formSchema = z.object({
   role: z.enum(['consultor', 'franqueado', 'admin']),
 });
 
-type FormValues = z.infer<typeof formSchema>;
-
 interface User {
   id: string;
   full_name: string;
@@ -70,7 +69,7 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
   const [showAdminConfirmation, setShowAdminConfirmation] = useState(false);
   const { updateUser } = useUserOperations();
 
-  const form = useForm<FormValues>({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       full_name: user.full_name || '',
@@ -136,8 +135,19 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
     }
   }, [open, user.id, form, toast]);
 
-  const handleSubmit = async (values: FormValues) => {
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log('Iniciando submissão do formulário:', values);
+    
+    // Garantir que todos os campos obrigatórios estejam preenchidos
+    if (!values.full_name || !values.email || !values.role || !values.unitIds.length) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Todos os campos são obrigatórios",
+      });
+      return;
+    }
+
     if (values.role === 'admin' && currentUnitUser?.role !== 'admin') {
       setShowAdminConfirmation(true);
       return;
@@ -146,9 +156,14 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
     await submitForm(values);
   };
 
-  const submitForm = async (values: FormValues) => {
+  const submitForm = async (values: z.infer<typeof formSchema>) => {
     console.log('Submetendo formulário com valores:', values);
-    const success = await updateUser(user.id, values);
+    const success = await updateUser(user.id, {
+      full_name: values.full_name,
+      email: values.email,
+      role: values.role,
+      unitIds: values.unitIds,
+    });
     if (success) {
       onOpenChange(false);
     }
