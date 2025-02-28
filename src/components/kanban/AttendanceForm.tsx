@@ -47,6 +47,7 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
   const [qualityScore, setQualityScore] = useState<string>("")
   const [nextContactDate, setNextContactDate] = useState<Date>()
   const [showLossConfirmation, setShowLossConfirmation] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
   const { registerSale, isLoading } = useSale()
   const { toast } = useToast()
 
@@ -54,13 +55,15 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
     if (!selectedResult) return
     
     try {
-      console.log('Registrando atendimento:', {
+      console.log('Iniciando processo de atendimento:', {
         result: selectedResult,
         qualityScore,
         selectedReasons,
         observations,
         nextContactDate
       })
+
+      setIsProcessing(true)
 
       // Validações específicas por tipo
       if (selectedResult === 'negociacao' && !nextContactDate) {
@@ -81,18 +84,25 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
         return
       }
 
-      // Atualizar quality score do cliente
-      if (qualityScore) {
-        const { error: scoreError } = await supabase
-          .from('clients')
-          .update({ 
-            lead_quality_score: parseInt(qualityScore),
-            next_contact_date: nextContactDate ? format(nextContactDate, 'yyyy-MM-dd') : undefined,
-            observations: observations || undefined
-          })
-          .eq('id', cardId)
+      // Atualizar dados do cliente
+      const updateData: any = {
+        lead_quality_score: qualityScore ? parseInt(qualityScore) : undefined,
+        next_contact_date: nextContactDate ? format(nextContactDate, 'yyyy-MM-dd') : undefined,
+        observations: observations || undefined,
+        status: selectedResult, // Adicionando atualização do status
+        updated_at: new Date().toISOString()
+      }
 
-        if (scoreError) throw scoreError
+      console.log('Atualizando cliente com dados:', updateData)
+
+      const { error: updateError } = await supabase
+        .from('clients')
+        .update(updateData)
+        .eq('id', cardId)
+
+      if (updateError) {
+        console.error('Erro ao atualizar cliente:', updateError)
+        throw updateError
       }
 
       // Se for perdido, registrar motivos
@@ -103,12 +113,19 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
           observations: observations
         }))
 
+        console.log('Registrando motivos da perda:', reasonEntries)
+
         const { error: reasonsError } = await supabase
           .from('client_loss_reasons')
           .insert(reasonEntries)
 
-        if (reasonsError) throw reasonsError
+        if (reasonsError) {
+          console.error('Erro ao registrar motivos:', reasonsError)
+          throw reasonsError
+        }
       }
+
+      console.log('Atendimento finalizado com sucesso')
 
       onSubmit({
         result: selectedResult,
@@ -126,6 +143,8 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
         title: "Erro ao registrar atendimento",
         description: "Ocorreu um erro ao tentar registrar o atendimento."
       })
+    } finally {
+      setIsProcessing(false)
     }
   }
 
@@ -282,11 +301,11 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
       <Button 
         onClick={handleSubmit}
         className="w-full"
-        disabled={!selectedResult || isLoading || 
+        disabled={!selectedResult || isLoading || isProcessing || 
           (selectedResult === 'perdido' && selectedReasons.length === 0) ||
           (selectedResult === 'negociacao' && !nextContactDate)}
       >
-        {isLoading ? "Processando..." : "Cadastrar Atendimento"}
+        {isProcessing ? "Processando..." : "Cadastrar Atendimento"}
       </Button>
 
       <AlertDialog open={showLossConfirmation} onOpenChange={setShowLossConfirmation}>
@@ -313,4 +332,3 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
     </div>
   )
 }
-
