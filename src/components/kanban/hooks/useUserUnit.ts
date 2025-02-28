@@ -6,25 +6,28 @@ export function useUserUnit() {
   return useQuery({
     queryKey: ['user-unit'],
     queryFn: async () => {
+      console.log('Iniciando busca de unidades do usuário');
+      
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) throw new Error('Not authenticated');
+      if (!session?.user) {
+        console.log('Usuário não autenticado');
+        throw new Error('Not authenticated');
+      }
 
+      console.log('Buscando unidades do usuário:', session.user.id);
+      
       const { data: unitUsers, error } = await supabase
         .from('unit_users')
-        .select(`
-          unit_id,
-          units (
-            name
-          )
-        `)
+        .select('unit_id, units(id, name)')
         .eq('user_id', session.user.id)
         .eq('active', true);
 
       if (error) {
-        console.error('Error fetching user unit:', error);
+        console.error('Erro ao buscar unidades do usuário:', error);
         throw error;
       }
 
+      console.log('Unidades encontradas:', unitUsers);
       return unitUsers;
     }
   });
