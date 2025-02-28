@@ -7,6 +7,7 @@ import { ImportantInfo } from "./components/sale-form/ImportantInfo"
 import { PaymentSection } from "./components/sale-form/PaymentSection"
 import { MonthlyFeeSection } from "./components/sale-form/MonthlyFeeSection"
 import { PhotoUpload } from "./components/sale-form/PhotoUpload"
+import { format } from "date-fns"
 
 interface SaleFormProps {
   onSubmit: (sale: Sale) => Promise<void>
@@ -19,7 +20,8 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
     client_id: clientId,
     attendance_activity_id: activityId,
     enrollment_installments: 1,
-    material_installments: 1
+    material_installments: 1,
+    sale_type: 'outros'
   })
 
   const handlePaymentMethodChange = (field: 'enrollment_payment_method' | 'material_payment_method' | 'monthly_fee_payment_method', value: PaymentMethod) => {
@@ -39,10 +41,10 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
     }))
   }
 
-  const setTodayDate = (field: keyof Sale) => {
+  const setTodayDate = (field: 'enrollment_payment_date' | 'material_payment_date' | 'first_monthly_fee_date') => {
     setSale(prev => ({
       ...prev,
-      [field]: new Date()
+      [field]: format(new Date(), 'yyyy-MM-dd')
     }))
   }
 
@@ -151,4 +153,3 @@ export function SaleForm({ onSubmit, clientId, activityId }: SaleFormProps) {
     </div>
   )
 }
-
