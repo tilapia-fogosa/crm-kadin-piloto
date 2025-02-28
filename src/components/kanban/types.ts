@@ -1,3 +1,4 @@
+
 export type KanbanColumn = {
   id: string
   title: string
@@ -59,17 +60,18 @@ export interface Sale {
   sale_type: SaleType
   student_name: string
   important_info?: string
+  attendance_activity_id: string
   enrollment_amount: number
   enrollment_payment_method: PaymentMethod
   enrollment_installments: number
-  enrollment_payment_date: Date
+  enrollment_payment_date: string
   material_amount: number
   material_payment_method: PaymentMethod
   material_installments: number
-  material_payment_date: Date
+  material_payment_date: string
   monthly_fee_amount: number
   monthly_fee_payment_method: PaymentMethod
-  first_monthly_fee_date: Date
+  first_monthly_fee_date: string
   monthly_fee_due_day?: DueDay
   student_photo_url?: string
   student_photo_thumbnail_url?: string

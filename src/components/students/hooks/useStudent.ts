@@ -3,6 +3,7 @@ import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { Student, StudentFormData } from "../types"
 import { useToast } from "@/components/ui/use-toast"
+import { format } from "date-fns"
 
 export function useStudent() {
   const [isLoading, setIsLoading] = useState(false)
@@ -19,6 +20,7 @@ export function useStudent() {
       // Preparar dados do estudante
       const studentData = {
         ...data,
+        birth_date: format(data.birth_date, 'yyyy-MM-dd'),
         client_id: clientId,
         created_by: user.id,
         active: true,
@@ -49,13 +51,18 @@ export function useStudent() {
         throw error
       }
 
-      console.log('Estudante criado com sucesso:', newStudent)
+      const student: Student = {
+        ...newStudent,
+        birth_date: new Date(newStudent.birth_date)
+      }
+
+      console.log('Estudante criado com sucesso:', student)
       toast({
         title: "Estudante cadastrado com sucesso!",
         duration: 3000
       })
 
-      return newStudent as Student
+      return student
     } catch (error: any) {
       console.error('Erro ao processar cadastro do estudante:', error)
       toast({
