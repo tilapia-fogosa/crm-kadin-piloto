@@ -26,7 +26,7 @@ export function useSales() {
           created_at,
           student_name,
           created_by,
-          profiles!fk_sales_created_by (
+          created_by_profile:profiles!fk_sales_created_by (
             full_name
           ),
           clients (
@@ -45,7 +45,7 @@ export function useSales() {
       // Formata os dados para manter compatibilidade com o componente
       const formattedData = data.map(sale => ({
         ...sale,
-        profiles: sale.profiles
+        profiles: sale.created_by_profile
       }))
 
       console.log('Dados de vendas obtidos:', formattedData)
