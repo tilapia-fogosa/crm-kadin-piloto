@@ -86,10 +86,10 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
 
       // Atualizar dados do cliente
       const updateData: any = {
-        lead_quality_score: qualityScore ? parseInt(qualityScore) : undefined,
-        next_contact_date: nextContactDate ? format(nextContactDate, 'yyyy-MM-dd') : undefined,
-        observations: observations || undefined,
-        status: selectedResult, // Adicionando atualização do status
+        lead_quality_score: qualityScore ? parseInt(qualityScore) : null,
+        next_contact_date: nextContactDate ? format(nextContactDate, 'yyyy-MM-dd') : null,
+        observations: observations || null,
+        status: selectedResult,
         updated_at: new Date().toISOString()
       }
 
@@ -110,7 +110,7 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
         const reasonEntries = selectedReasons.map(reasonId => ({
           client_id: cardId,
           reason_id: reasonId,
-          observations: observations
+          observations: observations || null
         }))
 
         console.log('Registrando motivos da perda:', reasonEntries)
@@ -126,6 +126,22 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
       }
 
       console.log('Atendimento finalizado com sucesso')
+
+      // Registra a atividade
+      const { error: activityError } = await supabase
+        .from('client_activities')
+        .insert({
+          client_id: cardId,
+          tipo_atividade: 'Atendimento',
+          tipo_contato: 'presencial',
+          notes: observations || null,
+          created_by: (await supabase.auth.getSession()).data.session?.user.id
+        })
+
+      if (activityError) {
+        console.error('Erro ao registrar atividade:', activityError)
+        throw activityError
+      }
 
       onSubmit({
         result: selectedResult,

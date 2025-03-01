@@ -18,7 +18,13 @@ export function useUserUnit() {
       
       const { data: unitUsers, error } = await supabase
         .from('unit_users')
-        .select('unit_id, units(id, name)')
+        .select(`
+          unit_id,
+          units (
+            id,
+            name
+          )
+        `)
         .eq('user_id', session.user.id)
         .eq('active', true);
 
