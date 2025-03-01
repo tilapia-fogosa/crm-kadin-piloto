@@ -23,6 +23,7 @@ export function useAttendance() {
           tipo_atividade: 'Atendimento',
           tipo_contato: 'presencial',
           created_by: session.session.user.id,
+          notes: attendance.observations,
           active: true
         })
         .select()
@@ -47,11 +48,29 @@ export function useAttendance() {
         if (matriculaError) throw matriculaError
       }
 
+      // Se houver motivos de perda, registra-os
+      if (attendance.result === 'perdido' && attendance.lossReasons?.length) {
+        console.log("Registrando motivos de perda:", attendance.lossReasons)
+        
+        const reasonEntries = attendance.lossReasons.map(reasonId => ({
+          client_id: attendance.cardId,
+          reason_id: reasonId,
+          observations: attendance.observations
+        }))
+
+        const { error: reasonsError } = await supabase
+          .from('client_loss_reasons')
+          .insert(reasonEntries)
+
+        if (reasonsError) throw reasonsError
+      }
+
       // Atualiza o status do cliente
       const { error: updateError } = await supabase
         .from('clients')
         .update({
           status: attendance.result,
+          observations: attendance.observations,
           updated_at: new Date().toISOString()
         })
         .eq('id', attendance.cardId)

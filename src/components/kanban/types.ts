@@ -1,4 +1,3 @@
-
 export type KanbanColumn = {
   id: string
   title: string
@@ -46,6 +45,8 @@ export type Scheduling = {
 export type Attendance = {
   result: 'matriculado' | 'negociacao' | 'perdido'
   cardId: string
+  lossReasons?: string[]
+  observations?: string
 }
 
 export type PaymentMethod = 'dinheiro' | 'pix' | 'cartao_credito' | 'cartao_debito' | 'boleto' | 'recorrencia';
