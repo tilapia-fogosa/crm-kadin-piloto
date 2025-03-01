@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -98,6 +99,8 @@ export function ActivityDashboard() {
       const endDate = endOfMonth(startDate);
       const unitIds = userUnits?.map(u => u.unit_id) || [];
 
+      console.log('Fetching stats for period:', { startDate, endDate });
+
       const [clientsResult, activitiesResult] = await Promise.all([
         supabase.from('clients')
           .select('*')
@@ -123,74 +126,88 @@ export function ActivityDashboard() {
       const clients = clientsResult.data;
       const activities = activitiesResult.data;
 
-      const dailyStats = Array.from({
-        length: endDate.getDate()
-      }, (_, index) => {
+      console.log('Total clients fetched:', clients.length);
+
+      const dailyStats = Array.from({ length: endDate.getDate() }, (_, index) => {
         const date = new Date(startDate);
         date.setDate(index + 1);
         const dayStart = new Date(date.setHours(0, 0, 0, 0));
         const dayEnd = new Date(date.setHours(23, 59, 59, 999));
 
-        const newClients = clients.filter(client => 
+        // Filtra clientes do dia
+        const dayClients = clients.filter(client => 
           new Date(client.created_at) >= dayStart && 
           new Date(client.created_at) <= dayEnd
-        ).length;
+        );
 
+        // Filtra atividades do dia
         const dayActivities = activities.filter(activity => 
           new Date(activity.created_at) >= dayStart && 
           new Date(activity.created_at) <= dayEnd
         );
 
-        const contactAttempts = dayActivities.filter(activity => 
-          ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
-        ).length;
+        // Conta matrículas do dia (clientes que foram matriculados neste dia)
+        const enrollments = clients.filter(client => {
+          const clientUpdatedAt = new Date(client.updated_at);
+          const isEnrolled = client.status === 'matriculado';
+          const isUpdatedOnDay = clientUpdatedAt >= dayStart && clientUpdatedAt <= dayEnd;
+          
+          if (isEnrolled && isUpdatedOnDay) {
+            console.log('Matrícula encontrada:', {
+              clientName: client.name,
+              status: client.status,
+              updatedAt: client.updated_at,
+              day: format(dayStart, 'dd/MM/yyyy')
+            });
+          }
+          
+          return isEnrolled && isUpdatedOnDay;
+        }).length;
 
-        const effectiveContacts = dayActivities.filter(activity => 
-          ['Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
-        ).length;
-
-        const scheduledVisits = dayActivities.filter(activity => 
-          activity.tipo_atividade === 'Agendamento'
-        ).length;
-
-        const awaitingVisits = activities.filter(activity => 
-          activity.tipo_atividade === 'Agendamento' && 
-          activity.scheduled_date && 
-          new Date(activity.scheduled_date) >= dayStart && 
-          new Date(activity.scheduled_date) <= dayEnd
-        ).length;
-
-        const completedVisits = dayActivities.filter(activity => 
-          activity.tipo_atividade === 'Atendimento'
-        ).length;
-
-        const enrollments = clients.filter(client => 
-          client.status === 'matricula' && 
-          new Date(client.updated_at) >= dayStart && 
-          new Date(client.updated_at) <= dayEnd
-        ).length;
-
-        const ceConversionRate = contactAttempts > 0 ? effectiveContacts / contactAttempts * 100 : 0;
-        const agConversionRate = effectiveContacts > 0 ? scheduledVisits / effectiveContacts * 100 : 0;
-        const atConversionRate = awaitingVisits > 0 ? completedVisits / awaitingVisits * 100 : 0;
+        // Log para debug das contagens diárias
+        console.log('Stats do dia', format(dayStart, 'dd/MM/yyyy'), {
+          newClients: dayClients.length,
+          totalActivities: dayActivities.length,
+          matriculas: enrollments
+        });
 
         return {
           date,
-          newClients,
-          contactAttempts,
-          effectiveContacts,
-          ceConversionRate,
-          scheduledVisits,
-          agConversionRate,
-          awaitingVisits,
-          completedVisits,
-          atConversionRate,
-          enrollments
+          newClients: dayClients.length,
+          contactAttempts: dayActivities.filter(activity => 
+            ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
+          ).length,
+          effectiveContacts: dayActivities.filter(activity => 
+            ['Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
+          ).length,
+          scheduledVisits: dayActivities.filter(activity => 
+            activity.tipo_atividade === 'Agendamento'
+          ).length,
+          awaitingVisits: activities.filter(activity => 
+            activity.tipo_atividade === 'Agendamento' && 
+            activity.scheduled_date && 
+            new Date(activity.scheduled_date) >= dayStart && 
+            new Date(activity.scheduled_date) <= dayEnd
+          ).length,
+          completedVisits: dayActivities.filter(activity => 
+            activity.tipo_atividade === 'Atendimento'
+          ).length,
+          enrollments,
+          ceConversionRate: 0,
+          agConversionRate: 0,
+          atConversionRate: 0
         };
       });
 
-      const today = startOfDay(new Date());
-      return dailyStats.filter(day => !isAfter(startOfDay(day.date), today));
+      // Calcula as taxas de conversão após ter todos os números
+      return dailyStats.map(day => {
+        return {
+          ...day,
+          ceConversionRate: day.contactAttempts > 0 ? (day.effectiveContacts / day.contactAttempts) * 100 : 0,
+          agConversionRate: day.effectiveContacts > 0 ? (day.scheduledVisits / day.effectiveContacts) * 100 : 0,
+          atConversionRate: day.awaitingVisits > 0 ? (day.completedVisits / day.awaitingVisits) * 100 : 0
+        };
+      }).filter(day => !isAfter(startOfDay(day.date), today));
     },
     enabled: userUnits !== undefined && userUnits.length > 0,
     refetchInterval: 5000
