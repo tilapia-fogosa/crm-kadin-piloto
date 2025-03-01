@@ -87,6 +87,104 @@ export type Database = {
           },
         ]
       }
+      class_types: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          max_capacity: number
+          name: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_capacity: number
+          name: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_capacity?: number
+          name?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_types_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          active: boolean
+          class_type_id: string
+          created_at: string
+          current_students: number
+          end_date: string | null
+          id: string
+          name: string
+          schedule: string
+          start_date: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          class_type_id: string
+          created_at?: string
+          current_students?: number
+          end_date?: string | null
+          id?: string
+          name: string
+          schedule: string
+          start_date: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          class_type_id?: string
+          created_at?: string
+          current_students?: number
+          end_date?: string | null
+          id?: string
+          name?: string
+          schedule?: string
+          start_date?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_class_type_id_fkey"
+            columns: ["class_type_id"]
+            isOneToOne: false
+            referencedRelation: "class_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classes_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_activities: {
         Row: {
           active: boolean
@@ -260,6 +358,145 @@ export type Database = {
           },
         ]
       }
+      data_imports: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          error_log: Json | null
+          file_name: string
+          id: string
+          import_type: string
+          processed_rows: number | null
+          status: string
+          total_rows: number | null
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          error_log?: Json | null
+          file_name: string
+          id?: string
+          import_type: string
+          processed_rows?: number | null
+          status?: string
+          total_rows?: number | null
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          error_log?: Json | null
+          file_name?: string
+          id?: string
+          import_type?: string
+          processed_rows?: number | null
+          status?: string
+          total_rows?: number | null
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_imports_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kit_types: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kit_types_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kit_versions: {
+        Row: {
+          active: boolean
+          created_at: string
+          current_stock: number
+          id: string
+          kit_type_id: string
+          unit_id: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          current_stock?: number
+          id?: string
+          kit_type_id: string
+          unit_id: string
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          current_stock?: number
+          id?: string
+          kit_type_id?: string
+          unit_id?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kit_versions_kit_type_id_fkey"
+            columns: ["kit_type_id"]
+            isOneToOne: false
+            referencedRelation: "kit_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kit_versions_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_sources: {
         Row: {
           created_at: string
@@ -336,6 +573,70 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "loss_reason_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedagogical_schedules: {
+        Row: {
+          active: boolean
+          class_id: string
+          created_at: string
+          created_by: string
+          id: string
+          observations: string | null
+          schedule_date: string
+          status: string
+          student_id: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          class_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          observations?: string | null
+          schedule_date: string
+          status?: string
+          student_id: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          class_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          observations?: string | null
+          schedule_date?: string
+          status?: string
+          student_id?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedagogical_schedules_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedagogical_schedules_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedagogical_schedules_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -1131,7 +1432,12 @@ export type Database = {
         | "boleto"
         | "recorrencia"
       sale_type: "matricula" | "outros"
-      user_role: "consultor" | "franqueado" | "admin"
+      user_role:
+        | "consultor"
+        | "franqueado"
+        | "admin"
+        | "educador"
+        | "gestor_pedagogico"
       user_role_old: "consultor" | "franqueado" | "gestor_comercial"
     }
     CompositeTypes: {
