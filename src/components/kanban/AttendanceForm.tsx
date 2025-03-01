@@ -1,19 +1,9 @@
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Attendance, Sale } from "./types"
+import { Attendance } from "./types"
 import { SaleForm } from "./SaleForm"
 import { useSale } from "./hooks/useSale"
 import { LossReasonSelect } from "./LossReasonSelect"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,22 +14,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
-
-interface AttendanceFormProps {
-  onSubmit: (attendance: Attendance) => void
-  cardId: string
-  clientName: string
-}
+import { ResultButton } from "./components/attendance/ResultButton"
+import { QualityScore } from "./components/attendance/QualityScore"
+import { NextContactDate } from "./components/attendance/NextContactDate"
+import { Observations } from "./components/attendance/Observations"
+import { AttendanceFormProps } from "./types/attendance-form.types"
 
 export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormProps) {
+  console.log('Renderizando AttendanceForm para cliente:', clientName)
+
   const [selectedResult, setSelectedResult] = useState<'matriculado' | 'negociacao' | 'perdido' | undefined>(undefined)
   const [showSaleForm, setShowSaleForm] = useState(false)
   const [selectedReasons, setSelectedReasons] = useState<string[]>([])
@@ -165,6 +151,7 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
   }
 
   const handleResultSelect = (result: 'matriculado' | 'negociacao' | 'perdido') => {
+    console.log('Selecionando resultado:', result)
     if (result === 'perdido') {
       setShowLossConfirmation(true)
     } else {
@@ -185,60 +172,22 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2">
-        <Button
-          onClick={() => handleResultSelect('matriculado')}
-          className={`w-full ${
-            selectedResult === 'matriculado' 
-              ? 'bg-green-500 hover:bg-green-600 ring-2 ring-green-700' 
-              : 'bg-green-100 hover:bg-green-200 text-green-800'
-          }`}
-          variant="default"
-        >
-          Matriculado
-        </Button>
-        
-        <Button
-          onClick={() => handleResultSelect('negociacao')}
-          className={`w-full ${
-            selectedResult === 'negociacao'
-              ? 'bg-yellow-500 hover:bg-yellow-600 ring-2 ring-yellow-700 text-yellow-950'
-              : 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800'
-          }`}
-          variant="default"
-        >
-          Negociação
-        </Button>
-        
-        <Button
-          onClick={() => handleResultSelect('perdido')}
-          className={`w-full ${
-            selectedResult === 'perdido'
-              ? 'bg-red-500 hover:bg-red-600 ring-2 ring-red-700 text-white'
-              : 'bg-red-100 hover:bg-red-200 text-red-800'
-          }`}
-          variant="default"
-        >
-          Perdido
-        </Button>
+        {['matriculado', 'negociacao', 'perdido'].map((result) => (
+          <ResultButton
+            key={result}
+            result={result as 'matriculado' | 'negociacao' | 'perdido'}
+            selectedResult={selectedResult}
+            onClick={() => handleResultSelect(result as 'matriculado' | 'negociacao' | 'perdido')}
+          />
+        ))}
       </div>
 
       {selectedResult && (
         <div className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <Label>Qualidade do Lead (1-10)</Label>
-            <Select value={qualityScore} onValueChange={setQualityScore}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma nota" />
-              </SelectTrigger>
-              <SelectContent>
-                {[...Array(10)].map((_, i) => (
-                  <SelectItem key={i + 1} value={(i + 1).toString()}>
-                    {i + 1}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <QualityScore 
+            value={qualityScore} 
+            onChange={setQualityScore} 
+          />
 
           {selectedResult === 'matriculado' && (
             <div className="p-4 border rounded-md bg-red-50 text-red-800">
@@ -248,47 +197,20 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
 
           {selectedResult === 'negociacao' && (
             <>
-              <div className="space-y-2">
-                <Label>Data do Próximo Contato</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !nextContactDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {nextContactDate ? format(nextContactDate, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={nextContactDate}
-                      onSelect={setNextContactDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Observações</Label>
-                <Textarea
-                  value={observations}
-                  onChange={(e) => setObservations(e.target.value)}
-                  placeholder="Digite suas observações..."
-                />
-              </div>
+              <NextContactDate 
+                date={nextContactDate} 
+                onDateChange={setNextContactDate} 
+              />
+              <Observations 
+                value={observations} 
+                onChange={setObservations} 
+              />
             </>
           )}
 
           {selectedResult === 'perdido' && (
             <>
               <div className="space-y-2">
-                <Label>Motivos da Perda</Label>
                 <LossReasonSelect
                   selectedReasons={selectedReasons}
                   onSelectReason={(reasonId) => {
@@ -300,15 +222,10 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
                   }}
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label>Observações</Label>
-                <Textarea
-                  value={observations}
-                  onChange={(e) => setObservations(e.target.value)}
-                  placeholder="Digite suas observações (opcional)..."
-                />
-              </div>
+              <Observations 
+                value={observations} 
+                onChange={setObservations} 
+              />
             </>
           )}
         </div>
