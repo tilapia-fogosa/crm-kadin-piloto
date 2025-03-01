@@ -1,4 +1,3 @@
-
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -17,6 +16,7 @@ import ChangePassword from "@/pages/auth/ChangePassword";
 import AuthCallback from "@/pages/auth/callback";
 import UsersPage from "@/pages/users";
 import SalesPage from "@/pages/Sales";
+import PedagogicalKanban from "@/pages/PedagogicalKanban";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,6 +62,7 @@ function App() {
               }>
                 <Route path="/dashboard" element={<Index />} />
                 <Route path="/kanban" element={<Kanban />} />
+                <Route path="/students" element={<PedagogicalKanban />} />
                 <Route path="/clients/new" element={<NewClient />} />
                 <Route path="/clients" element={<ClientsPage />} />
                 <Route path="/clients/sources" element={<LeadSourcesPage />} />
