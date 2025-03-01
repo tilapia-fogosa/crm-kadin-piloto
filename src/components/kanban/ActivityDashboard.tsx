@@ -99,7 +99,7 @@ export function ActivityDashboard() {
       const unitIds = userUnits?.map(u => u.unit_id) || [];
       const today = startOfDay(new Date());
 
-      console.log('Fetching stats for period:', { startDate, endDate });
+      console.log('Buscando estatísticas para o período:', { startDate, endDate });
 
       const [clientsResult, activitiesResult] = await Promise.all([
         supabase.from('clients')
@@ -126,7 +126,8 @@ export function ActivityDashboard() {
       const clients = clientsResult.data;
       const activities = activitiesResult.data;
 
-      console.log('Total clients fetched:', clients.length);
+      console.log('Total de clientes encontrados:', clients.length);
+      console.log('Total de atividades encontradas:', activities.length);
 
       const validDates = Array.from({ length: endDate.getDate() }, (_, index) => {
         const date = new Date(startDate);
@@ -138,41 +139,26 @@ export function ActivityDashboard() {
         const dayStart = new Date(date.setHours(0, 0, 0, 0));
         const dayEnd = new Date(date.setHours(23, 59, 59, 999));
 
-        const dayClients = clients.filter(client => 
-          new Date(client.created_at) >= dayStart && 
-          new Date(client.created_at) <= dayEnd
-        );
-
         const dayActivities = activities.filter(activity => 
           new Date(activity.created_at) >= dayStart && 
           new Date(activity.created_at) <= dayEnd
         );
 
-        console.log(`Procurando matrículas para o dia ${format(dayStart, 'dd/MM/yyyy')}`, {
-          dayStart: dayStart.toISOString(),
-          dayEnd: dayEnd.toISOString()
-        });
+        const enrollments = dayActivities.filter(activity => 
+          activity.tipo_atividade === 'Matrícula'
+        ).length;
 
-        const enrollments = clients.filter(client => {
-          const clientUpdatedAt = new Date(client.updated_at);
-          const isEnrolled = client.status === 'matriculado';
-          const isUpdatedOnDay = clientUpdatedAt >= dayStart && clientUpdatedAt <= dayEnd;
-          
-          if (isEnrolled && isUpdatedOnDay) {
-            console.log('Matrícula encontrada:', {
-              clientName: client.name,
-              status: client.status,
-              updatedAt: client.updated_at,
-              day: format(dayStart, 'dd/MM/yyyy')
-            });
-          }
-          
-          return isEnrolled && isUpdatedOnDay;
-        }).length;
+        console.log(`Estatísticas para ${format(dayStart, 'dd/MM/yyyy')}:`, {
+          totalAtividades: dayActivities.length,
+          matriculas: enrollments
+        });
 
         return {
           date,
-          newClients: dayClients.length,
+          newClients: clients.filter(client => 
+            new Date(client.created_at) >= dayStart && 
+            new Date(client.created_at) <= dayEnd
+          ).length,
           contactAttempts: dayActivities.filter(activity => 
             ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
           ).length,

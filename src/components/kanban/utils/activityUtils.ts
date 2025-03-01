@@ -9,6 +9,8 @@ export const getActivityBadge = (tipo_atividade: string) => {
       return 'AG'
     case 'Atendimento':
       return 'AT'
+    case 'Matrícula':
+      return 'MT'
     default:
       return ''
   }
