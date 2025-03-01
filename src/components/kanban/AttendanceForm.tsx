@@ -10,6 +10,7 @@ import { MatriculationMessage } from "./components/attendance/MatriculationMessa
 import { NegotiationSection } from "./components/attendance/NegotiationSection"
 import { LossReasonSection } from "./components/attendance/LossReasonSection"
 import { LossConfirmationDialog } from "./components/attendance/LossConfirmationDialog"
+import { useAttendanceSubmission } from "./hooks/useAttendanceSubmission"
 import { AttendanceFormProps } from "./types/attendance-form.types"
 
 export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormProps) {
@@ -22,24 +23,14 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
   const [qualityScore, setQualityScore] = useState<string>("")
   const [nextContactDate, setNextContactDate] = useState<Date>()
   const [showLossConfirmation, setShowLossConfirmation] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
   const { registerSale, isLoading } = useSale()
+  const { submitAttendance, isProcessing } = useAttendanceSubmission()
   const { toast } = useToast()
 
   const handleSubmit = async () => {
     if (!selectedResult) return
     
     try {
-      console.log('Iniciando processo de atendimento:', {
-        result: selectedResult,
-        qualityScore,
-        selectedReasons,
-        observations,
-        nextContactDate
-      })
-
-      setIsProcessing(true)
-
       // Validações específicas por tipo
       if (selectedResult === 'negociacao' && !nextContactDate) {
         toast({
@@ -59,83 +50,23 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
         return
       }
 
-      // Atualizar dados do cliente
-      const updateData: any = {
-        lead_quality_score: qualityScore ? parseInt(qualityScore) : null,
-        next_contact_date: nextContactDate ? format(nextContactDate, 'yyyy-MM-dd') : null,
-        observations: observations || null,
-        status: selectedResult,
-        updated_at: new Date().toISOString()
-      }
-
-      console.log('Atualizando cliente com dados:', updateData)
-
-      const { error: updateError } = await supabase
-        .from('clients')
-        .update(updateData)
-        .eq('id', cardId)
-
-      if (updateError) {
-        console.error('Erro ao atualizar cliente:', updateError)
-        throw updateError
-      }
-
-      // Se for perdido, registrar motivos
-      if (selectedResult === 'perdido' && selectedReasons.length > 0) {
-        const reasonEntries = selectedReasons.map(reasonId => ({
-          client_id: cardId,
-          reason_id: reasonId,
-          observations: observations || null
-        }))
-
-        console.log('Registrando motivos da perda:', reasonEntries)
-
-        const { error: reasonsError } = await supabase
-          .from('client_loss_reasons')
-          .insert(reasonEntries)
-
-        if (reasonsError) {
-          console.error('Erro ao registrar motivos:', reasonsError)
-          throw reasonsError
-        }
-      }
-
-      console.log('Atendimento finalizado com sucesso')
-
-      // Registra a atividade
-      const { error: activityError } = await supabase
-        .from('client_activities')
-        .insert({
-          client_id: cardId,
-          tipo_atividade: 'Atendimento',
-          tipo_contato: 'presencial',
-          notes: observations || null,
-          created_by: (await supabase.auth.getSession()).data.session?.user.id
-        })
-
-      if (activityError) {
-        console.error('Erro ao registrar atividade:', activityError)
-        throw activityError
-      }
-
-      onSubmit({
+      const success = await submitAttendance({
+        cardId,
         result: selectedResult,
-        cardId
+        qualityScore,
+        selectedReasons,
+        observations,
+        nextContactDate
       })
 
-      toast({
-        title: "Atendimento registrado",
-        description: "O atendimento foi registrado com sucesso."
-      })
+      if (success) {
+        onSubmit({
+          result: selectedResult,
+          cardId
+        })
+      }
     } catch (error) {
       console.error('Erro ao registrar atendimento:', error)
-      toast({
-        variant: "destructive",
-        title: "Erro ao registrar atendimento",
-        description: "Ocorreu um erro ao tentar registrar o atendimento."
-      })
-    } finally {
-      setIsProcessing(false)
     }
   }
 
