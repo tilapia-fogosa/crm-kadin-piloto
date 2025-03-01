@@ -16,7 +16,7 @@ import ChangePassword from "@/pages/auth/ChangePassword";
 import AuthCallback from "@/pages/auth/callback";
 import UsersPage from "@/pages/users";
 import SalesPage from "@/pages/Sales";
-import PedagogicalKanban from "@/pages/PedagogicalKanban";
+import StudentsPage from "@/pages/PedagogicalKanban";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,7 +62,7 @@ function App() {
               }>
                 <Route path="/dashboard" element={<Index />} />
                 <Route path="/kanban" element={<Kanban />} />
-                <Route path="/students" element={<PedagogicalKanban />} />
+                <Route path="/students" element={<StudentsPage />} />
                 <Route path="/clients/new" element={<NewClient />} />
                 <Route path="/clients" element={<ClientsPage />} />
                 <Route path="/clients/sources" element={<LeadSourcesPage />} />
