@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -164,13 +163,6 @@ export function ActivityDashboard() {
           return isEnrolled && isUpdatedOnDay;
         }).length;
 
-        // Log para debug das contagens diárias
-        console.log('Stats do dia', format(dayStart, 'dd/MM/yyyy'), {
-          newClients: dayClients.length,
-          totalActivities: dayActivities.length,
-          matriculas: enrollments
-        });
-
         return {
           date,
           newClients: dayClients.length,
@@ -207,7 +199,7 @@ export function ActivityDashboard() {
           agConversionRate: day.effectiveContacts > 0 ? (day.scheduledVisits / day.effectiveContacts) * 100 : 0,
           atConversionRate: day.awaitingVisits > 0 ? (day.completedVisits / day.awaitingVisits) * 100 : 0
         };
-      }).filter(day => !isAfter(startOfDay(day.date), today));
+      });
     },
     enabled: userUnits !== undefined && userUnits.length > 0,
     refetchInterval: 5000
