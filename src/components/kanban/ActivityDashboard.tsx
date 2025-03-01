@@ -97,6 +97,7 @@ export function ActivityDashboard() {
       const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
       const endDate = endOfMonth(startDate);
       const unitIds = userUnits?.map(u => u.unit_id) || [];
+      const today = startOfDay(new Date()); // Define today aqui para usar no filtro
 
       console.log('Fetching stats for period:', { startDate, endDate });
 
@@ -191,15 +192,15 @@ export function ActivityDashboard() {
         };
       });
 
-      // Calcula as taxas de conversão após ter todos os números
-      return dailyStats.map(day => {
-        return {
+      // Calcula as taxas de conversão e filtra datas futuras
+      return dailyStats
+        .map(day => ({
           ...day,
           ceConversionRate: day.contactAttempts > 0 ? (day.effectiveContacts / day.contactAttempts) * 100 : 0,
           agConversionRate: day.effectiveContacts > 0 ? (day.scheduledVisits / day.effectiveContacts) * 100 : 0,
           atConversionRate: day.awaitingVisits > 0 ? (day.completedVisits / day.awaitingVisits) * 100 : 0
-        };
-      });
+        }))
+        .filter(day => !isAfter(startOfDay(day.date), today)); // Filtra datas futuras
     },
     enabled: userUnits !== undefined && userUnits.length > 0,
     refetchInterval: 5000
