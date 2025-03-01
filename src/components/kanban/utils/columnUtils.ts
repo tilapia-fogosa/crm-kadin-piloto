@@ -103,7 +103,7 @@ export const transformClientsToColumnData = (clients: any[] | null) => {
       id: "atendimento-realizado",
       title: "Atendimento Realizado",
       cards: filteredClients
-        ?.filter(client => client.status === 'atendimento-realizado')
+        ?.filter(client => client.status === 'atendimento-realizado' || client.status === 'negociacao')
         .map(client => ({
           id: client.id,
           clientName: client.name,
