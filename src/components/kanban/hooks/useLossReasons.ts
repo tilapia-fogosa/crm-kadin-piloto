@@ -19,7 +19,7 @@ export function useLossReasons() {
         .from('loss_reasons')
         .select('id, name')
         .eq('active', true)
-        .order('name')
+        .order('name', { ascending: true }) // Explicitly set ascending order
 
       if (error) {
         console.error('Erro ao buscar motivos:', error)
