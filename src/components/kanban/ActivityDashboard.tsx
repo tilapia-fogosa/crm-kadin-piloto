@@ -97,7 +97,7 @@ export function ActivityDashboard() {
       const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
       const endDate = endOfMonth(startDate);
       const unitIds = userUnits?.map(u => u.unit_id) || [];
-      const today = startOfDay(new Date()); // Define today aqui para usar no filtro
+      const today = startOfDay(new Date());
 
       console.log('Fetching stats for period:', { startDate, endDate });
 
@@ -128,25 +128,31 @@ export function ActivityDashboard() {
 
       console.log('Total clients fetched:', clients.length);
 
-      const dailyStats = Array.from({ length: endDate.getDate() }, (_, index) => {
+      const validDates = Array.from({ length: endDate.getDate() }, (_, index) => {
         const date = new Date(startDate);
         date.setDate(index + 1);
+        return !isAfter(startOfDay(date), today) ? date : null;
+      }).filter(date => date !== null) as Date[];
+
+      const dailyStats = validDates.map(date => {
         const dayStart = new Date(date.setHours(0, 0, 0, 0));
         const dayEnd = new Date(date.setHours(23, 59, 59, 999));
 
-        // Filtra clientes do dia
         const dayClients = clients.filter(client => 
           new Date(client.created_at) >= dayStart && 
           new Date(client.created_at) <= dayEnd
         );
 
-        // Filtra atividades do dia
         const dayActivities = activities.filter(activity => 
           new Date(activity.created_at) >= dayStart && 
           new Date(activity.created_at) <= dayEnd
         );
 
-        // Conta matrículas do dia (clientes que foram matriculados neste dia)
+        console.log(`Procurando matrículas para o dia ${format(dayStart, 'dd/MM/yyyy')}`, {
+          dayStart: dayStart.toISOString(),
+          dayEnd: dayEnd.toISOString()
+        });
+
         const enrollments = clients.filter(client => {
           const clientUpdatedAt = new Date(client.updated_at);
           const isEnrolled = client.status === 'matriculado';
@@ -192,15 +198,12 @@ export function ActivityDashboard() {
         };
       });
 
-      // Calcula as taxas de conversão e filtra datas futuras
-      return dailyStats
-        .map(day => ({
-          ...day,
-          ceConversionRate: day.contactAttempts > 0 ? (day.effectiveContacts / day.contactAttempts) * 100 : 0,
-          agConversionRate: day.effectiveContacts > 0 ? (day.scheduledVisits / day.effectiveContacts) * 100 : 0,
-          atConversionRate: day.awaitingVisits > 0 ? (day.completedVisits / day.awaitingVisits) * 100 : 0
-        }))
-        .filter(day => !isAfter(startOfDay(day.date), today)); // Filtra datas futuras
+      return dailyStats.map(day => ({
+        ...day,
+        ceConversionRate: day.contactAttempts > 0 ? (day.effectiveContacts / day.contactAttempts) * 100 : 0,
+        agConversionRate: day.effectiveContacts > 0 ? (day.scheduledVisits / day.effectiveContacts) * 100 : 0,
+        atConversionRate: day.awaitingVisits > 0 ? (day.completedVisits / day.awaitingVisits) * 100 : 0
+      }));
     },
     enabled: userUnits !== undefined && userUnits.length > 0,
     refetchInterval: 5000
