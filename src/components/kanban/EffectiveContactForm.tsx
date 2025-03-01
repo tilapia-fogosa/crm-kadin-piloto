@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -7,17 +6,20 @@ import { Textarea } from "@/components/ui/textarea"
 import { EffectiveContact } from "./types"
 import { useToast } from "@/components/ui/use-toast"
 import { Input } from "@/components/ui/input"
+import { LossModal } from "./components/loss/LossModal"
 
 interface EffectiveContactFormProps {
   onSubmit: (contact: EffectiveContact) => void
   cardId: string
+  onLossSubmit?: (reasons: string[], observations?: string) => void
 }
 
-export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormProps) {
+export function EffectiveContactForm({ onSubmit, cardId, onLossSubmit }: EffectiveContactFormProps) {
   const [contactType, setContactType] = useState<'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial' | undefined>(undefined)
   const [notes, setNotes] = useState("")
   const [date, setDate] = useState("")
   const [time, setTime] = useState("")
+  const [isLossModalOpen, setIsLossModalOpen] = useState(false)
   const { toast } = useToast()
 
   const handleSubmit = () => {
@@ -65,6 +67,12 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
         description: "Erro ao processar a data e hora selecionadas",
         variant: "destructive",
       })
+    }
+  }
+
+  const handleLossConfirm = async (reasons: string[], observations?: string) => {
+    if (onLossSubmit) {
+      onLossSubmit(reasons, observations)
     }
   }
 
@@ -126,12 +134,30 @@ export function EffectiveContactForm({ onSubmit, cardId }: EffectiveContactFormP
         />
       </div>
 
-      <Button 
-        onClick={handleSubmit}
-        className="w-full bg-orange-500 hover:bg-orange-600"
-      >
-        Registrar Contato Efetivo
-      </Button>
+      <div className="space-y-2">
+        <Button 
+          onClick={handleSubmit}
+          className="w-full bg-orange-500 hover:bg-orange-600"
+        >
+          Registrar Contato Efetivo
+        </Button>
+
+        {onLossSubmit && (
+          <Button
+            variant="destructive"
+            onClick={() => setIsLossModalOpen(true)}
+            className="w-full"
+          >
+            Perdido
+          </Button>
+        )}
+      </div>
+
+      <LossModal
+        isOpen={isLossModalOpen}
+        onClose={() => setIsLossModalOpen(false)}
+        onConfirm={handleLossConfirm}
+      />
     </div>
   )
 }

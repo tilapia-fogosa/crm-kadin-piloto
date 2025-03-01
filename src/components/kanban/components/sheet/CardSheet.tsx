@@ -1,4 +1,3 @@
-
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { KanbanCard as KanbanCardComponent } from "../../KanbanCard"
 import { ActivityHistory } from "../../ActivityHistory"
@@ -36,11 +35,9 @@ export function CardSheet({
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(true)
 
-  // Log de ciclo de vida do componente
   useEffect(() => {
     console.log('CardSheet - Estado do sheet:', isOpen ? 'aberto' : 'fechado')
     
-    // Cleanup quando o sheet é fechado
     return () => {
       if (!isOpen) {
         console.log('CardSheet - Limpando estados ao fechar')
@@ -59,6 +56,37 @@ export function CardSheet({
   const handleSheetOpenChange = (open: boolean) => {
     console.log('CardSheet - Mudança de estado do sheet:', open ? 'abrindo' : 'fechando')
     onOpenChange(open)
+  }
+
+  const handleLossSubmit = async (reasons: string[], observations?: string) => {
+    try {
+      if (selectedActivity === 'Tentativa de Contato') {
+        await onRegisterAttempt({
+          type: 'phone',
+          cardId: card.id,
+          nextContactDate: new Date()
+        })
+      } else if (selectedActivity === 'Contato Efetivo') {
+        await onRegisterEffectiveContact({
+          type: 'phone',
+          cardId: card.id,
+          contactDate: new Date(),
+          notes: '',
+          observations: observations || '',
+        })
+      }
+
+      await onRegisterAttendance({
+        result: 'perdido',
+        cardId: card.id,
+        lossReasons: reasons,
+        observations: observations
+      })
+
+      onOpenChange(false)
+    } catch (error) {
+      console.error('Erro ao registrar perda:', error)
+    }
   }
 
   return (
@@ -83,7 +111,6 @@ export function CardSheet({
             ? '1fr 1fr 1fr' 
             : '50px minmax(200px, 1fr) minmax(300px, 2fr)' 
         }}>
-          {/* Coluna do Histórico */}
           <div className={`transition-all duration-300 ease-in-out h-full ${isHistoryExpanded ? 'w-full' : 'w-[50px]'}`}>
             {isHistoryExpanded ? (
               <ActivityHistory
@@ -99,7 +126,6 @@ export function CardSheet({
             )}
           </div>
 
-          {/* Coluna Central */}
           <div className="space-y-4 h-full overflow-y-auto">
             <div>
               <ActivitySelector
@@ -113,7 +139,6 @@ export function CardSheet({
             </div>
           </div>
 
-          {/* Coluna dos Detalhes */}
           <div className="h-full overflow-y-auto">
             <ActivityDetails
               selectedActivity={selectedActivity}
@@ -123,6 +148,7 @@ export function CardSheet({
               onRegisterEffectiveContact={onRegisterEffectiveContact}
               onRegisterScheduling={onRegisterScheduling}
               onRegisterAttendance={onRegisterAttendance}
+              onLossSubmit={handleLossSubmit}
             />
           </div>
         </div>

@@ -1,22 +1,24 @@
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { ContactAttempt } from "./types"
 import { useToast } from "@/components/ui/use-toast"
-import { format, setHours, setMinutes } from "date-fns"
+import { format } from "date-fns"
 import { Input } from "@/components/ui/input"
+import { LossModal } from "./components/loss/LossModal"
 
 interface ContactAttemptFormProps {
   onSubmit: (attempt: ContactAttempt) => void
   cardId: string
+  onLossSubmit?: (reasons: string[], observations?: string) => void
 }
 
-export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps) {
+export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAttemptFormProps) {
   const [contactType, setContactType] = useState<'phone' | 'whatsapp' | 'whatsapp-call' | undefined>(undefined)
   const [date, setDate] = useState("")
   const [time, setTime] = useState("")
+  const [isLossModalOpen, setIsLossModalOpen] = useState(false)
   const { toast } = useToast()
 
   const handleSubmit = () => {
@@ -54,7 +56,6 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
       const nextContactDate = new Date(year, month - 1, day)
       nextContactDate.setHours(hours, minutes, 0, 0)
 
-      // Verifica se a data/hora é futura
       if (nextContactDate <= new Date()) {
         toast({
           title: "Erro",
@@ -75,6 +76,12 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
         description: "Erro ao processar a data e hora selecionadas",
         variant: "destructive",
       })
+    }
+  }
+
+  const handleLossConfirm = async (reasons: string[], observations?: string) => {
+    if (onLossSubmit) {
+      onLossSubmit(reasons, observations)
     }
   }
 
@@ -123,12 +130,30 @@ export function ContactAttemptForm({ onSubmit, cardId }: ContactAttemptFormProps
         />
       </div>
 
-      <Button 
-        onClick={handleSubmit}
-        className="w-full"
-      >
-        Cadastrar Tentativa
-      </Button>
+      <div className="space-y-2">
+        <Button 
+          onClick={handleSubmit}
+          className="w-full"
+        >
+          Cadastrar Tentativa
+        </Button>
+
+        {onLossSubmit && (
+          <Button
+            variant="destructive"
+            onClick={() => setIsLossModalOpen(true)}
+            className="w-full"
+          >
+            Perdido
+          </Button>
+        )}
+      </div>
+
+      <LossModal
+        isOpen={isLossModalOpen}
+        onClose={() => setIsLossModalOpen(false)}
+        onConfirm={handleLossConfirm}
+      />
     </div>
   )
 }
