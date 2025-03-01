@@ -3,24 +3,13 @@ import { Button } from "@/components/ui/button"
 import { Attendance } from "./types"
 import { SaleForm } from "./SaleForm"
 import { useSale } from "./hooks/useSale"
-import { LossReasonSelect } from "./LossReasonSelect"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { format } from "date-fns"
-import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
 import { ResultButton } from "./components/attendance/ResultButton"
 import { QualityScore } from "./components/attendance/QualityScore"
-import { NextContactDate } from "./components/attendance/NextContactDate"
-import { Observations } from "./components/attendance/Observations"
+import { MatriculationMessage } from "./components/attendance/MatriculationMessage"
+import { NegotiationSection } from "./components/attendance/NegotiationSection"
+import { LossReasonSection } from "./components/attendance/LossReasonSection"
+import { LossConfirmationDialog } from "./components/attendance/LossConfirmationDialog"
 import { AttendanceFormProps } from "./types/attendance-form.types"
 
 export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormProps) {
@@ -159,6 +148,11 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
     }
   }
 
+  const handleLossConfirm = () => {
+    setShowLossConfirmation(false)
+    setSelectedResult('perdido')
+  }
+
   if (showSaleForm) {
     return (
       <SaleForm
@@ -190,43 +184,31 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
           />
 
           {selectedResult === 'matriculado' && (
-            <div className="p-4 border rounded-md bg-red-50 text-red-800">
-              Você irá fazer a matrícula de {clientName}, ele irá para a tela de pré-venda onde poderá ser preenchido a Ficha de Matrícula do Aluno com Todos dados.
-            </div>
+            <MatriculationMessage clientName={clientName} />
           )}
 
           {selectedResult === 'negociacao' && (
-            <>
-              <NextContactDate 
-                date={nextContactDate} 
-                onDateChange={setNextContactDate} 
-              />
-              <Observations 
-                value={observations} 
-                onChange={setObservations} 
-              />
-            </>
+            <NegotiationSection
+              nextContactDate={nextContactDate}
+              observations={observations}
+              onDateChange={setNextContactDate}
+              onObservationsChange={setObservations}
+            />
           )}
 
           {selectedResult === 'perdido' && (
-            <>
-              <div className="space-y-2">
-                <LossReasonSelect
-                  selectedReasons={selectedReasons}
-                  onSelectReason={(reasonId) => {
-                    setSelectedReasons(prev => 
-                      prev.includes(reasonId)
-                        ? prev.filter(id => id !== reasonId)
-                        : [...prev, reasonId]
-                    )
-                  }}
-                />
-              </div>
-              <Observations 
-                value={observations} 
-                onChange={setObservations} 
-              />
-            </>
+            <LossReasonSection
+              selectedReasons={selectedReasons}
+              observations={observations}
+              onSelectReason={(reasonId) => {
+                setSelectedReasons(prev => 
+                  prev.includes(reasonId)
+                    ? prev.filter(id => id !== reasonId)
+                    : [...prev, reasonId]
+                )
+              }}
+              onObservationsChange={setObservations}
+            />
           )}
         </div>
       )}
@@ -241,27 +223,11 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
         {isProcessing ? "Processando..." : "Cadastrar Atendimento"}
       </Button>
 
-      <AlertDialog open={showLossConfirmation} onOpenChange={setShowLossConfirmation}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar cliente como perdido?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Ao marcar o cliente como perdido, ele será removido do Kanban. O histórico será mantido e você poderá acessá-lo na lista de clientes.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowLossConfirmation(false)}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => {
-                setShowLossConfirmation(false)
-                setSelectedResult('perdido')
-              }}
-            >
-              Confirmar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <LossConfirmationDialog
+        open={showLossConfirmation}
+        onOpenChange={setShowLossConfirmation}
+        onConfirm={handleLossConfirm}
+      />
     </div>
   )
 }
