@@ -59,23 +59,9 @@ export function CardSheet({
   }
 
   const handleLossSubmit = async (reasons: string[], observations?: string) => {
+    console.log('CardSheet - Registrando perda:', { reasons, observations })
+    
     try {
-      if (selectedActivity === 'Tentativa de Contato') {
-        await onRegisterAttempt({
-          type: 'phone',
-          cardId: card.id,
-          nextContactDate: new Date()
-        })
-      } else if (selectedActivity === 'Contato Efetivo') {
-        await onRegisterEffectiveContact({
-          type: 'phone',
-          cardId: card.id,
-          contactDate: new Date(),
-          notes: '',
-          observations: observations || '',
-        })
-      }
-
       await onRegisterAttendance({
         result: 'perdido',
         cardId: card.id,
