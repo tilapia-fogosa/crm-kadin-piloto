@@ -17,11 +17,29 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Initializing Supabase client')
+    // Inicializa cliente Supabase com Service Role para ter acesso total
+    console.log('Initializing Supabase client with service role')
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    // Obtém o token de autorização
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('No authorization header')
+    }
+
+    // Verifica o usuário atual
+    console.log('Getting current user from auth header')
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(authHeader.replace('Bearer ', ''))
+    
+    if (userError || !user) {
+      console.error('Error getting user:', userError)
+      throw new Error('Unauthorized')
+    }
+
+    console.log('Current user:', user.id)
 
     // Log request body for debugging
     const requestBody = await req.json()
@@ -44,16 +62,19 @@ serve(async (req) => {
       throw new Error('Pelo menos uma unidade deve ser selecionada')
     }
 
-    console.log('Calling create_unit_user RPC with params:', {
+    console.log('Calling create_unit_user_service with params:', {
+      p_creator_id: user.id,
       p_email: email,
       p_full_name: fullName,
       p_unit_ids: unitIds,
       p_role: role
     })
 
+    // Usa a nova função que não depende do contexto de autenticação
     const { data: userId, error: createError } = await supabaseClient.rpc(
-      'create_unit_user',
+      'create_unit_user_service',
       {
+        p_creator_id: user.id,
         p_email: email,
         p_full_name: fullName,
         p_unit_ids: unitIds,
@@ -62,7 +83,7 @@ serve(async (req) => {
     )
 
     if (createError) {
-      console.error('Error in create_unit_user RPC:', createError)
+      console.error('Error in create_unit_user_service:', createError)
       throw createError
     }
 
