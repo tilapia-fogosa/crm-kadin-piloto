@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +15,7 @@ interface UserUpdateData {
   full_name: string;
   email: string;
   unitIds: string[];
-  role: 'consultor' | 'franqueado' | 'admin';
+  role: 'consultor' | 'franqueado' | 'admin' | 'educador' | 'gestor_pedagogico';
 }
 
 export function useUserOperations() {
