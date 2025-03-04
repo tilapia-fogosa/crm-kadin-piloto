@@ -3,7 +3,7 @@ import { KanbanColumn, KanbanCard } from "../../types"
 
 export interface ClientData {
   id: string
-  name: string
+  name: string // snake_case como no banco
   lead_source: string
   phone_number: string
   created_at: string
@@ -39,3 +39,4 @@ export interface ColumnDefinition {
   title: string
   filterPredicate: (client: ClientData) => boolean
 }
+

@@ -1,4 +1,3 @@
-
 import { usePedagogicalData } from "./hooks/usePedagogicalData"
 import { PEDAGOGICAL_KANBAN_COLUMNS } from "./utils/columns/pedagogicalColumnDefinitions"
 import { KanbanColumn } from "./KanbanColumn"
@@ -17,20 +16,19 @@ export function PedagogicalKanban() {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>
   }
 
-  // Transforma os dados dos alunos para o formato do Kanban
+  // Transforma os dados dos alunos para o formato do ClientData
   const transformedData = students?.map(student => ({
     id: student.id,
-    clientName: student.full_name,
-    leadSource: student.client.lead_source,
-    phoneNumber: student.client.phone_number,
-    createdAt: student.client.created_at,
+    name: student.full_name,
+    lead_source: student.client.lead_source,
+    phone_number: student.client.phone_number,
+    created_at: student.client.created_at,
     status: student.client.status,
-    // Garante que kit_versions seja sempre um array
     kit_versions: Array.isArray(student.kit_versions) ? student.kit_versions : [],
     classes: student.classes || [],
     pedagogical_schedules: student.pedagogical_schedules || [],
     observations: student.client.observations || ''
-  }))
+  } as ClientData))
 
   console.log('Transformed data:', transformedData)
 

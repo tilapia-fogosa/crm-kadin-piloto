@@ -51,8 +51,7 @@ export type Attendance = {
 
 export type PaymentMethod = 'dinheiro' | 'pix' | 'cartao_credito' | 'cartao_debito' | 'boleto' | 'recorrencia';
 export type DueDay = '5' | '10' | '15' | '20' | '25';
-
-export type SaleType = 'matricula' | 'outros'
+export type SaleType = 'matricula' | 'outros';
 
 export interface Sale {
   id: string
