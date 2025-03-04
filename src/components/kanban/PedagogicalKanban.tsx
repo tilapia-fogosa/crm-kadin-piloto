@@ -5,37 +5,45 @@ import { KanbanColumn } from "./KanbanColumn"
 import { useState } from "react"
 import { BoardHeader } from "./BoardHeader"
 import { ClientData } from "./utils/types/kanbanTypes"
+import { transformStudentToKanbanCard } from "./utils/transforms/studentTransforms"
 
 export function PedagogicalKanban() {
   const { data: students, isLoading, refetch } = usePedagogicalData()
   const [showPendingOnly, setShowPendingOnly] = useState(false)
 
+  console.log('Rendering PedagogicalKanban with students:', students)
+
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>
   }
 
-  // Transformar os dados dos alunos para o formato do Kanban
+  // Transforma os dados dos alunos para o formato do Kanban
   const transformedData = students?.map(student => ({
     id: student.id,
-    name: student.full_name,
-    phone_number: student.client.phone_number,
-    lead_source: student.client.lead_source,
-    created_at: student.client.created_at,
+    clientName: student.full_name,
+    leadSource: student.client.lead_source,
+    phoneNumber: student.client.phone_number,
+    createdAt: student.client.created_at,
     status: student.client.status,
-    kit_versions: student.kit_versions,
-    classes: student.classes,
-    pedagogical_schedules: student.pedagogical_schedules,
-    observations: student.client.observations
-  } as ClientData))
+    // Garante que kit_versions seja sempre um array
+    kit_versions: Array.isArray(student.kit_versions) ? student.kit_versions : [],
+    classes: student.classes || [],
+    pedagogical_schedules: student.pedagogical_schedules || [],
+    observations: student.client.observations || ''
+  }))
+
+  console.log('Transformed data:', transformedData)
 
   // Filtrar e distribuir os cards nas colunas
   const columns = PEDAGOGICAL_KANBAN_COLUMNS.map(columnDef => ({
     id: columnDef.id,
     title: columnDef.title,
-    cards: transformedData?.filter(student => 
-      columnDef.filterPredicate(student)
-    ) || []
+    cards: transformedData
+      ?.filter(student => columnDef.filterPredicate(student))
+      ?.map(transformStudentToKanbanCard) || []
   }))
+
+  console.log('Columns data:', columns)
 
   return (
     <div className="flex flex-col h-screen max-h-screen overflow-hidden">
