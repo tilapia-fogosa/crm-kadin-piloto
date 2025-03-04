@@ -1,10 +1,10 @@
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { ContactAttempt } from "./types"
 import { useToast } from "@/components/ui/use-toast"
-import { format } from "date-fns"
 import { Input } from "@/components/ui/input"
 import { LossModal } from "./components/loss/LossModal"
 
@@ -22,6 +22,8 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
   const { toast } = useToast()
 
   const handleSubmit = () => {
+    console.log('Validando dados da tentativa de contato')
+    
     if (!contactType) {
       toast({
         title: "Erro",
@@ -50,6 +52,7 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
     }
 
     try {
+      console.log('Processando data e hora do próximo contato')
       const [year, month, day] = date.split('-').map(Number)
       const [hours, minutes] = time.split(":").map(Number)
       
@@ -65,12 +68,14 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
         return
       }
 
+      console.log('Submetendo tentativa de contato')
       onSubmit({
         type: contactType,
         nextContactDate,
         cardId
       })
     } catch (error) {
+      console.error('Erro ao processar data/hora:', error)
       toast({
         title: "Erro",
         description: "Erro ao processar a data e hora selecionadas",
@@ -80,8 +85,10 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
   }
 
   const handleLossConfirm = async (reasons: string[], observations?: string) => {
+    console.log('Confirmando perda com motivos:', reasons)
     if (onLossSubmit) {
-      onLossSubmit(reasons, observations)
+      await onLossSubmit(reasons, observations)
+      setIsLossModalOpen(false)
     }
   }
 

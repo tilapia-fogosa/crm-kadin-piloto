@@ -69,6 +69,7 @@ export function CardSheet({
         observations: observations
       })
 
+      console.log('CardSheet - Perda registrada com sucesso')
       onOpenChange(false)
     } catch (error) {
       console.error('Erro ao registrar perda:', error)

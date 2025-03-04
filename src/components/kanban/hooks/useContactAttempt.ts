@@ -10,11 +10,12 @@ export function useContactAttempt() {
 
   const registerAttempt = async (attempt: ContactAttempt) => {
     try {
-      console.log("Registering attempt:", attempt)
+      console.log("Registrando tentativa de contato:", attempt)
       
       const { data: session } = await supabase.auth.getSession()
-      if (!session.session) throw new Error('Not authenticated')
+      if (!session.session) throw new Error('Não autenticado')
 
+      // Registra a atividade de tentativa de contato
       const { error: activityError } = await supabase
         .from('client_activities')
         .insert({
@@ -28,6 +29,16 @@ export function useContactAttempt() {
 
       if (activityError) throw activityError
 
+      // Atualiza o próximo contato do cliente
+      const { error: clientError } = await supabase
+        .from('clients')
+        .update({ 
+          next_contact_date: attempt.nextContactDate.toISOString(),
+        })
+        .eq('id', attempt.cardId)
+
+      if (clientError) throw clientError
+
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       toast({
@@ -35,12 +46,13 @@ export function useContactAttempt() {
         description: "A atividade foi registrada com sucesso",
       })
     } catch (error) {
-      console.error('Error registering attempt:', error)
+      console.error('Erro ao registrar tentativa:', error)
       toast({
         variant: "destructive",
         title: "Erro ao registrar tentativa",
         description: "Ocorreu um erro ao tentar registrar a tentativa de contato.",
       })
+      throw error
     }
   }
 
