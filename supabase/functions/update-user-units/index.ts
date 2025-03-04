@@ -1,11 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeaders } from '../_shared/cors.ts'
 
 serve(async (req) => {
   console.log('Update user units function called')
@@ -16,6 +12,7 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Initializing Supabase client')
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -42,7 +39,7 @@ serve(async (req) => {
 
     const { userId, unitIds, role } = requestBody
 
-    // Validation
+    // Validation with detailed logs
     console.log('Validating input data')
     if (!userId) throw new Error('ID do usuário é obrigatório')
     if (!role) throw new Error('Função é obrigatória')
@@ -51,7 +48,7 @@ serve(async (req) => {
     }
 
     // Update user units using the manage_user_units function
-    console.log('Updating user units')
+    console.log('Calling manage_user_units with params:', { creator_id: creator.id, userId, unitIds, role })
     const { data: unitData, error: unitError } = await supabaseAdmin.rpc(
       'manage_user_units',
       {
@@ -67,9 +64,9 @@ serve(async (req) => {
       throw unitError
     }
 
-    console.log('Operation completed successfully')
+    console.log('Operation completed successfully:', unitData)
     return new Response(
-      JSON.stringify({ userId }),
+      JSON.stringify({ userId, success: true }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
