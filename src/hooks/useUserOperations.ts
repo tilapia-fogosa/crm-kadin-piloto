@@ -4,14 +4,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
-interface User {
-  id: string;
-  full_name: string;
-  email: string;
-  access_blocked: boolean;
-  email_confirmed: boolean;
-}
-
 interface UserUpdateData {
   full_name: string;
   email: string;
@@ -34,11 +26,12 @@ export function useUserOperations() {
   const updateUser = async (userId: string, values: UpdateUserValues) => {
     console.log('Atualizando usuário:', { userId, values });
     try {
-      // Chama a função create-user do Edge
-      const { data: response, error } = await supabase.functions.invoke('create-user', {
+      setIsLoading(true);
+      
+      // Usa a nova função update-user-units para edição
+      const { data: response, error } = await supabase.functions.invoke('update-user-units', {
         body: {
-          email: values.email,
-          fullName: values.full_name,
+          userId: userId,
           unitIds: values.unitIds,
           role: values.role
         }
@@ -71,6 +64,8 @@ export function useUserOperations() {
         variant: "destructive",
       });
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
