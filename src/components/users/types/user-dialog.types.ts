@@ -9,7 +9,7 @@ export interface Unit {
 
 export interface UnitUser {
   unit_id: string;
-  role: 'consultor' | 'franqueado' | 'admin';
+  role: 'consultor' | 'franqueado' | 'admin' | 'educador' | 'gestor_pedagogico';
   active: boolean;
 }
 
