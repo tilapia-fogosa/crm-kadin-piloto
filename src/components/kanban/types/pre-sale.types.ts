@@ -1,5 +1,5 @@
 
-import { PaymentMethod, DueDay, SaleType } from "@/integrations/supabase/types"
+import { PaymentMethod, DueDay, SaleType } from "../types"
 
 export interface PreSaleFormData {
   // Informações do Aluno
@@ -10,6 +10,7 @@ export interface PreSaleFormData {
   
   // Informações da Venda
   sale_type: SaleType
+  unit_id: string
   
   // Matrícula
   enrollment_amount: number
@@ -28,28 +29,4 @@ export interface PreSaleFormData {
   monthly_fee_payment_method: PaymentMethod
   first_monthly_fee_date: string
   monthly_fee_due_day?: DueDay
-}
-
-export interface PaymentSectionProps {
-  title: string
-  amount: number
-  paymentMethod: PaymentMethod | undefined
-  installments: number
-  paymentDate: string
-  onAmountChange: (value: number) => void
-  onPaymentMethodChange: (value: PaymentMethod) => void
-  onInstallmentsChange: (value: number) => void
-  onPaymentDateChange: (value: string) => void
-  showInstallments?: boolean
-}
-
-export interface MonthlyFeeSectionProps {
-  amount: number
-  paymentMethod: PaymentMethod | undefined
-  dueDay: DueDay | undefined
-  firstPaymentDate: string
-  onAmountChange: (value: number) => void
-  onPaymentMethodChange: (value: PaymentMethod) => void
-  onDueDayChange: (value: DueDay) => void
-  onFirstPaymentDateChange: (value: string) => void
 }

@@ -7,6 +7,7 @@ import { PaymentSection } from "./components/sale-form/PaymentSection"
 import { MonthlyFeeSection } from "./components/sale-form/MonthlyFeeSection"
 import { PhotoUpload } from "./components/sale-form/PhotoUpload"
 import { MatriculationMessage } from "./components/attendance/MatriculationMessage"
+import { format } from "date-fns"
 
 interface PreSaleFormProps {
   clientId: string
@@ -42,6 +43,11 @@ export function PreSaleForm({ clientId, clientName, activityId, onComplete }: Pr
     }
   }
 
+  const setTodayDate = (field: 'enrollment_payment_date' | 'material_payment_date' | 'first_monthly_fee_date') => {
+    const today = format(new Date(), 'yyyy-MM-dd')
+    updateForm({ [field]: today })
+  }
+
   return (
     <div className="space-y-6 py-4">
       <MatriculationMessage clientName={clientName} />
@@ -74,6 +80,7 @@ export function PreSaleForm({ clientId, clientName, activityId, onComplete }: Pr
           onPaymentMethodChange={value => updateForm({ enrollment_payment_method: value })}
           onInstallmentsChange={value => updateForm({ enrollment_installments: value })}
           onPaymentDateChange={value => updateForm({ enrollment_payment_date: value })}
+          onTodayClick={() => setTodayDate('enrollment_payment_date')}
           showInstallments={formData.enrollment_payment_method === 'cartao_credito'}
         />
 
@@ -87,6 +94,7 @@ export function PreSaleForm({ clientId, clientName, activityId, onComplete }: Pr
           onPaymentMethodChange={value => updateForm({ material_payment_method: value })}
           onInstallmentsChange={value => updateForm({ material_installments: value })}
           onPaymentDateChange={value => updateForm({ material_payment_date: value })}
+          onTodayClick={() => setTodayDate('material_payment_date')}
           showInstallments={formData.material_payment_method === 'cartao_credito'}
         />
       </div>

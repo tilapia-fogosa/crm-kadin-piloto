@@ -19,14 +19,28 @@ export function usePreSaleForm(clientId: string, activityId: string) {
     
     try {
       setIsLoading(true)
+
+      // Buscar unit_id do cliente
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('unit_id')
+        .eq('id', clientId)
+        .single()
+
+      if (clientError) throw clientError
+      if (!clientData?.unit_id) throw new Error('Cliente sem unidade associada')
       
+      const saleData = {
+        ...formData,
+        client_id: clientId,
+        attendance_activity_id: activityId,
+        unit_id: clientData.unit_id,
+        active: true
+      }
+
       const { data: sale, error } = await supabase
         .from('sales')
-        .insert({
-          ...formData,
-          client_id: clientId,
-          attendance_activity_id: activityId,
-        })
+        .insert(saleData)
         .select()
         .single()
 
