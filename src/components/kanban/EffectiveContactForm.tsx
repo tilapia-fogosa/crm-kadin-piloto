@@ -7,6 +7,7 @@ import { EffectiveContact } from "./types"
 import { useToast } from "@/components/ui/use-toast"
 import { Input } from "@/components/ui/input"
 import { LossModal } from "./components/loss/LossModal"
+import { useLossRegistration } from "./hooks/useLossRegistration"
 
 interface EffectiveContactFormProps {
   onSubmit: (contact: EffectiveContact) => void
@@ -21,6 +22,7 @@ export function EffectiveContactForm({ onSubmit, cardId, onLossSubmit }: Effecti
   const [time, setTime] = useState("")
   const [isLossModalOpen, setIsLossModalOpen] = useState(false)
   const { toast } = useToast()
+  const { registerLoss } = useLossRegistration()
 
   const handleSubmit = () => {
     if (!contactType) {
@@ -71,8 +73,29 @@ export function EffectiveContactForm({ onSubmit, cardId, onLossSubmit }: Effecti
   }
 
   const handleLossConfirm = async (reasons: string[], observations?: string) => {
-    if (onLossSubmit) {
-      onLossSubmit(reasons, observations)
+    console.log('Confirmando perda com motivos:', reasons)
+    if (!contactType) {
+      toast({
+        title: "Erro",
+        description: "Selecione o tipo de contato antes de registrar a perda",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const success = await registerLoss({
+      clientId: cardId,
+      activityType: 'Contato Efetivo',
+      contactType,
+      reasons,
+      observations
+    })
+
+    if (success) {
+      setIsLossModalOpen(false)
+      if (onLossSubmit) {
+        await onLossSubmit(reasons, observations)
+      }
     }
   }
 

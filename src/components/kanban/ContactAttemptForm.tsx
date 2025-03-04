@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -7,6 +6,7 @@ import { ContactAttempt } from "./types"
 import { useToast } from "@/components/ui/use-toast"
 import { Input } from "@/components/ui/input"
 import { LossModal } from "./components/loss/LossModal"
+import { useLossRegistration } from "./hooks/useLossRegistration"
 
 interface ContactAttemptFormProps {
   onSubmit: (attempt: ContactAttempt) => void
@@ -20,6 +20,7 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
   const [time, setTime] = useState("")
   const [isLossModalOpen, setIsLossModalOpen] = useState(false)
   const { toast } = useToast()
+  const { registerLoss } = useLossRegistration()
 
   const handleSubmit = () => {
     console.log('Validando dados da tentativa de contato')
@@ -86,9 +87,28 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
 
   const handleLossConfirm = async (reasons: string[], observations?: string) => {
     console.log('Confirmando perda com motivos:', reasons)
-    if (onLossSubmit) {
-      await onLossSubmit(reasons, observations)
+    if (!contactType) {
+      toast({
+        title: "Erro",
+        description: "Selecione o tipo de contato antes de registrar a perda",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const success = await registerLoss({
+      clientId: cardId,
+      activityType: 'Tentativa de Contato',
+      contactType,
+      reasons,
+      observations
+    })
+
+    if (success) {
       setIsLossModalOpen(false)
+      if (onLossSubmit) {
+        await onLossSubmit(reasons, observations)
+      }
     }
   }
 
