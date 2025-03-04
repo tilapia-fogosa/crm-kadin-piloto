@@ -44,7 +44,13 @@ serve(async (req) => {
       throw new Error('Pelo menos uma unidade deve ser selecionada')
     }
 
-    console.log('Calling create_unit_user RPC')
+    console.log('Calling create_unit_user RPC with params:', {
+      p_email: email,
+      p_full_name: fullName,
+      p_unit_ids: unitIds,
+      p_role: role
+    })
+
     const { data: userId, error: createError } = await supabaseClient.rpc(
       'create_unit_user',
       {

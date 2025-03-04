@@ -1344,25 +1344,15 @@ export type Database = {
         }
         Returns: boolean
       }
-      create_unit_user:
-        | {
-            Args: {
-              p_email: string
-              p_full_name: string
-              p_unit_id: string
-              p_role: Database["public"]["Enums"]["user_role"]
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_email: string
-              p_full_name: string
-              p_unit_ids: string[]
-              p_role: Database["public"]["Enums"]["user_role"]
-            }
-            Returns: string
-          }
+      create_unit_user: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_unit_ids: string[]
+          p_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: string
+      }
       create_unit_user_simple: {
         Args: {
           p_email: string
