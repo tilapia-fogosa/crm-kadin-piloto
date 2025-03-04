@@ -8,25 +8,43 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('Create user function called')
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request')
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    console.log('Initializing Supabase client')
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { email, fullName, role, unitIds } = await req.json()
+    // Log request body for debugging
+    const requestBody = await req.json()
+    console.log('Request body:', requestBody)
 
-    // Validação básica
-    if (!email || !fullName || !role || !unitIds || !Array.isArray(unitIds) || unitIds.length === 0) {
-      throw new Error('Dados inválidos')
+    const { email, fullName, role, unitIds } = requestBody
+
+    // Validação detalhada com logs
+    console.log('Validating input data')
+    if (!email) {
+      throw new Error('Email é obrigatório')
+    }
+    if (!fullName) {
+      throw new Error('Nome completo é obrigatório')
+    }
+    if (!role) {
+      throw new Error('Função é obrigatória')
+    }
+    if (!unitIds || !Array.isArray(unitIds) || unitIds.length === 0) {
+      throw new Error('Pelo menos uma unidade deve ser selecionada')
     }
 
-    // Criar usuário usando a função RPC do banco
+    console.log('Calling create_unit_user RPC')
     const { data: userId, error: createError } = await supabaseClient.rpc(
       'create_unit_user',
       {
@@ -37,7 +55,12 @@ serve(async (req) => {
       }
     )
 
-    if (createError) throw createError
+    if (createError) {
+      console.error('Error in create_unit_user RPC:', createError)
+      throw createError
+    }
+
+    console.log('User created successfully:', userId)
 
     return new Response(
       JSON.stringify({ userId }),
@@ -47,8 +70,12 @@ serve(async (req) => {
       },
     )
   } catch (error) {
+    console.error('Error in create-user function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.details || 'No additional details available'
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

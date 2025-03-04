@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,7 +27,7 @@ import { MultipleUnitSelect } from "./MultipleUnitSelect";
 const formSchema = z.object({
   fullName: z.string().min(1, "Nome é obrigatório"),
   email: z.string().email("Email inválido"),
-  role: z.enum(["consultor", "franqueado", "admin"]),
+  role: z.enum(["consultor", "franqueado", "admin", "educador", "gestor_pedagogico"]),
   unitIds: z.array(z.string()).min(1, "Selecione pelo menos uma unidade"),
 });
 
@@ -47,8 +46,11 @@ export function CreateUserForm() {
   });
 
   const onSubmit = async (values: FormValues) => {
+    console.log('Submitting form with values:', values);
     setLoading(true);
+    
     try {
+      console.log('Calling create-user function');
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
           email: values.email,
@@ -58,8 +60,12 @@ export function CreateUserForm() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error from create-user function:', error);
+        throw error;
+      }
 
+      console.log('User created successfully:', data);
       toast({
         title: "Sucesso",
         description: "Usuário criado com sucesso",
@@ -67,7 +73,7 @@ export function CreateUserForm() {
 
       form.reset();
     } catch (error: any) {
-      console.error("Erro ao criar usuário:", error);
+      console.error('Error creating user:', error);
       toast({
         title: "Erro",
         description: error.message || "Erro ao criar usuário",
@@ -125,6 +131,8 @@ export function CreateUserForm() {
                   <SelectItem value="consultor">Consultor</SelectItem>
                   <SelectItem value="franqueado">Franqueado</SelectItem>
                   <SelectItem value="admin">Administrador</SelectItem>
+                  <SelectItem value="educador">Educador</SelectItem>
+                  <SelectItem value="gestor_pedagogico">Gestor Pedagógico</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
