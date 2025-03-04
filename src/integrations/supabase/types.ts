@@ -1400,7 +1400,7 @@ export type Database = {
       }
       user_has_unit_access: {
         Args: {
-          unit_id: string
+          p_unit_id: string
         }
         Returns: boolean
       }
