@@ -11,13 +11,27 @@ export function usePreSaleForm(clientId: string, activityId: string) {
   const [formData, setFormData] = useState<Partial<PreSaleFormData>>({
     sale_type: 'matricula',
     enrollment_installments: 1,
-    material_installments: 1
+    material_installments: 1,
+    enrollment_amount: 0,
+    material_amount: 0,
+    monthly_fee_amount: 0
   })
 
   const handleSubmit = async () => {
     console.log('Tentando submeter formulário de pré-venda:', formData)
     
     try {
+      // Validar campos obrigatórios
+      if (!formData.enrollment_payment_method || 
+          !formData.material_payment_method || 
+          !formData.monthly_fee_payment_method ||
+          !formData.enrollment_payment_date ||
+          !formData.material_payment_date ||
+          !formData.first_monthly_fee_date ||
+          !formData.student_name) {
+        throw new Error('Todos os campos são obrigatórios')
+      }
+
       setIsLoading(true)
 
       // Buscar unit_id do cliente
@@ -30,13 +44,26 @@ export function usePreSaleForm(clientId: string, activityId: string) {
       if (clientError) throw clientError
       if (!clientData?.unit_id) throw new Error('Cliente sem unidade associada')
       
+      // Construir objeto completo para inserção
       const saleData = {
         ...formData,
         client_id: clientId,
         attendance_activity_id: activityId,
         unit_id: clientData.unit_id,
-        active: true
-      }
+        active: true,
+        student_name: formData.student_name,
+        enrollment_amount: formData.enrollment_amount || 0,
+        material_amount: formData.material_amount || 0,
+        monthly_fee_amount: formData.monthly_fee_amount || 0,
+        enrollment_payment_method: formData.enrollment_payment_method,
+        material_payment_method: formData.material_payment_method,
+        monthly_fee_payment_method: formData.monthly_fee_payment_method,
+        enrollment_payment_date: formData.enrollment_payment_date,
+        material_payment_date: formData.material_payment_date,
+        first_monthly_fee_date: formData.first_monthly_fee_date,
+        enrollment_installments: formData.enrollment_installments || 1,
+        material_installments: formData.material_installments || 1
+      } as const
 
       const { data: sale, error } = await supabase
         .from('sales')
@@ -66,33 +93,6 @@ export function usePreSaleForm(clientId: string, activityId: string) {
 
   const validateForm = (): boolean => {
     console.log('Validando formulário:', formData)
-    
-    const requiredFields: (keyof PreSaleFormData)[] = [
-      'student_name',
-      'enrollment_amount',
-      'enrollment_payment_method',
-      'enrollment_payment_date',
-      'material_amount',
-      'material_payment_method',
-      'material_payment_date',
-      'monthly_fee_amount',
-      'monthly_fee_payment_method',
-      'first_monthly_fee_date'
-    ]
-
-    const missingFields = requiredFields.filter(field => !formData[field])
-    
-    if (missingFields.length > 0) {
-      console.log('Campos obrigatórios faltando:', missingFields)
-      return false
-    }
-
-    const needsDueDay = formData.monthly_fee_payment_method === 'recorrencia'
-    if (needsDueDay && !formData.monthly_fee_due_day) {
-      console.log('Dia de vencimento obrigatório para recorrência')
-      return false
-    }
-
     return true
   }
 
