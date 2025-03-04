@@ -1344,17 +1344,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      create_new_unit_user: {
-        Args: {
-          p_creator_id: string
-          p_user_id: string
-          p_email: string
-          p_full_name: string
-          p_unit_ids: string[]
-          p_role: Database["public"]["Enums"]["user_role"]
-        }
-        Returns: string
-      }
       create_unit_user: {
         Args: {
           p_email: string
@@ -1415,19 +1404,18 @@ export type Database = {
         }
         Returns: boolean
       }
-      retry_failed_webhooks: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      update_unit_user: {
+      manage_user_units: {
         Args: {
           p_creator_id: string
           p_user_id: string
-          p_full_name: string
           p_unit_ids: string[]
           p_role: Database["public"]["Enums"]["user_role"]
         }
         Returns: string
+      }
+      retry_failed_webhooks: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       user_has_unit_access: {
         Args: {

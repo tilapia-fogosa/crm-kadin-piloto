@@ -56,69 +56,38 @@ serve(async (req) => {
       throw new Error('Pelo menos uma unidade deve ser selecionada')
     }
 
-    // Check if user already exists
-    console.log('Checking if user exists:', email)
-    const { data: existingUser, error: existingUserError } = await supabaseAdmin.auth.admin.listUsers()
-    const userExists = existingUser?.users.find(u => u.email === email)
+    // Create new user in auth.users
+    console.log('Creating new user in auth.users')
+    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      password: 'Mudar@123',
+      user_metadata: { full_name: fullName }
+    })
 
-    let userId: string
+    if (createError) {
+      console.error('Error creating user:', createError)
+      throw createError
+    }
 
-    if (!userExists) {
-      // Create new user
-      console.log('Creating new user in auth.users')
-      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        password: 'Mudar@123',
-        user_metadata: { full_name: fullName }
-      })
+    const userId = newUser.user.id
+    console.log('New user created:', userId)
 
-      if (createError) {
-        console.error('Error creating user:', createError)
-        throw createError
+    // Associate user with units using the new simplified function
+    console.log('Associating user with units')
+    const { data: unitData, error: unitError } = await supabaseAdmin.rpc(
+      'manage_user_units',
+      {
+        p_creator_id: creator.id,
+        p_user_id: userId,
+        p_unit_ids: unitIds,
+        p_role: role
       }
+    )
 
-      userId = newUser.user.id
-      console.log('New user created:', userId)
-
-      // Create user profile and unit associations
-      console.log('Creating user profile and unit associations')
-      const { data: profileData, error: profileError } = await supabaseAdmin.rpc(
-        'create_new_unit_user',
-        {
-          p_creator_id: creator.id,
-          p_user_id: userId,
-          p_email: email,
-          p_full_name: fullName,
-          p_unit_ids: unitIds,
-          p_role: role
-        }
-      )
-
-      if (profileError) {
-        console.error('Error in create_new_unit_user:', profileError)
-        throw profileError
-      }
-    } else {
-      // Update existing user
-      userId = userExists.id
-      console.log('Updating existing user:', userId)
-
-      const { error: updateError } = await supabaseAdmin.rpc(
-        'update_unit_user',
-        {
-          p_creator_id: creator.id,
-          p_user_id: userId,
-          p_full_name: fullName,
-          p_unit_ids: unitIds,
-          p_role: role
-        }
-      )
-
-      if (updateError) {
-        console.error('Error in update_unit_user:', updateError)
-        throw updateError
-      }
+    if (unitError) {
+      console.error('Error in manage_user_units:', unitError)
+      throw unitError
     }
 
     console.log('Operation completed successfully')
