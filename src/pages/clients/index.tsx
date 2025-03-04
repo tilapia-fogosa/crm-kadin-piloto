@@ -8,16 +8,23 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { ClientsTable } from "@/components/clients/clients-table"
 import { useLocation } from "react-router-dom"
+import { UnitSelector } from "@/components/UnitSelector"
+import { useUnit } from "@/contexts/UnitContext"
 
 export default function ClientsPage() {
   const [selectedClient, setSelectedClient] = useState<any>(null)
   const [clientToDelete, setClientToDelete] = useState<any>(null)
   const queryClient = useQueryClient()
   const location = useLocation()
+  const { selectedUnitId, isLoading: isLoadingUnit } = useUnit()
 
   const { data: clients, isLoading, refetch } = useQuery({
-    queryKey: ['all-clients'],
+    queryKey: ['all-clients', selectedUnitId],
     queryFn: async () => {
+      if (!selectedUnitId) return [];
+
+      console.log('Fetching clients for unit:', selectedUnitId);
+      
       const { data, error } = await supabase
         .from('clients')
         .select(`
@@ -30,11 +37,13 @@ export default function ClientsPage() {
           created_at
         `)
         .eq('active', true)
+        .eq('unit_id', selectedUnitId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!selectedUnitId
   });
 
   // Refetch data when component mounts or route changes
@@ -130,18 +139,27 @@ export default function ClientsPage() {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-6">Todos os Clientes</h1>
-      <ClientsTable
-        clients={clients || []}
-        selectedClient={selectedClient}
-        clientToDelete={clientToDelete}
-        form={form}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        setSelectedClient={setSelectedClient}
-        setClientToDelete={setClientToDelete}
-        onSubmit={onSubmit}
-      />
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Todos os Clientes</h1>
+        <UnitSelector />
+      </div>
+      {isLoadingUnit ? (
+        <div>Carregando...</div>
+      ) : !selectedUnitId ? (
+        <div>Selecione uma unidade para ver os clientes</div>
+      ) : (
+        <ClientsTable
+          clients={clients || []}
+          selectedClient={selectedClient}
+          clientToDelete={clientToDelete}
+          form={form}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          setSelectedClient={setSelectedClient}
+          setClientToDelete={setClientToDelete}
+          onSubmit={onSubmit}
+        />
+      )}
     </div>
   )
 }

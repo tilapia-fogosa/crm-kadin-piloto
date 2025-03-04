@@ -9,10 +9,12 @@ interface PeriodStats {
   period: '1M' | '3M' | '6M' | '12M'
 }
 
-export function useLeadsStats() {
+export function useLeadsStats(unitId: string | null) {
   return useQuery({
-    queryKey: ['leads-stats'],
+    queryKey: ['leads-stats', unitId],
     queryFn: async () => {
+      if (!unitId) return null;
+      
       const now = new Date()
       
       // Função para buscar leads em um intervalo de datas
@@ -21,6 +23,7 @@ export function useLeadsStats() {
           .from('clients')
           .select('created_at')
           .eq('active', true)
+          .eq('unit_id', unitId)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
 
@@ -65,8 +68,6 @@ export function useLeadsStats() {
         twelveMonths
       }
     },
-    refetchInterval: 5000,
-    staleTime: 4000,
-    refetchOnWindowFocus: false
+    enabled: !!unitId
   })
 }

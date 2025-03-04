@@ -1,22 +1,34 @@
-
 import { UsersIcon } from "lucide-react";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { LeadsChart } from "@/components/dashboard/LeadsChart";
 import LeadsTable from "@/components/leads/LeadsTable";
 import { useLeadsStats } from "@/hooks/useLeadsStats";
 import { RecentContractPhotos } from "@/components/dashboard/RecentContractPhotos";
+import { UnitSelector } from "@/components/UnitSelector";
+import { useUnit } from "@/contexts/UnitContext";
 
 const Index = () => {
-  const { data: stats, isLoading } = useLeadsStats();
+  const { selectedUnitId, isLoading: isLoadingUnit } = useUnit();
+  const { data: stats, isLoading } = useLeadsStats(selectedUnitId);
 
-  if (isLoading) {
+  if (isLoading || isLoadingUnit) {
     return <div className="flex items-center justify-center h-full">Carregando...</div>;
+  }
+
+  if (!selectedUnitId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <p className="mb-4">Selecione uma unidade para ver o dashboard</p>
+        <UnitSelector />
+      </div>
+    );
   }
 
   return (
     <div className="space-y-4 p-6 flex flex-col items-start">
       <div className="flex items-center justify-between w-full">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <UnitSelector />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 w-full">
         <StatsCard
