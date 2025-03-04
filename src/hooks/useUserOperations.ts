@@ -34,28 +34,27 @@ export function useUserOperations() {
   const updateUser = async (userId: string, values: UpdateUserValues) => {
     console.log('Atualizando usuário:', { userId, values });
     try {
-      // Chama a função RPC do Supabase para criar/atualizar usuário
-      const { data: updatedUserId, error: createError } = await supabase.rpc(
-        'create_unit_user',
-        {
-          p_email: values.email,
-          p_full_name: values.full_name,
-          p_unit_ids: values.unitIds,
-          p_role: values.role
+      // Chama a função create-user do Edge
+      const { data: response, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: values.email,
+          fullName: values.full_name,
+          unitIds: values.unitIds,
+          role: values.role
         }
-      );
+      });
 
-      if (createError) {
-        console.error('Erro ao atualizar usuário:', createError);
+      if (error) {
+        console.error('Erro ao atualizar usuário:', error);
         toast({
           title: "Erro",
-          description: createError.message,
+          description: error.message || "Erro ao atualizar usuário",
           variant: "destructive",
         });
         return false;
       }
 
-      console.log('Usuário atualizado com sucesso:', updatedUserId);
+      console.log('Usuário atualizado com sucesso:', response);
       await queryClient.invalidateQueries({ queryKey: ['users'] });
       
       toast({
