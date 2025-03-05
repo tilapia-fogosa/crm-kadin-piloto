@@ -3,13 +3,19 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, endOfMonth } from "date-fns";
 
-interface CommercialStats {
+export interface CommercialUnitStats {
   unit_id: string;
   unit_name: string;
-  total_leads: number;
-  total_attendances: number;
-  total_enrollments: number;
-  conversion_rate: number;
+  new_clients: number;
+  contact_attempts: number;
+  effective_contacts: number;
+  scheduled_visits: number;
+  awaiting_visits: number;
+  completed_visits: number;
+  enrollments: number;
+  ce_conversion_rate: number;
+  ag_conversion_rate: number;
+  at_conversion_rate: number;
 }
 
 export function useCommercialUnitStats(selectedMonth: Date) {
@@ -22,11 +28,11 @@ export function useCommercialUnitStats(selectedMonth: Date) {
       const { data, error } = await supabase
         .from('commercial_unit_stats')
         .select('*')
-        .gte('date', startDate.toISOString())
-        .lte('date', endDate.toISOString());
+        .gte('month_year', startDate.toISOString())
+        .lte('month_year', endDate.toISOString());
 
       if (error) throw error;
-      return data as CommercialStats[];
+      return data as CommercialUnitStats[];
     }
   });
 }

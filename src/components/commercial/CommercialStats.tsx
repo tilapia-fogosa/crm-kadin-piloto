@@ -1,6 +1,6 @@
 
 import { useUnit } from "@/contexts/UnitContext";
-import { useCommercialStats } from "@/hooks/useCommercialStats";
+import { useCommercialUnitStats } from "@/hooks/useCommercialStats";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UnitsTable } from "./tables/UnitsTable";
 import { UsersTable } from "./tables/UsersTable";

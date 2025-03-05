@@ -1,13 +1,13 @@
 
-import { useCommercialUnitStats } from "@/hooks/useCommercialStats";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from "@/components/ui/table";
+import { useCommercialUnitStats } from "@/hooks/useCommercialStats";
 
 interface UnitsTableProps {
   selectedMonth: Date;
@@ -21,29 +21,31 @@ export function UnitsTable({ selectedMonth }: UnitsTableProps) {
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Unidade</TableHead>
-            <TableHead>Leads</TableHead>
-            <TableHead>Atendimentos</TableHead>
-            <TableHead>Matrículas</TableHead>
-            <TableHead>Taxa de Conversão</TableHead>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Unidade</TableHead>
+          <TableHead>Novos Leads</TableHead>
+          <TableHead>Tentativas de Contato</TableHead>
+          <TableHead>Contatos Efetivos</TableHead>
+          <TableHead>Agendamentos</TableHead>
+          <TableHead>Matrículas</TableHead>
+          <TableHead>Taxa de Conversão</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {stats?.map((stat) => (
+          <TableRow key={stat.unit_id}>
+            <TableCell>{stat.unit_name}</TableCell>
+            <TableCell>{stat.new_clients}</TableCell>
+            <TableCell>{stat.contact_attempts}</TableCell>
+            <TableCell>{stat.effective_contacts}</TableCell>
+            <TableCell>{stat.scheduled_visits}</TableCell>
+            <TableCell>{stat.enrollments}</TableCell>
+            <TableCell>{stat.ce_conversion_rate}%</TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {stats?.map((stat) => (
-            <TableRow key={stat.unit_id}>
-              <TableCell>{stat.unit_name}</TableCell>
-              <TableCell>{stat.total_leads}</TableCell>
-              <TableCell>{stat.total_attendances}</TableCell>
-              <TableCell>{stat.total_enrollments}</TableCell>
-              <TableCell>{(stat.conversion_rate * 100).toFixed(1)}%</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
