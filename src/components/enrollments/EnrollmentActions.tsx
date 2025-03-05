@@ -31,7 +31,7 @@ export function EnrollmentActions({ enrollment }: EnrollmentActionsProps) {
         className="flex items-center gap-2"
       >
         <Pencil className="h-4 w-4" />
-        Continuar Cadastro
+        {enrollment.status === 'pre_matricula' ? 'Continuar Cadastro' : 'Editar Cadastro'}
       </Button>
     </div>
   );

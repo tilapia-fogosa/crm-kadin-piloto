@@ -31,7 +31,7 @@ export function useEnrollments() {
         `)
         .eq('unit_id', selectedUnitId)
         .eq('active', true)
-        .eq('status', 'pre_matricula')
+        .in('status', ['pre_matricula', 'matricula_completa'])
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -39,14 +39,11 @@ export function useEnrollments() {
         throw error;
       }
 
-      // Transformar apenas birth_date para Date, manter created_at e updated_at como string
-      const transformedStudents = students.map(student => ({
+      console.log('Matrículas encontradas:', students);
+      return students.map(student => ({
         ...student,
         birth_date: student.birth_date ? new Date(student.birth_date) : null,
       }));
-
-      console.log('Matrículas encontradas:', transformedStudents);
-      return transformedStudents;
     },
     enabled: !!selectedUnitId
   });
