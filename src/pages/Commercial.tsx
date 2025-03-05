@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, getYear, setYear, setMonth } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useCommercialStats } from "@/hooks/useCommercialStats";
 
 const MONTHS = [
   { value: "0", label: "Janeiro" },
@@ -43,104 +42,12 @@ export default function CommercialPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().getMonth().toString());
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
 
-  const { data: unitStats, isLoading: isLoadingUnits } = useQuery({
-    queryKey: ['commercial-stats-units', selectedMonth, selectedYear],
-    queryFn: async () => {
-      const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
-      const endDate = endOfMonth(startDate);
-
-      console.log('Buscando estatísticas por unidade:', { startDate, endDate });
-
-      const { data, error } = await supabase
-        .from('commercial_unit_stats')
-        .select('*')
-        .gte('month_year', startDate.toISOString())
-        .lte('month_year', endDate.toISOString());
-
-      if (error) throw error;
-      
-      return data.map(stat => ({
-        id: stat.unit_id,
-        name: stat.unit_name,
-        newClients: stat.new_clients,
-        contactAttempts: stat.contact_attempts,
-        effectiveContacts: stat.effective_contacts,
-        ceConversionRate: stat.ce_conversion_rate,
-        scheduledVisits: stat.scheduled_visits,
-        agConversionRate: stat.ag_conversion_rate,
-        awaitingVisits: stat.awaiting_visits,
-        completedVisits: stat.completed_visits,
-        atConversionRate: stat.at_conversion_rate,
-        enrollments: stat.enrollments
-      }));
-    }
-  });
-
-  const { data: userStats, isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['commercial-stats-users', selectedMonth, selectedYear],
-    queryFn: async () => {
-      const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
-      const endDate = endOfMonth(startDate);
-
-      console.log('Buscando estatísticas por usuário:', { startDate, endDate });
-
-      const { data, error } = await supabase
-        .from('commercial_user_stats')
-        .select('*')
-        .gte('month_year', startDate.toISOString())
-        .lte('month_year', endDate.toISOString());
-
-      if (error) throw error;
-      
-      return data.map(stat => ({
-        id: stat.user_id,
-        name: stat.user_name,
-        newClients: stat.new_clients,
-        contactAttempts: stat.contact_attempts,
-        effectiveContacts: stat.effective_contacts,
-        ceConversionRate: stat.ce_conversion_rate,
-        scheduledVisits: stat.scheduled_visits,
-        agConversionRate: stat.ag_conversion_rate,
-        awaitingVisits: stat.awaiting_visits,
-        completedVisits: stat.completed_visits,
-        atConversionRate: stat.at_conversion_rate,
-        enrollments: stat.enrollments
-      }));
-    }
-  });
-
-  const { data: sourceStats, isLoading: isLoadingSources } = useQuery({
-    queryKey: ['commercial-stats-sources', selectedMonth, selectedYear],
-    queryFn: async () => {
-      const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
-      const endDate = endOfMonth(startDate);
-
-      console.log('Buscando estatísticas por origem:', { startDate, endDate });
-
-      const { data, error } = await supabase
-        .from('commercial_source_stats')
-        .select('*')
-        .gte('month_year', startDate.toISOString())
-        .lte('month_year', endDate.toISOString());
-
-      if (error) throw error;
-      
-      return data.map(stat => ({
-        id: stat.lead_source,
-        name: stat.source_name,
-        newClients: stat.new_clients,
-        contactAttempts: stat.contact_attempts,
-        effectiveContacts: stat.effective_contacts,
-        ceConversionRate: stat.ce_conversion_rate,
-        scheduledVisits: stat.scheduled_visits,
-        agConversionRate: stat.ag_conversion_rate,
-        awaitingVisits: stat.awaiting_visits,
-        completedVisits: stat.completed_visits,
-        atConversionRate: stat.at_conversion_rate,
-        enrollments: stat.enrollments
-      }));
-    }
-  });
+  const { 
+    unitStats, 
+    userStats, 
+    sourceStats, 
+    isLoading 
+  } = useCommercialStats(selectedMonth, selectedYear);
 
   const renderTable = (title: string, data: CommercialStats[] | undefined, isLoading: boolean) => (
     <div className="mt-6">
@@ -227,9 +134,9 @@ export default function CommercialPage() {
           </div>
         </div>
 
-        {renderTable("Dados por Unidade", unitStats, isLoadingUnits)}
-        {renderTable("Dados por Usuário", userStats, isLoadingUsers)}
-        {renderTable("Dados por Origem", sourceStats, isLoadingSources)}
+        {renderTable("Dados por Unidade", unitStats, isLoading)}
+        {renderTable("Dados por Usuário", userStats, isLoading)}
+        {renderTable("Dados por Origem", sourceStats, isLoading)}
       </div>
     </div>
   );
