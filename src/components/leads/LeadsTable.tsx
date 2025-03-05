@@ -1,9 +1,9 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useUnit } from "@/contexts/UnitContext";
 
 interface Lead {
   id: string;
@@ -17,10 +17,18 @@ interface Lead {
 }
 
 export default function LeadsTable() {
+  const { selectedUnitId } = useUnit();
+  
   const { data: leads, isLoading } = useQuery({
-    queryKey: ['recent-leads'],
+    queryKey: ['recent-leads', selectedUnitId],
     queryFn: async () => {
-      // Buscar os 10 leads mais recentes que estão ativos
+      console.log('Buscando leads recentes para unidade:', selectedUnitId);
+      
+      if (!selectedUnitId) {
+        console.log('Nenhuma unidade selecionada para leads recentes');
+        return [];
+      }
+
       const { data: clients, error: clientsError } = await supabase
         .from('clients')
         .select(`
@@ -33,17 +41,20 @@ export default function LeadsTable() {
           )
         `)
         .eq('active', true)
+        .eq('unit_id', selectedUnitId)
         .order('created_at', { ascending: false })
         .limit(10);
 
       if (clientsError) throw clientsError;
 
-      // Processar os dados para obter a última atividade de cada lead
+      console.log('Leads recentes encontrados:', clients?.length);
+
       return clients.map(client => ({
         ...client,
         last_activity: client.client_activities?.[0]?.created_at || client.created_at
       }));
     },
+    enabled: !!selectedUnitId,
     refetchInterval: 5000
   });
 

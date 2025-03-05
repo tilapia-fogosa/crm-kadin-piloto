@@ -1,19 +1,17 @@
-
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { subMonths, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useUnit } from "@/contexts/UnitContext";
 
-// Mapa de cores fixas para origens específicas
 const sourceColors: Record<string, string> = {
-  facebook: "#3b5998", // Azul do Facebook
-  instagram: "#e1306c", // Rosa do Instagram
-  indicacao: "#F97316", // Laranja para Indicação
+  facebook: "#3b5998",
+  instagram: "#e1306c",
+  indicacao: "#F97316",
 };
 
-// Função para gerar uma cor HSL aleatória para outras origens
 const getColorForSource = (source: string, index: number) => {
   if (source.toLowerCase() in sourceColors) {
     return sourceColors[source.toLowerCase()];
@@ -22,23 +20,36 @@ const getColorForSource = (source: string, index: number) => {
 };
 
 export function LeadsChart() {
+  const { selectedUnitId } = useUnit();
+  
   const { data, isLoading } = useQuery({
-    queryKey: ['leads-by-month-and-source'],
+    queryKey: ['leads-by-month-and-source', selectedUnitId],
     queryFn: async () => {
+      console.log('Buscando leads do gráfico para unidade:', selectedUnitId);
+      
+      if (!selectedUnitId) {
+        console.log('Nenhuma unidade selecionada para o gráfico');
+        return { data: [], sources: [] };
+      }
+
       const now = new Date();
       const sixMonthsAgo = subMonths(now, 6);
 
-      // Buscar leads dos últimos 6 meses
       const { data: leads, error } = await supabase
         .from('clients')
         .select('created_at, lead_source')
         .eq('active', true)
+        .eq('unit_id', selectedUnitId)
         .gte('created_at', sixMonthsAgo.toISOString())
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar leads para o gráfico:', error);
+        throw error;
+      }
 
-      // Agrupar leads por mês e origem
+      console.log('Leads encontrados para o gráfico:', leads?.length);
+
       const leadsByMonth = leads?.reduce((acc: any, lead) => {
         const date = new Date(lead.created_at);
         const monthKey = format(date, 'MMM/yy', { locale: ptBR });
@@ -54,10 +65,8 @@ export function LeadsChart() {
         return acc;
       }, {});
 
-      // Converter para array e formatar para o Recharts
       const chartData = Object.values(leadsByMonth || {});
       
-      // Obter todas as origens únicas para criar as barras empilhadas
       const allSources = Array.from(
         new Set(
           leads?.map(lead => lead.lead_source || 'outros') || []
@@ -69,8 +78,9 @@ export function LeadsChart() {
         sources: allSources
       };
     },
-    staleTime: 60 * 60 * 1000, // 1 hora
-    refetchOnWindowFocus: false
+    staleTime: 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    enabled: !!selectedUnitId
   });
 
   if (isLoading) {

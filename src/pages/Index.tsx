@@ -3,7 +3,6 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { LeadsChart } from "@/components/dashboard/LeadsChart";
 import LeadsTable from "@/components/leads/LeadsTable";
 import { useLeadsStats } from "@/hooks/useLeadsStats";
-import { RecentContractPhotos } from "@/components/dashboard/RecentContractPhotos";
 import { UnitSelector } from "@/components/UnitSelector";
 import { useUnit } from "@/contexts/UnitContext";
 
@@ -60,11 +59,8 @@ const Index = () => {
           description="Comparado aos 12 meses anteriores"
         />
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 w-full">
-        <div className="col-span-2 lg:col-span-4">
-          <LeadsChart />
-        </div>
-        <RecentContractPhotos />
+      <div className="w-full">
+        <LeadsChart />
       </div>
       <div className="w-full">
         <div className="flex items-center justify-between space-y-2">
