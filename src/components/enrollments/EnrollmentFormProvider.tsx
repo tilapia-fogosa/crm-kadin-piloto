@@ -1,21 +1,8 @@
 
-import React, { createContext, useContext, useState } from 'react';
-import { Student } from '@/types/enrollment';
+import React, { createContext, useContext } from 'react';
+import { EnrollmentFormContextType } from './types/enrollment-form.types';
+import { useEnrollmentFormState } from './hooks/useEnrollmentFormState';
 import { useClientPreFill } from './hooks/useClientPreFill';
-
-interface EnrollmentFormState {
-  currentStep: number;
-  formData: Partial<Student>;
-  clientId?: string;
-}
-
-interface EnrollmentFormContextType {
-  state: EnrollmentFormState;
-  setCurrentStep: (step: number) => void;
-  updateFormData: (data: Partial<Student>) => void;
-  setClientId: (id: string) => void;
-  resetForm: () => void;
-}
 
 const EnrollmentFormContext = createContext<EnrollmentFormContextType | undefined>(undefined);
 
@@ -26,52 +13,13 @@ export function EnrollmentFormProvider({
   children: React.ReactNode;
   initialClientId?: string;
 }) {
-  const [state, setState] = useState<EnrollmentFormState>({
-    currentStep: 0,
-    formData: {},
-    clientId: initialClientId
-  });
-
-  // Use the pre-fill hook
-  useClientPreFill(state.clientId);
+  const formState = useEnrollmentFormState(initialClientId);
   
-  console.log('EnrollmentFormProvider state:', state);
-
-  const setCurrentStep = (step: number) => {
-    console.log('Setting current step to:', step);
-    setState(prev => ({ ...prev, currentStep: step }));
-  };
-
-  const updateFormData = (data: Partial<Student>) => {
-    console.log('Updating form data:', data);
-    setState(prev => ({
-      ...prev,
-      formData: { ...prev.formData, ...data }
-    }));
-  };
-
-  const setClientId = (id: string) => {
-    console.log('Setting client ID:', id);
-    setState(prev => ({ ...prev, clientId: id }));
-  };
-
-  const resetForm = () => {
-    console.log('Resetting form');
-    setState({
-      currentStep: 0,
-      formData: {},
-      clientId: undefined
-    });
-  };
+  // Use the pre-fill hook
+  useClientPreFill(formState.state.clientId);
 
   return (
-    <EnrollmentFormContext.Provider value={{
-      state,
-      setCurrentStep,
-      updateFormData,
-      setClientId,
-      resetForm
-    }}>
+    <EnrollmentFormContext.Provider value={formState}>
       {children}
     </EnrollmentFormContext.Provider>
   );
