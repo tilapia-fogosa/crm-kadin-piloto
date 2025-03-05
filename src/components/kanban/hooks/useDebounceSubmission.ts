@@ -12,11 +12,20 @@ export function useDebounceSubmission({ debounceMs = 5000 }: UseDebounceSubmissi
   const canSubmit = useCallback(() => {
     const now = Date.now();
     const timeSinceLastSubmission = now - lastSubmissionTime.current;
-    return !isProcessing && timeSinceLastSubmission > debounceMs;
+    const result = !isProcessing && timeSinceLastSubmission > debounceMs;
+    
+    console.log('Verificando se pode submeter:', {
+      isProcessing,
+      timeSinceLastSubmission,
+      debounceMs,
+      canSubmit: result
+    });
+    
+    return result;
   }, [isProcessing, debounceMs]);
 
   const wrapSubmission = useCallback(async <T>(submissionFn: () => Promise<T>) => {
-    console.log('Verificando se pode submeter...');
+    console.log('Iniciando wrapSubmission');
     
     if (!canSubmit()) {
       console.log('Submissão bloqueada - muito cedo ou já processando');
@@ -24,18 +33,20 @@ export function useDebounceSubmission({ debounceMs = 5000 }: UseDebounceSubmissi
     }
 
     try {
+      console.log('Definindo estado para processando...');
       setIsProcessing(true);
       lastSubmissionTime.current = Date.now();
-      console.log('Iniciando submissão');
       
+      console.log('Executando função de submissão');
       const result = await submissionFn();
       
-      console.log('Submissão concluída com sucesso');
+      console.log('Submissão concluída com sucesso:', result);
       return result;
     } catch (error) {
       console.error('Erro durante submissão:', error);
       throw error;
     } finally {
+      console.log('Finalizando processamento');
       setIsProcessing(false);
     }
   }, [canSubmit]);

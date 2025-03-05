@@ -27,7 +27,8 @@ export function useAttendanceSubmission() {
   }) => {
     return wrapSubmission(async () => {
       try {
-        console.log('Iniciando processo de atendimento:', {
+        console.log('Iniciando submissão de atendimento:', {
+          cardId,
           result,
           qualityScore,
           selectedReasons,
@@ -44,12 +45,15 @@ export function useAttendanceSubmission() {
           updated_at: new Date().toISOString()
         }
 
-        console.log('Atualizando cliente com dados:', updateData)
+        console.log('Tentando atualizar cliente com dados:', updateData)
 
-        const { error: updateError } = await supabase
+        const { error: updateError, data: updateResult } = await supabase
           .from('clients')
           .update(updateData)
           .eq('id', cardId)
+          .select()
+
+        console.log('Resultado da atualização do cliente:', { updateResult, updateError })
 
         if (updateError) {
           console.error('Erro ao atualizar cliente:', updateError)
@@ -58,17 +62,23 @@ export function useAttendanceSubmission() {
 
         // Se for perdido, registrar motivos
         if (result === 'perdido' && selectedReasons?.length) {
+          console.log('Registrando motivos da perda:', {
+            clientId: cardId,
+            reasons: selectedReasons
+          })
+
           const reasonEntries = selectedReasons.map(reasonId => ({
             client_id: cardId,
             reason_id: reasonId,
             observations: observations || null
           }))
 
-          console.log('Registrando motivos da perda:', reasonEntries)
-
-          const { error: reasonsError } = await supabase
+          const { error: reasonsError, data: reasonsResult } = await supabase
             .from('client_loss_reasons')
             .insert(reasonEntries)
+            .select()
+
+          console.log('Resultado do registro de motivos:', { reasonsResult, reasonsError })
 
           if (reasonsError) {
             console.error('Erro ao registrar motivos:', reasonsError)
@@ -77,7 +87,9 @@ export function useAttendanceSubmission() {
         }
 
         // Registra a atividade
-        const { error: activityError } = await supabase
+        console.log('Registrando atividade de atendimento')
+
+        const { error: activityError, data: activityResult } = await supabase
           .from('client_activities')
           .insert({
             client_id: cardId,
@@ -86,11 +98,16 @@ export function useAttendanceSubmission() {
             notes: observations || null,
             created_by: (await supabase.auth.getSession()).data.session?.user.id
           })
+          .select()
+
+        console.log('Resultado do registro de atividade:', { activityResult, activityError })
 
         if (activityError) {
           console.error('Erro ao registrar atividade:', activityError)
           throw activityError
         }
+
+        console.log('Atendimento registrado com sucesso')
 
         toast({
           title: "Atendimento registrado",
