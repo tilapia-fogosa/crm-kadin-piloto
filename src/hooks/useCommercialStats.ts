@@ -119,11 +119,20 @@ export const useCommercialStats = (month: string, year: string) => {
     queryFn: async () => {
       console.log('Buscando dados comerciais:', { month, year });
 
+      // Convert string values to numbers and handle invalid values
+      const monthNum = parseInt(month, 10);
+      const yearNum = parseInt(year, 10);
+
+      if (isNaN(monthNum) || isNaN(yearNum)) {
+        console.error('Invalid month or year values:', { month, year });
+        throw new Error('Invalid month or year values');
+      }
+
       const { data, error } = await supabase
         .from('commercial_activities_data')
         .select('*')
-        .eq('month', month)
-        .eq('year', year);
+        .eq('month', monthNum)
+        .eq('year', yearNum);
 
       if (error) {
         console.error('Erro ao buscar dados:', error);
