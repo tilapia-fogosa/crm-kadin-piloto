@@ -1,107 +1,163 @@
-import React from "react";
+import { useEffect, useState } from "react";
+import { useLocation, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  CalendarIcon,
-  HomeIcon,
-  KanbanIcon,
-  LineChart,
-  Settings,
-  User2,
+  KanbanSquare,
   Users,
+  FileCode,
+  Menu,
+  Plus,
+  Link2,
+  LogOut,
+  DollarSign,
 } from "lucide-react";
-import { MainNavItem, SidebarNavItem } from "@/types/navigation";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Link } from "react-router-dom";
-import { useAuthState } from "@/hooks/useAuthState";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { useSidebar } from "./ui/sidebar";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-interface MenuItemProps {
-  href: string;
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  children: React.ReactNode;
-}
-
-function MenuItem({ href, icon: Icon, children }: MenuItemProps) {
-  return (
-    <Link to={href}>
-      <div className="flex items-center space-x-2 rounded-md p-2 hover:bg-secondary">
-        <Icon className="h-4 w-4" />
-        <span className="text-sm font-medium leading-none">{children}</span>
-      </div>
-    </Link>
-  );
-}
-
-interface MenuSectionProps {
-  title: string;
-  items: SidebarNavItem[];
-}
-
-function MenuSection({ title, items }: MenuSectionProps) {
-  return (
-    <Accordion type="single" collapsible className="w-full">
-      <AccordionItem value={title}>
-        <AccordionTrigger className="text-sm font-medium">{title}</AccordionTrigger>
-        <AccordionContent>
-          <div className="grid gap-1 pl-4">
-            {items.map((item) => (
-              <Link key={item.href} to={item.href}>
-                <div className="flex items-center space-x-2 rounded-md p-2 hover:bg-secondary">
-                  {item.icon && React.createElement(item.icon, { className: "h-4 w-4" })}
-                  <span className="text-sm font-medium leading-none">{item.title}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
-  );
-}
-
-interface AppSidebarProps {
-  mainNav?: MainNavItem[]
-  sidebarNav?: SidebarNavItem[]
-}
+const navigation = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Painel do Consultor", href: "/kanban", icon: KanbanSquare },
+  { 
+    name: "Clientes", 
+    href: "/clients", 
+    icon: Users,
+    subItems: [
+      { name: "Novo Cliente", href: "/clients/new", icon: Plus },
+      { name: "Origens", href: "/clients/sources", icon: Link2 }
+    ]
+  },
+  { name: "Vendas", href: "/sales", icon: DollarSign },
+  { name: "Usuários", href: "/users", icon: Users },
+  { name: "API Docs", href: "/api-docs", icon: FileCode },
+];
 
 export function AppSidebar() {
-  const { user } = useAuthState();
+  const { openMobile, setOpenMobile } = useSidebar();
+  const location = useLocation();
+  const [isClient, setIsClient] = useState(false);
+  const { toast } = useToast();
 
-  const isFranqueado = user?.role === 'franqueado';
-  const isAdmin = user?.role === 'admin';
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-  return (
-    <div className="flex h-full min-w-[200px] flex-col border-r bg-secondary/50 py-4">
-      <Link to="/" className="px-6">
-        <div className="flex items-center space-x-2">
-          <LayoutDashboard className="h-4 w-4" />
-          <span className="text-sm font-bold">Painel</span>
-        </div>
-      </Link>
-      <Separator className="my-2 space-y-10" />
-      <ScrollArea className="h-[calc(100vh-4rem)] py-6">
-        <div className="space-y-1">
-          <MenuItem href="/" icon={HomeIcon}>Dashboard</MenuItem>
-          <MenuItem href="/kanban" icon={KanbanIcon}>Kanban</MenuItem>
-          <MenuItem href="/agenda" icon={CalendarIcon}>Agenda</MenuItem>
-          <MenuItem href="/commercial" icon={LineChart}>Gestão Comercial</MenuItem>
-          {isAdmin && (
-            <>
-              <Separator className="my-2" />
-              <p className="px-6 text-sm font-semibold">Administração</p>
-              <MenuItem href="/users" icon={Users}>Usuários</MenuItem>
-            </>
-          )}
-          {isFranqueado && (
-            <>
-              <Separator className="my-2" />
-              <p className="px-6 text-sm font-semibold">Gerenciamento</p>
-              <MenuItem href="/leads" icon={User2}>Leads</MenuItem>
-            </>
-          )}
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Erro ao fazer logout",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Logout realizado com sucesso",
+        description: "Redirecionando para a página de login...",
+      });
+    }
+  };
+
+  const sidebar = (
+    <div className="flex h-full flex-col gap-4">
+      <div className="flex h-[60px] items-center px-6 bg-[#311D64]">
+        <img
+          className="h-8 w-auto"
+          src="/lovable-uploads/c9bc0aec-0f40-468c-8c5e-24cb91ff0918.png"
+          alt="Kad Logo"
+        />
+      </div>
+      <ScrollArea className="flex-1 overflow-hidden">
+        <div className="space-y-4 px-4">
+          <div className="space-y-1">
+            {navigation.map((item) => (
+              <div key={item.name}>
+                <Button
+                  variant={location.pathname === item.href ? "secondary" : "ghost"}
+                  className={cn(
+                    "w-full justify-start text-white",
+                    "hover:bg-[#FF6B00] hover:text-white transition-colors duration-200",
+                    location.pathname === item.href && "bg-white/20 text-white hover:bg-[#FF6B00]"
+                  )}
+                  asChild
+                >
+                  <Link to={item.href}>
+                    <item.icon className="mr-2 h-5 w-5" />
+                    {item.name}
+                  </Link>
+                </Button>
+                
+                {item.subItems && (
+                  <div className="ml-4 mt-1 space-y-1">
+                    {item.subItems.map((subItem) => (
+                      <Button
+                        key={subItem.name}
+                        variant={location.pathname === subItem.href ? "secondary" : "ghost"}
+                        className={cn(
+                          "w-full justify-start text-sm text-white",
+                          "hover:bg-[#FF6B00] hover:text-white transition-colors duration-200",
+                          location.pathname === subItem.href && "bg-white/20 text-white hover:bg-[#FF6B00]"
+                        )}
+                        asChild
+                      >
+                        <Link to={subItem.href}>
+                          <subItem.icon className="mr-2 h-4 w-4" />
+                          {subItem.name}
+                        </Link>
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </ScrollArea>
+      <div className="p-4 border-t border-white/10">
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start text-white",
+            "hover:bg-[#FF6B00] hover:text-white transition-colors duration-200"
+          )}
+          onClick={handleLogout}
+        >
+          <LogOut className="mr-2 h-5 w-5" />
+          Sair
+        </Button>
+      </div>
     </div>
+  );
+
+  if (!isClient) {
+    return null;
+  }
+
+  return (
+    <>
+      <Sheet open={openMobile} onOpenChange={setOpenMobile}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            className="md:hidden fixed z-50 left-4 top-4"
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-60 p-0 bg-[#311D64]">
+          {sidebar}
+        </SheetContent>
+      </Sheet>
+      <div className="hidden bg-[#311D64] md:block w-60 fixed h-full z-40">
+        {sidebar}
+      </div>
+      <div className="hidden md:block w-60">
+        {/* Espaçador para compensar a sidebar fixa */}
+      </div>
+    </>
   );
 }
