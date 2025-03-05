@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client"
 import { Student, StudentFormData } from "../types"
 import { useToast } from "@/components/ui/use-toast"
 import { format } from "date-fns"
+import { useUnit } from "@/contexts/UnitContext"
 
 export function useStudent() {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+  const { selectedUnitId } = useUnit()
 
   const createStudent = async (clientId: string, data: StudentFormData) => {
     console.log('Iniciando criação do estudante:', { clientId, data })
@@ -16,12 +18,14 @@ export function useStudent() {
       // Obter o usuário atual
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Usuário não autenticado')
+      if (!selectedUnitId) throw new Error('Nenhuma unidade selecionada')
 
       // Preparar dados do estudante
       const studentData = {
         ...data,
         birth_date: format(data.birth_date, 'yyyy-MM-dd'),
         client_id: clientId,
+        unit_id: selectedUnitId,
         created_by: user.id,
         active: true,
         cpf: data.cpf.replace(/\D/g, '') // Remove caracteres não numéricos
@@ -53,7 +57,9 @@ export function useStudent() {
 
       const student: Student = {
         ...newStudent,
-        birth_date: new Date(newStudent.birth_date)
+        birth_date: new Date(newStudent.birth_date),
+        created_at: new Date(newStudent.created_at),
+        updated_at: new Date(newStudent.updated_at)
       }
 
       console.log('Estudante criado com sucesso:', student)

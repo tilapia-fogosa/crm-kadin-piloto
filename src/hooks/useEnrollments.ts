@@ -36,8 +36,21 @@ export function useEnrollments() {
         throw error;
       }
 
-      console.log('Matrículas encontradas:', students);
-      return students;
+      // Transformar os dados para o formato correto
+      const transformedStudents = students.map(student => ({
+        ...student,
+        birth_date: new Date(student.birth_date),
+        created_at: new Date(student.created_at),
+        updated_at: new Date(student.updated_at)
+      }));
+
+      console.log('Matrículas encontradas:', transformedStudents);
+      return transformedStudents as (Student & {
+        clients: {
+          lead_source: string;
+          phone_number: string;
+        };
+      })[];
     },
     enabled: !!selectedUnitId
   });
