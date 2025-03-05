@@ -233,6 +233,13 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "client_activities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_activities_data"
+            referencedColumns: ["client_id"]
+          },
         ]
       }
       client_loss_reasons: {
@@ -264,6 +271,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_loss_reasons_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_activities_data"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "client_loss_reasons_reason_id_fkey"
@@ -1006,6 +1020,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sales_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_activities_data"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "sales_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
@@ -1232,6 +1253,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_activities_data"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "students_unit_id_fkey"
@@ -1533,6 +1561,39 @@ export type Database = {
       }
     }
     Views: {
+      commercial_activities_data: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          lead_source: string | null
+          month: number | null
+          scheduled_date: string | null
+          source_name: string | null
+          status: string | null
+          tipo_atividade: string | null
+          unit_id: string | null
+          unit_name: string | null
+          user_id: string | null
+          user_name: string | null
+          year: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_lead_source_fkey"
+            columns: ["lead_source"]
+            isOneToOne: false
+            referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commercial_source_stats: {
         Row: {
           ag_conversion_rate: number | null
@@ -1684,6 +1745,12 @@ export type Database = {
       retry_failed_webhooks: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      user_has_access_to_unit: {
+        Args: {
+          unit_id: string
+        }
+        Returns: boolean
       }
       user_has_unit_access: {
         Args: {
