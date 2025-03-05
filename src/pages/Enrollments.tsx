@@ -6,10 +6,14 @@ import { EnrollmentsTable } from "@/components/enrollments/EnrollmentsTable";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useUnit } from "@/contexts/UnitContext";
+import { EnrollmentFormProvider } from "@/components/enrollments/EnrollmentFormProvider";
+import { EnrollmentFormSteps } from "@/components/enrollments/EnrollmentFormSteps";
+import { useState } from "react";
 
 export default function EnrollmentsPage() {
   const { selectedUnitId } = useUnit();
   const { data: enrollments, isLoading } = useEnrollments();
+  const [isCreating, setIsCreating] = useState(false);
 
   if (!selectedUnitId) {
     return (
@@ -20,13 +24,29 @@ export default function EnrollmentsPage() {
     );
   }
 
+  if (isCreating) {
+    return (
+      <div className="container mx-auto py-10">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Nova Matrícula</h1>
+          <Button variant="outline" onClick={() => setIsCreating(false)}>
+            Voltar
+          </Button>
+        </div>
+        <EnrollmentFormProvider>
+          <EnrollmentFormSteps />
+        </EnrollmentFormProvider>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-10">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Matrículas</h1>
         <div className="flex items-center gap-4">
           <UnitSelector />
-          <Button>
+          <Button onClick={() => setIsCreating(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Nova Matrícula
           </Button>

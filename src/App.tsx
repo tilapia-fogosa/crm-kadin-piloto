@@ -66,6 +66,7 @@ function App() {
                 <Route path="/clients/sources" element={<LeadSourcesPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/enrollments" element={<EnrollmentsPage />} />
+                <Route path="/sales" element={<EnrollmentsPage />} />
                 <Route path="/api-docs" element={<ApiDocsPage />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
