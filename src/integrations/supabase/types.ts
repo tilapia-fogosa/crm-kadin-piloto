@@ -1134,20 +1134,20 @@ export type Database = {
       students: {
         Row: {
           active: boolean
-          address_city: string
+          address_city: string | null
           address_complement: string | null
-          address_neighborhood: string
-          address_number: string
-          address_postal_code: string
-          address_state: string
-          address_street: string
+          address_neighborhood: string | null
+          address_number: string | null
+          address_postal_code: string | null
+          address_state: string | null
+          address_street: string | null
           alternative_phone: string | null
           birth_city: string | null
-          birth_date: string
+          birth_date: string | null
           birth_state: string | null
           client_id: string
           commercial_data_completed: boolean | null
-          cpf: string
+          cpf: string | null
           created_at: string
           created_by: string | null
           education_level: string | null
@@ -1172,20 +1172,20 @@ export type Database = {
         }
         Insert: {
           active?: boolean
-          address_city: string
+          address_city?: string | null
           address_complement?: string | null
-          address_neighborhood: string
-          address_number: string
-          address_postal_code: string
-          address_state: string
-          address_street: string
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          address_street?: string | null
           alternative_phone?: string | null
           birth_city?: string | null
-          birth_date: string
+          birth_date?: string | null
           birth_state?: string | null
           client_id: string
           commercial_data_completed?: boolean | null
-          cpf: string
+          cpf?: string | null
           created_at?: string
           created_by?: string | null
           education_level?: string | null
@@ -1210,20 +1210,20 @@ export type Database = {
         }
         Update: {
           active?: boolean
-          address_city?: string
+          address_city?: string | null
           address_complement?: string | null
-          address_neighborhood?: string
-          address_number?: string
-          address_postal_code?: string
-          address_state?: string
-          address_street?: string
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          address_street?: string | null
           alternative_phone?: string | null
           birth_city?: string | null
-          birth_date?: string
+          birth_date?: string | null
           birth_state?: string | null
           client_id?: string
           commercial_data_completed?: boolean | null
-          cpf?: string
+          cpf?: string | null
           created_at?: string
           created_by?: string | null
           education_level?: string | null
