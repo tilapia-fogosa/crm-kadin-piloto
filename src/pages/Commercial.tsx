@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -44,7 +43,6 @@ export default function CommercialPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().getMonth().toString());
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
 
-  // Fetch stats by unit
   const { data: unitStats, isLoading: isLoadingUnits } = useQuery({
     queryKey: ['commercial-stats-units', selectedMonth, selectedYear],
     queryFn: async () => {
@@ -78,7 +76,6 @@ export default function CommercialPage() {
     }
   });
 
-  // Fetch stats by user
   const { data: userStats, isLoading: isLoadingUsers } = useQuery({
     queryKey: ['commercial-stats-users', selectedMonth, selectedYear],
     queryFn: async () => {
@@ -112,7 +109,6 @@ export default function CommercialPage() {
     }
   });
 
-  // Fetch stats by source
   const { data: sourceStats, isLoading: isLoadingSources } = useQuery({
     queryKey: ['commercial-stats-sources', selectedMonth, selectedYear],
     queryFn: async () => {
@@ -130,7 +126,7 @@ export default function CommercialPage() {
       if (error) throw error;
       
       return data.map(stat => ({
-        id: stat.source_id,
+        id: stat.lead_source,
         name: stat.source_name,
         newClients: stat.new_clients,
         contactAttempts: stat.contact_attempts,
