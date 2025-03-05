@@ -7,9 +7,10 @@ import { cn } from "@/lib/utils"
 interface LossReasonSelectProps {
   selectedReasons: string[]
   onSelectReason: (reasonId: string) => void
+  disabled?: boolean
 }
 
-export function LossReasonSelect({ selectedReasons, onSelectReason }: LossReasonSelectProps) {
+export function LossReasonSelect({ selectedReasons, onSelectReason, disabled }: LossReasonSelectProps) {
   const { data: reasons, isLoading } = useLossReasons()
 
   console.log('Renderizando LossReasonSelect', {
@@ -63,13 +64,13 @@ export function LossReasonSelect({ selectedReasons, onSelectReason }: LossReason
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
         {reasons.map((reason) => {
           const isSelected = selectedReasons.includes(reason.id)
-          console.log(`Motivo ${reason.name}:`, isSelected ? 'selecionado' : 'não selecionado')
           
           return (
             <Toggle
               key={reason.id}
               pressed={isSelected}
-              onPressedChange={() => handleToggle(reason.id)}
+              onPressedChange={() => !disabled && onSelectReason(reason.id)}
+              disabled={disabled}
               className={cn(
                 "w-full h-auto min-h-[2.5rem] px-4 py-2 gap-2 transition-all duration-200 text-xs text-left",
                 isSelected 

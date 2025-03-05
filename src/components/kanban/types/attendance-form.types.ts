@@ -21,9 +21,11 @@ export interface QualityScoreProps {
 export interface NextContactDateProps {
   date: Date | undefined
   onDateChange: (date: Date | undefined) => void
+  disabled?: boolean
 }
 
 export interface ObservationsProps {
   value: string
   onChange: (value: string) => void
+  disabled?: boolean
 }

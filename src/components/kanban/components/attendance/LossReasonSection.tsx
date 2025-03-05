@@ -21,7 +21,7 @@ export function LossReasonSection({
     <div className="space-y-4">
       <LossReasonSelect
         selectedReasons={selectedReasons}
-        onSelect={onSelectReason}
+        onSelectReason={onSelectReason}
         disabled={disabled}
       />
       <Observations
