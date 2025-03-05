@@ -38,6 +38,18 @@ export interface Student {
   unit_id: string;
   created_at: string;
   updated_at: string;
+  responsible_full_name?: string;
+  responsible_cpf?: string;
+  responsible_birth_date?: Date;
+  responsible_profession?: string;
+  responsible_email?: string;
+  responsible_phone?: string;
+  responsible_postal_code?: string;
+  responsible_street?: string;
+  responsible_number?: string;
+  responsible_neighborhood?: string;
+  responsible_city?: string;
+  responsible_state?: string;
 }
 
 export interface FinancialResponsible {

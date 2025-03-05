@@ -3,10 +3,11 @@ import { Student } from '@/types/enrollment';
 import { useEnrollmentForm } from './EnrollmentFormProvider';
 import { Button } from '@/components/ui/button';
 import { PersonalDataForm } from './steps/PersonalDataForm';
+import { FinancialResponsibleForm } from './steps/FinancialResponsibleForm';
 
 const STEPS = [
   { id: 0, title: 'Dados Pessoais', component: PersonalDataForm },
-  { id: 1, title: 'Responsável Financeiro' },
+  { id: 1, title: 'Responsável Financeiro', component: FinancialResponsibleForm },
   { id: 2, title: 'Dados Comerciais' },
   { id: 3, title: 'Dados Pedagógicos' },
   { id: 4, title: 'Confirmação' }
