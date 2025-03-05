@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -52,46 +53,48 @@ export default function CommercialPage() {
   const renderTable = (title: string, data: CommercialStats[] | undefined, isLoading: boolean) => (
     <div className="mt-6">
       <h2 className="text-xl font-semibold mb-4">{title}</h2>
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent [&>th]:px-2.5">
-            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold">{title.split(" ")[2]}</TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold">{"Novos\nClientes"}</TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold">{"Total de\nContatos"}</TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold">{"Contatos\nEfetivos"}</TableHead>
-            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold">% CE</TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold">{"Visitas\nAgendadas"}</TableHead>
-            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold">% AG</TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold">{"Visitas\nAguardadas"}</TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold">{"Visitas\nRealizadas"}</TableHead>
-            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold">% AT</TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold">{"Matrí-\nculas"}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading ? (
-            <TableRow>
-              <TableCell colSpan={11} className="text-center text-xs py-3 px-2.5">Carregando...</TableCell>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="text-center bg-[#FEC6A1] w-[200px] text-xs font-semibold sticky left-0 z-10">{title.split(" ")[2]}</TableHead>
+              <TableHead className="text-center w-[100px] whitespace-pre-line text-xs font-semibold">{"Novos\nClientes"}</TableHead>
+              <TableHead className="text-center w-[100px] whitespace-pre-line text-xs font-semibold">{"Total de\nContatos"}</TableHead>
+              <TableHead className="text-center w-[100px] whitespace-pre-line text-xs font-semibold">{"Contatos\nEfetivos"}</TableHead>
+              <TableHead className="text-center w-[80px] bg-[#FEC6A1] text-xs font-semibold">% CE</TableHead>
+              <TableHead className="text-center w-[100px] whitespace-pre-line text-xs font-semibold">{"Visitas\nAgendadas"}</TableHead>
+              <TableHead className="text-center w-[80px] bg-[#FEC6A1] text-xs font-semibold">% AG</TableHead>
+              <TableHead className="text-center w-[100px] whitespace-pre-line text-xs font-semibold">{"Visitas\nAguardadas"}</TableHead>
+              <TableHead className="text-center w-[100px] whitespace-pre-line text-xs font-semibold">{"Visitas\nRealizadas"}</TableHead>
+              <TableHead className="text-center w-[80px] bg-[#FEC6A1] text-xs font-semibold">% AT</TableHead>
+              <TableHead className="text-center w-[100px] whitespace-pre-line text-xs font-semibold">{"Matrí-\nculas"}</TableHead>
             </TableRow>
-          ) : (
-            data?.map(stat => (
-              <TableRow key={stat.id} className="hover:bg-muted/50 [&>td]:px-2.5">
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{stat.name}</TableCell>
-                <TableCell className="text-center text-xs py-0">{stat.newClients}</TableCell>
-                <TableCell className="text-center text-xs py-0">{stat.contactAttempts}</TableCell>
-                <TableCell className="text-center text-xs py-0">{stat.effectiveContacts}</TableCell>
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{stat.ceConversionRate.toFixed(1)}%</TableCell>
-                <TableCell className="text-center text-xs py-0">{stat.scheduledVisits}</TableCell>
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{stat.agConversionRate.toFixed(1)}%</TableCell>
-                <TableCell className="text-center text-xs py-0">{stat.awaitingVisits}</TableCell>
-                <TableCell className="text-center text-xs py-0">{stat.completedVisits}</TableCell>
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{stat.atConversionRate.toFixed(1)}%</TableCell>
-                <TableCell className="text-center text-xs py-[5px]">{stat.enrollments}</TableCell>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={11} className="text-center text-xs py-3">Carregando...</TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : (
+              data?.map(stat => (
+                <TableRow key={stat.id} className="hover:bg-muted/50">
+                  <TableCell className="text-center bg-[#FEC6A1] text-xs py-2 sticky left-0 z-10">{stat.name}</TableCell>
+                  <TableCell className="text-center text-xs py-2">{stat.newClients}</TableCell>
+                  <TableCell className="text-center text-xs py-2">{stat.contactAttempts}</TableCell>
+                  <TableCell className="text-center text-xs py-2">{stat.effectiveContacts}</TableCell>
+                  <TableCell className="text-center bg-[#FEC6A1] text-xs py-2">{stat.ceConversionRate.toFixed(1)}%</TableCell>
+                  <TableCell className="text-center text-xs py-2">{stat.scheduledVisits}</TableCell>
+                  <TableCell className="text-center bg-[#FEC6A1] text-xs py-2">{stat.agConversionRate.toFixed(1)}%</TableCell>
+                  <TableCell className="text-center text-xs py-2">{stat.awaitingVisits}</TableCell>
+                  <TableCell className="text-center text-xs py-2">{stat.completedVisits}</TableCell>
+                  <TableCell className="text-center bg-[#FEC6A1] text-xs py-2">{stat.atConversionRate.toFixed(1)}%</TableCell>
+                  <TableCell className="text-center text-xs py-2">{stat.enrollments}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 
