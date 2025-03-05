@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { Student, StudentFormData } from "../types"
@@ -15,12 +14,10 @@ export function useStudent() {
     console.log('Iniciando criação do estudante:', { clientId, data })
     setIsLoading(true)
     try {
-      // Obter o usuário atual
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Usuário não autenticado')
       if (!selectedUnitId) throw new Error('Nenhuma unidade selecionada')
 
-      // Preparar dados do estudante
       const studentData = {
         ...data,
         birth_date: format(data.birth_date, 'yyyy-MM-dd'),
@@ -28,10 +25,9 @@ export function useStudent() {
         unit_id: selectedUnitId,
         created_by: user.id,
         active: true,
-        cpf: data.cpf.replace(/\D/g, '') // Remove caracteres não numéricos
+        cpf: data.cpf.replace(/\D/g, '')
       }
 
-      // Verificar CPF duplicado
       const { data: existingStudent } = await supabase
         .from('students')
         .select('id, client_id')
@@ -43,7 +39,6 @@ export function useStudent() {
         throw new Error('CPF já cadastrado para outro aluno')
       }
 
-      // Inserir novo estudante
       const { data: newStudent, error } = await supabase
         .from('students')
         .insert(studentData)
@@ -58,8 +53,8 @@ export function useStudent() {
       const student: Student = {
         ...newStudent,
         birth_date: new Date(newStudent.birth_date),
-        created_at: new Date(newStudent.created_at),
-        updated_at: new Date(newStudent.updated_at)
+        created_at: newStudent.created_at,
+        updated_at: newStudent.updated_at
       }
 
       console.log('Estudante criado com sucesso:', student)
@@ -87,7 +82,6 @@ export function useStudent() {
     const cleanCPF = cpf.replace(/\D/g, '')
     if (cleanCPF.length !== 11) return false
 
-    // Validar dígitos verificadores
     let sum = 0
     let rest
     if (cleanCPF === "00000000000") return false

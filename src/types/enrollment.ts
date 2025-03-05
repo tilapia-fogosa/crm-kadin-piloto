@@ -1,4 +1,3 @@
-
 export type StudentStatus = 'pre_matricula' | 'matricula_completa';
 
 export type Gender = 'masculino' | 'feminino';
@@ -37,8 +36,8 @@ export interface Student {
   pedagogical_data_completed: boolean;
   client_id: string;
   unit_id: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface FinancialResponsible {
