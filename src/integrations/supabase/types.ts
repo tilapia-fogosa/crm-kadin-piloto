@@ -1533,7 +1533,76 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      commercial_source_stats: {
+        Row: {
+          ag_conversion_rate: number | null
+          at_conversion_rate: number | null
+          awaiting_visits: number | null
+          ce_conversion_rate: number | null
+          completed_visits: number | null
+          contact_attempts: number | null
+          effective_contacts: number | null
+          enrollments: number | null
+          lead_source: string | null
+          month_year: string | null
+          new_clients: number | null
+          scheduled_visits: number | null
+          source_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_lead_source_fkey"
+            columns: ["lead_source"]
+            isOneToOne: false
+            referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_unit_stats: {
+        Row: {
+          ag_conversion_rate: number | null
+          at_conversion_rate: number | null
+          awaiting_visits: number | null
+          ce_conversion_rate: number | null
+          completed_visits: number | null
+          contact_attempts: number | null
+          effective_contacts: number | null
+          enrollments: number | null
+          month_year: string | null
+          new_clients: number | null
+          scheduled_visits: number | null
+          unit_id: string | null
+          unit_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_user_stats: {
+        Row: {
+          ag_conversion_rate: number | null
+          at_conversion_rate: number | null
+          awaiting_visits: number | null
+          ce_conversion_rate: number | null
+          completed_visits: number | null
+          contact_attempts: number | null
+          effective_contacts: number | null
+          enrollments: number | null
+          month_year: string | null
+          new_clients: number | null
+          scheduled_visits: number | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       change_initial_password: {
