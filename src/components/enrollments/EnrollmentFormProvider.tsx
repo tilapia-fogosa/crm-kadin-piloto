@@ -1,10 +1,10 @@
-
 import React, { createContext, useContext, useState } from 'react';
 import { Student } from '@/types/enrollment';
 
 interface EnrollmentFormState {
   currentStep: number;
   formData: Partial<Student>;
+  clientId?: string;
 }
 
 interface EnrollmentFormContextType {
@@ -18,17 +18,21 @@ const EnrollmentFormContext = createContext<EnrollmentFormContextType | undefine
 
 const initialState: EnrollmentFormState = {
   currentStep: 0,
-  formData: {}
+  formData: {},
+  clientId: undefined
 };
 
 export function EnrollmentFormProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<EnrollmentFormState>(initialState);
+  console.log('EnrollmentFormProvider state:', state);
 
   const setCurrentStep = (step: number) => {
+    console.log('Setting current step to:', step);
     setState(prev => ({ ...prev, currentStep: step }));
   };
 
   const updateFormData = (data: Partial<Student>) => {
+    console.log('Updating form data:', data);
     setState(prev => ({
       ...prev,
       formData: { ...prev.formData, ...data }
@@ -36,6 +40,7 @@ export function EnrollmentFormProvider({ children }: { children: React.ReactNode
   };
 
   const resetForm = () => {
+    console.log('Resetting form');
     setState(initialState);
   };
 

@@ -2,9 +2,10 @@
 import { Student } from '@/types/enrollment';
 import { useEnrollmentForm } from './EnrollmentFormProvider';
 import { Button } from '@/components/ui/button';
+import { PersonalDataForm } from './steps/PersonalDataForm';
 
 const STEPS = [
-  { id: 0, title: 'Dados Pessoais' },
+  { id: 0, title: 'Dados Pessoais', component: PersonalDataForm },
   { id: 1, title: 'Responsável Financeiro' },
   { id: 2, title: 'Dados Comerciais' },
   { id: 3, title: 'Dados Pedagógicos' },
@@ -13,6 +14,9 @@ const STEPS = [
 
 export function EnrollmentFormSteps() {
   const { state, setCurrentStep } = useEnrollmentForm();
+  console.log('Current step:', state.currentStep);
+
+  const CurrentStepComponent = STEPS[state.currentStep]?.component;
 
   return (
     <div className="space-y-4">
@@ -29,9 +33,12 @@ export function EnrollmentFormSteps() {
         ))}
       </div>
 
-      {/* Step content will be added here in next iterations */}
       <div className="p-4 border rounded">
-        <p>Conteúdo do passo {state.currentStep + 1}</p>
+        {CurrentStepComponent ? (
+          <CurrentStepComponent />
+        ) : (
+          <p>Conteúdo do passo {state.currentStep + 1}</p>
+        )}
       </div>
 
       <div className="flex justify-between mt-4">
