@@ -1,3 +1,4 @@
+import React from "react";
 import {
   LayoutDashboard,
   CalendarIcon,
@@ -8,13 +9,12 @@ import {
   User2,
   Users,
 } from "lucide-react";
-
-import { MainNavItem, SidebarNavItem } from "@/types";
+import { MainNavItem, SidebarNavItem } from "@/types/navigation";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuthState } from "@/hooks/useAuthState";
 
 interface MenuItemProps {
   href: string;
@@ -22,11 +22,11 @@ interface MenuItemProps {
   children: React.ReactNode;
 }
 
-function MenuItem({ href, icon, children }: MenuItemProps) {
+function MenuItem({ href, icon: Icon, children }: MenuItemProps) {
   return (
     <Link to={href}>
       <div className="flex items-center space-x-2 rounded-md p-2 hover:bg-secondary">
-        {React.createElement(icon, { className: "h-4 w-4" })}
+        <Icon className="h-4 w-4" />
         <span className="text-sm font-medium leading-none">{children}</span>
       </div>
     </Link>
@@ -66,7 +66,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar() {
-  const { user } = useAuth();
+  const { user } = useAuthState();
 
   const isFranqueado = user?.role === 'franqueado';
   const isAdmin = user?.role === 'admin';
