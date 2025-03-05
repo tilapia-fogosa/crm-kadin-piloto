@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,6 +5,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Student } from "@/types/enrollment";
 import { useEnrollmentForm } from "../EnrollmentFormProvider";
+import { parseFormDate, formatDateForInput } from "@/utils/dateUtils";
 
 const personalDataSchema = z.object({
   full_name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -32,7 +32,7 @@ export function PersonalDataForm() {
       full_name: state.formData.full_name || '',
       cpf: state.formData.cpf || '',
       rg: state.formData.rg || '',
-      birth_date: state.formData.birth_date?.toString() || '',
+      birth_date: state.formData.birth_date ? formatDateForInput(state.formData.birth_date) : '',
       address_postal_code: state.formData.address_postal_code || '',
       address_street: state.formData.address_street || '',
       address_number: state.formData.address_number || '',
@@ -44,7 +44,10 @@ export function PersonalDataForm() {
 
   const onSubmit = (data: PersonalDataForm) => {
     console.log('Form submitted:', data);
-    updateFormData(data);
+    updateFormData({
+      ...data,
+      birth_date: parseFormDate(data.birth_date)
+    });
   };
 
   return (
