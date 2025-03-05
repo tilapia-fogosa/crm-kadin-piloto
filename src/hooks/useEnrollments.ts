@@ -36,12 +36,10 @@ export function useEnrollments() {
         throw error;
       }
 
-      // Transformar os dados para o formato correto
+      // Transformar apenas birth_date para Date, manter created_at e updated_at como string
       const transformedStudents = students.map(student => ({
         ...student,
         birth_date: new Date(student.birth_date),
-        created_at: new Date(student.created_at),
-        updated_at: new Date(student.updated_at)
       }));
 
       console.log('Matrículas encontradas:', transformedStudents);
