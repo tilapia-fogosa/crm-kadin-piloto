@@ -7,26 +7,28 @@ interface LossReasonSectionProps {
   observations: string
   onSelectReason: (reasonId: string) => void
   onObservationsChange: (value: string) => void
+  disabled?: boolean
 }
 
 export function LossReasonSection({
   selectedReasons,
   observations,
   onSelectReason,
-  onObservationsChange
+  onObservationsChange,
+  disabled
 }: LossReasonSectionProps) {
   return (
-    <>
-      <div className="space-y-2">
-        <LossReasonSelect
-          selectedReasons={selectedReasons}
-          onSelectReason={onSelectReason}
-        />
-      </div>
-      <Observations 
-        value={observations} 
-        onChange={onObservationsChange} 
+    <div className="space-y-4">
+      <LossReasonSelect
+        selectedReasons={selectedReasons}
+        onSelect={onSelectReason}
+        disabled={disabled}
       />
-    </>
+      <Observations
+        value={observations}
+        onChange={onObservationsChange}
+        disabled={disabled}
+      />
+    </div>
   )
 }

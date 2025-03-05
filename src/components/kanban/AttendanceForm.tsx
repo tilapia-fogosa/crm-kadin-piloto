@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Attendance } from "./types"
@@ -12,6 +13,8 @@ import { LossReasonSection } from "./components/attendance/LossReasonSection"
 import { LossConfirmationDialog } from "./components/attendance/LossConfirmationDialog"
 import { useAttendanceSubmission } from "./hooks/useAttendanceSubmission"
 import { AttendanceFormProps } from "./types/attendance-form.types"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2 } from "lucide-react"
 
 export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormProps) {
   console.log('Renderizando AttendanceForm para cliente:', clientName)
@@ -23,7 +26,7 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
   const [qualityScore, setQualityScore] = useState<string>("")
   const [nextContactDate, setNextContactDate] = useState<Date>()
   const [showLossConfirmation, setShowLossConfirmation] = useState(false)
-  const { registerSale, isLoading } = useSale()
+  const { registerSale, isLoading: isSaleLoading } = useSale()
   const { submitAttendance, isProcessing } = useAttendanceSubmission()
   const { toast } = useToast()
 
@@ -96,6 +99,16 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
 
   return (
     <div className="space-y-4">
+      {isProcessing && (
+        <Alert>
+          <AlertDescription className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate 
+-spin" />
+            Processando atendimento...
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex flex-col gap-2">
         {['matriculado', 'negociacao', 'perdido'].map((result) => (
           <ResultButton
@@ -124,6 +137,7 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
               observations={observations}
               onDateChange={setNextContactDate}
               onObservationsChange={setObservations}
+              disabled={isProcessing}
             />
           )}
 
@@ -139,6 +153,7 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
                 )
               }}
               onObservationsChange={setObservations}
+              disabled={isProcessing}
             />
           )}
         </div>
@@ -147,11 +162,18 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
       <Button 
         onClick={handleSubmit}
         className="w-full"
-        disabled={!selectedResult || isLoading || isProcessing || 
+        disabled={isProcessing || !selectedResult || 
           (selectedResult === 'perdido' && selectedReasons.length === 0) ||
           (selectedResult === 'negociacao' && !nextContactDate)}
       >
-        {isProcessing ? "Processando..." : "Cadastrar Atendimento"}
+        {isProcessing ? (
+          <span className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Processando...
+          </span>
+        ) : (
+          "Cadastrar Atendimento"
+        )}
       </Button>
 
       <LossConfirmationDialog
