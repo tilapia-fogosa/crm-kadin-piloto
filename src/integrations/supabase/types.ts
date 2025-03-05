@@ -411,6 +411,86 @@ export type Database = {
           },
         ]
       }
+      financial_responsibles: {
+        Row: {
+          birth_date: string
+          city: string
+          complement: string | null
+          country: string
+          cpf: string
+          created_at: string
+          created_by: string | null
+          email: string
+          full_name: string
+          id: string
+          mobile_phone: string
+          neighborhood: string
+          number: string
+          observations: string | null
+          postal_code: string
+          profession: string
+          state: string
+          street: string
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          birth_date: string
+          city: string
+          complement?: string | null
+          country?: string
+          cpf: string
+          created_at?: string
+          created_by?: string | null
+          email: string
+          full_name: string
+          id?: string
+          mobile_phone: string
+          neighborhood: string
+          number: string
+          observations?: string | null
+          postal_code: string
+          profession: string
+          state: string
+          street: string
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          birth_date?: string
+          city?: string
+          complement?: string | null
+          country?: string
+          cpf?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          mobile_phone?: string
+          neighborhood?: string
+          number?: string
+          observations?: string | null
+          postal_code?: string
+          profession?: string
+          state?: string
+          street?: string
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_responsibles_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kit_types: {
         Row: {
           active: boolean
@@ -573,6 +653,67 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "loss_reason_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedagogical_enrollments: {
+        Row: {
+          class_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          inaugural_class_date: string | null
+          kit_version_id: string | null
+          status: string
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inaugural_class_date?: string | null
+          kit_version_id?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inaugural_class_date?: string | null
+          kit_version_id?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedagogical_enrollments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedagogical_enrollments_kit_version_id_fkey"
+            columns: ["kit_version_id"]
+            isOneToOne: false
+            referencedRelation: "kit_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedagogical_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -979,17 +1120,34 @@ export type Database = {
           address_postal_code: string
           address_state: string
           address_street: string
+          alternative_phone: string | null
+          birth_city: string | null
           birth_date: string
+          birth_state: string | null
           client_id: string
+          commercial_data_completed: boolean | null
           cpf: string
           created_at: string
           created_by: string | null
+          education_level: string | null
+          email: string | null
           full_name: string
+          gender: Database["public"]["Enums"]["gender"] | null
           id: string
+          is_own_financial_responsible: boolean | null
+          landline_phone: string | null
+          marital_status: Database["public"]["Enums"]["marital_status"] | null
+          mobile_phone: string | null
+          pedagogical_data_completed: boolean | null
           photo_thumbnail_url: string | null
           photo_url: string | null
+          profession: string | null
           rg: string | null
+          ssp: string | null
+          status: Database["public"]["Enums"]["student_status"] | null
+          unit_id: string
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
           active?: boolean
@@ -1000,17 +1158,34 @@ export type Database = {
           address_postal_code: string
           address_state: string
           address_street: string
+          alternative_phone?: string | null
+          birth_city?: string | null
           birth_date: string
+          birth_state?: string | null
           client_id: string
+          commercial_data_completed?: boolean | null
           cpf: string
           created_at?: string
           created_by?: string | null
+          education_level?: string | null
+          email?: string | null
           full_name: string
+          gender?: Database["public"]["Enums"]["gender"] | null
           id?: string
+          is_own_financial_responsible?: boolean | null
+          landline_phone?: string | null
+          marital_status?: Database["public"]["Enums"]["marital_status"] | null
+          mobile_phone?: string | null
+          pedagogical_data_completed?: boolean | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          profession?: string | null
           rg?: string | null
+          ssp?: string | null
+          status?: Database["public"]["Enums"]["student_status"] | null
+          unit_id: string
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           active?: boolean
@@ -1021,17 +1196,34 @@ export type Database = {
           address_postal_code?: string
           address_state?: string
           address_street?: string
+          alternative_phone?: string | null
+          birth_city?: string | null
           birth_date?: string
+          birth_state?: string | null
           client_id?: string
+          commercial_data_completed?: boolean | null
           cpf?: string
           created_at?: string
           created_by?: string | null
+          education_level?: string | null
+          email?: string | null
           full_name?: string
+          gender?: Database["public"]["Enums"]["gender"] | null
           id?: string
+          is_own_financial_responsible?: boolean | null
+          landline_phone?: string | null
+          marital_status?: Database["public"]["Enums"]["marital_status"] | null
+          mobile_phone?: string | null
+          pedagogical_data_completed?: boolean | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          profession?: string | null
           rg?: string | null
+          ssp?: string | null
+          status?: Database["public"]["Enums"]["student_status"] | null
+          unit_id?: string
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: [
           {
@@ -1039,6 +1231,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -1433,6 +1632,8 @@ export type Database = {
     }
     Enums: {
       due_day: "5" | "10" | "15" | "20" | "25"
+      gender: "masculino" | "feminino"
+      marital_status: "solteiro" | "casado" | "divorciado" | "viuvo" | "outro"
       payment_method:
         | "dinheiro"
         | "pix"
@@ -1441,6 +1642,7 @@ export type Database = {
         | "boleto"
         | "recorrencia"
       sale_type: "matricula" | "outros"
+      student_status: "pre_matricula" | "matricula_completa"
       user_role:
         | "consultor"
         | "franqueado"
