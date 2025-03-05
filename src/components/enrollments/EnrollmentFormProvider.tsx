@@ -1,5 +1,7 @@
+
 import React, { createContext, useContext, useState } from 'react';
 import { Student } from '@/types/enrollment';
+import { useClientPreFill } from './hooks/useClientPreFill';
 
 interface EnrollmentFormState {
   currentStep: number;
@@ -11,19 +13,28 @@ interface EnrollmentFormContextType {
   state: EnrollmentFormState;
   setCurrentStep: (step: number) => void;
   updateFormData: (data: Partial<Student>) => void;
+  setClientId: (id: string) => void;
   resetForm: () => void;
 }
 
 const EnrollmentFormContext = createContext<EnrollmentFormContextType | undefined>(undefined);
 
-const initialState: EnrollmentFormState = {
-  currentStep: 0,
-  formData: {},
-  clientId: undefined
-};
+export function EnrollmentFormProvider({ 
+  children,
+  initialClientId 
+}: { 
+  children: React.ReactNode;
+  initialClientId?: string;
+}) {
+  const [state, setState] = useState<EnrollmentFormState>({
+    currentStep: 0,
+    formData: {},
+    clientId: initialClientId
+  });
 
-export function EnrollmentFormProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<EnrollmentFormState>(initialState);
+  // Use the pre-fill hook
+  useClientPreFill(state.clientId);
+  
   console.log('EnrollmentFormProvider state:', state);
 
   const setCurrentStep = (step: number) => {
@@ -39,9 +50,18 @@ export function EnrollmentFormProvider({ children }: { children: React.ReactNode
     }));
   };
 
+  const setClientId = (id: string) => {
+    console.log('Setting client ID:', id);
+    setState(prev => ({ ...prev, clientId: id }));
+  };
+
   const resetForm = () => {
     console.log('Resetting form');
-    setState(initialState);
+    setState({
+      currentStep: 0,
+      formData: {},
+      clientId: undefined
+    });
   };
 
   return (
@@ -49,6 +69,7 @@ export function EnrollmentFormProvider({ children }: { children: React.ReactNode
       state,
       setCurrentStep,
       updateFormData,
+      setClientId,
       resetForm
     }}>
       {children}

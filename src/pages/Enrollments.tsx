@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEnrollments } from "@/hooks/useEnrollments";
 import { UnitSelector } from "@/components/UnitSelector";
@@ -14,6 +13,7 @@ export default function EnrollmentsPage() {
   const { selectedUnitId } = useUnit();
   const { data: enrollments, isLoading } = useEnrollments();
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string>();
 
   if (!selectedUnitId) {
     return (
@@ -33,7 +33,7 @@ export default function EnrollmentsPage() {
             Voltar
           </Button>
         </div>
-        <EnrollmentFormProvider>
+        <EnrollmentFormProvider initialClientId={selectedClientId}>
           <EnrollmentFormSteps />
         </EnrollmentFormProvider>
       </div>
