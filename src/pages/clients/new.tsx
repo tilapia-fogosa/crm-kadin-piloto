@@ -9,8 +9,7 @@ import { LeadFormFields } from "@/components/leads/lead-form-fields";
 import { LeadFormData, leadFormSchema } from "@/types/lead-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
-
-const DEFAULT_UNIT_ID = "0df79a04-444e-46ee-b218-59e4b1835f4a";
+import { UnitFormField } from "@/components/leads/UnitFormField";
 
 export default function NewClient() {
   const { toast } = useToast();
@@ -26,6 +25,7 @@ export default function NewClient() {
       ageRange: "",
       metaId: "",
       originalAd: "",
+      unitId: "",
     },
   });
 
@@ -55,7 +55,7 @@ export default function NewClient() {
           original_ad: values.originalAd,
           created_by: session.session.user.id,
           status: 'novo-cadastro',
-          unit_id: DEFAULT_UNIT_ID
+          unit_id: values.unitId
         })
         .select()
         .single();
@@ -87,6 +87,7 @@ export default function NewClient() {
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
+          <UnitFormField form={form} />
           <LeadFormFields form={form} />
           
           <Button type="submit" className="w-full">
