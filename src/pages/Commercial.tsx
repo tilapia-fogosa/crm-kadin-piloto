@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -50,7 +51,7 @@ export default function CommercialPage() {
     availableUnits
   } = useFilteredCommercialStats(selectedMonth, selectedYear);
 
-  const renderTable = (title: string, data: CommercialStats[] | undefined, isLoading: boolean) => (
+  const renderTable = (title: string, data: CommercialStats[], isLoading: boolean) => (
     <div className="mt-6">
       <h2 className="text-xl font-semibold mb-4">{title}</h2>
       <div className="overflow-x-auto">
@@ -75,8 +76,12 @@ export default function CommercialPage() {
               <TableRow>
                 <TableCell colSpan={11} className="text-center text-xs py-3">Carregando...</TableCell>
               </TableRow>
+            ) : data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={11} className="text-center text-xs py-3">Nenhum dado encontrado</TableCell>
+              </TableRow>
             ) : (
-              data?.map(stat => (
+              data.map(stat => (
                 <TableRow key={stat.id} className="hover:bg-muted/50">
                   <TableCell className="text-center bg-[#FEC6A1] text-xs py-2 sticky left-0 z-10">{stat.name}</TableCell>
                   <TableCell className="text-center text-xs py-2">{stat.newClients}</TableCell>

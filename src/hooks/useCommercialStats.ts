@@ -24,11 +24,6 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
   const yearNum = parseInt(year, 10);
   const monthYear = `${yearNum}-${String(monthNum + 1).padStart(2, '0')}-01`;
 
-  const baseQuery = {
-    month_year: monthYear,
-    ...(unitId && unitId !== 'all' ? { unit_id: unitId } : {})
-  };
-
   const { data: unitStatsData, isLoading: isLoadingUnit } = useQuery({
     queryKey: ['commercial-unit-stats', monthYear, unitId],
     queryFn: async () => {
@@ -39,7 +34,7 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
         .select('*')
         .eq('month_year', monthYear);
 
-      if (unitId && unitId !== 'all') {
+      if (unitId) {
         query = query.eq('unit_id', unitId);
       }
 
@@ -77,7 +72,7 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
         .select('*')
         .eq('month_year', monthYear);
 
-      if (unitId && unitId !== 'all') {
+      if (unitId) {
         query = query.eq('unit_id', unitId);
       }
 
@@ -115,7 +110,7 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
         .select('*')
         .eq('month_year', monthYear);
 
-      if (unitId && unitId !== 'all') {
+      if (unitId) {
         query = query.eq('unit_id', unitId);
       }
 
