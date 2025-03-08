@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useCommercialStats } from "@/hooks/useCommercialStats";
+import { useFilteredCommercialStats } from '@/hooks/useFilteredCommercialStats';
 
 const MONTHS = [
   { value: "0", label: "Janeiro" },
@@ -47,8 +46,11 @@ export default function CommercialPage() {
     unitStats, 
     userStats, 
     sourceStats, 
-    isLoading 
-  } = useCommercialStats(selectedMonth, selectedYear);
+    isLoading,
+    selectedUnitId,
+    setSelectedUnitId,
+    availableUnits
+  } = useFilteredCommercialStats(selectedMonth, selectedYear);
 
   const renderTable = (title: string, data: CommercialStats[] | undefined, isLoading: boolean) => (
     <div className="mt-6">
@@ -130,6 +132,26 @@ export default function CommercialPage() {
                 {YEARS.map(year => (
                   <SelectItem key={year} value={year.toString()}>
                     {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="font-medium">Unidade:</span>
+            <Select 
+              value={selectedUnitId || ''} 
+              onValueChange={setSelectedUnitId}
+            >
+              <SelectTrigger className="w-[280px]">
+                <SelectValue placeholder="Todas as unidades" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todas as unidades</SelectItem>
+                {availableUnits.map(unit => (
+                  <SelectItem key={unit.unit_id} value={unit.unit_id}>
+                    {unit.units.name}
                   </SelectItem>
                 ))}
               </SelectContent>
