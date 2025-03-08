@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { WebhookSection } from "@/components/api-docs/webhook-section"
 import { MakeSection } from "@/components/api-docs/make-section"
 import { ApiSection } from "@/components/api-docs/api-section"
+import { UnitsTableSection } from "@/components/api-docs/units-table-section"
 
 const ApiDocsPage = () => {
   const { toast } = useToast()
@@ -25,6 +26,7 @@ const ApiDocsPage = () => {
           <TabsTrigger value="webhook">Webhooks</TabsTrigger>
           <TabsTrigger value="make">Integração Make</TabsTrigger>
           <TabsTrigger value="api">API REST</TabsTrigger>
+          <TabsTrigger value="units">Tabela de Unidades</TabsTrigger>
         </TabsList>
 
         <TabsContent value="webhook">
@@ -37,6 +39,10 @@ const ApiDocsPage = () => {
 
         <TabsContent value="api">
           <ApiSection />
+        </TabsContent>
+
+        <TabsContent value="units">
+          <UnitsTableSection />
         </TabsContent>
       </Tabs>
     </div>
