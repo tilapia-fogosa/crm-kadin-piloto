@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { toast } from "@/components/ui/use-toast"
 import { useForm } from "react-hook-form"
@@ -10,6 +9,9 @@ import { ClientsTable } from "@/components/clients/clients-table"
 import { useLocation } from "react-router-dom"
 import { UnitSelector } from "@/components/UnitSelector"
 import { useUnit } from "@/contexts/UnitContext"
+import { Input } from "@/components/ui/input"
+import { useClientFiltering } from "@/hooks/useClientFiltering"
+import { ClientsPagination } from "@/components/clients/ClientsPagination"
 
 export default function ClientsPage() {
   const [selectedClient, setSelectedClient] = useState<any>(null)
@@ -46,7 +48,16 @@ export default function ClientsPage() {
     enabled: !!selectedUnitId
   });
 
-  // Refetch data when component mounts or route changes
+  const {
+    searchTerm,
+    setSearchTerm,
+    currentPage,
+    setCurrentPage,
+    paginatedClients,
+    totalPages,
+    totalResults
+  } = useClientFiltering(clients)
+
   useEffect(() => {
     console.log("Clients page mounted or route changed, refetching data...")
     refetch()
@@ -143,22 +154,48 @@ export default function ClientsPage() {
         <h1 className="text-2xl font-bold">Todos os Clientes</h1>
         <UnitSelector />
       </div>
+      
       {isLoadingUnit ? (
         <div>Carregando...</div>
       ) : !selectedUnitId ? (
         <div>Selecione uma unidade para ver os clientes</div>
       ) : (
-        <ClientsTable
-          clients={clients || []}
-          selectedClient={selectedClient}
-          clientToDelete={clientToDelete}
-          form={form}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          setSelectedClient={setSelectedClient}
-          setClientToDelete={setClientToDelete}
-          onSubmit={onSubmit}
-        />
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Input
+                type="search"
+                placeholder="Buscar por nome ou telefone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+              />
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Total: {totalResults} clientes
+            </div>
+          </div>
+
+          <ClientsTable
+            clients={paginatedClients}
+            selectedClient={selectedClient}
+            clientToDelete={clientToDelete}
+            form={form}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            setSelectedClient={setSelectedClient}
+            setClientToDelete={setClientToDelete}
+            onSubmit={onSubmit}
+          />
+
+          {totalPages > 1 && (
+            <ClientsPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
+        </div>
       )}
     </div>
   )
