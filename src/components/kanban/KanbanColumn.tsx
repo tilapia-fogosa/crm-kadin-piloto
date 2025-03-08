@@ -1,4 +1,3 @@
-
 import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType, ContactAttempt, EffectiveContact } from "./types"
 import { useState } from "react"
 import { DeleteActivityDialog } from "./DeleteActivityDialog"
@@ -66,14 +65,8 @@ export function KanbanColumn({
             }}
             onWhatsAppClick={(e) => onWhatsAppClick(e, card.phoneNumber)}
             onDeleteActivity={handleDeleteActivity}
-            onRegisterAttempt={async (attempt) => {
-              await onRegisterAttempt(attempt)
-              setSelectedCard(null)
-            }}
-            onRegisterEffectiveContact={async (contact) => {
-              await onRegisterEffectiveContact(contact)
-              setSelectedCard(null)
-            }}
+            onRegisterAttempt={onRegisterAttempt}
+            onRegisterEffectiveContact={onRegisterEffectiveContact}
             onRegisterScheduling={async (scheduling) => {
               await registerScheduling(scheduling)
               setSelectedCard(null)
