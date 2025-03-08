@@ -74,24 +74,17 @@ export function ActivityDashboard() {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const { data: userUnits } = useUserUnit();
 
-  const {
-    data: leadSources
-  } = useQuery({
+  const { data: leadSources } = useQuery({
     queryKey: ['lead-sources'],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('lead_sources').select('*').order('name');
+      console.log('Fetching lead sources')
+      const { data, error } = await supabase.from('lead_sources').select('*').order('name');
       if (error) throw error;
       return data;
     }
   });
 
-  const {
-    data: stats,
-    isLoading
-  } = useQuery({
+  const { data: stats, isLoading } = useQuery({
     queryKey: ['activity-dashboard', selectedSource, selectedMonth, selectedYear, userUnits?.map(u => u.unit_id)],
     queryFn: async () => {
       const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
@@ -99,7 +92,12 @@ export function ActivityDashboard() {
       const unitIds = userUnits?.map(u => u.unit_id) || [];
       const today = startOfDay(new Date());
 
-      console.log('Buscando estatísticas para o período:', { startDate, endDate });
+      console.log('Fetching activity dashboard stats:', { 
+        startDate: startDate.toISOString(), 
+        endDate: endDate.toISOString(),
+        selectedSource,
+        unitIds 
+      });
 
       const [clientsResult, activitiesResult] = await Promise.all([
         supabase.from('clients')
@@ -192,7 +190,6 @@ export function ActivityDashboard() {
       }));
     },
     enabled: userUnits !== undefined && userUnits.length > 0,
-    refetchInterval: 5000
   });
 
   const calculateTotals = (stats: DailyStats[] | undefined) => {

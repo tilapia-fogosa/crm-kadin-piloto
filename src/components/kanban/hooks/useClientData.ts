@@ -19,19 +19,20 @@ export function useClientData() {
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all events
+          event: '*',
           schema: 'public',
           table: 'clients'
         },
         (payload) => {
           console.log('Client change detected:', payload)
           queryClient.invalidateQueries({ queryKey: ['clients'] })
+          queryClient.invalidateQueries({ queryKey: ['activity-dashboard'] }) // Adicionado para garantir atualização
         }
       )
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all events
+          event: '*',
           schema: 'public',
           table: 'client_activities'
         },
