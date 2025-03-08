@@ -15,6 +15,16 @@ export function useScheduling() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
+      // Get client's unit_id
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('unit_id')
+        .eq('id', scheduling.cardId)
+        .single()
+
+      if (clientError) throw clientError
+      if (!clientData?.unit_id) throw new Error('Client has no unit_id')
+
       const { error: activityError } = await supabase
         .from('client_activities')
         .insert({
@@ -25,6 +35,7 @@ export function useScheduling() {
           created_by: session.session.user.id,
           scheduled_date: scheduling.scheduledDate.toISOString(),
           next_contact_date: scheduling.nextContactDate?.toISOString(),
+          unit_id: clientData.unit_id,
           active: true
         })
 

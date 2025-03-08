@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
@@ -33,8 +32,17 @@ export function useLossRegistration() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Não autenticado')
 
-      // 1. Registra a atividade (Tentativa de Contato ou Contato Efetivo)
-      console.log('Registrando atividade de', activityType)
+      // Get client's unit_id
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('unit_id')
+        .eq('id', clientId)
+        .single()
+
+      if (clientError) throw clientError
+      if (!clientData?.unit_id) throw new Error('Client has no unit_id')
+
+      // 1. Registra a atividade
       const { data: activity, error: activityError } = await supabase
         .from('client_activities')
         .insert({
@@ -43,6 +51,7 @@ export function useLossRegistration() {
           tipo_contato: contactType,
           notes: observations,
           created_by: session.session.user.id,
+          unit_id: clientData.unit_id,
           active: true
         })
         .select()

@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Attendance } from "../types"
+import { useClientUnit } from "./useClientUnit"
 
 export function useAttendance() {
   const { toast } = useToast()
@@ -15,6 +16,16 @@ export function useAttendance() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
+      // Get client's unit_id
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('unit_id')
+        .eq('id', attendance.cardId)
+        .single()
+
+      if (clientError) throw clientError
+      if (!clientData?.unit_id) throw new Error('Client has no unit_id')
+
       // Registra a atividade de Atendimento
       const { data: attendanceActivity, error: attendanceError } = await supabase
         .from('client_activities')
@@ -24,7 +35,8 @@ export function useAttendance() {
           tipo_contato: 'presencial',
           created_by: session.session.user.id,
           notes: attendance.observations,
-          active: true
+          active: true,
+          unit_id: clientData.unit_id
         })
         .select()
         .single()
@@ -42,6 +54,7 @@ export function useAttendance() {
             tipo_atividade: 'Matrícula',
             tipo_contato: 'presencial',
             created_by: session.session.user.id,
+            unit_id: clientData.unit_id,
             active: true
           })
 

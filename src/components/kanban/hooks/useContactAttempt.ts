@@ -15,6 +15,16 @@ export function useContactAttempt() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Não autenticado')
 
+      // Get client's unit_id
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('unit_id')
+        .eq('id', attempt.cardId)
+        .single()
+
+      if (clientError) throw clientError
+      if (!clientData?.unit_id) throw new Error('Client has no unit_id')
+
       // Registra a atividade de tentativa de contato
       const { error: activityError } = await supabase
         .from('client_activities')
@@ -24,6 +34,7 @@ export function useContactAttempt() {
           tipo_atividade: 'Tentativa de Contato',
           created_by: session.session.user.id,
           next_contact_date: attempt.nextContactDate.toISOString(),
+          unit_id: clientData.unit_id,
           active: true
         })
 

@@ -1,4 +1,3 @@
-
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -16,6 +15,16 @@ export function useEffectiveContact() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
+      // Get client's unit_id
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('unit_id')
+        .eq('id', contact.cardId)
+        .single()
+
+      if (clientError) throw clientError
+      if (!clientData?.unit_id) throw new Error('Client has no unit_id')
+
       const { error: activityError } = await supabase
         .from('client_activities')
         .insert({
@@ -25,6 +34,7 @@ export function useEffectiveContact() {
           notes: contact.notes,
           created_by: session.session.user.id,
           next_contact_date: contact.nextContactDate?.toISOString(),
+          unit_id: clientData.unit_id,
           active: true
         })
 
