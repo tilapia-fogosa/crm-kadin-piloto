@@ -1,9 +1,8 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, endOfMonth, setYear, setMonth, startOfDay, isAfter } from "date-fns";
 import { DailyStats } from "../types/activity-dashboard.types";
-import { UserUnit } from "../hooks/useUserUnit";
+import { UserUnit } from "./useUserUnit";
 
 export function useActivityStats(
   selectedSource: string,
