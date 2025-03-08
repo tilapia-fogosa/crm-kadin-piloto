@@ -24,7 +24,7 @@ export function KanbanColumn({
 }: KanbanColumnProps) {
   const [selectedCard, setSelectedCard] = useState<KanbanCardType | null>(null)
   const [activityToDelete, setActivityToDelete] = useState<{id: string, clientId: string} | null>(null)
-  const { registerScheduling, registerAttendance } = useActivityOperations()
+  const { registerScheduling, submitAttendance } = useActivityOperations()
 
   const handleDeleteActivity = (id: string, clientId: string) => {
     if (!id || !clientId) {
@@ -65,14 +65,20 @@ export function KanbanColumn({
             }}
             onWhatsAppClick={(e) => onWhatsAppClick(e, card.phoneNumber)}
             onDeleteActivity={handleDeleteActivity}
-            onRegisterAttempt={onRegisterAttempt}
-            onRegisterEffectiveContact={onRegisterEffectiveContact}
+            onRegisterAttempt={async (attempt) => {
+              await onRegisterAttempt(attempt)
+              setSelectedCard(null)
+            }}
+            onRegisterEffectiveContact={async (contact) => {
+              await onRegisterEffectiveContact(contact)
+              setSelectedCard(null)
+            }}
             onRegisterScheduling={async (scheduling) => {
               await registerScheduling(scheduling)
               setSelectedCard(null)
             }}
             onRegisterAttendance={async (attendance) => {
-              await registerAttendance(attendance)
+              await submitAttendance(attendance)
               setSelectedCard(null)
             }}
           />

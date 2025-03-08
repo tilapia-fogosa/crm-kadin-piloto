@@ -21,13 +21,13 @@ export function useActivityOperations() {
   const registerEffectiveContact = useCallback(effectiveContactHook.registerEffectiveContact, [effectiveContactHook.registerEffectiveContact])
   const registerScheduling = useCallback(schedulingHook.registerScheduling, [schedulingHook.registerScheduling])
   const deleteActivity = useCallback(activityDeletionHook.deleteActivity, [activityDeletionHook.deleteActivity])
-  const registerAttendance = useCallback(attendanceSubmissionHook.registerAttendance, [attendanceSubmissionHook.registerAttendance])
+  const submitAttendance = useCallback(attendanceSubmissionHook.submitAttendance, [attendanceSubmissionHook.submitAttendance])
 
   return {
     registerAttempt,
     registerEffectiveContact,
     registerScheduling,
     deleteActivity,
-    registerAttendance
+    submitAttendance
   }
 }
