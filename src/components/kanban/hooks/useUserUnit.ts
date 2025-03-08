@@ -27,7 +27,7 @@ export function useUserUnit() {
       const { data: unitUsers, error } = await supabase
         .from('unit_users')
         .select(`
-          DISTINCT ON (unit_id) unit_id,
+          unit_id,
           units (
             id,
             name
@@ -35,15 +35,25 @@ export function useUserUnit() {
         `)
         .eq('user_id', session.user.id)
         .eq('active', true)
-        .order('unit_id');  // Required for DISTINCT ON
+        .order('unit_id');
 
       if (error) {
         console.error('Erro ao buscar unidades do usuário:', error);
         throw error;
       }
 
-      console.log('Unidades encontradas (sem duplicatas):', unitUsers);
-      return unitUsers;
+      // Remove duplicates using Set and map to ensure type safety
+      const uniqueUnitIds = new Set();
+      const uniqueUnits = unitUsers?.filter(unit => {
+        if (uniqueUnitIds.has(unit.unit_id)) {
+          return false;
+        }
+        uniqueUnitIds.add(unit.unit_id);
+        return true;
+      });
+
+      console.log('Unidades encontradas (sem duplicatas):', uniqueUnits);
+      return uniqueUnits as UserUnit[];
     }
   });
 }
