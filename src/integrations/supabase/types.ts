@@ -306,6 +306,8 @@ export type Database = {
           original_ad: string | null
           original_adset: string | null
           phone_number: string
+          registration_cpf: string | null
+          registration_name: string | null
           scheduled_date: string | null
           status: string
           unit_id: string | null
@@ -328,6 +330,8 @@ export type Database = {
           original_ad?: string | null
           original_adset?: string | null
           phone_number: string
+          registration_cpf?: string | null
+          registration_name?: string | null
           scheduled_date?: string | null
           status?: string
           unit_id?: string | null
@@ -350,6 +354,8 @@ export type Database = {
           original_ad?: string | null
           original_adset?: string | null
           phone_number?: string
+          registration_cpf?: string | null
+          registration_name?: string | null
           scheduled_date?: string | null
           status?: string
           unit_id?: string | null
