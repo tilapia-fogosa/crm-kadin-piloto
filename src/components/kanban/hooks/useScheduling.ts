@@ -16,13 +16,13 @@ export function useScheduling() {
       if (!session.session) throw new Error('Not authenticated')
 
       // Get client's unit_id
-      const { data: clientData, error: clientError } = await supabase
+      const { data: clientData, error: fetchClientError } = await supabase
         .from('clients')
         .select('unit_id')
         .eq('id', scheduling.cardId)
         .single()
 
-      if (clientError) throw clientError
+      if (fetchClientError) throw fetchClientError
       if (!clientData?.unit_id) throw new Error('Client has no unit_id')
 
       const { error: activityError } = await supabase
@@ -41,7 +41,7 @@ export function useScheduling() {
 
       if (activityError) throw activityError
 
-      const { error: clientError } = await supabase
+      const { error: updateClientError } = await supabase
         .from('clients')
         .update({ 
           scheduled_date: scheduling.scheduledDate.toISOString(),
@@ -49,7 +49,7 @@ export function useScheduling() {
         })
         .eq('id', scheduling.cardId)
 
-      if (clientError) throw clientError
+      if (updateClientError) throw updateClientError
 
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 

@@ -36,6 +36,16 @@ export function useAttendanceSubmission() {
           nextContactDate
         })
 
+        // Get client's unit_id
+        const { data: clientData, error: fetchClientError } = await supabase
+          .from('clients')
+          .select('unit_id')
+          .eq('id', cardId)
+          .single()
+
+        if (fetchClientError) throw fetchClientError
+        if (!clientData?.unit_id) throw new Error('Client has no unit_id')
+
         // Atualizar dados do cliente
         const updateData: any = {
           lead_quality_score: qualityScore ? parseInt(qualityScore) : null,
@@ -47,18 +57,12 @@ export function useAttendanceSubmission() {
 
         console.log('Tentando atualizar cliente com dados:', updateData)
 
-        const { error: updateError, data: updateResult } = await supabase
+        const { error: updateClientError } = await supabase
           .from('clients')
           .update(updateData)
           .eq('id', cardId)
-          .select()
 
-        console.log('Resultado da atualização do cliente:', { updateResult, updateError })
-
-        if (updateError) {
-          console.error('Erro ao atualizar cliente:', updateError)
-          throw updateError
-        }
+        if (updateClientError) throw updateClientError
 
         // Se for perdido, registrar motivos
         if (result === 'perdido' && selectedReasons?.length) {
@@ -73,39 +77,28 @@ export function useAttendanceSubmission() {
             observations: observations || null
           }))
 
-          const { error: reasonsError, data: reasonsResult } = await supabase
+          const { error: reasonsError } = await supabase
             .from('client_loss_reasons')
             .insert(reasonEntries)
-            .select()
 
-          console.log('Resultado do registro de motivos:', { reasonsResult, reasonsError })
-
-          if (reasonsError) {
-            console.error('Erro ao registrar motivos:', reasonsError)
-            throw reasonsError
-          }
+          if (reasonsError) throw reasonsError
         }
 
         // Registra a atividade
         console.log('Registrando atividade de atendimento')
 
-        const { error: activityError, data: activityResult } = await supabase
+        const { error: activityError } = await supabase
           .from('client_activities')
           .insert({
             client_id: cardId,
             tipo_atividade: 'Atendimento',
             tipo_contato: 'presencial',
             notes: observations || null,
+            unit_id: clientData.unit_id,
             created_by: (await supabase.auth.getSession()).data.session?.user.id
           })
-          .select()
 
-        console.log('Resultado do registro de atividade:', { activityResult, activityError })
-
-        if (activityError) {
-          console.error('Erro ao registrar atividade:', activityError)
-          throw activityError
-        }
+        if (activityError) throw activityError
 
         console.log('Atendimento registrado com sucesso')
 

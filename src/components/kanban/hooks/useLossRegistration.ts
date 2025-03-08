@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
@@ -33,13 +34,13 @@ export function useLossRegistration() {
       if (!session.session) throw new Error('Não autenticado')
 
       // Get client's unit_id
-      const { data: clientData, error: clientError } = await supabase
+      const { data: clientData, error: fetchClientError } = await supabase
         .from('clients')
         .select('unit_id')
         .eq('id', clientId)
         .single()
 
-      if (clientError) throw clientError
+      if (fetchClientError) throw fetchClientError
       if (!clientData?.unit_id) throw new Error('Client has no unit_id')
 
       // 1. Registra a atividade
@@ -77,7 +78,7 @@ export function useLossRegistration() {
 
       // 3. Atualiza o status do cliente para perdido
       console.log('Atualizando status do cliente para perdido')
-      const { error: clientError } = await supabase
+      const { error: updateClientError } = await supabase
         .from('clients')
         .update({ 
           status: 'perdido',
@@ -86,7 +87,7 @@ export function useLossRegistration() {
         })
         .eq('id', clientId)
 
-      if (clientError) throw clientError
+      if (updateClientError) throw updateClientError
 
       // 4. Atualiza o cache do React Query
       await queryClient.invalidateQueries({ queryKey: ['clients'] })

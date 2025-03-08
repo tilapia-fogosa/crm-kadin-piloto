@@ -16,13 +16,13 @@ export function useContactAttempt() {
       if (!session.session) throw new Error('Não autenticado')
 
       // Get client's unit_id
-      const { data: clientData, error: clientError } = await supabase
+      const { data: clientData, error: fetchClientError } = await supabase
         .from('clients')
         .select('unit_id')
         .eq('id', attempt.cardId)
         .single()
 
-      if (clientError) throw clientError
+      if (fetchClientError) throw fetchClientError
       if (!clientData?.unit_id) throw new Error('Client has no unit_id')
 
       // Registra a atividade de tentativa de contato
@@ -41,14 +41,14 @@ export function useContactAttempt() {
       if (activityError) throw activityError
 
       // Atualiza o próximo contato do cliente
-      const { error: clientError } = await supabase
+      const { error: updateClientError } = await supabase
         .from('clients')
         .update({ 
           next_contact_date: attempt.nextContactDate.toISOString(),
         })
         .eq('id', attempt.cardId)
 
-      if (clientError) throw clientError
+      if (updateClientError) throw updateClientError
 
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
