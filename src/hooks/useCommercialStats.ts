@@ -45,6 +45,8 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
         throw error;
       }
 
+      console.log('Unit stats data:', data);
+
       return data.map(stat => ({
         id: stat.unit_id,
         name: stat.name,
@@ -83,6 +85,8 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
         throw error;
       }
 
+      console.log('User stats data:', data);
+
       return data.map(stat => ({
         id: stat.id,
         name: stat.name,
@@ -120,6 +124,8 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
         console.error('Error fetching source stats:', error);
         throw error;
       }
+
+      console.log('Source stats data:', data);
 
       return data.map(stat => ({
         id: stat.id,

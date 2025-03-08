@@ -197,6 +197,7 @@ export type Database = {
           scheduled_date: string | null
           tipo_atividade: string
           tipo_contato: string
+          unit_id: string
           updated_at: string | null
         }
         Insert: {
@@ -210,6 +211,7 @@ export type Database = {
           scheduled_date?: string | null
           tipo_atividade: string
           tipo_contato: string
+          unit_id: string
           updated_at?: string | null
         }
         Update: {
@@ -223,6 +225,7 @@ export type Database = {
           scheduled_date?: string | null
           tipo_atividade?: string
           tipo_contato?: string
+          unit_id?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -239,6 +242,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "commercial_activities_data"
             referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "client_activities_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1587,17 +1597,17 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "client_activities_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "clients_lead_source_fkey"
             columns: ["lead_source"]
             isOneToOne: false
             referencedRelation: "lead_sources"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "clients_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -1621,17 +1631,17 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "client_activities_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "clients_lead_source_fkey"
             columns: ["id"]
             isOneToOne: false
             referencedRelation: "lead_sources"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "clients_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -1654,7 +1664,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "clients_unit_id_fkey"
+            foreignKeyName: "client_activities_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
@@ -1681,7 +1691,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "clients_unit_id_fkey"
+            foreignKeyName: "client_activities_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
