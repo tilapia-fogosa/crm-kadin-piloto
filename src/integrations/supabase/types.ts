@@ -1611,18 +1611,26 @@ export type Database = {
           contact_attempts: number | null
           effective_contacts: number | null
           enrollments: number | null
-          lead_source: string | null
+          id: string | null
           month_year: string | null
           new_clients: number | null
           scheduled_visits: number | null
           source_name: string | null
+          unit_id: string | null
         }
         Relationships: [
           {
             foreignKeyName: "clients_lead_source_fkey"
-            columns: ["lead_source"]
+            columns: ["id"]
             isOneToOne: false
             referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -1663,13 +1671,22 @@ export type Database = {
           contact_attempts: number | null
           effective_contacts: number | null
           enrollments: number | null
+          id: string | null
           month_year: string | null
           new_clients: number | null
           scheduled_visits: number | null
-          user_id: string | null
+          unit_id: string | null
           user_name: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {

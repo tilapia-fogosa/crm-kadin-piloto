@@ -17,111 +17,129 @@ interface CommercialStats {
   enrollments: number;
 }
 
-interface StatsResponse {
-  unit_id?: string;
-  unit_name?: string;
-  user_id?: string;
-  user_name?: string;
-  lead_source?: string;
-  source_name?: string;
-  new_clients: number;
-  contact_attempts: number;
-  effective_contacts: number;
-  ce_conversion_rate: number;
-  scheduled_visits: number;
-  ag_conversion_rate: number;
-  awaiting_visits: number;
-  completed_visits: number;
-  at_conversion_rate: number;
-  enrollments: number;
-}
+export const useCommercialStats = (month: string, year: string, unitId?: string | null) => {
+  console.log('Fetching stats with unit_id:', unitId);
+  
+  const monthNum = parseInt(month, 10);
+  const yearNum = parseInt(year, 10);
+  const monthYear = `${yearNum}-${String(monthNum + 1).padStart(2, '0')}-01`;
 
-const transformStats = (stats: StatsResponse[]): CommercialStats[] => {
-  return stats.map(stat => ({
-    id: stat.unit_id || stat.user_id || stat.lead_source || '',
-    name: stat.unit_name || stat.user_name || stat.source_name || '',
-    newClients: stat.new_clients,
-    contactAttempts: stat.contact_attempts,
-    effectiveContacts: stat.effective_contacts,
-    ceConversionRate: stat.ce_conversion_rate,
-    scheduledVisits: stat.scheduled_visits,
-    agConversionRate: stat.ag_conversion_rate,
-    awaitingVisits: stat.awaiting_visits,
-    completedVisits: stat.completed_visits,
-    atConversionRate: stat.at_conversion_rate,
-    enrollments: stat.enrollments
-  }));
-};
+  const baseQuery = {
+    month_year: monthYear,
+    ...(unitId && unitId !== 'all' ? { unit_id: unitId } : {})
+  };
 
-export const useCommercialStats = (month: string, year: string) => {
   const { data: unitStatsData, isLoading: isLoadingUnit } = useQuery({
-    queryKey: ['commercial-unit-stats', month, year],
+    queryKey: ['commercial-unit-stats', monthYear, unitId],
     queryFn: async () => {
-      console.log('Fetching unit stats:', { month, year });
+      console.log('Fetching unit stats:', { monthYear, unitId });
       
-      const monthNum = parseInt(month, 10);
-      const yearNum = parseInt(year, 10);
-      
-      if (isNaN(monthNum) || isNaN(yearNum)) {
-        console.error('Invalid month or year values:', { month, year });
-        throw new Error('Invalid month or year values');
-      }
-
-      const { data, error } = await supabase
+      let query = supabase
         .from('commercial_unit_stats')
         .select('*')
-        .eq('month_year', `${yearNum}-${String(monthNum + 1).padStart(2, '0')}-01`);
+        .eq('month_year', monthYear);
+
+      if (unitId && unitId !== 'all') {
+        query = query.eq('unit_id', unitId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching unit stats:', error);
         throw error;
       }
 
-      return transformStats(data);
+      return data.map(stat => ({
+        id: stat.unit_id,
+        name: stat.unit_name,
+        newClients: stat.new_clients,
+        contactAttempts: stat.contact_attempts,
+        effectiveContacts: stat.effective_contacts,
+        ceConversionRate: stat.ce_conversion_rate,
+        scheduledVisits: stat.scheduled_visits,
+        agConversionRate: stat.ag_conversion_rate,
+        awaitingVisits: stat.awaiting_visits,
+        completedVisits: stat.completed_visits,
+        atConversionRate: stat.at_conversion_rate,
+        enrollments: stat.enrollments
+      }));
     }
   });
 
   const { data: userStatsData, isLoading: isLoadingUser } = useQuery({
-    queryKey: ['commercial-user-stats', month, year],
+    queryKey: ['commercial-user-stats', monthYear, unitId],
     queryFn: async () => {
-      console.log('Fetching user stats:', { month, year });
+      console.log('Fetching user stats:', { monthYear, unitId });
       
-      const monthNum = parseInt(month, 10);
-      const yearNum = parseInt(year, 10);
-
-      const { data, error } = await supabase
+      let query = supabase
         .from('commercial_user_stats')
         .select('*')
-        .eq('month_year', `${yearNum}-${String(monthNum + 1).padStart(2, '0')}-01`);
+        .eq('month_year', monthYear);
+
+      if (unitId && unitId !== 'all') {
+        query = query.eq('unit_id', unitId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching user stats:', error);
         throw error;
       }
 
-      return transformStats(data);
+      return data.map(stat => ({
+        id: stat.id,
+        name: stat.user_name,
+        newClients: stat.new_clients,
+        contactAttempts: stat.contact_attempts,
+        effectiveContacts: stat.effective_contacts,
+        ceConversionRate: stat.ce_conversion_rate,
+        scheduledVisits: stat.scheduled_visits,
+        agConversionRate: stat.ag_conversion_rate,
+        awaitingVisits: stat.awaiting_visits,
+        completedVisits: stat.completed_visits,
+        atConversionRate: stat.at_conversion_rate,
+        enrollments: stat.enrollments
+      }));
     }
   });
 
   const { data: sourceStatsData, isLoading: isLoadingSource } = useQuery({
-    queryKey: ['commercial-source-stats', month, year],
+    queryKey: ['commercial-source-stats', monthYear, unitId],
     queryFn: async () => {
-      console.log('Fetching source stats:', { month, year });
+      console.log('Fetching source stats:', { monthYear, unitId });
       
-      const monthNum = parseInt(month, 10);
-      const yearNum = parseInt(year, 10);
-
-      const { data, error } = await supabase
+      let query = supabase
         .from('commercial_source_stats')
         .select('*')
-        .eq('month_year', `${yearNum}-${String(monthNum + 1).padStart(2, '0')}-01`);
+        .eq('month_year', monthYear);
+
+      if (unitId && unitId !== 'all') {
+        query = query.eq('unit_id', unitId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching source stats:', error);
         throw error;
       }
 
-      return transformStats(data);
+      return data.map(stat => ({
+        id: stat.id,
+        name: stat.source_name,
+        newClients: stat.new_clients,
+        contactAttempts: stat.contact_attempts,
+        effectiveContacts: stat.effective_contacts,
+        ceConversionRate: stat.ce_conversion_rate,
+        scheduledVisits: stat.scheduled_visits,
+        agConversionRate: stat.ag_conversion_rate,
+        awaitingVisits: stat.awaiting_visits,
+        completedVisits: stat.completed_visits,
+        atConversionRate: stat.at_conversion_rate,
+        enrollments: stat.enrollments
+      }));
     }
   });
 
