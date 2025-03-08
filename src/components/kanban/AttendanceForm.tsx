@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Attendance } from "./types"
@@ -11,7 +10,6 @@ import { MatriculationMessage } from "./components/attendance/MatriculationMessa
 import { NegotiationSection } from "./components/attendance/NegotiationSection"
 import { LossReasonSection } from "./components/attendance/LossReasonSection"
 import { LossConfirmationDialog } from "./components/attendance/LossConfirmationDialog"
-import { useAttendanceSubmission } from "./hooks/useAttendanceSubmission"
 import { AttendanceFormProps } from "./types/attendance-form.types"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
@@ -26,14 +24,16 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
   const [qualityScore, setQualityScore] = useState<string>("")
   const [nextContactDate, setNextContactDate] = useState<Date>()
   const [showLossConfirmation, setShowLossConfirmation] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
   const { registerSale, isLoading: isSaleLoading } = useSale()
-  const { submitAttendance, isProcessing } = useAttendanceSubmission()
   const { toast } = useToast()
 
   const handleSubmit = async () => {
     if (!selectedResult) return
     
     try {
+      setIsProcessing(true)
+      
       // Validações específicas por tipo
       if (selectedResult === 'negociacao' && !nextContactDate) {
         toast({
@@ -53,23 +53,18 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
         return
       }
 
-      const success = await submitAttendance({
-        cardId,
+      await onSubmit({
         result: selectedResult,
+        cardId,
         qualityScore,
         selectedReasons,
         observations,
         nextContactDate
       })
-
-      if (success) {
-        onSubmit({
-          result: selectedResult,
-          cardId
-        })
-      }
     } catch (error) {
       console.error('Erro ao registrar atendimento:', error)
+    } finally {
+      setIsProcessing(false)
     }
   }
 
@@ -102,8 +97,7 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
       {isProcessing && (
         <Alert>
           <AlertDescription className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate 
--spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
             Processando atendimento...
           </AlertDescription>
         </Alert>

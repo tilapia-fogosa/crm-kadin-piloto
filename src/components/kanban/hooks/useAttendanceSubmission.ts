@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { format } from "date-fns"
 import { supabase } from "@/integrations/supabase/client"
@@ -29,7 +28,7 @@ export function useAttendanceSubmission() {
   }) => {
     return wrapSubmission(async () => {
       try {
-        console.log('Iniciando submissão de atendimento:', {
+        console.log('Iniciando submissão de atendimento em useAttendanceSubmission:', {
           cardId,
           result,
           qualityScore,
@@ -52,6 +51,7 @@ export function useAttendanceSubmission() {
         if (!session) throw new Error('Not authenticated')
 
         // Registra a atividade de Atendimento
+        console.log('Registrando atividade de atendimento')
         const { data: attendanceActivity, error: attendanceError } = await supabase
           .from('client_activities')
           .insert({
@@ -66,7 +66,10 @@ export function useAttendanceSubmission() {
           .select()
           .single()
 
-        if (attendanceError) throw attendanceError
+        if (attendanceError) {
+          console.error('Erro ao registrar atividade de atendimento:', attendanceError)
+          throw attendanceError
+        }
 
         // Se for matriculado, registra atividade de Matrícula
         if (result === 'matriculado') {
@@ -126,6 +129,7 @@ export function useAttendanceSubmission() {
           description: "O atendimento foi registrado com sucesso."
         })
 
+        console.log('Atendimento registrado com sucesso')
         return true
       } catch (error) {
         console.error('Erro ao registrar atendimento:', error)

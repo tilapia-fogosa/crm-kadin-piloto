@@ -7,6 +7,8 @@ import { useAttendanceSubmission } from "./useAttendanceSubmission"
 import { useCallback } from "react"
 
 export function useActivityOperations() {
+  console.log('Inicializando useActivityOperations')
+  
   // Call all hooks at the top level, unconditionally
   const contactAttemptHook = useContactAttempt()
   const effectiveContactHook = useEffectiveContact()
@@ -19,7 +21,13 @@ export function useActivityOperations() {
   const registerEffectiveContact = useCallback(effectiveContactHook.registerEffectiveContact, [effectiveContactHook.registerEffectiveContact])
   const registerScheduling = useCallback(schedulingHook.registerScheduling, [schedulingHook.registerScheduling])
   const deleteActivity = useCallback(activityDeletionHook.deleteActivity, [activityDeletionHook.deleteActivity])
-  const registerAttendance = useCallback(attendanceSubmissionHook.submitAttendance, [attendanceSubmissionHook.submitAttendance])
+  const registerAttendance = useCallback(
+    async (attendance) => {
+      console.log('Registrando atendimento via useActivityOperations:', attendance)
+      return attendanceSubmissionHook.submitAttendance(attendance)
+    },
+    [attendanceSubmissionHook.submitAttendance]
+  )
 
   return {
     registerAttempt,
