@@ -63,9 +63,9 @@ export function CardSheet({
     
     try {
       await onRegisterAttendance({
-        result: 'perdido',
         cardId: card.id,
-        lossReasons: reasons,
+        result: 'perdido',
+        selectedReasons: reasons,
         observations: observations
       })
 
