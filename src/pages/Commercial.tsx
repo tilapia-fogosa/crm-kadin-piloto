@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useFilteredCommercialStats } from '@/hooks/useFilteredCommercialStats';
 
 const MONTHS = [
@@ -141,14 +139,14 @@ export default function CommercialPage() {
           <div className="flex items-center gap-2">
             <span className="font-medium">Unidade:</span>
             <Select 
-              value={selectedUnitId || ''} 
+              value={selectedUnitId || 'all'} 
               onValueChange={setSelectedUnitId}
             >
               <SelectTrigger className="w-[280px]">
                 <SelectValue placeholder="Todas as unidades" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as unidades</SelectItem>
+                <SelectItem value="all">Todas as unidades</SelectItem>
                 {availableUnits.map(unit => (
                   <SelectItem key={unit.unit_id} value={unit.unit_id}>
                     {unit.units.name}
