@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,6 +10,7 @@ import {
 import { MultipleUnitSelectProps } from "./types/unit-select.types";
 import { useUnits } from "./hooks/useUnits";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export function MultipleUnitSelect({ 
   selectedUnits: externalSelectedUnits, 
@@ -21,7 +21,6 @@ export function MultipleUnitSelect({
   const { units, loading } = useUnits();
   const selectedUnits = externalSelectedUnits || [];
 
-  // Função simplificada para alternar seleção
   const toggleUnit = (unitId: string) => {
     console.log('Toggling unit:', unitId);
     const newSelectedUnits = selectedUnits.includes(unitId)
@@ -31,7 +30,6 @@ export function MultipleUnitSelect({
     onUnitsChange(newSelectedUnits);
   };
 
-  // Obtém os nomes das unidades selecionadas
   const selectedUnitNames = units
     .filter(unit => selectedUnits.includes(unit.id))
     .map(unit => `${unit.name} - ${unit.city}`);
@@ -49,9 +47,9 @@ export function MultipleUnitSelect({
             <div className="flex flex-wrap gap-1">
               {selectedUnitNames.map((name) => (
                 <Badge 
-                  variant="default" // Mudado para variant default para melhor contraste
+                  variant="default"
                   key={name}
-                  className="mr-1 mb-1 bg-primary text-primary-foreground" // Cores ajustadas para melhor visibilidade
+                  className="mr-1 mb-1 bg-primary text-primary-foreground"
                 >
                   {name}
                 </Badge>
@@ -62,35 +60,48 @@ export function MultipleUnitSelect({
           )}
         </SelectValue>
       </SelectTrigger>
-      <SelectContent className="w-[400px]">
+      <SelectContent 
+        className="w-[400px]"
+        align="start"
+        position="popper"
+        side="bottom"
+      >
         {loading ? (
           <div className="p-4 text-sm text-muted-foreground">
             Carregando unidades...
           </div>
         ) : (
-          <ScrollArea className="h-[200px]">
-            <div className="p-2 space-y-2">
-              {units.map((unit) => (
-                <div
-                  key={unit.id}
-                  className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md cursor-pointer"
-                  onClick={() => toggleUnit(unit.id)}
-                >
-                  <Checkbox 
-                    checked={selectedUnits.includes(unit.id)}
-                    onCheckedChange={() => toggleUnit(unit.id)}
-                    id={`unit-${unit.id}`}
-                  />
-                  <label
-                    htmlFor={`unit-${unit.id}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-grow"
+          <div className="relative">
+            {units.length > 8 && (
+              <div className="absolute right-2 top-0 z-10 flex flex-col gap-1 p-1">
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </div>
+            )}
+            <ScrollArea className="h-[400px] pr-6">
+              <div className="p-2 space-y-2">
+                {units.map((unit) => (
+                  <div
+                    key={unit.id}
+                    className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md cursor-pointer"
+                    onClick={() => toggleUnit(unit.id)}
                   >
-                    {unit.name} - {unit.city}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
+                    <Checkbox 
+                      checked={selectedUnits.includes(unit.id)}
+                      onCheckedChange={() => toggleUnit(unit.id)}
+                      id={`unit-${unit.id}`}
+                    />
+                    <label
+                      htmlFor={`unit-${unit.id}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-grow"
+                    >
+                      {unit.name} - {unit.city}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
         )}
       </SelectContent>
     </Select>
