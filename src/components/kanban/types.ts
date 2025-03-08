@@ -45,8 +45,10 @@ export type Scheduling = {
 export type Attendance = {
   result: 'matriculado' | 'negociacao' | 'perdido'
   cardId: string
-  lossReasons?: string[]
+  qualityScore?: string
+  selectedReasons?: string[]
   observations?: string
+  nextContactDate?: Date
 }
 
 export type PaymentMethod = 'dinheiro' | 'pix' | 'cartao_credito' | 'cartao_debito' | 'boleto' | 'recorrencia';
