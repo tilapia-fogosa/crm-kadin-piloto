@@ -1567,6 +1567,7 @@ export type Database = {
           created_at: string | null
           lead_source: string | null
           month: number | null
+          name: string | null
           scheduled_date: string | null
           source_name: string | null
           status: string | null
