@@ -1569,6 +1569,7 @@ export type Database = {
     Views: {
       commercial_activities_data: {
         Row: {
+          activity_created_at: string | null
           client_id: string | null
           created_at: string | null
           lead_source: string | null
@@ -1613,9 +1614,9 @@ export type Database = {
           enrollments: number | null
           id: string | null
           month_year: string | null
+          name: string | null
           new_clients: number | null
           scheduled_visits: number | null
-          source_name: string | null
           unit_id: string | null
         }
         Relationships: [
@@ -1646,10 +1647,10 @@ export type Database = {
           effective_contacts: number | null
           enrollments: number | null
           month_year: string | null
+          name: string | null
           new_clients: number | null
           scheduled_visits: number | null
           unit_id: string | null
-          unit_name: string | null
         }
         Relationships: [
           {
@@ -1673,10 +1674,10 @@ export type Database = {
           enrollments: number | null
           id: string | null
           month_year: string | null
+          name: string | null
           new_clients: number | null
           scheduled_visits: number | null
           unit_id: string | null
-          user_name: string | null
         }
         Relationships: [
           {

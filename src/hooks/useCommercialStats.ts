@@ -47,7 +47,7 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
 
       return data.map(stat => ({
         id: stat.unit_id,
-        name: stat.unit_name,
+        name: stat.name,
         newClients: stat.new_clients,
         contactAttempts: stat.contact_attempts,
         effectiveContacts: stat.effective_contacts,
@@ -85,7 +85,7 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
 
       return data.map(stat => ({
         id: stat.id,
-        name: stat.user_name,
+        name: stat.name,
         newClients: stat.new_clients,
         contactAttempts: stat.contact_attempts,
         effectiveContacts: stat.effective_contacts,
@@ -123,7 +123,7 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
 
       return data.map(stat => ({
         id: stat.id,
-        name: stat.source_name,
+        name: stat.name,
         newClients: stat.new_clients,
         contactAttempts: stat.contact_attempts,
         effectiveContacts: stat.effective_contacts,
