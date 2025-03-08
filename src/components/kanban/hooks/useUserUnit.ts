@@ -27,21 +27,22 @@ export function useUserUnit() {
       const { data: unitUsers, error } = await supabase
         .from('unit_users')
         .select(`
-          unit_id,
+          DISTINCT ON (unit_id) unit_id,
           units (
             id,
             name
           )
         `)
         .eq('user_id', session.user.id)
-        .eq('active', true);
+        .eq('active', true)
+        .order('unit_id');  // Required for DISTINCT ON
 
       if (error) {
         console.error('Erro ao buscar unidades do usuário:', error);
         throw error;
       }
 
-      console.log('Unidades encontradas:', unitUsers);
+      console.log('Unidades encontradas (sem duplicatas):', unitUsers);
       return unitUsers;
     }
   });
