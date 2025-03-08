@@ -1,14 +1,14 @@
+
 import { useState } from "react"
 import { format } from "date-fns"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
-import { Attendance } from "../types"
 import { useDebounceSubmission } from "./useDebounceSubmission"
 import { useQueryClient } from "@tanstack/react-query"
 
 export function useAttendanceSubmission() {
   const { toast } = useToast()
-  const { isProcessing, wrapSubmission } = useDebounceSubmission()
+  const { isProcessing, wrapSubmission } = useDebounceSubmission({ debounceMs: 2000 })
   const queryClient = useQueryClient()
 
   const submitAttendance = async ({
@@ -27,16 +27,17 @@ export function useAttendanceSubmission() {
     nextContactDate?: Date
   }) => {
     return wrapSubmission(async () => {
-      try {
-        console.log('Iniciando submissão de atendimento em useAttendanceSubmission:', {
-          cardId,
-          result,
-          qualityScore,
-          selectedReasons,
-          observations,
-          nextContactDate
-        })
+      const submissionId = Math.random().toString(36).substring(7)
+      console.log(`[${submissionId}] Iniciando submissão de atendimento:`, {
+        cardId,
+        result,
+        qualityScore,
+        selectedReasons,
+        observations,
+        nextContactDate
+      })
 
+      try {
         // Get client's unit_id
         const { data: clientData, error: clientError } = await supabase
           .from('clients')
@@ -44,14 +45,23 @@ export function useAttendanceSubmission() {
           .eq('id', cardId)
           .single()
 
-        if (clientError) throw clientError
-        if (!clientData?.unit_id) throw new Error('Client has no unit_id')
+        if (clientError) {
+          console.error(`[${submissionId}] Erro ao buscar unit_id do cliente:`, clientError)
+          throw clientError
+        }
+        if (!clientData?.unit_id) {
+          console.error(`[${submissionId}] Cliente sem unit_id`)
+          throw new Error('Client has no unit_id')
+        }
 
         const session = (await supabase.auth.getSession()).data.session
-        if (!session) throw new Error('Not authenticated')
+        if (!session) {
+          console.error(`[${submissionId}] Usuário não autenticado`)
+          throw new Error('Not authenticated')
+        }
 
         // Registra a atividade de Atendimento
-        console.log('Registrando atividade de atendimento')
+        console.log(`[${submissionId}] Registrando atividade de atendimento`)
         const { data: attendanceActivity, error: attendanceError } = await supabase
           .from('client_activities')
           .insert({
@@ -67,13 +77,13 @@ export function useAttendanceSubmission() {
           .single()
 
         if (attendanceError) {
-          console.error('Erro ao registrar atividade de atendimento:', attendanceError)
+          console.error(`[${submissionId}] Erro ao registrar atividade de atendimento:`, attendanceError)
           throw attendanceError
         }
 
         // Se for matriculado, registra atividade de Matrícula
         if (result === 'matriculado') {
-          console.log("Cliente matriculado, registrando atividade de matrícula")
+          console.log(`[${submissionId}] Cliente matriculado, registrando atividade de matrícula`)
           
           const { error: matriculaError } = await supabase
             .from('client_activities')
@@ -86,12 +96,15 @@ export function useAttendanceSubmission() {
               active: true
             })
 
-          if (matriculaError) throw matriculaError
+          if (matriculaError) {
+            console.error(`[${submissionId}] Erro ao registrar atividade de matrícula:`, matriculaError)
+            throw matriculaError
+          }
         }
 
         // Se houver motivos de perda, registra-os
         if (result === 'perdido' && selectedReasons?.length) {
-          console.log("Registrando motivos de perda:", selectedReasons)
+          console.log(`[${submissionId}] Registrando motivos de perda:`, selectedReasons)
           
           const reasonEntries = selectedReasons.map(reasonId => ({
             client_id: cardId,
@@ -103,7 +116,10 @@ export function useAttendanceSubmission() {
             .from('client_loss_reasons')
             .insert(reasonEntries)
 
-          if (reasonsError) throw reasonsError
+          if (reasonsError) {
+            console.error(`[${submissionId}] Erro ao registrar motivos de perda:`, reasonsError)
+            throw reasonsError
+          }
         }
 
         // Atualiza o status do cliente
@@ -120,19 +136,22 @@ export function useAttendanceSubmission() {
           .update(updateData)
           .eq('id', cardId)
 
-        if (updateError) throw updateError
+        if (updateError) {
+          console.error(`[${submissionId}] Erro ao atualizar cliente:`, updateError)
+          throw updateError
+        }
 
         await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
+        console.log(`[${submissionId}] Atendimento registrado com sucesso`)
         toast({
           title: "Atendimento registrado",
           description: "O atendimento foi registrado com sucesso."
         })
 
-        console.log('Atendimento registrado com sucesso')
         return true
       } catch (error) {
-        console.error('Erro ao registrar atendimento:', error)
+        console.error(`[${submissionId}] Erro ao registrar atendimento:`, error)
         toast({
           variant: "destructive",
           title: "Erro ao registrar atendimento",
