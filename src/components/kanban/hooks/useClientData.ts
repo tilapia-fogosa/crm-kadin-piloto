@@ -1,7 +1,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { RealtimePostgresInsertPayload, RealtimePostgresUpdatePayload } from "@supabase/supabase-js"
+import { RealtimePostgresInsertPayload, RealtimePostgresUpdatePayload, RealtimePostgresDeletePayload } from "@supabase/supabase-js"
 import { useEffect } from "react"
 import { useUserUnit } from "./useUserUnit"
 
@@ -11,43 +11,43 @@ export function useClientData() {
 
   // Enable realtime subscription when the hook is mounted
   useEffect(() => {
+    console.log('Setting up realtime subscriptions for clients and activities')
+    
     // Subscribe to realtime changes
     const channel = supabase
       .channel('schema-db-changes')
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*', // Listen to all events
           schema: 'public',
           table: 'clients'
         },
-        (payload: RealtimePostgresInsertPayload<any>) => {
-          console.log('New client inserted:', payload)
-          // Invalidate all relevant queries
+        (payload) => {
+          console.log('Client change detected:', payload)
           queryClient.invalidateQueries({ queryKey: ['clients'] })
-          queryClient.invalidateQueries({ queryKey: ['activity-dashboard'] })
-          queryClient.invalidateQueries({ queryKey: ['scheduled-leads'] })
         }
       )
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*', // Listen to all events
           schema: 'public',
-          table: 'clients'
+          table: 'client_activities'
         },
-        (payload: RealtimePostgresUpdatePayload<any>) => {
-          console.log('Client updated:', payload)
-          // Invalidate all relevant queries
+        (payload) => {
+          console.log('Activity change detected:', payload)
           queryClient.invalidateQueries({ queryKey: ['clients'] })
           queryClient.invalidateQueries({ queryKey: ['activity-dashboard'] })
-          queryClient.invalidateQueries({ queryKey: ['scheduled-leads'] })
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status)
+      })
 
     // Cleanup subscription on unmount
     return () => {
+      console.log('Cleaning up realtime subscriptions')
       supabase.removeChannel(channel)
     }
   }, [queryClient])
