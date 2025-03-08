@@ -2,7 +2,22 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { CopyIcon } from "lucide-react"
-import { webhookExample } from "./webhook-example"
+
+// Updated example with all required fields for v2
+const makeExample = {
+  name: "João Silva",
+  phone_number: "+5511999999999",
+  registration_cpf: "123.456.789-00",
+  registration_name: "Maria Silva",
+  email: "joao@email.com",
+  lead_source: "fb",
+  observations: "Cliente interessado no curso de inglês",
+  meta_id: "123456789",
+  original_ad: "Anúncio Principal - Curso de Inglês",
+  original_adset: "Segmentação - 25-35 anos - São Paulo",
+  age_range: "25-35",
+  unit_number: 1
+}
 
 interface MakeSectionProps {
   onCopy: (text: string) => void
@@ -33,7 +48,7 @@ export function MakeSection({ onCopy }: MakeSectionProps) {
             <p className="text-muted-foreground">
               Adicione um novo módulo "HTTP Make a Request" e configure como POST request para o endpoint:
               <code className="block bg-secondary p-2 rounded mt-2">
-                https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/create-client
+                https://hkvjdxxndapxpslovrlc.supabase.co/functions/v1/create-client-v2
               </code>
             </p>
           </li>
@@ -56,19 +71,29 @@ Prefer: return=minimal`}
             </p>
             <div className="relative mt-2">
               <pre className="bg-secondary p-4 rounded-lg">
-                {JSON.stringify(webhookExample, null, 2)}
+                {JSON.stringify(makeExample, null, 2)}
               </pre>
               <Button
                 variant="outline"
                 size="icon"
                 className="absolute top-2 right-2"
-                onClick={() => onCopy(JSON.stringify(webhookExample, null, 2))}
+                onClick={() => onCopy(JSON.stringify(makeExample, null, 2))}
               >
                 <CopyIcon className="h-4 w-4" />
               </Button>
             </div>
           </li>
         </ol>
+
+        <div className="mt-6 bg-secondary p-4 rounded-lg">
+          <h3 className="text-xl font-semibold mb-4">Campos Obrigatórios</h3>
+          <ul className="list-disc pl-6 space-y-2">
+            <li><code>name</code> - Nome do lead</li>
+            <li><code>phone_number</code> - Telefone do lead</li>
+            <li><code>registration_cpf</code> - CPF do responsável pelo cadastro</li>
+            <li><code>registration_name</code> - Nome do responsável pelo cadastro</li>
+          </ul>
+        </div>
 
         <div className="mt-6">
           <h3 className="text-xl font-semibold mb-2">Testando a Integração</h3>
