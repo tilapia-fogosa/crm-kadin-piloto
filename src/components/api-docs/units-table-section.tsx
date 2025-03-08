@@ -1,9 +1,11 @@
 
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
+import { useUnitsFilter } from "./hooks/useUnitsFilter"
 
-interface UnitTableData {
+export interface UnitTableData {
   name: string
   state: string
   city: string
@@ -22,7 +24,7 @@ export function UnitsTableSection() {
         .from('units')
         .select('name, state, city, unit_number')
         .eq('active', true)
-        .order('unit_number')
+        .order('unit_number', { ascending: true })
       
       if (error) {
         console.error('Error fetching units:', error)
@@ -34,6 +36,8 @@ export function UnitsTableSection() {
     }
   })
 
+  const { searchTerm, setSearchTerm, filteredUnits } = useUnitsFilter(units)
+
   if (isLoading) {
     return <div>Carregando unidades...</div>
   }
@@ -44,6 +48,16 @@ export function UnitsTableSection() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center space-x-2">
+        <Input
+          type="search"
+          placeholder="Buscar por unidade, estado ou cidade..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -54,7 +68,7 @@ export function UnitsTableSection() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {units.map((unit) => (
+          {filteredUnits.map((unit) => (
             <TableRow key={unit.unit_number}>
               <TableCell>{unit.name}</TableCell>
               <TableCell>{unit.state}</TableCell>
