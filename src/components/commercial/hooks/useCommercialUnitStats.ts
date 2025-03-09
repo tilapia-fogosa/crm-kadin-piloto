@@ -38,24 +38,28 @@ export function useCommercialUnitStats(
 
       // Buscar dados agregados por unidade
       const [clientsResult, activitiesResult] = await Promise.all([
-        supabase.from('clients')
-          .select('unit_id, count(*)')
+        supabase
+          .from('clients')
+          .select('unit_id, count')
           .eq('active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
           .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : '')
-          .groupBy('unit_id'),
+          .select('count(*)', { count: 'exact' })
+          .select('unit_id'),
         
-        supabase.from('client_activities')
+        supabase
+          .from('client_activities')
           .select(`
             unit_id,
             tipo_atividade,
-            count(*)
+            count
           `)
           .eq('active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
-          .groupBy('unit_id, tipo_atividade')
+          .select('count(*)', { count: 'exact' })
+          .select('unit_id, tipo_atividade')
       ]);
 
       if (clientsResult.error) throw clientsResult.error;
@@ -68,28 +72,28 @@ export function useCommercialUnitStats(
 
       // Mapear os resultados para cada unidade disponível
       const unitStats: UnitStats[] = availableUnits.map(unit => {
-        const clients = clientsResult.data.find(c => c.unit_id === unit.unit_id)?.count || 0;
+        const clients = clientsResult.data.filter(c => c.unit_id === unit.unit_id).length;
         const activities = activitiesResult.data.filter(a => a.unit_id === unit.unit_id);
 
         const contactAttempts = activities.filter(a => 
           ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(a.tipo_atividade)
-        ).reduce((sum, a) => sum + a.count, 0);
+        ).length;
 
         const effectiveContacts = activities.filter(a => 
           ['Contato Efetivo', 'Agendamento'].includes(a.tipo_atividade)
-        ).reduce((sum, a) => sum + a.count, 0);
+        ).length;
 
         const scheduledVisits = activities.filter(a => 
           a.tipo_atividade === 'Agendamento'
-        ).reduce((sum, a) => sum + a.count, 0);
+        ).length;
 
         const completedVisits = activities.filter(a => 
           a.tipo_atividade === 'Atendimento'
-        ).reduce((sum, a) => sum + a.count, 0);
+        ).length;
 
         const enrollments = activities.filter(a => 
           a.tipo_atividade === 'Matrícula'
-        ).reduce((sum, a) => sum + a.count, 0);
+        ).length;
 
         return {
           unit_id: unit.unit_id,
