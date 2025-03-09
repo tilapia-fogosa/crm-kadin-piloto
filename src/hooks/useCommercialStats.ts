@@ -17,6 +17,40 @@ interface CommercialStats {
   enrollments: number;
 }
 
+interface RawCommercialStats {
+  unit_id?: string;
+  id?: string;
+  name: string;
+  month_year: string;
+  new_clients: number;
+  contact_attempts: number;
+  effective_contacts: number;
+  ce_conversion_rate: number;
+  scheduled_visits: number;
+  ag_conversion_rate: number;
+  awaiting_visits: number;
+  completed_visits: number;
+  at_conversion_rate: number;
+  enrollments: number;
+}
+
+const transformStats = (data: RawCommercialStats[]): CommercialStats[] => {
+  return data.map(stat => ({
+    id: stat.unit_id || stat.id || '',
+    name: stat.name,
+    newClients: stat.new_clients,
+    contactAttempts: stat.contact_attempts,
+    effectiveContacts: stat.effective_contacts,
+    ceConversionRate: stat.ce_conversion_rate,
+    scheduledVisits: stat.scheduled_visits,
+    agConversionRate: stat.ag_conversion_rate,
+    awaitingVisits: stat.awaiting_visits,
+    completedVisits: stat.completed_visits,
+    atConversionRate: stat.at_conversion_rate,
+    enrollments: stat.enrollments
+  }));
+};
+
 export const useCommercialStats = (month: string, year: string, unitId?: string | null) => {
   console.log('Fetching stats with unit_id:', unitId);
   
@@ -24,7 +58,7 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
   const yearNum = parseInt(year, 10);
   const monthYear = `${yearNum}-${String(monthNum + 1).padStart(2, '0')}-01`;
 
-  const { data: unitStatsData, isLoading: isLoadingUnit } = useQuery({
+  const { data: unitStatsData, isLoading: isLoadingUnit } = useQuery<RawCommercialStats[], Error>({
     queryKey: ['commercial-unit-stats', monthYear, unitId],
     queryFn: async () => {
       console.log('Fetching unit stats:', { monthYear, unitId });
@@ -46,25 +80,11 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
       }
 
       console.log('Unit stats data:', data);
-
-      return data.map(stat => ({
-        id: stat.unit_id,
-        name: stat.name,
-        newClients: stat.new_clients,
-        contactAttempts: stat.contact_attempts,
-        effectiveContacts: stat.effective_contacts,
-        ceConversionRate: stat.ce_conversion_rate,
-        scheduledVisits: stat.scheduled_visits,
-        agConversionRate: stat.ag_conversion_rate,
-        awaitingVisits: stat.awaiting_visits,
-        completedVisits: stat.completed_visits,
-        atConversionRate: stat.at_conversion_rate,
-        enrollments: stat.enrollments
-      }));
+      return data;
     }
   });
 
-  const { data: userStatsData, isLoading: isLoadingUser } = useQuery({
+  const { data: userStatsData, isLoading: isLoadingUser } = useQuery<RawCommercialStats[], Error>({
     queryKey: ['commercial-user-stats', monthYear, unitId],
     queryFn: async () => {
       console.log('Fetching user stats:', { monthYear, unitId });
@@ -86,25 +106,11 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
       }
 
       console.log('User stats data:', data);
-
-      return data.map(stat => ({
-        id: stat.id,
-        name: stat.name,
-        newClients: stat.new_clients,
-        contactAttempts: stat.contact_attempts,
-        effectiveContacts: stat.effective_contacts,
-        ceConversionRate: stat.ce_conversion_rate,
-        scheduledVisits: stat.scheduled_visits,
-        agConversionRate: stat.ag_conversion_rate,
-        awaitingVisits: stat.awaiting_visits,
-        completedVisits: stat.completed_visits,
-        atConversionRate: stat.at_conversion_rate,
-        enrollments: stat.enrollments
-      }));
+      return data;
     }
   });
 
-  const { data: sourceStatsData, isLoading: isLoadingSource } = useQuery({
+  const { data: sourceStatsData, isLoading: isLoadingSource } = useQuery<RawCommercialStats[], Error>({
     queryKey: ['commercial-source-stats', monthYear, unitId],
     queryFn: async () => {
       console.log('Fetching source stats:', { monthYear, unitId });
@@ -126,28 +132,14 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
       }
 
       console.log('Source stats data:', data);
-
-      return data.map(stat => ({
-        id: stat.id,
-        name: stat.name,
-        newClients: stat.new_clients,
-        contactAttempts: stat.contact_attempts,
-        effectiveContacts: stat.effective_contacts,
-        ceConversionRate: stat.ce_conversion_rate,
-        scheduledVisits: stat.scheduled_visits,
-        agConversionRate: stat.ag_conversion_rate,
-        awaitingVisits: stat.awaiting_visits,
-        completedVisits: stat.completed_visits,
-        atConversionRate: stat.at_conversion_rate,
-        enrollments: stat.enrollments
-      }));
+      return data;
     }
   });
 
   return {
-    unitStats: unitStatsData || [],
-    userStats: userStatsData || [],
-    sourceStats: sourceStatsData || [],
+    unitStats: unitStatsData ? transformStats(unitStatsData) : [],
+    userStats: userStatsData ? transformStats(userStatsData) : [],
+    sourceStats: sourceStatsData ? transformStats(sourceStatsData) : [],
     isLoading: isLoadingUnit || isLoadingUser || isLoadingSource
   };
 };
