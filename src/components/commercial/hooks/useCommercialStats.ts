@@ -1,37 +1,33 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, endOfMonth, setYear, setMonth, startOfDay, isAfter } from "date-fns";
 import { DailyStats } from "../../kanban/types/activity-dashboard.types";
-import { useUserUnit } from "../../kanban/hooks/useUserUnit";
 
 export function useCommercialStats(
   selectedSource: string,
   selectedMonth: string,
   selectedYear: string,
+  selectedUnitId: string | null
 ) {
-  const { data: userUnits } = useUserUnit();
-
   return useQuery({
-    queryKey: ['commercial-dashboard', selectedSource, selectedMonth, selectedYear, userUnits?.map(u => u.unit_id)],
+    queryKey: ['commercial-dashboard', selectedSource, selectedMonth, selectedYear, selectedUnitId],
     queryFn: async () => {
       const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
       const endDate = endOfMonth(startDate);
-      const unitIds = userUnits?.map(u => u.unit_id) || [];
       const today = startOfDay(new Date());
 
       console.log('Buscando estatísticas comerciais:', { 
         startDate: startDate.toISOString(), 
         endDate: endDate.toISOString(),
         selectedSource,
-        unitIds 
+        selectedUnitId 
       });
 
       const [clientsResult, activitiesResult] = await Promise.all([
         supabase.from('clients')
           .select('*')
           .eq('active', true)
-          .in('unit_id', unitIds)
+          .eq(selectedUnitId ? 'unit_id' : '', selectedUnitId || '')
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
           .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
@@ -40,7 +36,7 @@ export function useCommercialStats(
           .select('*, clients!inner(*)')
           .eq('active', true)
           .eq('clients.active', true)
-          .in('clients.unit_id', unitIds)
+          .eq(selectedUnitId ? 'unit_id' : '', selectedUnitId || '')
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
           .eq(selectedSource !== 'todos' ? 'clients.lead_source' : '', selectedSource !== 'todos' ? selectedSource : '')
@@ -114,6 +110,5 @@ export function useCommercialStats(
         atConversionRate: day.awaitingVisits > 0 ? (day.completedVisits / day.awaitingVisits) * 100 : 0
       }));
     },
-    enabled: userUnits !== undefined && userUnits.length > 0,
   });
 }

@@ -10,8 +10,14 @@ export function CommercialDashboard() {
   const [selectedSource, setSelectedSource] = useState<string>("todos");
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().getMonth().toString());
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 
-  const { data: stats, isLoading } = useCommercialStats(selectedSource, selectedMonth, selectedYear);
+  const { data: stats, isLoading } = useCommercialStats(
+    selectedSource, 
+    selectedMonth, 
+    selectedYear,
+    selectedUnitId
+  );
   const totals = calculateTotals(stats);
 
   return (
@@ -25,6 +31,8 @@ export function CommercialDashboard() {
           setSelectedMonth={setSelectedMonth}
           selectedYear={selectedYear}
           setSelectedYear={setSelectedYear}
+          selectedUnitId={selectedUnitId}
+          setSelectedUnitId={setSelectedUnitId}
         />
         <div className="mt-6">
           <CommercialTable stats={stats} totals={totals} isLoading={isLoading} />
