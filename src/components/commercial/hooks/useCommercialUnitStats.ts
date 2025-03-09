@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DailyStats } from "../../kanban/types/activity-dashboard.types";
@@ -29,13 +30,17 @@ export function useCommercialUnitStats(
       const startDate = new Date(parseInt(selectedYear), parseInt(selectedMonth), 1);
       const endDate = new Date(parseInt(selectedYear), parseInt(selectedMonth) + 1, 0);
 
+      // Get array of accessible unit IDs
+      const availableUnitIds = availableUnits.map(unit => unit.unit_id);
+
       console.log('Buscando estatísticas por unidade:', { 
         startDate: startDate.toISOString(), 
         endDate: endDate.toISOString(),
-        selectedSource
+        selectedSource,
+        availableUnitIds
       });
 
-      // Buscar dados agregados por unidade
+      // Buscar dados agregados por unidade, filtrando apenas unidades acessíveis
       const [clientsResult, activitiesResult] = await Promise.all([
         supabase
           .from('clients')
@@ -43,6 +48,7 @@ export function useCommercialUnitStats(
           .eq('active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
+          .in('unit_id', availableUnitIds)
           .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
         
         supabase
@@ -51,12 +57,13 @@ export function useCommercialUnitStats(
           .eq('active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
+          .in('unit_id', availableUnitIds)
       ]);
 
       if (clientsResult.error) throw clientsResult.error;
       if (activitiesResult.error) throw activitiesResult.error;
 
-      console.log('Resultados agrupados por unidade:', {
+      console.log('Resultados filtrados por unidades acessíveis:', {
         clients: clientsResult.data,
         activities: activitiesResult.data
       });
