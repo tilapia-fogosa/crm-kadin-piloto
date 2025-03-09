@@ -1,7 +1,8 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-// Base interfaces remain the same but with more explicit types
+// Base interfaces for strong typing
 interface CommercialStats {
   id: string;
   name: string;
@@ -36,7 +37,13 @@ interface RawCommercialStats {
 
 type ViewType = 'commercial_unit_stats' | 'commercial_user_stats' | 'commercial_source_stats';
 
-// Simplified transformation function with explicit types
+// Type for query results
+interface CommercialStatsQueryResult {
+  data: RawCommercialStats[] | null;
+  error: Error | null;
+}
+
+// Transformation function with explicit null handling
 function transformStats(data: RawCommercialStats[] | null): CommercialStats[] {
   if (!data) return [];
   
@@ -56,12 +63,14 @@ function transformStats(data: RawCommercialStats[] | null): CommercialStats[] {
   }));
 }
 
-// Type-safe query function with explicit return type
+// Query function with explicit return type
 async function fetchCommercialStats(
   view: ViewType,
   monthYear: string,
   unitId?: string | null
 ): Promise<RawCommercialStats[]> {
+  console.log(`Fetching ${view} data for ${monthYear}, unit: ${unitId || 'all'}`);
+  
   const { data, error } = await supabase
     .from(view)
     .select('*')
@@ -69,7 +78,11 @@ async function fetchCommercialStats(
     .eq('unit_id', unitId || '')
     .returns<RawCommercialStats[]>();
 
-  if (error) throw error;
+  if (error) {
+    console.error(`Error fetching ${view} data:`, error);
+    throw error;
+  }
+
   return data || [];
 }
 
@@ -77,18 +90,18 @@ async function fetchCommercialStats(
 export function useCommercialStats(month: string, year: string, unitId?: string | null) {
   const monthYear = `${year}-${String(parseInt(month) + 1).padStart(2, '0')}-01`;
 
-  // Use more explicit typing for each query
-  const unitStats = useQuery({
+  // Explicitly type each query
+  const unitStats = useQuery<RawCommercialStats[], Error>({
     queryKey: ['commercial-unit-stats', monthYear, unitId] as const,
     queryFn: () => fetchCommercialStats('commercial_unit_stats', monthYear, unitId),
   });
 
-  const userStats = useQuery({
+  const userStats = useQuery<RawCommercialStats[], Error>({
     queryKey: ['commercial-user-stats', monthYear, unitId] as const,
     queryFn: () => fetchCommercialStats('commercial_user_stats', monthYear, unitId),
   });
 
-  const sourceStats = useQuery({
+  const sourceStats = useQuery<RawCommercialStats[], Error>({
     queryKey: ['commercial-source-stats', monthYear, unitId] as const,
     queryFn: () => fetchCommercialStats('commercial_source_stats', monthYear, unitId),
   });
