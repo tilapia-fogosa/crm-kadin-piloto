@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Painel do Consultor", href: "/kanban", icon: KanbanSquare },
+  { name: "Indicadores Comerciais", href: "/commercial-stats", icon: LineChart },
   { 
     name: "Clientes", 
     href: "/clients", 

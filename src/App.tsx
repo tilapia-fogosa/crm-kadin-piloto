@@ -16,6 +16,7 @@ import ChangePassword from "@/pages/auth/ChangePassword";
 import AuthCallback from "@/pages/auth/callback";
 import UsersPage from "@/pages/users";
 import EnrollmentsPage from "@/pages/Enrollments";
+import CommercialStats from "@/pages/CommercialStats";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -68,6 +69,7 @@ function App() {
                 <Route path="/enrollments" element={<EnrollmentsPage />} />
                 <Route path="/sales" element={<EnrollmentsPage />} />
                 <Route path="/api-docs" element={<ApiDocsPage />} />
+                <Route path="/commercial-stats" element={<CommercialStats />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
