@@ -53,7 +53,8 @@ export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear
           </TableRow>
         ) : (
           <>
-            {unitStats?.map(unit => (
+            {/* First display individual unit stats */}
+            {unitStats?.map((unit) => (
               <TableRow key={unit.unit_id} className="hover:bg-muted/50 [&>td]:px-2.5">
                 <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
                   {unit.unit_name}
@@ -71,6 +72,7 @@ export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear
               </TableRow>
             ))}
             
+            {/* Then display the totals row */}
             {totals && (
               <TableRow className="hover:bg-muted/50 [&>td]:px-2.5 font-bold border-t-2">
                 <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">TOTAL</TableCell>
