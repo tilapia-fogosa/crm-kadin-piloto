@@ -82,6 +82,13 @@ export type Database = {
             foreignKeyName: "calendar_events_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "commercial_user_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -119,6 +126,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "class_types_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
+          },
           {
             foreignKeyName: "class_types_unit_id_fkey"
             columns: ["unit_id"]
@@ -175,6 +189,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "class_types"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classes_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
           },
           {
             foreignKeyName: "classes_unit_id_fkey"
@@ -242,6 +263,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "commercial_activities_data"
             referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "client_activities_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
           },
           {
             foreignKeyName: "client_activities_unit_id_fkey"
@@ -383,6 +411,13 @@ export type Database = {
             foreignKeyName: "clients_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
+          },
+          {
+            foreignKeyName: "clients_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
             referencedRelation: "units"
             referencedColumns: ["id"]
           },
@@ -432,6 +467,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "data_imports_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
+          },
           {
             foreignKeyName: "data_imports_unit_id_fkey"
             columns: ["unit_id"]
@@ -554,6 +596,13 @@ export type Database = {
             foreignKeyName: "kit_types_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
+          },
+          {
+            foreignKeyName: "kit_types_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
             referencedRelation: "units"
             referencedColumns: ["id"]
           },
@@ -597,6 +646,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "kit_types"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kit_versions_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
           },
           {
             foreignKeyName: "kit_versions_unit_id_fkey"
@@ -686,6 +742,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      materialized_view_refresh_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          refresh_completed_at: string
+          refresh_started_at: string
+          status: string
+          view_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          refresh_completed_at: string
+          refresh_started_at: string
+          status: string
+          view_name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          refresh_completed_at?: string
+          refresh_started_at?: string
+          status?: string
+          view_name?: string
+        }
+        Relationships: []
       }
       pedagogical_enrollments: {
         Row: {
@@ -807,6 +890,13 @@ export type Database = {
             foreignKeyName: "pedagogical_schedules_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
+          },
+          {
+            foreignKeyName: "pedagogical_schedules_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
             referencedRelation: "units"
             referencedColumns: ["id"]
           },
@@ -917,6 +1007,13 @@ export type Database = {
             foreignKeyName: "sale_webhooks_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
+          },
+          {
+            foreignKeyName: "sale_webhooks_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
             referencedRelation: "units"
             referencedColumns: ["id"]
           },
@@ -1018,6 +1115,13 @@ export type Database = {
             foreignKeyName: "fk_sales_created_by"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "commercial_user_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_sales_created_by"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1048,6 +1152,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "students"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
           },
           {
             foreignKeyName: "sales_unit_id_fkey"
@@ -1096,6 +1207,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sales"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_history_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
           },
           {
             foreignKeyName: "sales_history_unit_id_fkey"
@@ -1281,6 +1399,13 @@ export type Database = {
             foreignKeyName: "students_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
+          },
+          {
+            foreignKeyName: "students_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
             referencedRelation: "units"
             referencedColumns: ["id"]
           },
@@ -1340,8 +1465,22 @@ export type Database = {
             foreignKeyName: "fk_unit_users_profile"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "commercial_user_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_unit_users_profile"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unit_users_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
           },
           {
             foreignKeyName: "unit_users_unit_id_fkey"
@@ -1486,6 +1625,13 @@ export type Database = {
             foreignKeyName: "user_calendar_settings_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "commercial_user_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_calendar_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1600,6 +1746,13 @@ export type Database = {
             foreignKeyName: "client_activities_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
+            referencedRelation: "commercial_unit_stats"
+            referencedColumns: ["unit_id"]
+          },
+          {
+            foreignKeyName: "client_activities_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
             referencedRelation: "units"
             referencedColumns: ["id"]
           },
@@ -1627,19 +1780,18 @@ export type Database = {
           name: string | null
           new_clients: number | null
           scheduled_visits: number | null
-          unit_id: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "client_activities_unit_id_fkey"
-            columns: ["unit_id"]
+            foreignKeyName: "clients_lead_source_fkey"
+            columns: ["id"]
             isOneToOne: false
-            referencedRelation: "units"
+            referencedRelation: "lead_sources"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "clients_lead_source_fkey"
-            columns: ["id"]
+            columns: ["name"]
             isOneToOne: false
             referencedRelation: "lead_sources"
             referencedColumns: ["id"]
@@ -1662,15 +1814,7 @@ export type Database = {
           scheduled_visits: number | null
           unit_id: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "client_activities_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       commercial_user_stats: {
         Row: {
@@ -1687,17 +1831,8 @@ export type Database = {
           name: string | null
           new_clients: number | null
           scheduled_visits: number | null
-          unit_id: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "client_activities_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
@@ -1707,6 +1842,15 @@ export type Database = {
           new_password: string
         }
         Returns: boolean
+      }
+      check_materialized_view_refresh_status: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          view_name: string
+          last_refresh: string
+          status: string
+          duration_seconds: number
+        }[]
       }
       create_unit_user: {
         Args: {
@@ -1776,6 +1920,12 @@ export type Database = {
           p_role: Database["public"]["Enums"]["user_role"]
         }
         Returns: string
+      }
+      refresh_materialized_view_with_logging: {
+        Args: {
+          view_name: string
+        }
+        Returns: undefined
       }
       retry_failed_webhooks: {
         Args: Record<PropertyKey, never>
