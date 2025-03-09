@@ -1,10 +1,11 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CommercialTable } from "./components/CommercialTable";
 import { CommercialFilters } from "./components/CommercialFilters";
 import { useState } from "react";
 import { useCommercialStats } from "./hooks/useCommercialStats";
 import { calculateTotals } from "./utils/stats.utils";
+import { CommercialTableOne } from "./components/tables/CommercialTableOne";
+import { CommercialTableTwo } from "./components/tables/CommercialTableTwo";
+import { CommercialTableThree } from "./components/tables/CommercialTableThree";
 
 export function CommercialDashboard() {
   const [selectedSource, setSelectedSource] = useState<string>("todos");
@@ -34,9 +35,10 @@ export function CommercialDashboard() {
           selectedUnitId={selectedUnitId}
           setSelectedUnitId={setSelectedUnitId}
         />
-        <div className="mt-6">
-          <CommercialTable stats={stats} totals={totals} isLoading={isLoading} />
-        </div>
+        
+        <CommercialTableOne stats={stats} totals={totals} isLoading={isLoading} />
+        <CommercialTableTwo stats={stats} totals={totals} isLoading={isLoading} />
+        <CommercialTableThree stats={stats} totals={totals} isLoading={isLoading} />
       </div>
     </div>
   );
