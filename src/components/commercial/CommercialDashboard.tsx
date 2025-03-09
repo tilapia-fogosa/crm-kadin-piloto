@@ -1,4 +1,3 @@
-
 import { CommercialFilters } from "./components/CommercialFilters";
 import { useState } from "react";
 import { useCommercialStats } from "./hooks/useCommercialStats";
@@ -38,8 +37,13 @@ export function CommercialDashboard() {
         
         <div className="space-y-8 mt-6">
           <div>
-            <h2 className="text-lg font-semibold mb-4">Tabela 1</h2>
-            <CommercialTableOne stats={stats} totals={totals} isLoading={isLoading} />
+            <h2 className="text-lg font-semibold mb-4">Totais por Unidade</h2>
+            <CommercialTableOne 
+              selectedSource={selectedSource}
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+              totals={totals}
+            />
           </div>
           
           <div>
