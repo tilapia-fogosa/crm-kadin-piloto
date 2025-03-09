@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DailyStats } from "../../kanban/types/activity-dashboard.types";
@@ -40,26 +39,18 @@ export function useCommercialUnitStats(
       const [clientsResult, activitiesResult] = await Promise.all([
         supabase
           .from('clients')
-          .select('unit_id, count')
+          .select('unit_id')
           .eq('active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
-          .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : '')
-          .select('count(*)', { count: 'exact' })
-          .select('unit_id'),
+          .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
         
         supabase
           .from('client_activities')
-          .select(`
-            unit_id,
-            tipo_atividade,
-            count
-          `)
+          .select('unit_id, tipo_atividade')
           .eq('active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
-          .select('count(*)', { count: 'exact' })
-          .select('unit_id, tipo_atividade')
       ]);
 
       if (clientsResult.error) throw clientsResult.error;
