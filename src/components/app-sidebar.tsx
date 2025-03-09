@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,6 @@ const navigation = [
     ]
   },
   { name: "Vendas", href: "/sales", icon: DollarSign },
-  { name: "Gestão Comercial", href: "/commercial", icon: LineChart },
   { name: "Usuários", href: "/users", icon: Users },
   { name: "API Docs", href: "/api-docs", icon: FileCode },
 ];
