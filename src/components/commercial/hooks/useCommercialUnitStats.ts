@@ -48,7 +48,6 @@ export function useCommercialUnitStats(
           .eq('active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
-          .in('unit_id', availableUnitIds)
           .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
         
         supabase
@@ -57,56 +56,72 @@ export function useCommercialUnitStats(
           .eq('active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
-          .in('unit_id', availableUnitIds)
       ]);
 
       if (clientsResult.error) throw clientsResult.error;
       if (activitiesResult.error) throw activitiesResult.error;
 
-      console.log('Resultados filtrados por unidades acessíveis:', {
+      console.log('Dados brutos obtidos:', {
         clients: clientsResult.data,
         activities: activitiesResult.data
       });
 
-      // Mapear os resultados para cada unidade disponível
-      const unitStats: UnitStats[] = availableUnits.map(unit => {
-        const clients = clientsResult.data.filter(c => c.unit_id === unit.unit_id).length;
-        const activities = activitiesResult.data.filter(a => a.unit_id === unit.unit_id);
+      // Inicializar stats para todas as unidades disponíveis com valores zerados
+      const unitStats: UnitStats[] = availableUnits.map(unit => ({
+        unit_id: unit.unit_id,
+        unit_name: unit.units.name,
+        newClients: 0,
+        contactAttempts: 0,
+        effectiveContacts: 0,
+        scheduledVisits: 0,
+        awaitingVisits: 0,
+        completedVisits: 0,
+        enrollments: 0,
+        ceConversionRate: 0,
+        agConversionRate: 0,
+        atConversionRate: 0
+      }));
 
-        const contactAttempts = activities.filter(a => 
+      // Mapear os resultados para cada unidade
+      unitStats.forEach(unitStat => {
+        const unitClients = clientsResult.data.filter(c => c.unit_id === unitStat.unit_id).length;
+        const unitActivities = activitiesResult.data.filter(a => a.unit_id === unitStat.unit_id);
+
+        unitStat.newClients = unitClients;
+        unitStat.contactAttempts = unitActivities.filter(a => 
           ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(a.tipo_atividade)
         ).length;
 
-        const effectiveContacts = activities.filter(a => 
+        unitStat.effectiveContacts = unitActivities.filter(a => 
           ['Contato Efetivo', 'Agendamento'].includes(a.tipo_atividade)
         ).length;
 
-        const scheduledVisits = activities.filter(a => 
+        unitStat.scheduledVisits = unitActivities.filter(a => 
           a.tipo_atividade === 'Agendamento'
         ).length;
 
-        const completedVisits = activities.filter(a => 
+        unitStat.awaitingVisits = unitStat.scheduledVisits;
+
+        unitStat.completedVisits = unitActivities.filter(a => 
           a.tipo_atividade === 'Atendimento'
         ).length;
 
-        const enrollments = activities.filter(a => 
+        unitStat.enrollments = unitActivities.filter(a => 
           a.tipo_atividade === 'Matrícula'
         ).length;
 
-        return {
-          unit_id: unit.unit_id,
-          unit_name: unit.units.name,
-          newClients: Number(clients),
-          contactAttempts,
-          effectiveContacts,
-          scheduledVisits,
-          awaitingVisits: scheduledVisits, // Consideramos agendadas como aguardando
-          completedVisits,
-          enrollments,
-          ceConversionRate: contactAttempts > 0 ? (effectiveContacts / contactAttempts) * 100 : 0,
-          agConversionRate: effectiveContacts > 0 ? (scheduledVisits / effectiveContacts) * 100 : 0,
-          atConversionRate: scheduledVisits > 0 ? (completedVisits / scheduledVisits) * 100 : 0
-        };
+        // Calcular taxas de conversão
+        unitStat.ceConversionRate = unitStat.contactAttempts > 0 
+          ? (unitStat.effectiveContacts / unitStat.contactAttempts) * 100 
+          : 0;
+
+        unitStat.agConversionRate = unitStat.effectiveContacts > 0 
+          ? (unitStat.scheduledVisits / unitStat.effectiveContacts) * 100 
+          : 0;
+
+        unitStat.atConversionRate = unitStat.scheduledVisits > 0 
+          ? (unitStat.completedVisits / unitStat.scheduledVisits) * 100 
+          : 0;
       });
 
       console.log('Estatísticas calculadas por unidade:', unitStats);
