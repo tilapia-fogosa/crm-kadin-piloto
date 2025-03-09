@@ -1,8 +1,7 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-// Base interfaces
+// Base interfaces remain the same but with more explicit types
 interface CommercialStats {
   id: string;
   name: string;
@@ -35,8 +34,12 @@ interface RawCommercialStats {
   enrollments: number;
 }
 
-// Type-safe transformation function
-const transformStats = (data: RawCommercialStats[]): CommercialStats[] => {
+type ViewType = 'commercial_unit_stats' | 'commercial_user_stats' | 'commercial_source_stats';
+
+// Simplified transformation function with explicit types
+function transformStats(data: RawCommercialStats[] | null): CommercialStats[] {
+  if (!data) return [];
+  
   return data.map(stat => ({
     id: stat.unit_id || stat.id || '',
     name: stat.name,
@@ -51,62 +54,49 @@ const transformStats = (data: RawCommercialStats[]): CommercialStats[] => {
     atConversionRate: stat.at_conversion_rate,
     enrollments: stat.enrollments
   }));
-};
+}
 
-// Type-safe query function
-const fetchCommercialStats = async (
-  view: 'commercial_unit_stats' | 'commercial_user_stats' | 'commercial_source_stats',
+// Type-safe query function with explicit return type
+async function fetchCommercialStats(
+  view: ViewType,
   monthYear: string,
   unitId?: string | null
-): Promise<RawCommercialStats[]> => {
-  console.log(`Fetching ${view}:`, { monthYear, unitId });
-  
-  let query = supabase
+): Promise<RawCommercialStats[]> {
+  const { data, error } = await supabase
     .from(view)
     .select('*')
-    .eq('month_year', monthYear);
+    .eq('month_year', monthYear)
+    .eq('unit_id', unitId || '')
+    .returns<RawCommercialStats[]>();
 
-  if (unitId) {
-    query = query.eq('unit_id', unitId);
-  }
+  if (error) throw error;
+  return data || [];
+}
 
-  const { data, error } = await query;
+// Main hook with explicit types
+export function useCommercialStats(month: string, year: string, unitId?: string | null) {
+  const monthYear = `${year}-${String(parseInt(month) + 1).padStart(2, '0')}-01`;
 
-  if (error) {
-    console.error(`Error fetching ${view}:`, error);
-    throw error;
-  }
-
-  console.log(`${view} data:`, data);
-  return data;
-};
-
-export const useCommercialStats = (month: string, year: string, unitId?: string | null) => {
-  console.log('Fetching stats with unit_id:', unitId);
-  
-  const monthNum = parseInt(month, 10);
-  const yearNum = parseInt(year, 10);
-  const monthYear = `${yearNum}-${String(monthNum + 1).padStart(2, '0')}-01`;
-
-  const { data: unitStatsData, isLoading: isLoadingUnit } = useQuery<RawCommercialStats[], Error>({
-    queryKey: ['commercial-unit-stats', monthYear, unitId],
-    queryFn: () => fetchCommercialStats('commercial_unit_stats', monthYear, unitId)
+  // Use more explicit typing for each query
+  const unitStats = useQuery({
+    queryKey: ['commercial-unit-stats', monthYear, unitId] as const,
+    queryFn: () => fetchCommercialStats('commercial_unit_stats', monthYear, unitId),
   });
 
-  const { data: userStatsData, isLoading: isLoadingUser } = useQuery<RawCommercialStats[], Error>({
-    queryKey: ['commercial-user-stats', monthYear, unitId],
-    queryFn: () => fetchCommercialStats('commercial_user_stats', monthYear, unitId)
+  const userStats = useQuery({
+    queryKey: ['commercial-user-stats', monthYear, unitId] as const,
+    queryFn: () => fetchCommercialStats('commercial_user_stats', monthYear, unitId),
   });
 
-  const { data: sourceStatsData, isLoading: isLoadingSource } = useQuery<RawCommercialStats[], Error>({
-    queryKey: ['commercial-source-stats', monthYear, unitId],
-    queryFn: () => fetchCommercialStats('commercial_source_stats', monthYear, unitId)
+  const sourceStats = useQuery({
+    queryKey: ['commercial-source-stats', monthYear, unitId] as const,
+    queryFn: () => fetchCommercialStats('commercial_source_stats', monthYear, unitId),
   });
 
   return {
-    unitStats: unitStatsData ? transformStats(unitStatsData) : [],
-    userStats: userStatsData ? transformStats(userStatsData) : [],
-    sourceStats: sourceStatsData ? transformStats(sourceStatsData) : [],
-    isLoading: isLoadingUnit || isLoadingUser || isLoadingSource
+    unitStats: transformStats(unitStats.data),
+    userStats: transformStats(userStats.data),
+    sourceStats: transformStats(sourceStats.data),
+    isLoading: unitStats.isLoading || userStats.isLoading || sourceStats.isLoading
   };
-};
+}
