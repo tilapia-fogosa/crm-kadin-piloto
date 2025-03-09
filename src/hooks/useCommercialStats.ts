@@ -37,10 +37,10 @@ interface RawCommercialStats {
 
 type ViewType = 'commercial_unit_stats' | 'commercial_user_stats' | 'commercial_source_stats';
 
-// Type for query results
-interface CommercialStatsQueryResult {
-  data: RawCommercialStats[] | null;
-  error: Error | null;
+// Query options type to avoid deep inference
+interface CommercialQueryOptions {
+  queryKey: readonly [string, string, string | null | undefined];
+  queryFn: () => Promise<RawCommercialStats[]>;
 }
 
 // Transformation function with explicit null handling
@@ -86,25 +86,29 @@ async function fetchCommercialStats(
   return data || [];
 }
 
-// Main hook with explicit types
+// Main hook with simplified query configuration
 export function useCommercialStats(month: string, year: string, unitId?: string | null) {
   const monthYear = `${year}-${String(parseInt(month) + 1).padStart(2, '0')}-01`;
 
-  // Explicitly type each query
-  const unitStats = useQuery<RawCommercialStats[], Error>({
-    queryKey: ['commercial-unit-stats', monthYear, unitId] as const,
+  // Define query options explicitly to avoid type inference issues
+  const unitStatsOptions: CommercialQueryOptions = {
+    queryKey: ['commercial-unit-stats', monthYear, unitId],
     queryFn: () => fetchCommercialStats('commercial_unit_stats', monthYear, unitId),
-  });
+  };
 
-  const userStats = useQuery<RawCommercialStats[], Error>({
-    queryKey: ['commercial-user-stats', monthYear, unitId] as const,
+  const userStatsOptions: CommercialQueryOptions = {
+    queryKey: ['commercial-user-stats', monthYear, unitId],
     queryFn: () => fetchCommercialStats('commercial_user_stats', monthYear, unitId),
-  });
+  };
 
-  const sourceStats = useQuery<RawCommercialStats[], Error>({
-    queryKey: ['commercial-source-stats', monthYear, unitId] as const,
+  const sourceStatsOptions: CommercialQueryOptions = {
+    queryKey: ['commercial-source-stats', monthYear, unitId],
     queryFn: () => fetchCommercialStats('commercial_source_stats', monthYear, unitId),
-  });
+  };
+
+  const unitStats = useQuery<RawCommercialStats[], Error>(unitStatsOptions);
+  const userStats = useQuery<RawCommercialStats[], Error>(userStatsOptions);
+  const sourceStats = useQuery<RawCommercialStats[], Error>(sourceStatsOptions);
 
   return {
     unitStats: transformStats(unitStats.data),
