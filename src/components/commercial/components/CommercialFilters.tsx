@@ -1,8 +1,10 @@
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MONTHS, YEARS } from "../../kanban/constants/dashboard.constants";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUnit } from "@/contexts/UnitContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CommercialFiltersProps {
   selectedSource: string;
@@ -25,11 +27,15 @@ export function CommercialFilters({
   selectedUnitId,
   setSelectedUnitId,
 }: CommercialFiltersProps) {
-  const { availableUnits } = useUnit();
+  const { availableUnits, isLoading: isLoadingUnits } = useUnit();
   
-  console.log('Renderizando filtros comerciais com unidades disponíveis:', availableUnits);
+  console.log('Renderizando filtros comerciais:', {
+    isLoadingUnits,
+    availableUnits,
+    selectedUnitId
+  });
 
-  const { data: leadSources } = useQuery({
+  const { data: leadSources, isLoading: isLoadingLeadSources } = useQuery({
     queryKey: ['lead-sources'],
     queryFn: async () => {
       console.log('Buscando origens de leads para filtros comerciais');
@@ -39,11 +45,37 @@ export function CommercialFilters({
     }
   });
 
+  if (isLoadingUnits || isLoadingLeadSources) {
+    return (
+      <div className="flex flex-wrap gap-4 justify-start">
+        <div className="flex items-center gap-2">
+          <span className="font-medium">Unidade:</span>
+          <Skeleton className="h-10 w-[180px]" />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-medium">Origem:</span>
+          <Skeleton className="h-10 w-[180px]" />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-medium">Mês:</span>
+          <Skeleton className="h-10 w-[180px]" />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-medium">Ano:</span>
+          <Skeleton className="h-10 w-[180px]" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-wrap gap-4 justify-start">
       <div className="flex items-center gap-2">
         <span className="font-medium">Unidade:</span>
-        <Select value={selectedUnitId || "todos"} onValueChange={(value) => setSelectedUnitId(value === "todos" ? null : value)}>
+        <Select 
+          value={selectedUnitId || "todos"} 
+          onValueChange={(value) => setSelectedUnitId(value === "todos" ? null : value)}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Unidade" />
           </SelectTrigger>

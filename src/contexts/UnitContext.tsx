@@ -7,28 +7,39 @@ interface UnitContextType {
   setSelectedUnitId: (unitId: string | null) => void;
   availableUnits: { unit_id: string; units: { id: string; name: string; } }[];
   isLoading: boolean;
+  error: Error | null;
 }
 
 const UnitContext = createContext<UnitContextType | undefined>(undefined);
 
 export function UnitProvider({ children }: { children: React.ReactNode }) {
-  const { data: userUnits, isLoading } = useUserUnit();
+  const { data: userUnits, isLoading, error } = useUserUnit();
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
   // Set first available unit as default when units are loaded
   useEffect(() => {
-    if (userUnits && userUnits.length > 0 && !selectedUnitId) {
+    console.log('UnitProvider effect:', { isLoading, userUnits, initialized });
+    
+    if (!isLoading && userUnits && userUnits.length > 0 && !initialized) {
+      console.log('Setting initial unit:', userUnits[0].unit_id);
       setSelectedUnitId(userUnits[0].unit_id);
+      setInitialized(true);
     }
-  }, [userUnits, selectedUnitId]);
+  }, [userUnits, isLoading, initialized]);
+
+  const value = {
+    selectedUnitId,
+    setSelectedUnitId,
+    availableUnits: userUnits || [],
+    isLoading: isLoading || !initialized,
+    error
+  };
+
+  console.log('UnitProvider rendering with:', value);
 
   return (
-    <UnitContext.Provider value={{
-      selectedUnitId,
-      setSelectedUnitId,
-      availableUnits: userUnits || [],
-      isLoading
-    }}>
+    <UnitContext.Provider value={value}>
       {children}
     </UnitContext.Provider>
   );

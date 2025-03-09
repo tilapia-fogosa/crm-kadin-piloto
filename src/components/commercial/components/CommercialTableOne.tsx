@@ -1,7 +1,8 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TotalStats } from "../../kanban/types/activity-dashboard.types";
 import { useCommercialUnitStats, UnitStats } from "../hooks/useCommercialUnitStats";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useUnit } from "@/contexts/UnitContext";
 
 interface CommercialTableProps {
   selectedSource: string;
@@ -11,10 +12,18 @@ interface CommercialTableProps {
 }
 
 export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear, totals }: CommercialTableProps) {
-  const { data: unitStats, isLoading } = useCommercialUnitStats(selectedSource, selectedMonth, selectedYear);
+  const { isLoading: isLoadingUnits } = useUnit();
+  const { data: unitStats, isLoading: isLoadingStats } = useCommercialUnitStats(selectedSource, selectedMonth, selectedYear);
   
-  console.log('Renderizando Tabela 1 de indicadores comerciais por unidade:', { unitStats, totals });
+  const isLoading = isLoadingUnits || isLoadingStats;
   
+  console.log('Renderizando Tabela 1:', { 
+    isLoadingUnits,
+    isLoadingStats,
+    unitStats, 
+    totals 
+  });
+
   return (
     <Table>
       <TableHeader>
@@ -48,12 +57,17 @@ export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear
       </TableHeader>
       <TableBody>
         {isLoading ? (
-          <TableRow>
-            <TableCell colSpan={11} className="text-center text-xs py-3 px-2.5">Carregando...</TableCell>
-          </TableRow>
+          <>
+            {[1, 2, 3].map((i) => (
+              <TableRow key={i}>
+                <TableCell colSpan={11} className="p-2">
+                  <Skeleton className="h-8 w-full" />
+                </TableCell>
+              </TableRow>
+            ))}
+          </>
         ) : (
           <>
-            {/* First display individual unit stats */}
             {unitStats?.map((unit) => (
               <TableRow key={unit.unit_id} className="hover:bg-muted/50 [&>td]:px-2.5">
                 <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
@@ -72,7 +86,6 @@ export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear
               </TableRow>
             ))}
             
-            {/* Then display the totals row */}
             {totals && (
               <TableRow className="hover:bg-muted/50 [&>td]:px-2.5 font-bold border-t-2">
                 <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">TOTAL</TableCell>
