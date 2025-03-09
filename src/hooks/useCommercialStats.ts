@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+// Base interfaces
 interface CommercialStats {
   id: string;
   name: string;
@@ -34,6 +35,7 @@ interface RawCommercialStats {
   enrollments: number;
 }
 
+// Type-safe transformation function
 const transformStats = (data: RawCommercialStats[]): CommercialStats[] => {
   return data.map(stat => ({
     id: stat.unit_id || stat.id || '',
@@ -51,6 +53,34 @@ const transformStats = (data: RawCommercialStats[]): CommercialStats[] => {
   }));
 };
 
+// Type-safe query function
+const fetchCommercialStats = async (
+  view: 'commercial_unit_stats' | 'commercial_user_stats' | 'commercial_source_stats',
+  monthYear: string,
+  unitId?: string | null
+): Promise<RawCommercialStats[]> => {
+  console.log(`Fetching ${view}:`, { monthYear, unitId });
+  
+  let query = supabase
+    .from(view)
+    .select('*')
+    .eq('month_year', monthYear);
+
+  if (unitId) {
+    query = query.eq('unit_id', unitId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error(`Error fetching ${view}:`, error);
+    throw error;
+  }
+
+  console.log(`${view} data:`, data);
+  return data;
+};
+
 export const useCommercialStats = (month: string, year: string, unitId?: string | null) => {
   console.log('Fetching stats with unit_id:', unitId);
   
@@ -60,80 +90,17 @@ export const useCommercialStats = (month: string, year: string, unitId?: string 
 
   const { data: unitStatsData, isLoading: isLoadingUnit } = useQuery<RawCommercialStats[], Error>({
     queryKey: ['commercial-unit-stats', monthYear, unitId],
-    queryFn: async () => {
-      console.log('Fetching unit stats:', { monthYear, unitId });
-      
-      let query = supabase
-        .from('commercial_unit_stats')
-        .select('*')
-        .eq('month_year', monthYear);
-
-      if (unitId) {
-        query = query.eq('unit_id', unitId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching unit stats:', error);
-        throw error;
-      }
-
-      console.log('Unit stats data:', data);
-      return data;
-    }
+    queryFn: () => fetchCommercialStats('commercial_unit_stats', monthYear, unitId)
   });
 
   const { data: userStatsData, isLoading: isLoadingUser } = useQuery<RawCommercialStats[], Error>({
     queryKey: ['commercial-user-stats', monthYear, unitId],
-    queryFn: async () => {
-      console.log('Fetching user stats:', { monthYear, unitId });
-      
-      let query = supabase
-        .from('commercial_user_stats')
-        .select('*')
-        .eq('month_year', monthYear);
-
-      if (unitId) {
-        query = query.eq('unit_id', unitId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching user stats:', error);
-        throw error;
-      }
-
-      console.log('User stats data:', data);
-      return data;
-    }
+    queryFn: () => fetchCommercialStats('commercial_user_stats', monthYear, unitId)
   });
 
   const { data: sourceStatsData, isLoading: isLoadingSource } = useQuery<RawCommercialStats[], Error>({
     queryKey: ['commercial-source-stats', monthYear, unitId],
-    queryFn: async () => {
-      console.log('Fetching source stats:', { monthYear, unitId });
-      
-      let query = supabase
-        .from('commercial_source_stats')
-        .select('*')
-        .eq('month_year', monthYear);
-
-      if (unitId) {
-        query = query.eq('unit_id', unitId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching source stats:', error);
-        throw error;
-      }
-
-      console.log('Source stats data:', data);
-      return data;
-    }
+    queryFn: () => fetchCommercialStats('commercial_source_stats', monthYear, unitId)
   });
 
   return {
