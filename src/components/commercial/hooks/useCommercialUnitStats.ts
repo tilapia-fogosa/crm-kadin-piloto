@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DailyStats } from "../../kanban/types/activity-dashboard.types";
@@ -40,7 +39,7 @@ export function useCommercialUnitStats(
         availableUnitIds
       });
 
-      // Buscar dados agregados por unidade, filtrando apenas unidades acessíveis
+      // Fetch data filtered by accessible units
       const [clientsResult, activitiesResult] = await Promise.all([
         supabase
           .from('clients')
@@ -48,6 +47,7 @@ export function useCommercialUnitStats(
           .eq('active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
+          .in('unit_id', availableUnitIds)
           .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
         
         supabase
@@ -56,17 +56,18 @@ export function useCommercialUnitStats(
           .eq('active', true)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
+          .in('unit_id', availableUnitIds)
       ]);
 
       if (clientsResult.error) throw clientsResult.error;
       if (activitiesResult.error) throw activitiesResult.error;
 
-      console.log('Dados brutos obtidos:', {
+      console.log('Dados filtrados por unidades acessíveis:', {
         clients: clientsResult.data,
         activities: activitiesResult.data
       });
 
-      // Inicializar stats para todas as unidades disponíveis com valores zerados
+      // Initialize stats for all available units with zero values
       const unitStats: UnitStats[] = availableUnits.map(unit => ({
         unit_id: unit.unit_id,
         unit_name: unit.units.name,
@@ -82,7 +83,7 @@ export function useCommercialUnitStats(
         atConversionRate: 0
       }));
 
-      // Mapear os resultados para cada unidade
+      // Map results to each unit
       unitStats.forEach(unitStat => {
         const unitClients = clientsResult.data.filter(c => c.unit_id === unitStat.unit_id).length;
         const unitActivities = activitiesResult.data.filter(a => a.unit_id === unitStat.unit_id);
@@ -124,7 +125,7 @@ export function useCommercialUnitStats(
           : 0;
       });
 
-      console.log('Estatísticas calculadas por unidade:', unitStats);
+      console.log('Estatísticas calculadas por unidade (apenas unidades acessíveis):', unitStats);
       return unitStats;
     },
   });
