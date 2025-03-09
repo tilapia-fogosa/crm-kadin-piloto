@@ -1,9 +1,8 @@
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MONTHS, YEARS } from "../../kanban/constants/dashboard.constants";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useUnits } from "@/components/auth/hooks/useUnits";
+import { useUnit } from "@/contexts/UnitContext";
 
 interface CommercialFiltersProps {
   selectedSource: string;
@@ -26,7 +25,10 @@ export function CommercialFilters({
   selectedUnitId,
   setSelectedUnitId,
 }: CommercialFiltersProps) {
-  const { units } = useUnits();
+  const { availableUnits } = useUnit();
+  
+  console.log('Renderizando filtros comerciais com unidades disponíveis:', availableUnits);
+
   const { data: leadSources } = useQuery({
     queryKey: ['lead-sources'],
     queryFn: async () => {
@@ -47,9 +49,9 @@ export function CommercialFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todas</SelectItem>
-            {units?.map(unit => (
-              <SelectItem key={unit.id} value={unit.id}>
-                {unit.name} - {unit.city}
+            {availableUnits?.map(unitUser => (
+              <SelectItem key={unitUser.unit_id} value={unitUser.unit_id}>
+                {unitUser.units.name}
               </SelectItem>
             ))}
           </SelectContent>
