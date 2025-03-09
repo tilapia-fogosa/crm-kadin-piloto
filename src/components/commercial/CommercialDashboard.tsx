@@ -1,10 +1,11 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CommercialTable } from "./components/CommercialTable";
 import { CommercialFilters } from "./components/CommercialFilters";
 import { useState } from "react";
 import { useCommercialStats } from "./hooks/useCommercialStats";
 import { calculateTotals } from "./utils/stats.utils";
+import { CommercialTableOne } from "./components/CommercialTableOne";
+import { CommercialTableTwo } from "./components/CommercialTableTwo";
+import { CommercialTableThree } from "./components/CommercialTableThree";
 
 export function CommercialDashboard() {
   const [selectedSource, setSelectedSource] = useState<string>("todos");
@@ -34,8 +35,22 @@ export function CommercialDashboard() {
           selectedUnitId={selectedUnitId}
           setSelectedUnitId={setSelectedUnitId}
         />
-        <div className="mt-6">
-          <CommercialTable stats={stats} totals={totals} isLoading={isLoading} />
+        
+        <div className="space-y-8 mt-6">
+          <div>
+            <h2 className="text-lg font-semibold mb-4">Tabela 1</h2>
+            <CommercialTableOne stats={stats} totals={totals} isLoading={isLoading} />
+          </div>
+          
+          <div>
+            <h2 className="text-lg font-semibold mb-4">Tabela 2</h2>
+            <CommercialTableTwo stats={stats} totals={totals} isLoading={isLoading} />
+          </div>
+          
+          <div>
+            <h2 className="text-lg font-semibold mb-4">Tabela 3</h2>
+            <CommercialTableThree stats={stats} totals={totals} isLoading={isLoading} />
+          </div>
         </div>
       </div>
     </div>
