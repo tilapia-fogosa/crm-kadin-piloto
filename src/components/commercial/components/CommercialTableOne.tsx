@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TotalStats } from "../../kanban/types/activity-dashboard.types";
 import { useCommercialUnitStats } from "../hooks/useCommercialUnitStats";
@@ -52,6 +53,7 @@ export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear
           <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
             {"Matrí-\nculas"}
           </TableHead>
+          <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[10.8px]">% MA</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -82,6 +84,9 @@ export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear
                 <TableCell className="text-center text-xs py-0">{unit.completedVisits}</TableCell>
                 <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{unit.atConversionRate.toFixed(1)}%</TableCell>
                 <TableCell className="text-center text-xs py-[5px]">{unit.enrollments}</TableCell>
+                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
+                  {unit.completedVisits > 0 ? ((unit.enrollments / unit.completedVisits) * 100).toFixed(1) : '0.0'}%
+                </TableCell>
               </TableRow>
             ))}
           </>

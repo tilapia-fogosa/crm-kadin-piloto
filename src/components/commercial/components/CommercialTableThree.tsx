@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -41,12 +42,13 @@ export function CommercialTableThree({ stats, isLoading }: CommercialTableProps)
           <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
             {"Matrí-\nculas"}
           </TableHead>
+          <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[10.8px]">% MA</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {isLoading ? (
           <TableRow>
-            <TableCell colSpan={11} className="text-center text-xs py-3 px-2.5">Carregando...</TableCell>
+            <TableCell colSpan={12} className="text-center text-xs py-3 px-2.5">Carregando...</TableCell>
           </TableRow>
         ) : (
           <>
@@ -65,6 +67,9 @@ export function CommercialTableThree({ stats, isLoading }: CommercialTableProps)
                 <TableCell className="text-center text-xs py-0">{day.completedVisits}</TableCell>
                 <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{day.atConversionRate.toFixed(1)}%</TableCell>
                 <TableCell className="text-center text-xs py-[5px]">{day.enrollments}</TableCell>
+                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
+                  {day.completedVisits > 0 ? ((day.enrollments / day.completedVisits) * 100).toFixed(1) : '0.0'}%
+                </TableCell>
               </TableRow>
             ))}
           </>
