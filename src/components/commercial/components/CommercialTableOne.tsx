@@ -1,6 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TotalStats } from "../../kanban/types/activity-dashboard.types";
-import { useCommercialUnitStats, UnitStats } from "../hooks/useCommercialUnitStats";
+import { useCommercialUnitStats } from "../hooks/useCommercialUnitStats";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUnit } from "@/contexts/UnitContext";
 
@@ -11,7 +11,7 @@ interface CommercialTableProps {
   totals: TotalStats | null;
 }
 
-export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear, totals }: CommercialTableProps) {
+export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear }: CommercialTableProps) {
   const { isLoading: isLoadingUnits } = useUnit();
   const { data: unitStats, isLoading: isLoadingStats } = useCommercialUnitStats(selectedSource, selectedMonth, selectedYear);
   
@@ -20,8 +20,7 @@ export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear
   console.log('Renderizando Tabela 1:', { 
     isLoadingUnits,
     isLoadingStats,
-    unitStats, 
-    totals 
+    unitStats
   });
 
   return (
@@ -85,22 +84,6 @@ export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear
                 <TableCell className="text-center text-xs py-[5px]">{unit.enrollments}</TableCell>
               </TableRow>
             ))}
-            
-            {totals && (
-              <TableRow className="hover:bg-muted/50 [&>td]:px-2.5 font-bold border-t-2">
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">TOTAL</TableCell>
-                <TableCell className="text-center text-xs py-0">{totals.newClients}</TableCell>
-                <TableCell className="text-center text-xs py-0">{totals.contactAttempts}</TableCell>
-                <TableCell className="text-center text-xs py-0">{totals.effectiveContacts}</TableCell>
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.ceConversionRate.toFixed(1)}%</TableCell>
-                <TableCell className="text-center text-xs py-0">{totals.scheduledVisits}</TableCell>
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.agConversionRate.toFixed(1)}%</TableCell>
-                <TableCell className="text-center text-xs py-0">{totals.awaitingVisits}</TableCell>
-                <TableCell className="text-center text-xs py-0">{totals.completedVisits}</TableCell>
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.atConversionRate.toFixed(1)}%</TableCell>
-                <TableCell className="text-center text-xs py-[5px]">{totals.enrollments}</TableCell>
-              </TableRow>
-            )}
           </>
         )}
       </TableBody>

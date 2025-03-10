@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -10,8 +9,8 @@ interface CommercialTableProps {
   isLoading: boolean;
 }
 
-export function CommercialTableTwo({ stats, totals, isLoading }: CommercialTableProps) {
-  console.log('Renderizando Tabela 2 de indicadores comerciais:', { stats, totals });
+export function CommercialTableTwo({ stats, isLoading }: CommercialTableProps) {
+  console.log('Renderizando Tabela 2 de indicadores comerciais:', { stats });
   
   return (
     <Table>
@@ -68,22 +67,6 @@ export function CommercialTableTwo({ stats, totals, isLoading }: CommercialTable
                 <TableCell className="text-center text-xs py-[5px]">{day.enrollments}</TableCell>
               </TableRow>
             ))}
-            
-            {totals && (
-              <TableRow className="hover:bg-muted/50 [&>td]:px-2.5 font-bold border-t-2">
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">TOTAL</TableCell>
-                <TableCell className="text-center text-xs py-0">{totals.newClients}</TableCell>
-                <TableCell className="text-center text-xs py-0">{totals.contactAttempts}</TableCell>
-                <TableCell className="text-center text-xs py-0">{totals.effectiveContacts}</TableCell>
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.ceConversionRate.toFixed(1)}%</TableCell>
-                <TableCell className="text-center text-xs py-0">{totals.scheduledVisits}</TableCell>
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.agConversionRate.toFixed(1)}%</TableCell>
-                <TableCell className="text-center text-xs py-0">{totals.awaitingVisits}</TableCell>
-                <TableCell className="text-center text-xs py-0">{totals.completedVisits}</TableCell>
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.atConversionRate.toFixed(1)}%</TableCell>
-                <TableCell className="text-center text-xs py-[5px]">{totals.enrollments}</TableCell>
-              </TableRow>
-            )}
           </>
         )}
       </TableBody>
