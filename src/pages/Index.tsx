@@ -25,12 +25,16 @@ function Index() {
       ) : !selectedUnitId ? (
         <div>Selecione uma unidade para ver os dados</div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           <DashboardStats leadsStats={leadsStats} />
           
-          <div className="grid gap-6 md:grid-cols-2">
-            <LeadsChart />
-            <RecentClientsList />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="w-full">
+              <LeadsChart />
+            </div>
+            <div className="w-full">
+              <RecentClientsList />
+            </div>
           </div>
         </div>
       )}

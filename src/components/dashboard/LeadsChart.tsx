@@ -85,7 +85,7 @@ export function LeadsChart() {
 
   if (isLoading) {
     return (
-      <Card className="col-span-4">
+      <Card>
         <CardHeader>
           <CardTitle>Novos Leads por Mês</CardTitle>
         </CardHeader>
@@ -97,7 +97,7 @@ export function LeadsChart() {
   }
 
   return (
-    <Card className="col-span-4">
+    <Card>
       <CardHeader>
         <CardTitle>Novos Leads por Mês</CardTitle>
       </CardHeader>
