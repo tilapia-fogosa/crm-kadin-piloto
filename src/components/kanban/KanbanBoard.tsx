@@ -1,3 +1,4 @@
+
 import { useClientData } from "./hooks/useClientData"
 import { useActivityOperations } from "./hooks/useActivityOperations"
 import { useWhatsApp } from "./hooks/useWhatsApp"
@@ -53,14 +54,14 @@ export function KanbanBoard() {
   const columns = transformClientsToColumnData(filteredClients)
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col w-full">
       <BoardHeader 
         showPendingOnly={showPendingOnly}
         setShowPendingOnly={setShowPendingOnly}
         onRefresh={() => refetch()}
       />
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto w-full">
         <div className="inline-flex gap-4 p-4 min-w-max">
           {columns.map((column, index) => (
             <KanbanColumn
@@ -76,7 +77,7 @@ export function KanbanBoard() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default KanbanBoard

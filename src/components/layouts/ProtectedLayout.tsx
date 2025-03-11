@@ -1,10 +1,14 @@
 
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "../app-sidebar";
 import { UnitProvider } from "@/contexts/UnitContext";
 
 export default function ProtectedLayout() {
   console.log("Rendering ProtectedLayout");
+  const location = useLocation();
+  
+  // Remove max-width constraint for Kanban page
+  const isKanbanPage = location.pathname === "/kanban";
   
   return (
     <UnitProvider>
@@ -16,7 +20,7 @@ export default function ProtectedLayout() {
         
         {/* Main content area with left margin to account for sidebar */}
         <main className="flex-1 ml-60">
-          <div className="max-w-[1400px] mx-auto p-6">
+          <div className={`${isKanbanPage ? 'w-full' : 'max-w-[1400px]'} mx-auto p-6`}>
             <Outlet />
           </div>
         </main>
