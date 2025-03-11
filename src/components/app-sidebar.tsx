@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -61,7 +60,7 @@ export function AppSidebar() {
           alt="Kad Logo"
         />
       </div>
-      <ScrollArea className="flex-1 overflow-hidden">
+      <ScrollArea className="flex-1">
         <div className="space-y-4 px-4">
           <div className="space-y-1">
             {navigation.map((item) => (
@@ -147,11 +146,8 @@ export function AppSidebar() {
           {sidebar}
         </SheetContent>
       </Sheet>
-      <div className="hidden bg-[#311D64] md:block w-60 fixed h-full z-40">
+      <div className="hidden bg-[#311D64] md:block w-60 h-screen">
         {sidebar}
-      </div>
-      <div className="hidden md:block w-60">
-        {/* Espaçador para compensar a sidebar fixa */}
       </div>
     </>
   );

@@ -8,10 +8,15 @@ export default function ProtectedLayout() {
   
   return (
     <UnitProvider>
-      <div className="flex h-screen">
-        <AppSidebar />
-        <main className="flex-1 overflow-y-auto bg-background p-4 w-full">
-          <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen flex bg-background">
+        {/* Fixed sidebar */}
+        <div className="fixed left-0 top-0 h-screen z-40">
+          <AppSidebar />
+        </div>
+        
+        {/* Main content area with left margin to account for sidebar */}
+        <main className="flex-1 ml-60 w-full">
+          <div className="max-w-[1400px] mx-auto p-6">
             <Outlet />
           </div>
         </main>
