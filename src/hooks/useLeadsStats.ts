@@ -10,19 +10,19 @@ interface PeriodStats {
 
 export interface LeadsStatsData {
   oneMonth?: {
-    total: string;
+    total: number;
     comparison: number;
   };
   threeMonths?: {
-    total: string;
+    total: number;
     comparison: number;
   };
   sixMonths?: {
-    total: string;
+    total: number;
     comparison: number;
   };
   twelveMonths?: {
-    total: string;
+    total: number;
     comparison: number;
   };
 }
