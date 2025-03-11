@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useAuthState } from "@/hooks/useAuthState";
 import { SuperaLogo } from "@/components/auth/SuperaLogo";
@@ -18,16 +17,6 @@ export default function Auth() {
     navigate,
     toast,
   } = useAuthState();
-
-  useEffect(() => {
-    if (session) {
-      console.log("Usuário autenticado, redirecionando para dashboard");
-      // Delay redirection to show success message
-      setTimeout(() => {
-        navigate("/dashboard", { replace: true });
-      }, 1500);
-    }
-  }, [session, navigate]);
 
   if (isCheckingSession) {
     return (
