@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useUnit } from "@/contexts/UnitContext";
 import {
   Table,
   TableBody,
@@ -14,10 +15,18 @@ import {
 
 export function RecentClientsList() {
   console.log("Rendering RecentClientsList component");
-
+  const { selectedUnitId } = useUnit();
+  
   const { data: recentClients, isLoading } = useQuery({
-    queryKey: ['recent-clients'],
+    queryKey: ['recent-clients', selectedUnitId],
     queryFn: async () => {
+      console.log('Fetching recent clients for unit:', selectedUnitId);
+      
+      if (!selectedUnitId) {
+        console.log('No unit selected, returning empty array');
+        return [];
+      }
+
       const { data: clients, error } = await supabase
         .from('clients')
         .select(`
@@ -30,6 +39,7 @@ export function RecentClientsList() {
           )
         `)
         .eq('active', true)
+        .eq('unit_id', selectedUnitId)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -38,13 +48,16 @@ export function RecentClientsList() {
         throw error;
       }
 
+      console.log('Recent clients fetched:', clients?.length);
+
       return clients.map(client => ({
         ...client,
         lastContactTime: client.client_activities?.length > 0
           ? Math.max(...client.client_activities.map(a => new Date(a.created_at).getTime()))
           : new Date(client.created_at).getTime()
       }));
-    }
+    },
+    enabled: !!selectedUnitId
   });
 
   if (isLoading) {
