@@ -15,6 +15,7 @@ interface ClientPayloadV2 extends ClientPayload {
 interface ClientPayload {
   name: string
   phone_number: string
+  unit_number: number
   email?: string
   lead_source?: string
   observations?: string
@@ -22,7 +23,6 @@ interface ClientPayload {
   original_ad?: string
   original_adset?: string
   age_range?: string
-  unit_number?: number
 }
 
 serve(async (req) => {
@@ -47,12 +47,22 @@ serve(async (req) => {
     const payload: ClientPayloadV2 = await req.json()
     console.log('Payload recebido:', payload)
 
-    // Validate required fields
-    if (!payload.name || !payload.phone_number || !payload.registration_cpf || !payload.registration_name) {
+    // Check each required field individually and collect missing fields
+    const missingFields = []
+    
+    if (!payload.name) missingFields.push('name')
+    if (!payload.phone_number) missingFields.push('phone_number')
+    if (!payload.registration_cpf) missingFields.push('registration_cpf')
+    if (!payload.registration_name) missingFields.push('registration_name')
+    if (!payload.unit_number) missingFields.push('unit_number')
+
+    // If any required fields are missing, return error
+    if (missingFields.length > 0) {
+      console.log('Campos obrigatórios ausentes:', missingFields)
       return new Response(
         JSON.stringify({
-          error: 'Campos obrigatórios ausentes',
-          required_fields: ['name', 'phone_number', 'registration_cpf', 'registration_name'],
+          error: `Campos obrigatórios ausentes: ${missingFields.join(', ')}`,
+          missing_fields: missingFields,
           received_payload: payload
         }),
         {
@@ -66,26 +76,30 @@ serve(async (req) => {
     const normalizedSource = normalizeLead(payload.lead_source)
     console.log('Lead source normalizado:', normalizedSource)
 
-    // Try to find unit by unit_number if provided
-    let unitId = '0df79a04-444e-46ee-b218-59e4b1835f4a' // Default unit ID
-    if (payload.unit_number) {
-      console.log('Buscando unidade com número:', payload.unit_number)
-      const { data: unit, error: unitError } = await supabase
-        .from('units')
-        .select('id')
-        .eq('unit_number', payload.unit_number)
-        .eq('active', true)
-        .single()
+    // Find unit by unit_number
+    console.log('Buscando unidade com número:', payload.unit_number)
+    const { data: unit, error: unitError } = await supabase
+      .from('units')
+      .select('id')
+      .eq('unit_number', payload.unit_number)
+      .eq('active', true)
+      .single()
 
-      if (unitError) {
-        console.log('Erro ao buscar unidade:', unitError)
-      } else if (unit) {
-        console.log('Unidade encontrada:', unit)
-        unitId = unit.id
-      } else {
-        console.log('Nenhuma unidade encontrada com número', payload.unit_number, 'usando unidade padrão')
-      }
+    if (unitError || !unit) {
+      console.log('Erro ao buscar unidade ou unidade não encontrada:', unitError)
+      return new Response(
+        JSON.stringify({
+          error: `Unidade não encontrada com o número ${payload.unit_number}`,
+          details: unitError?.message
+        }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
     }
+
+    console.log('Unidade encontrada:', unit)
 
     // Prepare client data for insertion with new registration fields
     const clientData = {
@@ -99,7 +113,7 @@ serve(async (req) => {
       original_ad: payload.original_ad,
       original_adset: payload.original_adset,
       age_range: payload.age_range,
-      unit_id: unitId,
+      unit_id: unit.id,
       email: payload.email,
       registration_cpf: payload.registration_cpf,
       registration_name: payload.registration_name
@@ -126,7 +140,7 @@ serve(async (req) => {
         success: true,
         message: 'Cliente registrado com sucesso',
         normalized_source: normalizedSource,
-        unit_id: unitId
+        unit_id: unit.id
       }),
       {
         status: 201,
