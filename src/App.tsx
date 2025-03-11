@@ -9,11 +9,11 @@ import ProtectedLayout from "./components/layouts/ProtectedLayout";
 import LoginPage from "./pages/auth/LoginPage";
 import NotFound from "@/pages/NotFound";
 
-// Page imports
+// Page imports 
 import Index from "@/pages/Index";
 import Kanban from "@/pages/Kanban";
-import { AuthCallback } from "@/pages/auth/callback";
-import { NewClient } from "@/pages/clients/new";
+import AuthCallback from "@/pages/auth/callback";
+import NewClient from "@/pages/clients/new";
 import ClientsPage from "@/pages/clients/index";
 import LeadSourcesPage from "@/pages/clients/sources";
 import UsersPage from "@/pages/users/index";
