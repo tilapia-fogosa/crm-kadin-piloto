@@ -1,8 +1,7 @@
 
-import { createContext, useContext, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
-import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,24 +17,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Use React Query to manage session state
-  const { data: session, isLoading } = useQuery({
-    queryKey: ['session'],
-    queryFn: async () => {
-      console.log('Fetching initial session state');
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('Session state:', session ? 'Authenticated' : 'Not authenticated');
-      return session;
-    },
-  });
+  // Initialize auth state
+  useEffect(() => {
+    console.log('Initializing auth state');
+    
+    async function initializeAuth() {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log('Initial session:', initialSession ? 'Present' : 'None');
+        setSession(initialSession);
+      } catch (error) {
+        console.error('Error getting initial session:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    initializeAuth();
+  }, []);
 
   // Handle auth state changes
   useEffect(() => {
     console.log('Setting up auth state change listener');
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session ? 'Has session' : 'No session');
-      
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      console.log('Auth state changed:', event, newSession ? 'Has session' : 'No session');
+      setSession(newSession);
+
       if (event === 'SIGNED_IN') {
         console.log('User signed in, showing success toast');
         toast({
@@ -56,20 +67,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [navigate, toast]);
 
-  // Effect for handling authenticated state routing
+  // Handle route protection
   useEffect(() => {
-    console.log('Checking auth state for routing', { 
-      isLoading, 
-      hasSession: !!session, 
-      pathname: location.pathname 
+    console.log('Route protection check:', {
+      isLoading,
+      hasSession: !!session,
+      currentPath: location.pathname
     });
-    
+
     if (!isLoading) {
       if (session && location.pathname === '/auth') {
-        console.log('Authenticated user accessing /auth, redirecting to dashboard');
+        console.log('Authenticated user on auth page, redirecting to dashboard');
         navigate('/dashboard', { replace: true });
-      } else if (!session && location.pathname !== '/auth' && location.pathname !== '/auth/callback') {
-        console.log('Unauthenticated user accessing protected route, redirecting to login');
+      } else if (!session && !location.pathname.startsWith('/auth')) {
+        console.log('Unauthenticated user on protected route, redirecting to login');
         navigate('/auth', { replace: true });
       }
     }

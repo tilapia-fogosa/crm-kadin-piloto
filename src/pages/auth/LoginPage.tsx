@@ -71,6 +71,11 @@ export default function LoginPage() {
     );
   }
 
+  // If already logged in, don't show login form
+  if (session) {
+    return null;
+  }
+
   return (
     <AuthLayout>
       <form onSubmit={handleLogin} className="space-y-6">

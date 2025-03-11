@@ -10,8 +10,14 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
   useEffect(() => {
-    if (!isLoading && !session && location.pathname !== '/auth') {
-      console.log('User not authenticated, redirecting to login');
+    console.log('ProtectedRoute check:', {
+      isLoading,
+      hasSession: !!session,
+      pathname: location.pathname
+    });
+
+    if (!isLoading && !session && !location.pathname.startsWith('/auth')) {
+      console.log('Unauthorized access, redirecting to login');
       navigate("/auth", { replace: true });
     }
   }, [session, isLoading, navigate, location.pathname]);
@@ -24,7 +30,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!session) {
+  if (!session && !location.pathname.startsWith('/auth')) {
     return null;
   }
 
