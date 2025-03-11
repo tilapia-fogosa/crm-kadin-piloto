@@ -6,7 +6,7 @@ import { UnitProvider } from "@/contexts/UnitContext";
 export default function ProtectedLayout() {
   return (
     <UnitProvider>
-      <div className="flex h-screen">
+      <div className="flex h-screen overflow-hidden">
         <AppSidebar />
         <main className="flex-1 overflow-y-auto bg-background">
           <Outlet />
