@@ -80,12 +80,6 @@ export function LoginForm({
         text: "Login realizado com sucesso! Redirecionando..."
       });
 
-      // Aguarda 1.5 segundos para mostrar a mensagem antes de redirecionar
-      setTimeout(() => {
-        // Força uma atualização da página e redireciona para o dashboard
-        window.location.href = '/dashboard';
-      }, 1500);
-      
     } catch (error: any) {
       console.error("Erro inesperado no login:", error);
       setLoginMessage({
@@ -149,7 +143,7 @@ export function LoginForm({
 
       {loginMessage && (
         <div 
-          className={`mt-4 p-3 rounded text-center ${
+          className={`mt-4 p-3 rounded text-center transition-all duration-300 ${
             loginMessage.type === 'success' 
               ? 'bg-green-100 text-green-800 border border-green-300' 
               : 'bg-red-100 text-red-800 border border-red-300'
