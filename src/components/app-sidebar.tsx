@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,8 +18,6 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { useSidebar } from "./ui/sidebar";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navigation = [
@@ -43,8 +42,7 @@ export function AppSidebar() {
   const { openMobile, setOpenMobile } = useSidebar();
   const location = useLocation();
   const [isClient, setIsClient] = useState(false);
-  const { toast } = useToast();
-  const { signOut } = useAuth();
+  const { session, signOut } = useAuth();
 
   useEffect(() => {
     setIsClient(true);
@@ -109,7 +107,12 @@ export function AppSidebar() {
           </div>
         </div>
       </ScrollArea>
-      <div className="p-4 border-t border-white/10">
+      <div className="p-4 space-y-4 border-t border-white/10">
+        {session?.user?.user_metadata?.full_name && (
+          <div className="text-[#FF6B00] text-sm font-medium px-2">
+            {session.user.user_metadata.full_name}
+          </div>
+        )}
         <Button
           variant="ghost"
           className={cn(
@@ -145,9 +148,7 @@ export function AppSidebar() {
         </SheetContent>
       </Sheet>
       <div className="hidden bg-[#311D64] md:block w-60 fixed h-full z-40">
-        <div className="flex h-full flex-col gap-4">
-          {sidebar}
-        </div>
+        {sidebar}
       </div>
       <div className="hidden md:block w-60">
         {/* Espaçador para compensar a sidebar fixa */}
