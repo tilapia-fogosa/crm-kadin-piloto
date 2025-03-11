@@ -1,3 +1,4 @@
+
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -7,6 +8,18 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import ProtectedLayout from "./components/layouts/ProtectedLayout";
 import LoginPage from "./pages/auth/LoginPage";
 import NotFound from "@/pages/NotFound";
+
+// Page imports
+import Index from "@/pages/Index";
+import Kanban from "@/pages/Kanban";
+import { AuthCallback } from "@/pages/auth/callback";
+import { NewClient } from "@/pages/clients/new";
+import ClientsPage from "@/pages/clients/index";
+import LeadSourcesPage from "@/pages/clients/sources";
+import UsersPage from "@/pages/users/index";
+import EnrollmentsPage from "@/pages/Enrollments";
+import ApiDocsPage from "@/pages/api-docs";
+import CommercialStats from "@/pages/CommercialStats";
 
 const queryClient = new QueryClient({
   defaultOptions: {
