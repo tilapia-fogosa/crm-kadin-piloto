@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, isLoading } = useAuth();
@@ -10,7 +11,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && !session && location.pathname !== '/auth') {
-      console.log('Usuário não autenticado, redirecionando para login');
+      console.log('User not authenticated, redirecting to login');
       navigate("/auth", { replace: true });
     }
   }, [session, isLoading, navigate, location.pathname]);
@@ -18,16 +19,14 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <span className="loading">Carregando...</span>
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
-  // Se não estiver autenticado, não renderiza nada
   if (!session) {
     return null;
   }
 
-  // Se estiver autenticado, renderiza o conteúdo
   return <>{children}</>;
 }

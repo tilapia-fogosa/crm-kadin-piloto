@@ -1,6 +1,6 @@
 
 import { createContext, useContext, useEffect, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,12 +16,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   // Use React Query to manage session state
   const { data: session, isLoading } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
+      console.log('Fetching initial session state');
       const { data: { session } } = await supabase.auth.getSession();
       console.log('Session state:', session ? 'Authenticated' : 'Not authenticated');
       return session;
@@ -39,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta!",
+          variant: "default",
         });
         navigate('/dashboard', { replace: true });
       } else if (event === 'SIGNED_OUT') {
@@ -52,6 +55,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
     };
   }, [navigate, toast]);
+
+  // Effect for handling authenticated state routing
+  useEffect(() => {
+    console.log('Checking auth state for routing', { 
+      isLoading, 
+      hasSession: !!session, 
+      pathname: location.pathname 
+    });
+    
+    if (!isLoading) {
+      if (session && location.pathname === '/auth') {
+        console.log('Authenticated user accessing /auth, redirecting to dashboard');
+        navigate('/dashboard', { replace: true });
+      } else if (!session && location.pathname !== '/auth' && location.pathname !== '/auth/callback') {
+        console.log('Unauthenticated user accessing protected route, redirecting to login');
+        navigate('/auth', { replace: true });
+      }
+    }
+  }, [session, isLoading, navigate, location.pathname]);
 
   const signOut = async () => {
     console.log('Signing out user');

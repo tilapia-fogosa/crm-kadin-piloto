@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,13 +7,14 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, User, Lock } from "lucide-react";
 import { AuthLayout } from "@/components/layouts/AuthLayout";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
+  const { session, isLoading } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +60,16 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <AuthLayout>
+        <div className="flex justify-center items-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout>
