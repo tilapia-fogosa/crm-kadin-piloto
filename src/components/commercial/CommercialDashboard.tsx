@@ -1,3 +1,4 @@
+
 import { CommercialFilters } from "./components/CommercialFilters";
 import { useState } from "react";
 import { useCommercialStats } from "./hooks/useCommercialStats";
@@ -7,6 +8,8 @@ import { CommercialTableTwo } from "./components/CommercialTableTwo";
 import { CommercialTableThree } from "./components/CommercialTableThree";
 
 export function CommercialDashboard() {
+  console.log("Rendering CommercialDashboard");
+  
   const [selectedSource, setSelectedSource] = useState<string>("todos");
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().getMonth().toString());
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
@@ -21,9 +24,10 @@ export function CommercialDashboard() {
   const totals = calculateTotals(stats);
 
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">Indicadores Comerciais</h1>
-      <div className="bg-white rounded-lg shadow p-6">
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Indicadores Comerciais</h1>
+      
+      <div className="space-y-8">
         <CommercialFilters
           selectedSource={selectedSource}
           setSelectedSource={setSelectedSource}
@@ -35,7 +39,7 @@ export function CommercialDashboard() {
           setSelectedUnitId={setSelectedUnitId}
         />
         
-        <div className="space-y-8 mt-6">
+        <div className="space-y-8">
           <div>
             <h2 className="text-lg font-semibold mb-4">Totais por Unidade</h2>
             <CommercialTableOne 

@@ -14,28 +14,26 @@ function Index() {
   const { data: leadsStats } = useLeadsStats(selectedUnitId);
   
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-end mb-6">
-          <UnitSelector />
-        </div>
-        
-        {isLoadingUnit ? (
-          <div>Carregando...</div>
-        ) : !selectedUnitId ? (
-          <div>Selecione uma unidade para ver os dados</div>
-        ) : (
-          <div className="space-y-8">
-            <DashboardStats leadsStats={leadsStats} />
-            
-            <div className="grid gap-6 md:grid-cols-2">
-              <LeadsChart />
-              <RecentClientsList />
-            </div>
-          </div>
-        )}
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <UnitSelector />
       </div>
+      
+      {isLoadingUnit ? (
+        <div>Carregando...</div>
+      ) : !selectedUnitId ? (
+        <div>Selecione uma unidade para ver os dados</div>
+      ) : (
+        <div className="space-y-8">
+          <DashboardStats leadsStats={leadsStats} />
+          
+          <div className="grid gap-6 md:grid-cols-2">
+            <LeadsChart />
+            <RecentClientsList />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
