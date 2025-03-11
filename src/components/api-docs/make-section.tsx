@@ -1,12 +1,11 @@
-
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { CopyIcon } from "lucide-react"
 
-// Updated example with all required fields for v2
 const makeExample = {
   name: "João Silva",
   phone_number: "+5511999999999",
+  unit_number: 1,
   registration_cpf: "123.456.789-00",
   registration_name: "Maria Silva",
   email: "joao@email.com",
@@ -15,8 +14,7 @@ const makeExample = {
   meta_id: "123456789",
   original_ad: "Anúncio Principal - Curso de Inglês",
   original_adset: "Segmentação - 25-35 anos - São Paulo",
-  age_range: "25-35",
-  unit_number: 1
+  age_range: "25-35"
 }
 
 interface MakeSectionProps {

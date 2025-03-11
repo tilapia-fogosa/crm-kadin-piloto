@@ -15,19 +15,9 @@ export function ApiSection() {
       </Alert>
 
       <div className="space-y-4">
-        <h3 className="text-xl font-semibold">Cadastro de Leads (v1)</h3>
-        <p className="text-muted-foreground">POST /create-client</p>
-        <p>Esta versão continuará funcionando normalmente para compatibilidade.</p>
-        
-        <div className="relative mt-2">
-          <pre className="bg-secondary p-4 rounded-lg">
-            {JSON.stringify(webhookExample, null, 2)}
-          </pre>
-        </div>
-
-        <h3 className="text-xl font-semibold mt-8">Cadastro de Leads (v2)</h3>
+        <h3 className="text-xl font-semibold">Cadastro de Leads (v2)</h3>
         <p className="text-muted-foreground">POST /create-client-v2</p>
-        <p>Nova versão com campos obrigatórios adicionais para registro.</p>
+        <p>Endpoint para cadastro de leads com informações do responsável.</p>
         
         <div className="relative mt-2">
           <pre className="bg-secondary p-4 rounded-lg">
@@ -40,10 +30,11 @@ export function ApiSection() {
         </div>
 
         <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-2">Campos Obrigatórios v2</h3>
+          <h3 className="text-xl font-semibold mb-2">Campos Obrigatórios</h3>
           <ul className="list-disc pl-6 space-y-2">
             <li>name - Nome do lead</li>
             <li>phone_number - Telefone do lead</li>
+            <li>unit_number - Número da unidade</li>
             <li>registration_cpf - CPF do responsável pelo cadastro</li>
             <li>registration_name - Nome do responsável pelo cadastro</li>
           </ul>
