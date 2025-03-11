@@ -21,7 +21,7 @@ export function KanbanBoard() {
   }, [location.pathname, refetch])
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Carregando...</div>
+    return <div className="flex items-center justify-center p-8">Carregando...</div>
   }
 
   const filterClients = (clients: any[] | null) => {
@@ -53,28 +53,26 @@ export function KanbanBoard() {
   const columns = transformClientsToColumnData(filteredClients)
 
   return (
-    <div className="flex flex-col h-screen max-h-screen overflow-hidden">
+    <div className="flex flex-col">
       <BoardHeader 
         showPendingOnly={showPendingOnly}
         setShowPendingOnly={setShowPendingOnly}
         onRefresh={() => refetch()}
       />
 
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="h-full overflow-x-auto">
-          <div className="inline-flex gap-4 p-4 min-w-max">
-            {columns.map((column, index) => (
-              <KanbanColumn
-                key={column.id}
-                column={column}
-                index={index}
-                onWhatsAppClick={handleWhatsAppClick}
-                onRegisterAttempt={registerAttempt}
-                onRegisterEffectiveContact={registerEffectiveContact}
-                onDeleteActivity={deleteActivity}
-              />
-            ))}
-          </div>
+      <div className="overflow-x-auto">
+        <div className="inline-flex gap-4 p-4 min-w-max">
+          {columns.map((column, index) => (
+            <KanbanColumn
+              key={column.id}
+              column={column}
+              index={index}
+              onWhatsAppClick={handleWhatsAppClick}
+              onRegisterAttempt={registerAttempt}
+              onRegisterEffectiveContact={registerEffectiveContact}
+              onDeleteActivity={deleteActivity}
+            />
+          ))}
         </div>
       </div>
     </div>
