@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { subMonths, startOfMonth, endOfMonth } from "date-fns"
@@ -7,6 +6,25 @@ interface PeriodStats {
   total: number
   comparison: number
   period: '1M' | '3M' | '6M' | '12M'
+}
+
+export interface LeadsStatsData {
+  oneMonth?: {
+    total: string;
+    comparison: number;
+  };
+  threeMonths?: {
+    total: string;
+    comparison: number;
+  };
+  sixMonths?: {
+    total: string;
+    comparison: number;
+  };
+  twelveMonths?: {
+    total: string;
+    comparison: number;
+  };
 }
 
 export function useLeadsStats(unitId: string | null) {
