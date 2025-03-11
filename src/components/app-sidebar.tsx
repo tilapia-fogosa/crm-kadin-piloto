@@ -19,6 +19,7 @@ import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { useSidebar } from "./ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -43,25 +44,14 @@ export function AppSidebar() {
   const location = useLocation();
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
+  const { signOut } = useAuth();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Erro ao fazer logout",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Logout realizado com sucesso",
-        description: "Redirecionando para a página de login...",
-      });
-    }
+    await signOut();
   };
 
   const sidebar = (
@@ -155,7 +145,9 @@ export function AppSidebar() {
         </SheetContent>
       </Sheet>
       <div className="hidden bg-[#311D64] md:block w-60 fixed h-full z-40">
-        {sidebar}
+        <div className="flex h-full flex-col gap-4">
+          {sidebar}
+        </div>
       </div>
       <div className="hidden md:block w-60">
         {/* Espaçador para compensar a sidebar fixa */}

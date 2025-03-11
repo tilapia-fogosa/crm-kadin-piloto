@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
@@ -20,7 +19,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize auth state
   useEffect(() => {
     console.log('Initializing auth state');
     
@@ -39,7 +37,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
   }, []);
 
-  // Handle auth state changes
   useEffect(() => {
     console.log('Setting up auth state change listener');
     
@@ -67,7 +64,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [navigate, toast]);
 
-  // Handle route protection
   useEffect(() => {
     console.log('Route protection check:', {
       isLoading,
@@ -88,7 +84,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     console.log('Signing out user');
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+      console.log('User signed out successfully');
+      navigate('/auth', { replace: true });
+      setSession(null);
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Erro ao fazer logout",
+        description: "Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
