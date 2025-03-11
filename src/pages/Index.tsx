@@ -1,15 +1,16 @@
-
 import React from 'react';
 import { LeadsChart } from '@/components/dashboard/LeadsChart';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { RecentClientsList } from '@/components/dashboard/RecentClientsList';
 import { Users } from 'lucide-react';
 import { useLeadsStats } from '@/hooks/useLeadsStats';
+import { useUnit } from '@/contexts/UnitContext';
 
 function Index() {
   console.log("Rendering Dashboard/Index page");
   
-  const { data: leadsStats } = useLeadsStats();
+  const { selectedUnitId } = useUnit();
+  const { data: leadsStats } = useLeadsStats(selectedUnitId);
   
   return (
     <div className="flex flex-col h-full gap-6 p-6">
