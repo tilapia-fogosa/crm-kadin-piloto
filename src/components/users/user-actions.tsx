@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Lock, Unlock, Ban, CheckCircle, Edit2 } from "lucide-react";
 import { useState } from "react";
@@ -73,13 +72,10 @@ export function UserActions({ user }: UserActionsProps) {
   const handleResetPassword = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          must_change_password: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+      console.log('Resetting password for user:', user.id);
+      const { error } = await supabase.functions.invoke('reset-user-password', {
+        body: { userId: user.id }
+      });
 
       if (error) throw error;
 
