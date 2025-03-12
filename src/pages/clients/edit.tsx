@@ -40,7 +40,7 @@ export default function EditClientPage() {
         // Preencher o formulário com os dados existentes
         form.reset({
           name: data.name,
-          phoneNumber: data.phone_number,
+          phoneNumber: data.phone_number, // Phone number will be handled by the schema validation
           leadSource: data.lead_source,
           observations: data.observations || "",
           unitId: data.unit_id,
@@ -68,7 +68,7 @@ export default function EditClientPage() {
         .from('clients')
         .update({
           name: values.name,
-          phone_number: values.phoneNumber,
+          phone_number: values.phoneNumber, // The schema will ensure this is in the correct format
           lead_source: values.leadSource,
           observations: values.observations,
           unit_id: selectedUnitId,
@@ -136,3 +136,4 @@ export default function EditClientPage() {
     </div>
   )
 }
+
