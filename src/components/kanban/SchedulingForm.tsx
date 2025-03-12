@@ -67,17 +67,19 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
         return
       }
 
-      // Se valorizacaoDiaAnterior está ativo, define next_contact_date como 24h antes
+      // Nova lógica: 
+      // Se valorizacaoDiaAnterior está ativo -> próxima atividade é D-1
+      // Se não está ativo -> próxima atividade é na mesma data
       const nextContactDate = valorizacaoDiaAnterior 
-        ? new Date(scheduledDate.getTime() - 24 * 60 * 60 * 1000)
-        : undefined
+        ? new Date(scheduledDate.getTime() - 24 * 60 * 60 * 1000) // D-1
+        : new Date(scheduledDate.getTime()) // Mesma data
 
       onSubmit({
         scheduledDate,
         notes,
         cardId,
         valorizacaoDiaAnterior,
-        nextContactDate,
+        nextContactDate, // Agora sempre terá uma data
         type: contactType
       })
     } catch (error) {
