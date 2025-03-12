@@ -104,44 +104,51 @@ export default function ClientsPage() {
   }
 
   const handleEdit = (client: any) => {
+    console.log('Editing client:', client)
     setSelectedClient(client)
     form.reset({
       name: client.name,
-      phoneNumber: client.phone_number.replace(/\D/g, ""),
+      phoneNumber: client.phone_number,
       leadSource: client.lead_source,
       observations: client.observations || "",
+      unitId: client.unit_id,
     })
   }
 
   const onSubmit = async (values: LeadFormData) => {
-    if (!selectedClient) return;
+    console.log('Submitting form with values:', values)
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({
+          name: values.name,
+          phone_number: values.phoneNumber,
+          lead_source: values.leadSource,
+          observations: values.observations,
+          unit_id: values.unitId,
+        })
+        .eq('id', selectedClient.id)
 
-    const { error } = await supabase
-      .from('clients')
-      .update({
-        name: values.name,
-        phone_number: values.phoneNumber,
-        lead_source: values.leadSource,
-        observations: values.observations,
+      if (error) {
+        console.error('Error updating client:', error)
+        throw error
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['all-clients'] })
+
+      toast({
+        title: "Cliente atualizado",
+        description: "As informações do cliente foram atualizadas com sucesso.",
       })
-      .eq('id', selectedClient.id);
-
-    if (error) {
+      setSelectedClient(null)
+    } catch (error) {
+      console.error('Error in onSubmit:', error)
       toast({
         variant: "destructive",
         title: "Erro ao atualizar",
         description: "Ocorreu um erro ao tentar atualizar o cliente.",
-      });
-      return;
+      })
     }
-
-    await queryClient.invalidateQueries({ queryKey: ['all-clients'] })
-
-    toast({
-      title: "Cliente atualizado",
-      description: "As informações do cliente foram atualizadas com sucesso.",
-    });
-    setSelectedClient(null);
   }
 
   if (isLoading) {

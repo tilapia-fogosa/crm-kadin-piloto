@@ -46,6 +46,18 @@ export function ClientActions({
   setClientToDelete,
   onSubmit,
 }: ClientActionsProps) {
+  console.log('ClientActions: Form data before submit:', form.getValues())
+
+  const handleSubmit = async (values: LeadFormData) => {
+    console.log('ClientActions: Handling form submission with values:', values)
+    try {
+      await onSubmit(values)
+      console.log('ClientActions: Form submission successful')
+    } catch (error) {
+      console.error('ClientActions: Error submitting form:', error)
+    }
+  }
+
   return (
     <div className="space-x-2">
       <Dialog 
@@ -66,7 +78,7 @@ export function ClientActions({
             <DialogTitle>Editar Cliente</DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
               <LeadFormFields 
                 form={form} 
                 isEditing={true}
