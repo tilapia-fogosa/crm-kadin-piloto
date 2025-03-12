@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
@@ -51,7 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           description: "Bem-vindo de volta!",
           variant: "default",
         });
-        navigate('/dashboard', { replace: true });
+        // Só redireciona para o dashboard se estiver na página de autenticação
+        if (location.pathname.startsWith('/auth')) {
+          navigate('/dashboard', { replace: true });
+        }
       } else if (event === 'SIGNED_OUT') {
         console.log('User signed out, redirecting to login');
         navigate('/auth', { replace: true });
@@ -62,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Cleaning up auth state change listener');
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [navigate, toast, location.pathname]);
 
   useEffect(() => {
     console.log('Route protection check:', {
