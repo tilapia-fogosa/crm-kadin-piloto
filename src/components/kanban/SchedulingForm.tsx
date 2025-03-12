@@ -3,11 +3,11 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
 import { Scheduling } from "./types"
 import { useToast } from "@/components/ui/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
+import { AppointmentScheduler } from "../appointments/AppointmentScheduler"
 
 interface SchedulingFormProps {
   onSubmit: (scheduling: Scheduling) => void
@@ -15,27 +15,17 @@ interface SchedulingFormProps {
 }
 
 export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
-  const [date, setDate] = useState("")
-  const [time, setTime] = useState("")
   const [notes, setNotes] = useState("")
+  const [scheduledDate, setScheduledDate] = useState<Date>()
   const [valorizacaoDiaAnterior, setValorizacaoDiaAnterior] = useState(false)
   const [contactType, setContactType] = useState<'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial' | undefined>(undefined)
   const { toast } = useToast()
 
   const handleSubmit = () => {
-    if (!date) {
+    if (!scheduledDate) {
       toast({
         title: "Erro",
-        description: "Selecione a data do agendamento",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!time) {
-      toast({
-        title: "Erro",
-        description: "Selecione o horário do agendamento",
+        description: "Selecione a data e horário do agendamento",
         variant: "destructive",
       })
       return
@@ -51,12 +41,6 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
     }
 
     try {
-      const [year, month, day] = date.split('-').map(Number)
-      const [hours, minutes] = time.split(":").map(Number)
-      
-      const scheduledDate = new Date(year, month - 1, day)
-      scheduledDate.setHours(hours, minutes, 0, 0)
-
       // Verifica se a data/hora é futura
       if (scheduledDate <= new Date()) {
         toast({
@@ -67,9 +51,6 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
         return
       }
 
-      // Nova lógica: 
-      // Se valorizacaoDiaAnterior está ativo -> próxima atividade é D-1
-      // Se não está ativo -> próxima atividade é na mesma data
       const nextContactDate = valorizacaoDiaAnterior 
         ? new Date(scheduledDate.getTime() - 24 * 60 * 60 * 1000) // D-1
         : new Date(scheduledDate.getTime()) // Mesma data
@@ -79,16 +60,21 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
         notes,
         cardId,
         valorizacaoDiaAnterior,
-        nextContactDate, // Agora sempre terá uma data
+        nextContactDate,
         type: contactType
       })
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Erro ao processar a data e hora selecionadas",
+        description: "Erro ao processar o agendamento",
         variant: "destructive",
       })
     }
+  }
+
+  const handleSlotSelect = (date: Date) => {
+    console.log('Slot selecionado:', date)
+    setScheduledDate(date)
   }
 
   return (
@@ -120,23 +106,10 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label>Data do Agendamento</Label>
-        <Input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="w-full"
-          placeholder="dd/mm/aaaa"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Horário do Agendamento</Label>
-        <Input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          className="w-full"
+        <Label>Selecione a Data e Horário</Label>
+        <AppointmentScheduler 
+          onSelectSlot={handleSlotSelect}
+          simplified={true}
         />
       </div>
 

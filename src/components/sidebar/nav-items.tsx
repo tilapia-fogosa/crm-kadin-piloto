@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,12 +10,13 @@ import {
   Link2,
   DollarSign,
   LineChart,
+  Calendar
 } from "lucide-react";
 
 export const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Painel do Consultor", href: "/kanban", icon: KanbanSquare },
-  { name: "Indicadores Comerciais", href: "/commercial-stats", icon: LineChart },
+  { name: "Agenda", href: "/schedule", icon: Calendar },
   { 
     name: "Clientes", 
     href: "/clients", 

@@ -20,6 +20,7 @@ import EnrollmentsPage from "@/pages/Enrollments";
 import ApiDocsPage from "@/pages/api-docs";
 import CommercialStats from "@/pages/CommercialStats";
 import EditClientPage from "@/pages/clients/edit";
+import SchedulePage from "@/pages/Schedule";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,6 +68,7 @@ function App() {
                   <Route path="/sales" element={<EnrollmentsPage />} />
                   <Route path="/api-docs" element={<ApiDocsPage />} />
                   <Route path="/commercial-stats" element={<CommercialStats />} />
+                  <Route path="/schedule" element={<SchedulePage />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
               </Routes>
