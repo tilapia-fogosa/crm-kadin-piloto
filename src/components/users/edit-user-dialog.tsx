@@ -1,13 +1,13 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { useUserOperations } from "@/hooks/useUserOperations";
 import { UserForm } from "./components/UserForm";
 import { AdminConfirmationDialog } from "./components/AdminConfirmationDialog";
 import { User, UnitUser, UserFormValues } from "./types/user-dialog.types";
+import { Button } from "@/components/ui/button";
 
 interface EditUserDialogProps {
   open: boolean;
@@ -67,7 +67,6 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
   const handleSubmit = async (values: UserFormValues) => {
     console.log('Iniciando submissão do formulário:', values);
     
-    // Garantir que todos os campos obrigatórios estejam preenchidos
     if (!values.full_name || !values.email || !values.role || !values.unitIds.length) {
       toast({
         variant: "destructive",
@@ -107,6 +106,32 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
     }
   };
 
+  const handleResetPassword = async () => {
+    setIsLoading(true);
+    try {
+      console.log('Resetting password for user:', user.id);
+      const { error } = await supabase.functions.invoke('reset-user-password', {
+        body: { userId: user.id }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Senha resetada com sucesso. O usuário precisará alterar a senha no próximo acesso.",
+      });
+    } catch (error: any) {
+      console.error('Erro ao resetar senha:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Ocorreu um erro ao resetar a senha.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -135,6 +160,19 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
               Faça as alterações necessárias nos dados do usuário. Todas as alterações serão salvas automaticamente.
             </DialogDescription>
           </DialogHeader>
+
+          <div className="flex justify-end mb-4">
+            <Button
+              variant="outline"
+              onClick={handleResetPassword}
+              disabled={isLoading}
+              className="gap-2"
+            >
+              <Lock className="h-4 w-4" />
+              Resetar Senha
+            </Button>
+          </div>
+
           <UserForm
             defaultValues={{
               full_name: user.full_name || '',
