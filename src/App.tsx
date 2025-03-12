@@ -1,4 +1,3 @@
-
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -20,6 +19,7 @@ import UsersPage from "@/pages/users/index";
 import EnrollmentsPage from "@/pages/Enrollments";
 import ApiDocsPage from "@/pages/api-docs";
 import CommercialStats from "@/pages/CommercialStats";
+import EditClientPage from "@/pages/clients/edit";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,7 +61,7 @@ function App() {
                   <Route path="/kanban" element={<Kanban />} />
                   <Route path="/clients/new" element={<NewClient />} />
                   <Route path="/clients" element={<ClientsPage />} />
-                  <Route path="/clients/sources" element={<LeadSourcesPage />} />
+                  <Route path="/clients/:id/edit" element={<EditClientPage />} />
                   <Route path="/users" element={<UsersPage />} />
                   <Route path="/enrollments" element={<EnrollmentsPage />} />
                   <Route path="/sales" element={<EnrollmentsPage />} />

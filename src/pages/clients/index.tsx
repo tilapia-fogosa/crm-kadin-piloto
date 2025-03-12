@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react"
 import { toast } from "@/components/ui/use-toast"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { LeadFormData, leadFormSchema } from "@/types/lead-form"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { ClientsTable } from "@/components/clients/clients-table"
@@ -14,7 +11,6 @@ import { useClientFiltering } from "@/hooks/useClientFiltering"
 import { ClientsPagination } from "@/components/clients/ClientsPagination"
 
 export default function ClientsPage() {
-  const [selectedClient, setSelectedClient] = useState<any>(null)
   const [clientToDelete, setClientToDelete] = useState<any>(null)
   const queryClient = useQueryClient()
   const location = useLocation()
@@ -63,27 +59,16 @@ export default function ClientsPage() {
     refetch()
   }, [location.pathname, refetch])
 
-  const form = useForm<LeadFormData>({
-    resolver: zodResolver(leadFormSchema),
-  })
-
   const handleDelete = async (clientId: string) => {
     try {
       console.log('Inativando client:', clientId)
       
-      const { data: session } = await supabase.auth.getSession()
-      if (!session.session) throw new Error('Not authenticated')
-
-      // Ao invés de deletar, apenas marca como inativo
       const { error: updateError } = await supabase
         .from('clients')
         .update({ active: false })
         .eq('id', clientId)
 
-      if (updateError) {
-        console.error('Error inactivating client:', updateError)
-        throw updateError
-      }
+      if (updateError) throw updateError
 
       await queryClient.invalidateQueries({ queryKey: ['all-clients'] })
 
@@ -103,56 +88,8 @@ export default function ClientsPage() {
     }
   }
 
-  const handleEdit = (client: any) => {
-    console.log('Editing client:', client)
-    setSelectedClient(client)
-    form.reset({
-      name: client.name,
-      phoneNumber: client.phone_number,
-      leadSource: client.lead_source,
-      observations: client.observations || "",
-      unitId: client.unit_id,
-    })
-  }
-
-  const onSubmit = async (values: LeadFormData) => {
-    console.log('Submitting form with values:', values)
-    try {
-      const { error } = await supabase
-        .from('clients')
-        .update({
-          name: values.name,
-          phone_number: values.phoneNumber,
-          lead_source: values.leadSource,
-          observations: values.observations,
-          unit_id: values.unitId,
-        })
-        .eq('id', selectedClient.id)
-
-      if (error) {
-        console.error('Error updating client:', error)
-        throw error
-      }
-
-      await queryClient.invalidateQueries({ queryKey: ['all-clients'] })
-
-      toast({
-        title: "Cliente atualizado",
-        description: "As informações do cliente foram atualizadas com sucesso.",
-      })
-      setSelectedClient(null)
-    } catch (error) {
-      console.error('Error in onSubmit:', error)
-      toast({
-        variant: "destructive",
-        title: "Erro ao atualizar",
-        description: "Ocorreu um erro ao tentar atualizar o cliente.",
-      })
-    }
-  }
-
   if (isLoading) {
-    return <div className="flex items-center justify-center h-full">Carregando...</div>;
+    return <div className="flex items-center justify-center h-full">Carregando...</div>
   }
 
   return (
@@ -185,14 +122,9 @@ export default function ClientsPage() {
 
           <ClientsTable
             clients={paginatedClients}
-            selectedClient={selectedClient}
             clientToDelete={clientToDelete}
-            form={form}
-            onEdit={handleEdit}
             onDelete={handleDelete}
-            setSelectedClient={setSelectedClient}
             setClientToDelete={setClientToDelete}
-            onSubmit={onSubmit}
           />
 
           {totalPages > 1 && (
