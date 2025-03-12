@@ -9,26 +9,31 @@ import { useAvailableSlots } from "./hooks/useAvailableSlots"
 
 interface AppointmentSchedulerProps {
   onSelectSlot: (date: Date) => void
-  simplified?: boolean // Para controlar se é versão simplificada (Kanban) ou completa (página dedicada)
+  simplified?: boolean
 }
 
 export function AppointmentScheduler({ onSelectSlot, simplified = false }: AppointmentSchedulerProps) {
   const [selectedDate, setSelectedDate] = useState<Date>()
+  const [selectedTime, setSelectedTime] = useState<string>()
   const { availableSlots, isLoading } = useAvailableSlots(selectedDate)
 
   const handleDateSelect = (date: Date | undefined) => {
     console.log('Data selecionada:', date)
     setSelectedDate(date)
+    setSelectedTime(undefined) // Reset selected time when date changes
   }
 
   const handleTimeSelect = (time: string) => {
+    console.log('Horário selecionado:', time)
+    setSelectedTime(time)
+    
     if (!selectedDate) return
     
     const [hours, minutes] = time.split(':').map(Number)
     const dateTime = new Date(selectedDate)
     dateTime.setHours(hours, minutes, 0, 0)
     
-    console.log('Horário selecionado:', dateTime)
+    console.log('DateTime completo selecionado:', dateTime)
     onSelectSlot(dateTime)
   }
 
@@ -58,6 +63,7 @@ export function AppointmentScheduler({ onSelectSlot, simplified = false }: Appoi
               availableSlots={availableSlots}
               isLoading={isLoading}
               onSelectTime={handleTimeSelect}
+              selectedTime={selectedTime}
             />
           </>
         )}
