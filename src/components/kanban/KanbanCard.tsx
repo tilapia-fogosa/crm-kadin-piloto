@@ -14,7 +14,7 @@ interface KanbanCardProps {
 
 // Sistema de cores para status do próximo contato:
 // Verde (#00CC00): Data futura (amanhã ou posterior)
-// Amarelo (#FFD700): Hoje, antes do horário marcado
+// Amarelo (#CCA405): Hoje, antes do horário marcado
 // Vermelho (#FF3333): Atrasado (data anterior ou após horário marcado hoje)
 const getNextContactColor = (nextContactDate: Date | null): string => {
   if (!nextContactDate) return "text-muted-foreground";
@@ -35,7 +35,7 @@ const getNextContactColor = (nextContactDate: Date | null): string => {
       return "text-[#FF3333]"; // Vermelho suave
     }
     // Amarelo: É hoje mas ainda não chegou o horário
-    return "text-[#FFD700]"; // Amarelo dourado
+    return "text-[#CCA405]"; // Amarelo mais escuro
   }
 
   // Vermelho: Data anterior
