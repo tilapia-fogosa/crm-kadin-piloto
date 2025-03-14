@@ -27,6 +27,7 @@ export const navigation = [
     ]
   },
   { name: "Vendas", href: "/sales", icon: DollarSign },
+  { name: "Indicadores Comerciais", href: "/commercial-stats", icon: LineChart },
   { name: "Usuários", href: "/users", icon: Users },
   { name: "API Docs", href: "/api-docs", icon: FileCode },
 ];
