@@ -1,6 +1,7 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MONTHS, YEARS } from "../../constants/dashboard.constants";
+import { useUnit } from "@/contexts/UnitContext";
 
 interface ActivityFiltersProps {
   selectedSource: string;
@@ -9,6 +10,8 @@ interface ActivityFiltersProps {
   setSelectedMonth: (value: string) => void;
   selectedYear: string;
   setSelectedYear: (value: string) => void;
+  selectedUnitId: string;
+  setSelectedUnitId: (value: string) => void;
   leadSources: any[] | undefined;
 }
 
@@ -19,10 +22,31 @@ export function ActivityFilters({
   setSelectedMonth,
   selectedYear,
   setSelectedYear,
+  selectedUnitId,
+  setSelectedUnitId,
   leadSources
 }: ActivityFiltersProps) {
+  const { availableUnits } = useUnit();
+
   return (
     <div className="flex flex-wrap gap-4 justify-start">
+      <div className="flex items-center gap-2">
+        <span className="font-medium">Unidade:</span>
+        <Select value={selectedUnitId} onValueChange={setSelectedUnitId}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Selecione uma unidade" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">Todas as Unidades</SelectItem>
+            {availableUnits?.map((unitUser) => (
+              <SelectItem key={unitUser.unit_id} value={unitUser.unit_id}>
+                {unitUser.units.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="flex items-center gap-2">
         <span className="font-medium">Origem:</span>
         <Select value={selectedSource} onValueChange={setSelectedSource}>

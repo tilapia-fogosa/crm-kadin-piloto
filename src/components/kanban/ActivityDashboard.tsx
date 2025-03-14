@@ -15,6 +15,7 @@ export function ActivityDashboard() {
   const [selectedSource, setSelectedSource] = useState<string>("todos");
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().getMonth().toString());
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedUnitId, setSelectedUnitId] = useState<string>("todas");
   const { data: userUnits } = useUserUnit();
 
   const { data: leadSources } = useQuery({
@@ -27,7 +28,14 @@ export function ActivityDashboard() {
     }
   });
 
-  const { data: stats, isLoading } = useActivityStats(selectedSource, selectedMonth, selectedYear, userUnits);
+  const { data: stats, isLoading } = useActivityStats(
+    selectedSource, 
+    selectedMonth, 
+    selectedYear, 
+    userUnits,
+    selectedUnitId
+  );
+  
   const totals = calculateTotals(stats);
 
   return (
@@ -52,6 +60,8 @@ export function ActivityDashboard() {
             setSelectedMonth={setSelectedMonth}
             selectedYear={selectedYear}
             setSelectedYear={setSelectedYear}
+            selectedUnitId={selectedUnitId}
+            setSelectedUnitId={setSelectedUnitId}
             leadSources={leadSources}
           />
         </DialogHeader>

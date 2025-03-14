@@ -8,21 +8,25 @@ export function useActivityStats(
   selectedSource: string,
   selectedMonth: string,
   selectedYear: string,
-  userUnits: UserUnit[] | undefined
+  userUnits: UserUnit[] | undefined,
+  selectedUnitId: string
 ) {
   return useQuery({
-    queryKey: ['activity-dashboard', selectedSource, selectedMonth, selectedYear, userUnits?.map(u => u.unit_id)],
+    queryKey: ['activity-dashboard', selectedSource, selectedMonth, selectedYear, selectedUnitId, userUnits?.map(u => u.unit_id)],
     queryFn: async () => {
       const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
       const endDate = endOfMonth(startDate);
-      const unitIds = userUnits?.map(u => u.unit_id) || [];
+      const unitIds = selectedUnitId === 'todas' 
+        ? userUnits?.map(u => u.unit_id) || []
+        : [selectedUnitId];
       const today = startOfDay(new Date());
 
       console.log('Fetching activity dashboard stats:', { 
         startDate: startDate.toISOString(), 
         endDate: endDate.toISOString(),
         selectedSource,
-        unitIds 
+        unitIds,
+        selectedUnitId 
       });
 
       const [clientsResult, activitiesResult] = await Promise.all([
