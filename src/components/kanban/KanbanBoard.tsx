@@ -14,6 +14,7 @@ export function KanbanBoard() {
   const { registerAttempt, registerEffectiveContact, deleteActivity } = useActivityOperations()
   const { handleWhatsAppClick } = useWhatsApp()
   const [showPendingOnly, setShowPendingOnly] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
   const location = useLocation()
 
   useEffect(() => {
@@ -25,32 +26,65 @@ export function KanbanBoard() {
     return <div className="flex items-center justify-center p-8">Carregando...</div>
   }
 
-  const filterClients = (clients: any[] | null) => {
+  // Função para filtrar clientes por termo de pesquisa
+  const filterBySearchTerm = (clients: any[] | null) => {
     if (!clients) return null
     
-    if (!showPendingOnly) {
-      console.log('Filter is OFF, showing all clients')
+    if (!searchTerm.trim()) {
+      console.log('Termo de pesquisa vazio, retornando todos os clientes')
       return clients
     }
     
-    const today = startOfDay(new Date())
-    console.log('Filtering clients with showPendingOnly:', showPendingOnly)
-
+    console.log('Filtrando clientes pelo termo:', searchTerm.trim())
+    const normalizedSearchTerm = searchTerm.toLowerCase().trim()
+    
     return clients.filter(client => {
+      const matchesName = client.name?.toLowerCase().includes(normalizedSearchTerm)
+      const matchesPhone = client.phone_number?.toLowerCase().includes(normalizedSearchTerm)
+      
+      // Log detalhado para ajudar na depuração
+      if (matchesName || matchesPhone) {
+        console.log(`Cliente '${client.name}' corresponde ao termo de pesquisa: ${searchTerm}`)
+      }
+      
+      return matchesName || matchesPhone
+    })
+  }
+
+  const filterClients = (clients: any[] | null) => {
+    if (!clients) return null
+    
+    // Primeiro filtra por termo de pesquisa
+    let filteredResults = filterBySearchTerm(clients)
+    
+    // Depois aplica o filtro de pendentes se necessário
+    if (!showPendingOnly) {
+      console.log('Filtro de pendentes desativado, mostrando todos os clientes após pesquisa')
+      return filteredResults
+    }
+    
+    const today = startOfDay(new Date())
+    console.log('Filtrando clientes pendentes após pesquisa')
+
+    return filteredResults.filter(client => {
       if (!client.next_contact_date) {
-        console.log('Client with no next contact date:', client.name)
+        console.log('Cliente sem data de próximo contato:', client.name)
         return true
       }
 
       const nextContactDate = startOfDay(new Date(client.next_contact_date))
       const shouldShow = isBefore(nextContactDate, today) || isEqual(nextContactDate, today)
-      console.log('Client:', client.name, 'Next contact:', nextContactDate, 'Should show:', shouldShow)
+      
+      if (shouldShow) {
+        console.log(`Cliente '${client.name}' pendente com próximo contato em: ${nextContactDate}`)
+      }
+      
       return shouldShow
     })
   }
 
   const filteredClients = filterClients(clients)
-  console.log('Filtered clients count:', filteredClients?.length)
+  console.log('Total de clientes filtrados:', filteredClients?.length)
   const columns = transformClientsToColumnData(filteredClients)
 
   return (
@@ -59,6 +93,8 @@ export function KanbanBoard() {
         showPendingOnly={showPendingOnly}
         setShowPendingOnly={setShowPendingOnly}
         onRefresh={() => refetch()}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
       />
 
       <div className="overflow-x-auto w-full">
