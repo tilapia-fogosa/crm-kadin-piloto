@@ -10,21 +10,29 @@ import { useAvailableSlots } from "./hooks/useAvailableSlots"
 interface AppointmentSchedulerProps {
   onSelectSlot: (date: Date) => void
   simplified?: boolean
+  unitId?: string // Adicionado unitId como prop opcional
 }
 
-export function AppointmentScheduler({ onSelectSlot, simplified = false }: AppointmentSchedulerProps) {
+export function AppointmentScheduler({ 
+  onSelectSlot, 
+  simplified = false, 
+  unitId 
+}: AppointmentSchedulerProps) {
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [selectedTime, setSelectedTime] = useState<string>()
-  const { availableSlots, isLoading } = useAvailableSlots(selectedDate)
+  
+  // Passa o unitId para o hook useAvailableSlots
+  const { availableSlots, isLoading } = useAvailableSlots(selectedDate, unitId)
 
   const handleDateSelect = (date: Date | undefined) => {
-    console.log('Data selecionada:', date)
+    console.log('AppointmentScheduler - Data selecionada:', date);
+    console.log('AppointmentScheduler - Usando unitId:', unitId);
     setSelectedDate(date)
     setSelectedTime(undefined) // Reset selected time when date changes
   }
 
   const handleTimeSelect = (time: string) => {
-    console.log('Horário selecionado:', time)
+    console.log('AppointmentScheduler - Horário selecionado:', time);
     setSelectedTime(time)
     
     if (!selectedDate) return
@@ -33,7 +41,7 @@ export function AppointmentScheduler({ onSelectSlot, simplified = false }: Appoi
     const dateTime = new Date(selectedDate)
     dateTime.setHours(hours, minutes, 0, 0)
     
-    console.log('DateTime completo selecionado:', dateTime)
+    console.log('AppointmentScheduler - DateTime completo selecionado:', dateTime);
     onSelectSlot(dateTime)
   }
 

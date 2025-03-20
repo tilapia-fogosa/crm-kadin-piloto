@@ -7,9 +7,22 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useUnit } from "@/contexts/UnitContext"
+import { useEffect } from "react"
 
-export function UnitSelector() {
+interface UnitSelectorProps {
+  onChange?: (unitId: string) => void;
+}
+
+export function UnitSelector({ onChange }: UnitSelectorProps) {
   const { selectedUnitId, setSelectedUnitId, availableUnits, isLoading } = useUnit();
+
+  // Notifica o componente pai quando a unidade selecionada muda
+  useEffect(() => {
+    console.log('UnitSelector - Unidade selecionada mudou para:', selectedUnitId);
+    if (selectedUnitId && onChange) {
+      onChange(selectedUnitId);
+    }
+  }, [selectedUnitId, onChange]);
 
   if (isLoading) {
     return <div>Carregando unidades...</div>;
@@ -22,7 +35,13 @@ export function UnitSelector() {
   return (
     <Select
       value={selectedUnitId || undefined}
-      onValueChange={(value) => setSelectedUnitId(value)}
+      onValueChange={(value) => {
+        console.log('UnitSelector - Seleção alterada para:', value);
+        setSelectedUnitId(value);
+        if (onChange) {
+          onChange(value);
+        }
+      }}
     >
       <SelectTrigger className="w-[200px]">
         <SelectValue placeholder="Selecione uma unidade" />

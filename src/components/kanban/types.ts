@@ -1,3 +1,4 @@
+
 export type KanbanColumn = {
   id: string
   title: string
@@ -40,6 +41,7 @@ export type Scheduling = {
   valorizacaoDiaAnterior: boolean
   nextContactDate?: Date
   type: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial'
+  unitId: string // Adicionado campo unitId
 }
 
 export type Attendance = {

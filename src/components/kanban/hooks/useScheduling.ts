@@ -15,15 +15,13 @@ export function useScheduling() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      // Get client's unit_id
-      const { data: clientData, error: fetchClientError } = await supabase
-        .from('clients')
-        .select('unit_id')
-        .eq('id', scheduling.cardId)
-        .single()
-
-      if (fetchClientError) throw fetchClientError
-      if (!clientData?.unit_id) throw new Error('Client has no unit_id')
+      // Usamos a unitId fornecida no agendamento em vez de buscar a unitId do cliente
+      const unitId = scheduling.unitId;
+      console.log('useScheduling - Usando unitId do agendamento:', unitId);
+      
+      if (!unitId) {
+        throw new Error('Agendamento sem unitId definida');
+      }
 
       const { error: activityError } = await supabase
         .from('client_activities')
@@ -35,7 +33,7 @@ export function useScheduling() {
           created_by: session.session.user.id,
           scheduled_date: scheduling.scheduledDate.toISOString(),
           next_contact_date: scheduling.nextContactDate?.toISOString(),
-          unit_id: clientData.unit_id,
+          unit_id: unitId,
           active: true
         })
 
@@ -45,7 +43,8 @@ export function useScheduling() {
         .from('clients')
         .update({ 
           scheduled_date: scheduling.scheduledDate.toISOString(),
-          next_contact_date: scheduling.nextContactDate?.toISOString()
+          next_contact_date: scheduling.nextContactDate?.toISOString(),
+          unit_id: unitId // Atualiza a unidade do cliente se necessário
         })
         .eq('id', scheduling.cardId)
 
