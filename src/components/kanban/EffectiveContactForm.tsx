@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -83,6 +84,7 @@ export function EffectiveContactForm({ onSubmit, cardId, onLossSubmit }: Effecti
       return
     }
 
+    // Registra a perda usando apenas o hook registerLoss, evitando duplicação
     const success = await registerLoss({
       clientId: cardId,
       activityType: 'Contato Efetivo',
@@ -92,10 +94,11 @@ export function EffectiveContactForm({ onSubmit, cardId, onLossSubmit }: Effecti
     })
 
     if (success) {
+      console.log('Perda registrada com sucesso no Contato Efetivo')
       setIsLossModalOpen(false)
-      if (onLossSubmit) {
-        await onLossSubmit(reasons, observations)
-      }
+      
+      // Removemos a chamada ao onLossSubmit para evitar a duplicação da atividade Atendimento
+      // O método registerLoss já faz todas as atualizações necessárias, incluindo status do cliente
     }
   }
 

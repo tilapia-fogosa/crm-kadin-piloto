@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -96,6 +97,7 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
       return
     }
 
+    // Registra a perda usando apenas o hook registerLoss, evitando duplicação
     const success = await registerLoss({
       clientId: cardId,
       activityType: 'Tentativa de Contato',
@@ -105,10 +107,11 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
     })
 
     if (success) {
+      console.log('Perda registrada com sucesso na Tentativa de Contato')
       setIsLossModalOpen(false)
-      if (onLossSubmit) {
-        await onLossSubmit(reasons, observations)
-      }
+      
+      // Removemos a chamada ao onLossSubmit para evitar a duplicação da atividade Atendimento
+      // O método registerLoss já faz todas as atualizações necessárias, incluindo status do cliente
     }
   }
 
