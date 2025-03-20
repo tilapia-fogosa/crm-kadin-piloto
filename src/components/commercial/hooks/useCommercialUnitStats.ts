@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DailyStats } from "../../kanban/types/activity-dashboard.types";
@@ -39,12 +40,12 @@ export function useCommercialUnitStats(
         availableUnitIds
       });
 
-      // Fetch data filtered by accessible units
+      // Fetch data filtered by accessible units and active clients
       const [clientsResult, activitiesResult] = await Promise.all([
         supabase
           .from('clients')
           .select('unit_id')
-          .eq('active', true)
+          .eq('active', true) // Filtrar apenas clientes ativos
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
           .in('unit_id', availableUnitIds)
@@ -52,8 +53,8 @@ export function useCommercialUnitStats(
         
         supabase
           .from('client_activities')
-          .select('unit_id, tipo_atividade')
-          .eq('active', true)
+          .select('unit_id, tipo_atividade, client_id')
+          .eq('active', true) // Atividades ativas
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
           .in('unit_id', availableUnitIds)
@@ -62,10 +63,32 @@ export function useCommercialUnitStats(
       if (clientsResult.error) throw clientsResult.error;
       if (activitiesResult.error) throw activitiesResult.error;
 
-      console.log('Dados filtrados por unidades acessíveis:', {
+      console.log('Dados brutos obtidos:', {
         clients: clientsResult.data,
         activities: activitiesResult.data
       });
+
+      // Obter IDs de clientes ativos para filtrar atividades
+      const clientsQuery = supabase
+        .from('clients')
+        .select('id')
+        .eq('active', true)
+        .in('unit_id', availableUnitIds);
+      
+      const activeClientsResult = await clientsQuery;
+      
+      if (activeClientsResult.error) throw activeClientsResult.error;
+      
+      const activeClientIds = activeClientsResult.data.map(client => client.id);
+      
+      console.log(`Encontrados ${activeClientIds.length} clientes ativos para filtrar atividades`);
+
+      // Filtrar atividades para incluir apenas as de clientes ativos
+      const filteredActivities = activitiesResult.data.filter(activity => 
+        activeClientIds.includes(activity.client_id)
+      );
+
+      console.log(`Filtradas ${filteredActivities.length} atividades de ${activitiesResult.data.length} para clientes ativos`);
 
       // Initialize stats for all available units with zero values
       const unitStats: UnitStats[] = availableUnits.map(unit => ({
@@ -86,7 +109,7 @@ export function useCommercialUnitStats(
       // Map results to each unit
       unitStats.forEach(unitStat => {
         const unitClients = clientsResult.data.filter(c => c.unit_id === unitStat.unit_id).length;
-        const unitActivities = activitiesResult.data.filter(a => a.unit_id === unitStat.unit_id);
+        const unitActivities = filteredActivities.filter(a => a.unit_id === unitStat.unit_id);
 
         unitStat.newClients = unitClients;
         unitStat.contactAttempts = unitActivities.filter(a => 
@@ -125,7 +148,7 @@ export function useCommercialUnitStats(
           : 0;
       });
 
-      console.log('Estatísticas calculadas por unidade (apenas unidades acessíveis):', unitStats);
+      console.log('Estatísticas calculadas por unidade (apenas clientes e atividades ativas):', unitStats);
       return unitStats;
     },
   });
