@@ -6,6 +6,8 @@ interface WhatsAppIconProps {
 }
 
 export const WhatsAppIcon: React.FC<WhatsAppIconProps> = ({ className }) => {
+  console.log('WhatsAppIcon - Renderizando ícone do WhatsApp');
+  
   // Ícone do WhatsApp como SVG
   return (
     <svg 

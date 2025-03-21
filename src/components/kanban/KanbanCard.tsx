@@ -1,10 +1,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Phone, MessageSquare, Clock, Calendar } from "lucide-react";
+import { Phone, Clock, Calendar } from "lucide-react";
 import { KanbanCard as KanbanCardType } from "./types";
 import { format, parseISO, isBefore, isAfter, startOfDay, isToday } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { WhatsAppIcon } from "./components/icons/WhatsAppIcon";
 
 interface KanbanCardProps {
   card: KanbanCardType;
@@ -47,6 +48,8 @@ export function KanbanCard({
   onClick,
   onWhatsAppClick
 }: KanbanCardProps) {
+  console.log('KanbanCard - Renderizando card para:', card.clientName);
+  
   const createdAtDate = parseISO(card.createdAt);
   const isValidDate = !isNaN(createdAtDate.getTime());
   const nextContactDate = card.nextContactDate ? parseISO(card.nextContactDate) : null;
@@ -92,7 +95,7 @@ export function KanbanCard({
           </p>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" className="p-0 hover:bg-transparent" onClick={onWhatsAppClick}>
-              <MessageSquare className="h-4 w-4 text-green-500" />
+              <WhatsAppIcon className="h-4 w-4 text-green-500" />
             </Button>
             <Phone className="h-4 w-4 text-[#333333]" />
             <span className="text-sm text-[#333333]">{card.phoneNumber}</span>
