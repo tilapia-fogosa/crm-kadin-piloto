@@ -10,9 +10,10 @@ import { KanbanCard } from "../../types"
 import { useState, useEffect } from "react"
 import { ContactAttempt, EffectiveContact, Scheduling, Attendance } from "../../types"
 import { Button } from "@/components/ui/button"
-import { Copy, Phone, MessageSquare } from "lucide-react"
+import { Copy, Phone } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { WhatsAppIcon } from "../icons/WhatsAppIcon"
 
 interface CardSheetProps {
   card: KanbanCard
@@ -116,12 +117,12 @@ export function CardSheet({
         className="w-[900px] sm:max-w-[900px] overflow-y-auto"
       >
         <SheetHeader>
-          <div className="flex items-center justify-between">
-            <SheetTitle className="flex-grow">Atividades - {card.clientName}</SheetTitle>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center mr-2">
+          <div className="flex flex-col items-center justify-center mb-2">
+            <SheetTitle className="text-center">Atividades - {card.clientName}</SheetTitle>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center">
                 <Phone className="h-4 w-4 text-muted-foreground mr-2" />
-                <span className="text-sm">{card.phoneNumber}</span>
+                <span className="text-lg">{card.phoneNumber}</span>
               </div>
               
               <TooltipProvider>
@@ -146,7 +147,7 @@ export function CardSheet({
                       variant="ghost" 
                       className="h-8 w-8 text-green-500 hover:text-green-600"
                     >
-                      <MessageSquare className="h-4 w-4" />
+                      <WhatsAppIcon className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
