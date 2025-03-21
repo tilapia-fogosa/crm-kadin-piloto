@@ -47,7 +47,8 @@ export function useCommercialUserStats(
         unitFilter
       });
 
-      // Buscar perfis de usuários para as unidades acessíveis
+      // Buscar perfis de usuários únicos para as unidades acessíveis
+      // Usando DISTINCT ON para garantir que cada usuário apareça apenas uma vez
       const { data: userProfiles, error: profilesError } = await supabase
         .from('unit_users')
         .select(`
@@ -62,10 +63,16 @@ export function useCommercialUserStats(
 
       if (profilesError) throw profilesError;
 
-      console.log(`Encontrados ${userProfiles?.length} perfis de usuários para as unidades selecionadas`);
+      // Deduplicar userProfiles por user_id para garantir que cada usuário apareça apenas uma vez
+      const uniqueUserProfiles = Array.from(
+        new Map(userProfiles.map(profile => [profile.user_id, profile])).values()
+      );
 
-      // Mapear IDs de usuários
-      const userIds = userProfiles?.map(up => up.user_id) || [];
+      console.log(`Encontrados ${userProfiles.length} perfis brutos de usuários`);
+      console.log(`Após deduplicação: ${uniqueUserProfiles.length} perfis únicos de usuários`);
+
+      // Mapear IDs de usuários únicos
+      const userIds = uniqueUserProfiles.map(up => up.user_id);
 
       // Buscar clientes e atividades
       const [clientsResult, activitiesResult] = await Promise.all([
@@ -115,7 +122,7 @@ export function useCommercialUserStats(
       console.log(`Atividades após filtro de origem: ${filteredActivities.length}`);
 
       // Inicializar estatísticas para todos os usuários encontrados
-      const userStats: UserStats[] = userProfiles.map(userProfile => ({
+      const userStats: UserStats[] = uniqueUserProfiles.map(userProfile => ({
         user_id: userProfile.user_id,
         user_name: userProfile.profiles.full_name,
         newClients: 0,
@@ -183,7 +190,7 @@ export function useCommercialUserStats(
         .filter(user => user.newClients > 0 || user.contactAttempts > 0)
         .sort((a, b) => a.user_name.localeCompare(b.user_name));
 
-      console.log('Estatísticas calculadas por usuário:', activeUserStats);
+      console.log('Estatísticas calculadas por usuário (após deduplicação):', activeUserStats);
       return activeUserStats;
     },
   });
