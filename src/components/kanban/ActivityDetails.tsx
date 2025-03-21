@@ -1,3 +1,4 @@
+
 import { ContactAttemptForm } from "./ContactAttemptForm"
 import { EffectiveContactForm } from "./EffectiveContactForm"
 import { SchedulingForm } from "./SchedulingForm"
@@ -25,6 +26,8 @@ export function ActivityDetails({
   onRegisterAttendance,
   onLossSubmit
 }: ActivityDetailsProps) {
+  console.log('ActivityDetails - Renderizando com atividade selecionada:', selectedActivity)
+  
   return (
     <div className="border-l pl-4">
       <h3 className="font-semibold mb-2">Detalhes da Atividade</h3>

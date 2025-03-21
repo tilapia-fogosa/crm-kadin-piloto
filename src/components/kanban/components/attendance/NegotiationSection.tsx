@@ -17,6 +17,8 @@ export function NegotiationSection({
   onObservationsChange,
   disabled
 }: NegotiationSectionProps) {
+  console.log('NegotiationSection - Renderizando seção de negociação')
+  
   return (
     <div className="space-y-4">
       <NextContactDate

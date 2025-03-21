@@ -1,13 +1,13 @@
 
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
 } from "@/components/ui/alert-dialog"
 
 interface LossConfirmationDialogProps {
@@ -21,18 +21,24 @@ export function LossConfirmationDialog({
   onOpenChange,
   onConfirm
 }: LossConfirmationDialogProps) {
+  console.log('LossConfirmationDialog - Renderizando diálogo de confirmação, aberto:', open)
+  
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirmar cliente como perdido?</AlertDialogTitle>
+          <AlertDialogTitle>Confirmar perda de cliente?</AlertDialogTitle>
           <AlertDialogDescription>
-            Ao marcar o cliente como perdido, ele será removido do Kanban. O histórico será mantido e você poderá acessá-lo na lista de clientes.
+            Você está prestes a marcar este cliente como perdido. Esta ação irá
+            criar um registro de perda e mover o cliente para a lista de perdidos.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => onOpenChange(false)}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className="bg-destructive text-destructive-foreground"
+          >
             Confirmar
           </AlertDialogAction>
         </AlertDialogFooter>

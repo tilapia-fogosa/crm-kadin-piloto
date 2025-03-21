@@ -4,6 +4,8 @@ import { ResultButtonProps } from "../../types/attendance-form.types"
 import { cn } from "@/lib/utils"
 
 export function ResultButton({ result, selectedResult, onClick }: ResultButtonProps) {
+  console.log('ResultButton - Renderizando botão para resultado:', result)
+  
   const getButtonStyle = () => {
     const styles = {
       matriculado: {

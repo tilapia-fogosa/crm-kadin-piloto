@@ -17,6 +17,8 @@ export function LossReasonSection({
   onObservationsChange,
   disabled
 }: LossReasonSectionProps) {
+  console.log('LossReasonSection - Renderizando com', selectedReasons.length, 'motivos selecionados')
+  
   return (
     <div className="space-y-4">
       <LossReasonSelect

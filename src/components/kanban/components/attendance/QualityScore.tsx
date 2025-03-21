@@ -1,24 +1,28 @@
 
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { QualityScoreProps } from "../../types/attendance-form.types"
 
 export function QualityScore({ value, onChange }: QualityScoreProps) {
+  console.log('QualityScore - Renderizando com valor:', value)
+  
   return (
     <div className="space-y-2">
-      <Label>Qualidade do Lead (1-10)</Label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger>
-          <SelectValue placeholder="Selecione uma nota" />
-        </SelectTrigger>
-        <SelectContent>
-          {[...Array(10)].map((_, i) => (
-            <SelectItem key={i + 1} value={(i + 1).toString()}>
-              {i + 1}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Label className="text-sm font-medium">Qualidade do Lead</Label>
+      <RadioGroup
+        value={value}
+        onValueChange={onChange}
+        className="flex flex-wrap gap-2"
+      >
+        {['1', '2', '3', '4', '5'].map(score => (
+          <div key={score} className="flex items-center space-x-1">
+            <RadioGroupItem value={score} id={`score-${score}`} />
+            <Label htmlFor={`score-${score}`} className="cursor-pointer">
+              {score}
+            </Label>
+          </div>
+        ))}
+      </RadioGroup>
     </div>
   )
 }

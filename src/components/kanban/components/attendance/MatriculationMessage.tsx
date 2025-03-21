@@ -1,12 +1,21 @@
 
+import { AlertCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+
 interface MatriculationMessageProps {
   clientName: string
 }
 
 export function MatriculationMessage({ clientName }: MatriculationMessageProps) {
+  console.log('MatriculationMessage - Renderizando para cliente:', clientName)
+  
   return (
-    <div className="p-4 border rounded-md bg-red-50 text-red-800">
-      Você irá fazer a matrícula de {clientName}, ele irá para a tela de pré-venda onde poderá ser preenchido a Ficha de Matrícula do Aluno com Todos dados.
-    </div>
+    <Alert>
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>Matriculando {clientName}</AlertTitle>
+      <AlertDescription>
+        O cliente será direcionado para o processo de matrícula após salvar.
+      </AlertDescription>
+    </Alert>
   )
 }
