@@ -1,3 +1,4 @@
+
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { KanbanCard as KanbanCardComponent } from "../../KanbanCard"
 import { ActivityHistory } from "../../ActivityHistory"
@@ -8,6 +9,10 @@ import { ClientInformation } from "./ClientInformation"
 import { KanbanCard } from "../../types"
 import { useState, useEffect } from "react"
 import { ContactAttempt, EffectiveContact, Scheduling, Attendance } from "../../types"
+import { Button } from "@/components/ui/button"
+import { Copy, Phone, MessageSquare } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface CardSheetProps {
   card: KanbanCard
@@ -34,6 +39,7 @@ export function CardSheet({
 }: CardSheetProps) {
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(true)
+  const { toast } = useToast()
 
   useEffect(() => {
     console.log('CardSheet - Estado do sheet:', isOpen ? 'aberto' : 'fechado')
@@ -76,6 +82,25 @@ export function CardSheet({
     }
   }
 
+  const handleCopyPhone = () => {
+    console.log('CardSheet - Copiando telefone:', card.phoneNumber)
+    navigator.clipboard.writeText(card.phoneNumber)
+      .then(() => {
+        toast({
+          title: "Número copiado",
+          description: "Número de telefone copiado para a área de transferência",
+        })
+      })
+      .catch(err => {
+        console.error('Erro ao copiar telefone:', err)
+        toast({
+          title: "Erro",
+          description: "Não foi possível copiar o número de telefone",
+          variant: "destructive",
+        })
+      })
+  }
+
   return (
     <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
       <SheetTrigger asChild>
@@ -91,7 +116,46 @@ export function CardSheet({
         className="w-[900px] sm:max-w-[900px] overflow-y-auto"
       >
         <SheetHeader>
-          <SheetTitle>Atividades - {card.clientName}</SheetTitle>
+          <div className="flex items-center justify-between">
+            <SheetTitle className="flex-grow">Atividades - {card.clientName}</SheetTitle>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center mr-2">
+                <Phone className="h-4 w-4 text-muted-foreground mr-2" />
+                <span className="text-sm">{card.phoneNumber}</span>
+              </div>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button onClick={handleCopyPhone} size="icon" variant="ghost" className="h-8 w-8">
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Copiar número</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={(e) => onWhatsAppClick(e)} 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-8 w-8 text-green-500 hover:text-green-600"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Abrir WhatsApp</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
         </SheetHeader>
         <div className="grid gap-4 mt-6 relative h-[calc(90vh-80px)]" style={{ 
           gridTemplateColumns: isHistoryExpanded 
