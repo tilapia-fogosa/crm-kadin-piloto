@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useCommercialStats } from "./hooks/useCommercialStats";
 import { calculateTotals } from "./utils/stats.utils";
 import { CommercialTableOne } from "./components/CommercialTableOne";
-import { CommercialTableTwo } from "./components/CommercialTableTwo";
+import { CommercialUserTable } from "./components/CommercialUserTable";
 import { CommercialTableThree } from "./components/CommercialTableThree";
+import { useCommercialUserStats } from "./hooks/useCommercialUserStats";
 
 export function CommercialDashboard() {
   console.log("Rendering CommercialDashboard");
@@ -21,6 +22,14 @@ export function CommercialDashboard() {
     selectedYear,
     selectedUnitId
   );
+  
+  const { data: userStats, isLoading: isLoadingUserStats } = useCommercialUserStats(
+    selectedSource, 
+    selectedMonth, 
+    selectedYear,
+    selectedUnitId
+  );
+  
   const totals = calculateTotals(stats);
 
   return (
@@ -51,8 +60,8 @@ export function CommercialDashboard() {
           </div>
           
           <div>
-            <h2 className="text-lg font-semibold mb-4">Tabela 2</h2>
-            <CommercialTableTwo stats={stats} totals={totals} isLoading={isLoading} />
+            <h2 className="text-lg font-semibold mb-4">Totais por Usuário</h2>
+            <CommercialUserTable stats={userStats} totals={totals} isLoading={isLoadingUserStats} />
           </div>
           
           <div>
