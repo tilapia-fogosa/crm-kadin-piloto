@@ -46,6 +46,7 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
         <UnitSelection 
           onUnitChange={handleUnitChange}
           availableUnitsCount={hasMultipleUnits ? 2 : 1}
+          selectedUnitId={selectedUnitId}
         />
       )}
 

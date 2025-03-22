@@ -11,9 +11,10 @@ import { useEffect } from "react"
 
 interface UnitSelectorProps {
   onChange?: (unitId: string) => void;
+  value?: string; // Nova propriedade para controlar o valor externamente
 }
 
-export function UnitSelector({ onChange }: UnitSelectorProps) {
+export function UnitSelector({ onChange, value }: UnitSelectorProps) {
   const { selectedUnitId, setSelectedUnitId, availableUnits, isLoading } = useUnit();
 
   // Notifica o componente pai quando a unidade selecionada muda
@@ -32,9 +33,14 @@ export function UnitSelector({ onChange }: UnitSelectorProps) {
     return <div>Nenhuma unidade disponível</div>;
   }
 
+  // Determina qual valor usar: o fornecido externamente (value) ou o do contexto (selectedUnitId)
+  const currentValue = value !== undefined ? value : selectedUnitId;
+  
+  console.log('UnitSelector - Renderizando com valor:', currentValue || 'nenhum valor');
+
   return (
     <Select
-      value={selectedUnitId || undefined}
+      value={currentValue || undefined}
       onValueChange={(value) => {
         console.log('UnitSelector - Seleção alterada para:', value);
         setSelectedUnitId(value);
