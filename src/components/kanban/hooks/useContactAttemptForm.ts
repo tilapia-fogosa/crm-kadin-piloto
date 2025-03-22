@@ -3,7 +3,8 @@ import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { ContactAttempt } from "../types"
 
-export type ContactType = 'phone' | 'whatsapp' | 'whatsapp-call' | undefined
+// Updated to be consistent with other definitions
+export type ContactType = 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial' | undefined
 
 interface UseContactAttemptFormProps {
   onSubmit: (attempt: ContactAttempt) => void
@@ -33,7 +34,7 @@ export function useContactAttemptForm({ onSubmit, cardId }: UseContactAttemptFor
   }
 
   // Atualiza o estado de seleção do tipo de contato e esconde o alerta quando um tipo for selecionado
-  const handleContactTypeChange = (value: 'phone' | 'whatsapp' | 'whatsapp-call') => {
+  const handleContactTypeChange = (value: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial') => {
     setContactType(value)
     setShowContactTypeAlert(false)
   }

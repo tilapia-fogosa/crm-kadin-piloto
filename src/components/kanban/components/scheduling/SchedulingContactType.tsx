@@ -1,27 +1,26 @@
 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+import { ContactType } from "../../hooks/useSchedulingForm"
 
-// Update the type to be consistent across all forms
-export type ContactType = 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial' | undefined
-
-interface ContactTypeSelectorProps {
+interface SchedulingContactTypeProps {
   contactType: ContactType
   onContactTypeChange: (value: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial') => void
-  includeFaceToFace?: boolean
 }
 
-export function ContactTypeSelector({ 
+export function SchedulingContactType({ 
   contactType, 
-  onContactTypeChange,
-  includeFaceToFace = false
-}: ContactTypeSelectorProps) {
+  onContactTypeChange 
+}: SchedulingContactTypeProps) {
+  // Log para rastreamento
+  console.log('SchedulingContactType - Renderizando com tipo:', contactType)
+  
   return (
     <div className="space-y-2">
       <Label>Tipo de Contato</Label>
       <RadioGroup
         value={contactType}
-        onValueChange={onContactTypeChange}
+        onValueChange={(value: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial') => onContactTypeChange(value)}
         className="flex flex-col space-y-2"
       >
         <div className="flex items-center space-x-2">
@@ -36,12 +35,10 @@ export function ContactTypeSelector({
           <RadioGroupItem value="whatsapp-call" id="whatsapp-call" />
           <Label htmlFor="whatsapp-call">Ligação WhatsApp</Label>
         </div>
-        {includeFaceToFace && (
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="presencial" id="presencial" />
-            <Label htmlFor="presencial">Presencial</Label>
-          </div>
-        )}
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="presencial" id="presencial" />
+          <Label htmlFor="presencial">Presencial</Label>
+        </div>
       </RadioGroup>
     </div>
   )
