@@ -86,6 +86,22 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
     }
   }
 
+  // Novo método para validar o tipo de contato antes de abrir o modal de perda
+  const handleLossButtonClick = () => {
+    console.log('Validando tipo de contato antes de abrir modal de perda')
+    if (!contactType) {
+      toast({
+        title: "Erro",
+        description: "Selecione o tipo de contato antes de registrar a perda",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    // Se passar na validação, abre o modal
+    setIsLossModalOpen(true)
+  }
+
   const handleLossConfirm = async (reasons: string[], observations?: string) => {
     console.log('Confirmando perda com motivos:', reasons)
     if (!contactType) {
@@ -171,7 +187,7 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
         {onLossSubmit && (
           <Button
             variant="destructive"
-            onClick={() => setIsLossModalOpen(true)}
+            onClick={handleLossButtonClick}
             className="w-full"
           >
             Perdido
