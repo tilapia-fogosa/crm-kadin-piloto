@@ -5,11 +5,17 @@ import { UnitSelector } from "@/components/UnitSelector"
 interface UnitSelectionProps {
   onUnitChange: (unitId: string) => void
   availableUnitsCount: number
+  selectedUnitId?: string
 }
 
-export function UnitSelection({ onUnitChange, availableUnitsCount }: UnitSelectionProps) {
+export function UnitSelection({ 
+  onUnitChange, 
+  availableUnitsCount,
+  selectedUnitId
+}: UnitSelectionProps) {
   // Log para rastreamento
   console.log('UnitSelection - Renderizando com quantidade de unidades:', availableUnitsCount)
+  console.log('UnitSelection - Unidade selecionada atualmente:', selectedUnitId || 'nenhuma')
   
   return (
     <div className="space-y-2">
@@ -21,6 +27,7 @@ export function UnitSelection({ onUnitChange, availableUnitsCount }: UnitSelecti
             console.log('UnitSelection - Unidade selecionada alterada para:', unitId)
             onUnitChange(unitId)
           }}
+          value={selectedUnitId}
         />
       </div>
     </div>

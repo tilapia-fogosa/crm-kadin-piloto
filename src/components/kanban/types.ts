@@ -20,7 +20,7 @@ export type KanbanCard = {
 }
 
 export type ContactAttempt = {
-  type: 'phone' | 'whatsapp' | 'whatsapp-call'
+  type: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial'
   nextContactDate: Date
   cardId: string
 }

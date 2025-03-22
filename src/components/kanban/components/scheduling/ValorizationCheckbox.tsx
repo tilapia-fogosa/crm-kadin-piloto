@@ -11,12 +11,17 @@ export function ValorizationCheckbox({ checked, onCheckedChange }: ValorizationC
   // Log para rastreamento
   console.log('ValorizationCheckbox - Renderizando com estado:', checked)
   
+  const handleChange = (value: boolean) => {
+    console.log('ValorizationCheckbox - Mudando para:', value)
+    onCheckedChange(value)
+  }
+  
   return (
     <div className="flex items-center space-x-2">
       <Checkbox
         id="valorizacao"
         checked={checked}
-        onCheckedChange={(value) => onCheckedChange(value as boolean)}
+        onCheckedChange={(value) => handleChange(value as boolean)}
       />
       <Label htmlFor="valorizacao">Valorização Dia Anterior?</Label>
     </div>

@@ -14,8 +14,12 @@ interface ContactTypeSelectorProps {
 export function ContactTypeSelector({ 
   contactType, 
   onContactTypeChange,
-  includeFaceToFace = false
+  includeFaceToFace = true // Alterado o padrão para true para que "presencial" seja incluído por default
 }: ContactTypeSelectorProps) {
+  // Log para rastreamento
+  console.log('ContactTypeSelector - Renderizando com tipo:', contactType)
+  console.log('ContactTypeSelector - Incluindo opção presencial:', includeFaceToFace)
+  
   return (
     <div className="space-y-2">
       <Label>Tipo de Contato</Label>

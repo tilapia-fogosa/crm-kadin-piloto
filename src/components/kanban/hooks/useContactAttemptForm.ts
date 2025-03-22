@@ -25,16 +25,18 @@ export function useContactAttemptForm({ onSubmit, cardId }: UseContactAttemptFor
     if (!contactType) {
       console.log('Tipo de contato não selecionado, exibindo alerta')
       setShowContactTypeAlert(true)
-      return
+      return false // Retorna falso para indicar que não devemos continuar
     }
     
     // Se tipo de contato estiver selecionado, esconde o alerta e abre o modal
     setShowContactTypeAlert(false)
     setIsLossModalOpen(true)
+    return true // Retorna verdadeiro para indicar que podemos continuar
   }
 
   // Atualiza o estado de seleção do tipo de contato e esconde o alerta quando um tipo for selecionado
   const handleContactTypeChange = (value: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial') => {
+    console.log('useContactAttemptForm - Tipo de contato alterado para:', value)
     setContactType(value)
     setShowContactTypeAlert(false)
   }
