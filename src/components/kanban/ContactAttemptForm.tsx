@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Input } from "@/components/ui/input"
 import { LossModal } from "./components/loss/LossModal"
 import { useLossRegistration } from "./hooks/useLossRegistration"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface ContactAttemptFormProps {
   onSubmit: (attempt: ContactAttempt) => void
@@ -20,6 +21,7 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
   const [date, setDate] = useState("")
   const [time, setTime] = useState("")
   const [isLossModalOpen, setIsLossModalOpen] = useState(false)
+  const [showContactTypeAlert, setShowContactTypeAlert] = useState(false)
   const { toast } = useToast()
   const { registerLoss } = useLossRegistration()
 
@@ -86,20 +88,24 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
     }
   }
 
-  // Novo método para validar o tipo de contato antes de abrir o modal de perda
+  // Método para validar o tipo de contato antes de abrir o modal de perda
   const handleLossButtonClick = () => {
     console.log('Validando tipo de contato antes de abrir modal de perda')
     if (!contactType) {
-      toast({
-        title: "Erro",
-        description: "Selecione o tipo de contato antes de registrar a perda",
-        variant: "destructive",
-      })
+      console.log('Tipo de contato não selecionado, exibindo alerta')
+      setShowContactTypeAlert(true)
       return
     }
     
-    // Se passar na validação, abre o modal
+    // Se tipo de contato estiver selecionado, esconde o alerta e abre o modal
+    setShowContactTypeAlert(false)
     setIsLossModalOpen(true)
+  }
+
+  // Atualiza o estado de seleção do tipo de contato e esconde o alerta quando um tipo for selecionado
+  const handleContactTypeChange = (value: 'phone' | 'whatsapp' | 'whatsapp-call') => {
+    setContactType(value)
+    setShowContactTypeAlert(false)
   }
 
   const handleLossConfirm = async (reasons: string[], observations?: string) => {
@@ -137,7 +143,7 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
         <Label>Tipo de Contato</Label>
         <RadioGroup
           value={contactType}
-          onValueChange={(value: 'phone' | 'whatsapp' | 'whatsapp-call') => setContactType(value)}
+          onValueChange={handleContactTypeChange}
           className="flex flex-col space-y-2"
         >
           <div className="flex items-center space-x-2">
@@ -185,13 +191,23 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
         </Button>
 
         {onLossSubmit && (
-          <Button
-            variant="destructive"
-            onClick={handleLossButtonClick}
-            className="w-full"
-          >
-            Perdido
-          </Button>
+          <>
+            <Button
+              variant="destructive"
+              onClick={handleLossButtonClick}
+              className="w-full"
+            >
+              Perdido
+            </Button>
+            
+            {showContactTypeAlert && (
+              <Alert variant="destructive" className="mt-2">
+                <AlertDescription>
+                  Selecione o Tipo de Contato
+                </AlertDescription>
+              </Alert>
+            )}
+          </>
         )}
       </div>
 
