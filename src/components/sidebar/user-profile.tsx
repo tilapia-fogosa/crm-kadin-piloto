@@ -3,9 +3,12 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "react-router-dom";
+import { UpdatesButton } from "./updates-button";
 
 export function UserProfile() {
   const { session, signOut } = useAuth();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await signOut();
@@ -13,6 +16,9 @@ export function UserProfile() {
 
   return (
     <div className="p-4 space-y-4 border-t border-white/10">
+      {/* Botão de atualizações acima do nome do usuário */}
+      <UpdatesButton currentPath={location.pathname} />
+      
       {session?.user?.user_metadata?.full_name && (
         <div className="text-[#FF6B00] text-sm font-medium px-2">
           {session.user.user_metadata.full_name}

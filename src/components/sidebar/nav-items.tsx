@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -10,8 +11,10 @@ import {
   Link2,
   DollarSign,
   LineChart,
-  Calendar
+  Calendar,
+  Bell
 } from "lucide-react";
+import { UpdatesButton } from "./updates-button";
 
 export const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },

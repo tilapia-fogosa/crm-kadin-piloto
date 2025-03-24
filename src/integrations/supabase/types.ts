@@ -1282,6 +1282,42 @@ export type Database = {
         }
         Relationships: []
       }
+      system_updates: {
+        Row: {
+          active: boolean
+          build_version: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          build_version?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          build_version?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       unit_users: {
         Row: {
           active: boolean
@@ -1463,6 +1499,35 @@ export type Database = {
           },
         ]
       }
+      user_update_reads: {
+        Row: {
+          id: string
+          read_at: string
+          update_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          read_at?: string
+          update_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          read_at?: string
+          update_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_update_reads_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "system_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webhook_credentials: {
         Row: {
           active: boolean | null
@@ -1595,6 +1660,12 @@ export type Database = {
           has_first_access: boolean
         }[]
       }
+      has_unread_updates: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       inactivate_activity: {
         Args: {
           activity_id: string
@@ -1627,6 +1698,16 @@ export type Database = {
           p_role: Database["public"]["Enums"]["user_role"]
         }
         Returns: string
+      }
+      mark_all_updates_as_read: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      mark_update_as_read: {
+        Args: {
+          p_update_id: string
+        }
+        Returns: boolean
       }
       retry_failed_webhooks: {
         Args: Record<PropertyKey, never>
