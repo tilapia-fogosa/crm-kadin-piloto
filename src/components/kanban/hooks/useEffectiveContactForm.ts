@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { EffectiveContact } from "../types"
@@ -5,7 +6,7 @@ import { EffectiveContact } from "../types"
 export type ContactType = 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial' | undefined
 
 export function useEffectiveContactForm(cardId: string, onSubmit: (contact: EffectiveContact) => void) {
-  // Estado do formulário
+  // Estado do formulário - iniciando contactType como undefined (sem seleção)
   const [contactType, setContactType] = useState<ContactType>(undefined)
   const [notes, setNotes] = useState("")
   const [date, setDate] = useState("")
@@ -44,6 +45,7 @@ export function useEffectiveContactForm(cardId: string, onSubmit: (contact: Effe
     
     if (!contactType) {
       console.log('useEffectiveContactForm - Tipo de contato não selecionado')
+      setShowContactTypeAlert(true) // Mostra o alerta visual
       toast({
         title: "Erro",
         description: "Selecione o tipo de contato",

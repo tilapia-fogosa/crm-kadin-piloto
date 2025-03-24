@@ -24,7 +24,7 @@ export function ContactTypeSelector({
     <div className="space-y-2">
       <Label>Tipo de Contato</Label>
       <RadioGroup
-        value={contactType}
+        value={contactType || ''} // Alterado para aceitar string vazia quando undefined
         onValueChange={onContactTypeChange}
         className="flex flex-col space-y-2"
       >

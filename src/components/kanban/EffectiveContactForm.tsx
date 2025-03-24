@@ -66,7 +66,7 @@ export function EffectiveContactForm({ onSubmit, cardId, onLossSubmit }: Effecti
   return (
     <div className="space-y-4">
       <ContactTypeSelector 
-        contactType={contactType || 'phone'} 
+        contactType={contactType} 
         onContactTypeChange={handleContactTypeChange} 
       />
 
@@ -87,6 +87,7 @@ export function EffectiveContactForm({ onSubmit, cardId, onLossSubmit }: Effecti
         onLossClick={openLossModal}
         showOnLossSubmit={!!onLossSubmit}
         showContactTypeAlert={showContactTypeAlert}
+        actionType="contact"  // Define o tipo como "contact" para mostrar o texto correto
       />
 
       <LossModal
