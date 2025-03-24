@@ -1290,6 +1290,7 @@ export type Database = {
           created_by: string | null
           description: string
           id: string
+          published: boolean
           title: string
           type: string
           updated_at: string
@@ -1301,6 +1302,7 @@ export type Database = {
           created_by?: string | null
           description: string
           id?: string
+          published?: boolean
           title: string
           type: string
           updated_at?: string
@@ -1312,6 +1314,7 @@ export type Database = {
           created_by?: string | null
           description?: string
           id?: string
+          published?: boolean
           title?: string
           type?: string
           updated_at?: string
@@ -1624,6 +1627,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      count_draft_updates: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       create_unit_user: {
         Args: {
           p_email: string
@@ -1709,9 +1716,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      publish_update: {
+        Args: {
+          p_update_id: string
+        }
+        Returns: boolean
+      }
       retry_failed_webhooks: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      unpublish_update: {
+        Args: {
+          p_update_id: string
+        }
+        Returns: boolean
       }
       user_has_access_to_unit: {
         Args: {
