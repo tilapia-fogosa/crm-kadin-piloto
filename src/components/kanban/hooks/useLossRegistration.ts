@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { useUserUnit } from "./useUserUnit"
+import { useUnit } from "@/contexts/UnitContext"
 
 interface LossRegistrationProps {
   clientId: string
@@ -15,7 +16,8 @@ interface LossRegistrationProps {
 export function useLossRegistration() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
-  const { currentUnitId } = useUserUnit()
+  // Substituindo useUserUnit().currentUnitId por useUnit().selectedUnitId
+  const { selectedUnitId } = useUnit()
 
   const registerLoss = async ({
     clientId,
