@@ -249,23 +249,35 @@ export type Database = {
         Row: {
           client_id: string | null
           created_at: string | null
+          created_by: string | null
           id: string
           observations: string | null
+          previous_status: string | null
           reason_id: string | null
+          total_reasons: number
+          unit_id: string | null
         }
         Insert: {
           client_id?: string | null
           created_at?: string | null
+          created_by?: string | null
           id?: string
           observations?: string | null
+          previous_status?: string | null
           reason_id?: string | null
+          total_reasons?: number
+          unit_id?: string | null
         }
         Update: {
           client_id?: string | null
           created_at?: string | null
+          created_by?: string | null
           id?: string
           observations?: string | null
+          previous_status?: string | null
           reason_id?: string | null
+          total_reasons?: number
+          unit_id?: string | null
         }
         Relationships: [
           {
@@ -280,6 +292,13 @@ export type Database = {
             columns: ["reason_id"]
             isOneToOne: false
             referencedRelation: "loss_reasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_loss_reasons_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]

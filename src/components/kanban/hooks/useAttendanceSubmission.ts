@@ -38,10 +38,10 @@ export function useAttendanceSubmission() {
       })
 
       try {
-        // Get client's unit_id
+        // Get client's unit_id and current status
         const { data: clientData, error: clientError } = await supabase
           .from('clients')
-          .select('unit_id')
+          .select('unit_id, status')
           .eq('id', cardId)
           .single()
 
@@ -53,6 +53,10 @@ export function useAttendanceSubmission() {
           console.error(`[${submissionId}] Cliente sem unit_id`)
           throw new Error('Client has no unit_id')
         }
+        
+        // Armazenando o status anterior do cliente
+        const previousStatus = clientData.status
+        console.log(`[${submissionId}] Status anterior do cliente: ${previousStatus}`)
 
         const session = (await supabase.auth.getSession()).data.session
         if (!session) {
@@ -102,14 +106,19 @@ export function useAttendanceSubmission() {
           }
         }
 
-        // Se houver motivos de perda, registra-os
+        // Se houver motivos de perda, registra-os com os novos campos
         if (result === 'perdido' && selectedReasons?.length) {
           console.log(`[${submissionId}] Registrando motivos de perda:`, selectedReasons)
           
+          const totalReasons = selectedReasons.length
           const reasonEntries = selectedReasons.map(reasonId => ({
             client_id: cardId,
             reason_id: reasonId,
-            observations: observations || null
+            observations: observations || null,
+            previous_status: previousStatus,
+            total_reasons: totalReasons,
+            created_by: session.user.id,
+            unit_id: clientData.unit_id
           }))
 
           const { error: reasonsError } = await supabase

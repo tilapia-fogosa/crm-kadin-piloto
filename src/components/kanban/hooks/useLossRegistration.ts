@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
+import { useUserUnit } from "./useUserUnit"
 
 interface LossRegistrationProps {
   clientId: string
@@ -14,6 +15,7 @@ interface LossRegistrationProps {
 export function useLossRegistration() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const { currentUnitId } = useUserUnit()
 
   const registerLoss = async ({
     clientId,
@@ -33,15 +35,19 @@ export function useLossRegistration() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Não autenticado')
 
-      // Get client's unit_id
+      // Get client's unit_id and current status
       const { data: clientData, error: fetchClientError } = await supabase
         .from('clients')
-        .select('unit_id')
+        .select('unit_id, status')
         .eq('id', clientId)
         .single()
 
       if (fetchClientError) throw fetchClientError
       if (!clientData?.unit_id) throw new Error('Client has no unit_id')
+      
+      // Armazenando o status anterior do cliente antes de ser marcado como perdido
+      const previousStatus = clientData.status
+      console.log(`Status anterior do cliente: ${previousStatus}`)
 
       // 1. Registra a atividade
       const { data: activity, error: activityError } = await supabase
@@ -60,13 +66,19 @@ export function useLossRegistration() {
 
       if (activityError) throw activityError
 
-      // 2. Registra os motivos de perda
+      // 2. Registra os motivos de perda com os novos campos
       console.log('Registrando motivos de perda:', reasons)
+      const totalReasons = reasons.length
+      
       if (reasons.length > 0) {
         const reasonEntries = reasons.map(reasonId => ({
           client_id: clientId,
           reason_id: reasonId,
-          observations: observations
+          observations: observations,
+          previous_status: previousStatus,
+          total_reasons: totalReasons,
+          created_by: session.session.user.id,
+          unit_id: clientData.unit_id
         }))
 
         const { error: reasonsError } = await supabase
