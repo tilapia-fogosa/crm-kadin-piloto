@@ -103,7 +103,8 @@ export function useCommercialUnitStats(
         enrollments: 0,
         ceConversionRate: 0,
         agConversionRate: 0,
-        atConversionRate: 0
+        atConversionRate: 0,
+        maConversionRate: 0  // Adicionando a inicialização da propriedade maConversionRate
       }));
 
       // Map results to each unit
@@ -145,6 +146,11 @@ export function useCommercialUnitStats(
 
         unitStat.atConversionRate = unitStat.scheduledVisits > 0 
           ? (unitStat.completedVisits / unitStat.scheduledVisits) * 100 
+          : 0;
+          
+        // Calcular a taxa de conversão de matrículas (MA)
+        unitStat.maConversionRate = unitStat.completedVisits > 0 
+          ? (unitStat.enrollments / unitStat.completedVisits) * 100 
           : 0;
       });
 

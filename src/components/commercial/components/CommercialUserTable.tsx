@@ -66,9 +66,7 @@ export function CommercialUserTable({ stats, totals, isLoading }: CommercialUser
                 <TableCell className="text-center text-xs py-0">{user.completedVisits}</TableCell>
                 <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{user.atConversionRate.toFixed(1)}%</TableCell>
                 <TableCell className="text-center text-xs py-[5px]">{user.enrollments}</TableCell>
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
-                  {user.completedVisits > 0 ? ((user.enrollments / user.completedVisits) * 100).toFixed(1) : '0.0'}%
-                </TableCell>
+                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{user.maConversionRate.toFixed(1)}%</TableCell>
               </TableRow>
             ))}
             
@@ -88,9 +86,7 @@ export function CommercialUserTable({ stats, totals, isLoading }: CommercialUser
                 <TableCell className="text-center text-xs py-0">{totals.completedVisits}</TableCell>
                 <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.atConversionRate.toFixed(1)}%</TableCell>
                 <TableCell className="text-center text-xs py-0">{totals.enrollments}</TableCell>
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
-                  {totals.completedVisits > 0 ? ((totals.enrollments / totals.completedVisits) * 100).toFixed(1) : '0.0'}%
-                </TableCell>
+                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{totals.maConversionRate.toFixed(1)}%</TableCell>
               </TableRow>
             )}
             

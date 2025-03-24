@@ -61,7 +61,7 @@ export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear
           <>
             {[1, 2, 3].map((i) => (
               <TableRow key={i}>
-                <TableCell colSpan={11} className="p-2">
+                <TableCell colSpan={12} className="p-2">
                   <Skeleton className="h-8 w-full" />
                 </TableCell>
               </TableRow>
@@ -84,9 +84,7 @@ export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear
                 <TableCell className="text-center text-xs py-0">{unit.completedVisits}</TableCell>
                 <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{unit.atConversionRate.toFixed(1)}%</TableCell>
                 <TableCell className="text-center text-xs py-[5px]">{unit.enrollments}</TableCell>
-                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
-                  {unit.completedVisits > 0 ? ((unit.enrollments / unit.completedVisits) * 100).toFixed(1) : '0.0'}%
-                </TableCell>
+                <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{unit.maConversionRate.toFixed(1)}%</TableCell>
               </TableRow>
             ))}
           </>
