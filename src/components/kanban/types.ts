@@ -10,6 +10,7 @@ export type KanbanCard = {
   clientName: string
   leadSource: string
   phoneNumber: string
+  email?: string
   createdAt: string
   nextContactDate?: string
   activities?: string[]

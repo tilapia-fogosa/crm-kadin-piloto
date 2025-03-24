@@ -25,6 +25,7 @@ export default function NewClient() {
       ageRange: "",
       metaId: "",
       originalAd: "",
+      email: "",
       unitId: "",
     },
   });
@@ -53,6 +54,7 @@ export default function NewClient() {
           age_range: values.ageRange,
           meta_id: values.metaId,
           original_ad: values.originalAd,
+          email: values.email,
           created_by: session.session.user.id,
           status: 'novo-cadastro',
           unit_id: values.unitId

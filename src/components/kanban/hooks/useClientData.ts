@@ -79,6 +79,7 @@ export function useClientData(selectedUnitId: string | null = null) {
           id,
           name,
           phone_number,
+          email,
           lead_source,
           observations,
           status,
@@ -112,6 +113,7 @@ export function useClientData(selectedUnitId: string | null = null) {
         console.log('Client data:', {
           id: client.id,
           name: client.name,
+          email: client.email,
           original_ad: client.original_ad,
           original_adset: client.original_adset,
           status: client.status,

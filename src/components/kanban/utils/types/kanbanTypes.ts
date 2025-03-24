@@ -6,6 +6,7 @@ export interface ClientData {
   name: string // snake_case como no banco
   lead_source: string
   phone_number: string
+  email?: string // Adicionando campo de email
   created_at: string
   next_contact_date?: string
   client_activities?: string[]
@@ -39,4 +40,3 @@ export interface ColumnDefinition {
   title: string
   filterPredicate: (client: ClientData) => boolean
 }
-

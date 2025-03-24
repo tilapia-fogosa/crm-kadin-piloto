@@ -10,6 +10,7 @@ export const transformClientToCard = (client: ClientData): KanbanCard => {
     clientName: client.name,
     leadSource: client.lead_source,
     phoneNumber: client.phone_number,
+    email: client.email,
     createdAt: client.created_at,
     nextContactDate: client.next_contact_date,
     activities: client.client_activities || [],
@@ -18,4 +19,3 @@ export const transformClientToCard = (client: ClientData): KanbanCard => {
     observations: client.observations
   }
 }
-

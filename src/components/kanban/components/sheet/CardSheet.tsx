@@ -76,6 +76,7 @@ export function CardSheet({
           <SheetHeaderContent 
             clientName={card.clientName}
             phoneNumber={card.phoneNumber}
+            email={card.email}
             onWhatsAppClick={onWhatsAppClick}
           />
         </SheetHeader>

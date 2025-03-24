@@ -21,8 +21,8 @@ export const leadFormSchema = z.object({
   metaId: z.string().optional(),
   originalAd: z.string().optional(),
   originalAdset: z.string().optional(),
+  email: z.string().email("Email inválido").optional(),
   unitId: z.string().min(1, "Unidade é obrigatória"),
 });
 
 export type LeadFormData = z.infer<typeof leadFormSchema>;
-

@@ -61,6 +61,24 @@ export function LeadFormFields({ form, isEditing = false, clientData }: LeadForm
         )}
       />
 
+      <FormField
+        control={form.control}
+        name="email"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Email</FormLabel>
+            <FormControl>
+              <Input
+                placeholder="Digite o email"
+                type="email"
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <LeadSourceSelect form={form} />
 
       <FormField
