@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { SystemUpdate, UpdatesContextType } from '@/types/updates';
+import { SystemUpdate, UpdateType, UpdatesContextType } from '@/types/updates';
 
 // Tamanho da página para paginação
 const PAGE_SIZE = 10;
@@ -25,6 +25,11 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
   
   // Calcular o total de páginas
   const totalPages = Math.ceil(totalUpdates / PAGE_SIZE);
+
+  // Função para verificar se o tipo é válido
+  const isValidUpdateType = (type: string): type is UpdateType => {
+    return ['melhoria', 'implementacao', 'correcao'].includes(type);
+  };
 
   // Função para buscar atualizações com paginação
   const fetchUpdates = async (page: number = 1) => {
@@ -72,11 +77,22 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
       // Criar conjunto de IDs lidos para fácil verificação
       const readIds = new Set(readData?.map(item => item.update_id) || []);
       
-      // Marcar as atualizações como lidas conforme necessário
-      const updatesWithReadStatus = data?.map(update => ({
-        ...update,
-        read: readIds.has(update.id)
-      })) || [];
+      // Validar e converter os dados para o tipo SystemUpdate
+      const updatesWithReadStatus: SystemUpdate[] = (data || []).map(update => {
+        // Verificar se o tipo é válido, caso contrário usar fallback
+        let updateType: UpdateType = 'melhoria'; // Valor padrão
+        if (isValidUpdateType(update.type)) {
+          updateType = update.type as UpdateType;
+        } else {
+          console.warn(`Tipo de atualização inválido: ${update.type}, usando fallback`);
+        }
+        
+        return {
+          ...update,
+          type: updateType,
+          read: readIds.has(update.id)
+        };
+      });
       
       setUpdates(updatesWithReadStatus);
       
