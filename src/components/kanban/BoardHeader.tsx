@@ -6,6 +6,7 @@ import { RefreshCw, Search } from "lucide-react"
 import { ActivityDashboard } from "./ActivityDashboard"
 import { CalendarDashboard } from "./CalendarDashboard"
 import { Input } from "@/components/ui/input"
+import { UnitSelector } from "@/components/UnitSelector"
 
 interface BoardHeaderProps {
   showPendingOnly: boolean
@@ -13,6 +14,10 @@ interface BoardHeaderProps {
   onRefresh: () => void
   searchTerm: string
   setSearchTerm: (value: string) => void
+  availableUnits: { unit_id: string; units: { id: string; name: string } }[]
+  selectedUnitId: string | null
+  setSelectedUnitId: (unitId: string | null) => void
+  isMultiUnit: boolean
 }
 
 export function BoardHeader({
@@ -21,15 +26,37 @@ export function BoardHeader({
   onRefresh,
   searchTerm,
   setSearchTerm,
+  availableUnits,
+  selectedUnitId,
+  setSelectedUnitId,
+  isMultiUnit,
 }: BoardHeaderProps) {
   // Log para rastrear mudanças no termo de pesquisa
   console.log('Termo de pesquisa atual:', searchTerm);
+  console.log('Unidade selecionada:', selectedUnitId);
+  console.log('Usuário multi-unidade:', isMultiUnit);
   
   return (
     <div className="flex flex-col bg-[#311D64] p-4 gap-4">
       <div className="grid grid-cols-4 items-center">
         <div className="col-span-1">
           <h1 className="text-2xl font-semibold tracking-tight text-white">Painel do Consultor</h1>
+          
+          {/* Mostra o seletor de unidade apenas se o usuário tiver acesso a múltiplas unidades */}
+          {isMultiUnit && (
+            <div className="mt-2">
+              <div className="flex items-center space-x-2">
+                <span className="text-white text-sm">Unidade:</span>
+                <UnitSelector 
+                  onChange={(unitId) => {
+                    console.log('Alterando unidade para:', unitId);
+                    setSelectedUnitId(unitId);
+                  }}
+                  value={selectedUnitId || undefined}
+                />
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="col-span-2 flex items-center space-x-4">

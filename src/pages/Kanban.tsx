@@ -1,3 +1,4 @@
+
 import { KanbanBoard } from "@/components/kanban/KanbanBoard"
 
 const Kanban = () => {

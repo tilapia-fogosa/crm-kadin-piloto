@@ -8,21 +8,49 @@ import { startOfDay, isBefore, isEqual } from "date-fns"
 import { useLocation } from "react-router-dom"
 import { BoardHeader } from "./BoardHeader"
 import { KanbanColumn } from "./KanbanColumn"
+import { useUserUnit } from "./hooks/useUserUnit"
 
 export function KanbanBoard() {
-  const { data: clients, isLoading, refetch } = useClientData()
-  const { registerAttempt, registerEffectiveContact, deleteActivity } = useActivityOperations()
-  const { handleWhatsAppClick } = useWhatsApp()
-  const [showPendingOnly, setShowPendingOnly] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const location = useLocation()
+  // Estado para controlar a unidade selecionada
+  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+  
+  // Obter os dados do usuário e suas unidades
+  const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit();
+  
+  // Verificar se o usuário tem acesso a múltiplas unidades
+  const isMultiUnit = userUnits && userUnits.length > 1;
+  
+  // Buscar dados de clientes com a unidade selecionada
+  const { data: clients, isLoading, refetch } = useClientData(selectedUnitId);
+  
+  const { registerAttempt, registerEffectiveContact, deleteActivity } = useActivityOperations();
+  const { handleWhatsAppClick } = useWhatsApp();
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const location = useLocation();
+
+  // Inicializar com "Todas as unidades" caso o usuário tenha múltiplas unidades
+  useEffect(() => {
+    console.log("Inicializando seleção de unidade");
+    if (userUnits && userUnits.length > 0) {
+      console.log("Usuário tem acesso a", userUnits.length, "unidades");
+      
+      // Se tiver mais de uma unidade, começamos com null (todas as unidades)
+      // Se tiver apenas uma, usamos essa unidade diretamente
+      if (userUnits.length === 1) {
+        setSelectedUnitId(userUnits[0].unit_id);
+      } else {
+        setSelectedUnitId(null); // null significa "todas as unidades"
+      }
+    }
+  }, [userUnits]);
 
   useEffect(() => {
-    console.log("Kanban Board mounted or route changed, refetching data...")
-    refetch()
-  }, [location.pathname, refetch])
+    console.log("Kanban Board mounted or route changed, refetching data...");
+    refetch();
+  }, [location.pathname, refetch]);
 
-  if (isLoading) {
+  if (isLoading || isLoadingUnits) {
     return <div className="flex items-center justify-center p-8">Carregando...</div>
   }
 
@@ -95,6 +123,10 @@ export function KanbanBoard() {
         onRefresh={() => refetch()}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        availableUnits={userUnits || []}
+        selectedUnitId={selectedUnitId}
+        setSelectedUnitId={setSelectedUnitId}
+        isMultiUnit={isMultiUnit || false}
       />
 
       <div className="overflow-x-auto w-full">

@@ -1,11 +1,10 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { RealtimePostgresInsertPayload, RealtimePostgresUpdatePayload, RealtimePostgresDeletePayload } from "@supabase/supabase-js"
 import { useEffect } from "react"
 import { useUserUnit } from "./useUserUnit"
 
-export function useClientData() {
+export function useClientData(selectedUnitId: string | null = null) {
   const queryClient = useQueryClient()
   const { data: userUnits } = useUserUnit()
 
@@ -54,12 +53,24 @@ export function useClientData() {
   }, [queryClient])
 
   return useQuery({
-    queryKey: ['clients', userUnits?.map(u => u.unit_id)],
+    queryKey: ['clients', userUnits?.map(u => u.unit_id), selectedUnitId],
     queryFn: async () => {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      const unitIds = userUnits?.map(u => u.unit_id) || []
+      // Determinar as unidades para filtrar
+      let unitIds: string[] = []
+      
+      if (selectedUnitId) {
+        // Se uma unidade específica foi selecionada
+        console.log('Filtrando por unidade específica:', selectedUnitId)
+        unitIds = [selectedUnitId]
+      } else {
+        // Se "Todas as unidades" foi selecionado ou não há seleção
+        unitIds = userUnits?.map(u => u.unit_id) || []
+        console.log('Buscando dados de todas as unidades do usuário:', unitIds)
+      }
+      
       console.log('Fetching clients data for units:', unitIds)
       
       const { data, error } = await supabase
