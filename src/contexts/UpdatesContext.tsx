@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,6 +23,9 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalUpdates, setTotalUpdates] = useState(0);
   const [draftCount, setDraftCount] = useState(0);
+  
+  // Verificar se o usuário é admin para fornecer funcionalidades adicionais
+  const [isAdmin, setIsAdmin] = useState(false);
   
   // Calcular o total de páginas
   const totalPages = Math.ceil(totalUpdates / PAGE_SIZE);
@@ -427,30 +431,8 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
     console.log('Navegando para página:', page);
     setCurrentPage(page);
   };
-
-  // Efeito para carregar atualizações inicialmente e quando a página mudar
-  useEffect(() => {
-    if (session?.user?.id) {
-      // Se o usuário for admin, buscar também os rascunhos
-      fetchUpdates(currentPage, isAdmin);
-    }
-  }, [session?.user?.id, currentPage, isAdmin]);
   
-  // Verificar atualizações não lidas periodicamente e após login
-  useEffect(() => {
-    if (session?.user?.id) {
-      checkUnreadUpdates();
-      
-      // Verificar a cada 5 minutos
-      const interval = setInterval(checkUnreadUpdates, 5 * 60 * 1000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [session?.user?.id]);
-
-  // Verificar se o usuário é admin para fornecer funcionalidades adicionais
-  const [isAdmin, setIsAdmin] = useState(false);
-  
+  // Verificar status de admin do usuário atual
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!session?.user?.id) return;
@@ -475,6 +457,26 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
     };
     
     checkAdminStatus();
+  }, [session?.user?.id]);
+
+  // Efeito para carregar atualizações inicialmente e quando a página mudar
+  useEffect(() => {
+    if (session?.user?.id) {
+      // Se o usuário for admin, buscar também os rascunhos
+      fetchUpdates(currentPage, isAdmin);
+    }
+  }, [session?.user?.id, currentPage, isAdmin]);
+  
+  // Verificar atualizações não lidas periodicamente e após login
+  useEffect(() => {
+    if (session?.user?.id) {
+      checkUnreadUpdates();
+      
+      // Verificar a cada 5 minutos
+      const interval = setInterval(checkUnreadUpdates, 5 * 60 * 1000);
+      
+      return () => clearInterval(interval);
+    }
   }, [session?.user?.id]);
 
   // Construir o valor do contexto
