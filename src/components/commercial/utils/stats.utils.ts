@@ -36,10 +36,12 @@ export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | n
       : 0,
     atConversionRate: rawTotals.awaitingVisits > 0 
       ? (rawTotals.completedVisits / rawTotals.awaitingVisits) * 100 
+      : 0,
+    maConversionRate: rawTotals.completedVisits > 0
+      ? (rawTotals.enrollments / rawTotals.completedVisits) * 100
       : 0
   };
 
   console.log('Totais calculados:', totals);
   return totals;
 };
-

@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, endOfMonth, setYear, setMonth, startOfDay, isAfter } from "date-fns";
@@ -99,7 +100,8 @@ export function useCommercialStats(
           enrollments,
           ceConversionRate: 0,
           agConversionRate: 0,
-          atConversionRate: 0
+          atConversionRate: 0,
+          maConversionRate: 0
         };
       });
 
@@ -107,7 +109,8 @@ export function useCommercialStats(
         ...day,
         ceConversionRate: day.contactAttempts > 0 ? (day.effectiveContacts / day.contactAttempts) * 100 : 0,
         agConversionRate: day.effectiveContacts > 0 ? (day.scheduledVisits / day.effectiveContacts) * 100 : 0,
-        atConversionRate: day.awaitingVisits > 0 ? (day.completedVisits / day.awaitingVisits) * 100 : 0
+        atConversionRate: day.awaitingVisits > 0 ? (day.completedVisits / day.awaitingVisits) * 100 : 0,
+        maConversionRate: day.completedVisits > 0 ? (day.enrollments / day.completedVisits) * 100 : 0
       }));
     },
   });

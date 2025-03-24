@@ -11,6 +11,7 @@ export interface DailyStats {
   completedVisits: number;
   atConversionRate: number;
   enrollments: number;
+  maConversionRate: number;
   leadSource?: string;
 }
 
@@ -25,4 +26,5 @@ export interface TotalStats {
   ceConversionRate: number;
   agConversionRate: number;
   atConversionRate: number;
+  maConversionRate: number;
 }
