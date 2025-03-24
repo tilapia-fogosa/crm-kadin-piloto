@@ -20,6 +20,7 @@ export interface SystemUpdate {
   created_by?: string;
   updated_at: string;
   active: boolean;
+  published: boolean; // Novo campo para indicar se está publicado
   read?: boolean; // Propriedade calculada no frontend
 }
 
@@ -32,9 +33,13 @@ export interface UpdatesContextType {
   markAsRead: (updateId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   refreshUpdates: () => Promise<void>;
-  createUpdate?: (update: Omit<SystemUpdate, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'active' | 'read'>) => Promise<void>;
+  draftCount?: number; // Contador de rascunhos para admins
+  // Funções administrativas
+  createUpdate?: (update: Omit<SystemUpdate, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'active' | 'published' | 'read'>) => Promise<void>;
   updateUpdate?: (id: string, update: Partial<SystemUpdate>) => Promise<void>;
   deleteUpdate?: (id: string) => Promise<void>;
+  publishUpdate?: (id: string) => Promise<void>;
+  unpublishUpdate?: (id: string) => Promise<void>;
   pagination: {
     currentPage: number;
     totalPages: number;

@@ -22,6 +22,7 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<Error | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalUpdates, setTotalUpdates] = useState(0);
+  const [draftCount, setDraftCount] = useState(0);
   
   // Calcular o total de páginas
   const totalPages = Math.ceil(totalUpdates / PAGE_SIZE);
@@ -32,8 +33,8 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Função para buscar atualizações com paginação
-  const fetchUpdates = async (page: number = 1) => {
-    console.log('Buscando atualizações - página:', page);
+  const fetchUpdates = async (page: number = 1, showDrafts: boolean = false) => {
+    console.log('Buscando atualizações - página:', page, 'mostrar rascunhos:', showDrafts);
     
     if (!session?.user?.id) {
       console.log('Usuário não autenticado, retornando');
@@ -44,11 +45,29 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
-      // Obter contagem total de atualizações ativas
-      const { count, error: countError } = await supabase
+      // Se usuário é admin, vamos buscar também o contador de rascunhos
+      if (isAdmin) {
+        const { data: draftCountData, error: draftCountError } = await supabase
+          .rpc('count_draft_updates');
+          
+        if (draftCountError) throw draftCountError;
+        setDraftCount(draftCountData || 0);
+        console.log('Número de rascunhos:', draftCountData);
+      }
+      
+      // Preparar a query base
+      let query = supabase
         .from('system_updates')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'exact' })
         .eq('active', true);
+      
+      // Filtrar por published se não for para mostrar rascunhos
+      if (!showDrafts) {
+        query = query.eq('published', true);
+      }
+      
+      // Obter contagem total
+      const { count, error: countError } = await query;
       
       if (countError) throw countError;
       setTotalUpdates(count || 0);
@@ -57,10 +76,7 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
       const offset = (page - 1) * PAGE_SIZE;
       
       // Buscar atualizações com paginação
-      const { data, error: fetchError } = await supabase
-        .from('system_updates')
-        .select('*')
-        .eq('active', true)
+      const { data, error: fetchError } = await query
         .order('created_at', { ascending: false })
         .range(offset, offset + PAGE_SIZE - 1);
         
@@ -96,12 +112,14 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
       
       setUpdates(updatesWithReadStatus);
       
-      // Verificar se existem atualizações não lidas
-      const unreadExists = updatesWithReadStatus.some(update => !update.read);
-      setHasUnreadUpdates(unreadExists);
+      // Verificar se existem atualizações não lidas (apenas para publicadas)
+      if (!showDrafts) {
+        const unreadExists = updatesWithReadStatus.some(update => !update.read && update.published);
+        setHasUnreadUpdates(unreadExists);
+        console.log('Tem atualizações não lidas:', unreadExists);
+      }
       
       console.log('Atualizações carregadas:', updatesWithReadStatus.length);
-      console.log('Tem atualizações não lidas:', unreadExists);
       
     } catch (err) {
       console.error('Erro ao buscar atualizações:', err);
@@ -166,7 +184,7 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
       
       // Verificar se ainda há atualizações não lidas
       const stillHasUnread = updates.some(update => 
-        update.id !== updateId && !update.read
+        update.id !== updateId && !update.read && update.published
       );
       
       setHasUnreadUpdates(stillHasUnread);
@@ -221,7 +239,7 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Função para criar uma nova atualização
-  const createUpdate = async (update: Omit<SystemUpdate, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'active' | 'read'>) => {
+  const createUpdate = async (update: Omit<SystemUpdate, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'active' | 'published' | 'read'>) => {
     console.log('Criando nova atualização:', update);
     
     if (!session?.user?.id) {
@@ -234,7 +252,8 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
         .from('system_updates')
         .insert({
           ...update,
-          created_by: session.user.id
+          created_by: session.user.id,
+          published: false // Novas atualizações são criadas como rascunho
         })
         .select()
         .single();
@@ -243,11 +262,11 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
       
       toast({
         title: 'Sucesso',
-        description: 'Atualização criada com sucesso!',
+        description: 'Atualização criada com sucesso como rascunho!',
       });
       
       // Recarregar atualizações
-      await fetchUpdates(currentPage);
+      await fetchUpdates(currentPage, true);
       
     } catch (err) {
       console.error('Erro ao criar atualização:', err);
@@ -290,13 +309,79 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
       });
       
       // Recarregar atualizações
-      await fetchUpdates(currentPage);
+      await fetchUpdates(currentPage, true);
       
     } catch (err) {
       console.error('Erro ao atualizar atualização:', err);
       toast({
         title: 'Erro',
         description: 'Não foi possível atualizar a atualização.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Função para publicar uma atualização
+  const publishUpdate = async (id: string) => {
+    console.log('Publicando atualização:', id);
+    
+    if (!session?.user?.id) {
+      console.log('Usuário não autenticado, retornando');
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .rpc('publish_update', { p_update_id: id });
+        
+      if (error) throw error;
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Atualização publicada com sucesso!',
+      });
+      
+      // Recarregar atualizações
+      await fetchUpdates(currentPage, true);
+      
+    } catch (err) {
+      console.error('Erro ao publicar atualização:', err);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível publicar a atualização.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Função para despublicar uma atualização
+  const unpublishUpdate = async (id: string) => {
+    console.log('Despublicando atualização:', id);
+    
+    if (!session?.user?.id) {
+      console.log('Usuário não autenticado, retornando');
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .rpc('unpublish_update', { p_update_id: id });
+        
+      if (error) throw error;
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Atualização despublicada com sucesso!',
+      });
+      
+      // Recarregar atualizações
+      await fetchUpdates(currentPage, true);
+      
+    } catch (err) {
+      console.error('Erro ao despublicar atualização:', err);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível despublicar a atualização.',
         variant: 'destructive',
       });
     }
@@ -326,7 +411,7 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
       });
       
       // Recarregar atualizações
-      await fetchUpdates(currentPage);
+      await fetchUpdates(currentPage, true);
       
     } catch (err) {
       console.error('Erro ao desativar atualização:', err);
@@ -347,9 +432,10 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
   // Efeito para carregar atualizações inicialmente e quando a página mudar
   useEffect(() => {
     if (session?.user?.id) {
-      fetchUpdates(currentPage);
+      // Se o usuário for admin, buscar também os rascunhos
+      fetchUpdates(currentPage, isAdmin);
     }
-  }, [session?.user?.id, currentPage]);
+  }, [session?.user?.id, currentPage, isAdmin]);
   
   // Verificar atualizações não lidas periodicamente e após login
   useEffect(() => {
@@ -400,7 +486,7 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
     error,
     markAsRead,
     markAllAsRead,
-    refreshUpdates: () => fetchUpdates(currentPage),
+    refreshUpdates: () => fetchUpdates(currentPage, isAdmin),
     pagination: {
       currentPage,
       totalPages,
@@ -410,7 +496,10 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
     ...(isAdmin && {
       createUpdate,
       updateUpdate,
-      deleteUpdate
+      deleteUpdate,
+      publishUpdate,
+      unpublishUpdate,
+      draftCount
     })
   };
 

@@ -1,5 +1,6 @@
 
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Card, 
   CardContent, 
@@ -9,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Calendar, ArrowLeft, ArrowRight, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useUpdates } from '@/contexts/UpdatesContext';
@@ -140,8 +141,12 @@ export default function UpdatesPage() {
     markAsRead, 
     markAllAsRead,
     hasUnreadUpdates,
-    pagination
+    pagination,
+    createUpdate // Se existir, significa que o usuário é admin
   } = useUpdates();
+  
+  // Verificar se usuário é admin
+  const isAdmin = Boolean(createUpdate);
   
   // Marcar todas as atualizações visíveis como lidas automaticamente
   useEffect(() => {
@@ -162,14 +167,30 @@ export default function UpdatesPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Melhorias e Novidades</h1>
         
-        {hasUnreadUpdates && (
-          <Button 
-            variant="outline" 
-            onClick={markAllAsRead}
-          >
-            Marcar todas como lidas
-          </Button>
-        )}
+        <div className="flex items-center space-x-2">
+          {hasUnreadUpdates && (
+            <Button 
+              variant="outline" 
+              onClick={markAllAsRead}
+            >
+              Marcar todas como lidas
+            </Button>
+          )}
+          
+          {/* Botão de Admin - apenas visível para admins */}
+          {isAdmin && (
+            <Button 
+              variant="outline"
+              asChild
+              className="flex items-center ml-2"
+            >
+              <Link to="/updates/admin">
+                <Settings className="h-4 w-4 mr-2" />
+                Gerenciar
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
       
       {isLoading ? (
