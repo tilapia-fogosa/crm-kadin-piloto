@@ -36,7 +36,8 @@ export function CommercialDashboard() {
   
   console.log("Totais calculados para ambas as visualizações:", { 
     diariosTotals: totals, 
-    userTotals: userTotals 
+    userTotals: userTotals,
+    selectedUnitId
   });
 
   return (
@@ -62,6 +63,7 @@ export function CommercialDashboard() {
               selectedSource={selectedSource}
               selectedMonth={selectedMonth}
               selectedYear={selectedYear}
+              selectedUnitId={selectedUnitId}
               totals={totals}
             />
           </div>

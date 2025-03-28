@@ -14,6 +14,7 @@ export function useCommercialUnitStats(
   selectedSource: string,
   selectedMonth: string,
   selectedYear: string,
+  selectedUnitId: string | null = null
 ) {
   const { availableUnits } = useUnit();
   
@@ -21,23 +22,29 @@ export function useCommercialUnitStats(
     selectedSource,
     selectedMonth,
     selectedYear,
+    selectedUnitId,
     availableUnits
   });
 
   return useQuery({
-    queryKey: ['commercial-unit-stats', selectedSource, selectedMonth, selectedYear],
+    queryKey: ['commercial-unit-stats', selectedSource, selectedMonth, selectedYear, selectedUnitId],
     queryFn: async () => {
       const startDate = new Date(parseInt(selectedYear), parseInt(selectedMonth), 1);
       const endDate = new Date(parseInt(selectedYear), parseInt(selectedMonth) + 1, 0);
 
       // Get array of accessible unit IDs
       const availableUnitIds = availableUnits.map(unit => unit.unit_id);
+      
+      // Se uma unidade específica foi selecionada, filtra apenas por ela
+      const unitFilter = selectedUnitId 
+        ? [selectedUnitId]
+        : availableUnitIds;
 
       console.log('Buscando estatísticas por unidade:', { 
         startDate: startDate.toISOString(), 
         endDate: endDate.toISOString(),
         selectedSource,
-        availableUnitIds
+        unitFilter
       });
 
       // Obter IDs de clientes ativos para filtrar atividades
@@ -45,7 +52,7 @@ export function useCommercialUnitStats(
         .from('clients')
         .select('id, unit_id')
         .eq('active', true)
-        .in('unit_id', availableUnitIds);
+        .in('unit_id', unitFilter);
       
       // Adicionar filtro de origem se necessário
       if (selectedSource !== 'todos') {
@@ -58,7 +65,7 @@ export function useCommercialUnitStats(
       
       // Agrupar clientes por unidade para contagens
       const clientsByUnit: Record<string, number> = {};
-      availableUnitIds.forEach(unitId => {
+      unitFilter.forEach(unitId => {
         clientsByUnit[unitId] = 0;
       });
       
@@ -67,7 +74,7 @@ export function useCommercialUnitStats(
         .from('clients')
         .select('unit_id')
         .eq('active', true)
-        .in('unit_id', availableUnitIds)
+        .in('unit_id', unitFilter)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
         
@@ -81,7 +88,7 @@ export function useCommercialUnitStats(
       
       // Contar novos clientes por unidade
       const newClientsByUnit: Record<string, number> = {};
-      availableUnitIds.forEach(unitId => {
+      unitFilter.forEach(unitId => {
         newClientsByUnit[unitId] = 0;
       });
       
@@ -102,7 +109,7 @@ export function useCommercialUnitStats(
         .select('id, tipo_atividade, unit_id, scheduled_date')
         .eq('active', true)
         .in('client_id', activeClientIds)
-        .in('unit_id', availableUnitIds)
+        .in('unit_id', unitFilter)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
       
@@ -112,8 +119,11 @@ export function useCommercialUnitStats(
 
       console.log(`Encontradas ${activitiesResult.data.length} atividades no período`);
 
-      // Initialize stats for all available units with zero values
-      const unitStats: UnitStats[] = availableUnits.map(unit => ({
+      // Filtrar unidades disponíveis com base no unitFilter
+      const filteredUnits = availableUnits.filter(unit => unitFilter.includes(unit.unit_id));
+
+      // Initialize stats for filtered units with zero values
+      const unitStats: UnitStats[] = filteredUnits.map(unit => ({
         unit_id: unit.unit_id,
         unit_name: unit.units.name,
         newClients: newClientsByUnit[unit.unit_id] || 0,
