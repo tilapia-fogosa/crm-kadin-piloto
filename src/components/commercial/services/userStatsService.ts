@@ -11,6 +11,12 @@ import { UserStats } from "../types/stats.types";
 export const fetchUniqueUserProfiles = async (unitFilter: string[]) => {
   console.log(`Buscando perfis de usuários para ${unitFilter.length} unidades`);
   
+  // Se não houver unidades para filtrar, interrompe a busca
+  if (unitFilter.length === 0) {
+    console.log('Nenhuma unidade disponível para filtrar perfis de usuários');
+    return [];
+  }
+  
   const { data: userProfiles, error: profilesError } = await supabase
     .from('unit_users')
     .select(`
@@ -49,6 +55,12 @@ export const fetchActiveClientsInPeriod = async (
   unitFilter: string[], 
   selectedSource: string
 ) => {
+  // Se não houver unidades para filtrar, retorna lista vazia
+  if (unitFilter.length === 0) {
+    console.log('Nenhuma unidade disponível para filtrar clientes');
+    return [];
+  }
+
   const clientsQuery = supabase
     .from('clients')
     .select('id, created_by')
@@ -77,6 +89,12 @@ export const fetchActiveClientsInPeriod = async (
  * @returns IDs dos clientes ativos
  */
 export const fetchAllActiveClientIds = async (unitFilter: string[]) => {
+  // Se não houver unidades para filtrar, retorna lista vazia
+  if (unitFilter.length === 0) {
+    console.log('Nenhuma unidade disponível para filtrar IDs de clientes');
+    return [];
+  }
+
   const { data: activeClients, error: activeClientsError } = await supabase
     .from('clients')
     .select('id')
@@ -107,6 +125,12 @@ export const fetchClientActivities = async (
   unitFilter: string[],
   selectedSource: string
 ) => {
+  // Se não houver clientes ou unidades para filtrar, retorna lista vazia
+  if (activeClientIds.length === 0 || unitFilter.length === 0) {
+    console.log('Nenhum cliente ou unidade disponível para filtrar atividades');
+    return [];
+  }
+
   const activitiesQuery = supabase
     .from('client_activities')
     .select(`
@@ -156,8 +180,27 @@ export const getUserStats = async (
   unitFilter: string[],
   selectedSource: string
 ): Promise<UserStats[]> => {
+  console.log('Iniciando getUserStats com filtros:', { 
+    startDate: startDate.toISOString(), 
+    endDate: endDate.toISOString(), 
+    unitFilter, 
+    selectedSource 
+  });
+
+  // Validar se há unidades para filtrar
+  if (unitFilter.length === 0) {
+    console.log('Nenhuma unidade disponível para buscar estatísticas de usuário');
+    return [];
+  }
+
   // Buscar perfis de usuários
   const uniqueUserProfiles = await fetchUniqueUserProfiles(unitFilter);
+  
+  // Se não houver usuários, retorna lista vazia
+  if (uniqueUserProfiles.length === 0) {
+    console.log('Nenhum perfil de usuário encontrado nas unidades especificadas');
+    return [];
+  }
   
   // Buscar clientes no período
   const clientsData = await fetchActiveClientsInPeriod(startDate, endDate, unitFilter, selectedSource);
@@ -190,5 +233,8 @@ export const getUserStats = async (
   });
 
   // Filtrar usuários sem atividades e ordenar por nome
-  return filterActiveUsers(userStats);
+  const filteredStats = filterActiveUsers(userStats);
+  console.log(`Estatísticas processadas para ${filteredStats.length} usuários ativos`);
+  
+  return filteredStats;
 };

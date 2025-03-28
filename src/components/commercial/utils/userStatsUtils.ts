@@ -112,7 +112,8 @@ export const prepareUserStats = (
  * @returns Lista filtrada e ordenada de usuários ativos
  */
 export const filterActiveUsers = (userStats: UserStats[]): UserStats[] => {
+  // Incluir todos os usuários, ordenados por nome
+  // Removemos o filtro rígido que só mostrava usuários com atividades
   return userStats
-    .filter(user => user.newClients > 0 || user.contactAttempts > 0)
     .sort((a, b) => a.user_name.localeCompare(b.user_name));
 };

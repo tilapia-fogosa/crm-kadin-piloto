@@ -1,14 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { DailyStats } from "../../kanban/types/activity-dashboard.types";
+import { UnitStats } from "../types/stats.types";
 import { useUnit } from "@/contexts/UnitContext";
-
-// Interface específica para stats por unidade
-export interface UnitStats extends Omit<DailyStats, 'date'> {
-  unit_id: string;
-  unit_name: string;
-}
 
 export function useCommercialUnitStats(
   selectedSource: string,
@@ -35,10 +29,16 @@ export function useCommercialUnitStats(
       // Get array of accessible unit IDs
       const availableUnitIds = availableUnits.map(unit => unit.unit_id);
       
-      // Se uma unidade específica foi selecionada, filtra apenas por ela
+      // Se uma unidade específica foi selecionada, filtra apenas por ela, senão usa todas as unidades disponíveis
       const unitFilter = selectedUnitId 
         ? [selectedUnitId]
         : availableUnitIds;
+        
+      // Verificar se há unidades disponíveis para filtrar
+      if (unitFilter.length === 0) {
+        console.log('Nenhuma unidade disponível para filtrar estatísticas');
+        return [];
+      }
 
       console.log('Buscando estatísticas por unidade:', { 
         startDate: startDate.toISOString(), 
@@ -63,12 +63,16 @@ export function useCommercialUnitStats(
       
       if (clientsResult.error) throw clientsResult.error;
       
-      // Agrupar clientes por unidade para contagens
-      const clientsByUnit: Record<string, number> = {};
-      unitFilter.forEach(unitId => {
-        clientsByUnit[unitId] = 0;
-      });
+      // Mapear cliente IDs para usar na filtragem de atividades
+      const activeClientIds = clientsResult.data.map(client => client.id);
       
+      if (activeClientIds.length === 0) {
+        console.log('Nenhum cliente ativo encontrado para as unidades selecionadas');
+        return [];
+      }
+      
+      console.log(`Encontrados ${activeClientIds.length} clientes ativos para filtrar atividades`);
+
       // Contar novos clientes por unidade no período
       const newClientsQuery = supabase
         .from('clients')
@@ -97,11 +101,6 @@ export function useCommercialUnitStats(
           newClientsByUnit[client.unit_id] = (newClientsByUnit[client.unit_id] || 0) + 1;
         }
       });
-
-      // Mapear cliente IDs para usar na filtragem de atividades
-      const activeClientIds = clientsResult.data.map(client => client.id);
-      
-      console.log(`Encontrados ${activeClientIds.length} clientes ativos para filtrar atividades`);
 
       // Buscar atividades de clientes ativos no período selecionado
       const activitiesQuery = supabase

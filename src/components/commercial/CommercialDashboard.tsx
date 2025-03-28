@@ -30,6 +30,13 @@ export function CommercialDashboard() {
     selectedUnitId
   );
   
+  // Log para rastrear os dados recebidos
+  console.log("Dados recebidos:", { 
+    statsLength: stats?.length || 0,
+    userStatsLength: userStats?.length || 0,
+    selectedUnitId 
+  });
+  
   // Calculando totais para diários e usuários separadamente
   const totals = calculateTotals(stats);
   const userTotals = calculateUserTotals(userStats);
