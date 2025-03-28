@@ -40,61 +40,83 @@ export function useCommercialUnitStats(
         availableUnitIds
       });
 
-      // Fetch data filtered by accessible units and active clients
-      const [clientsResult, activitiesResult] = await Promise.all([
-        supabase
-          .from('clients')
-          .select('unit_id')
-          .eq('active', true) // Filtrar apenas clientes ativos
-          .gte('created_at', startDate.toISOString())
-          .lte('created_at', endDate.toISOString())
-          .in('unit_id', availableUnitIds)
-          .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
-        
-        supabase
-          .from('client_activities')
-          .select('unit_id, tipo_atividade, client_id')
-          .eq('active', true) // Atividades ativas
-          .gte('created_at', startDate.toISOString())
-          .lte('created_at', endDate.toISOString())
-          .in('unit_id', availableUnitIds)
-      ]);
-
-      if (clientsResult.error) throw clientsResult.error;
-      if (activitiesResult.error) throw activitiesResult.error;
-
-      console.log('Dados brutos obtidos:', {
-        clients: clientsResult.data,
-        activities: activitiesResult.data
-      });
-
       // Obter IDs de clientes ativos para filtrar atividades
       const clientsQuery = supabase
         .from('clients')
-        .select('id')
+        .select('id, unit_id')
         .eq('active', true)
         .in('unit_id', availableUnitIds);
       
-      const activeClientsResult = await clientsQuery;
+      // Adicionar filtro de origem se necessário
+      if (selectedSource !== 'todos') {
+        clientsQuery.eq('lead_source', selectedSource);
+      }
       
-      if (activeClientsResult.error) throw activeClientsResult.error;
+      const clientsResult = await clientsQuery;
       
-      const activeClientIds = activeClientsResult.data.map(client => client.id);
+      if (clientsResult.error) throw clientsResult.error;
+      
+      // Agrupar clientes por unidade para contagens
+      const clientsByUnit: Record<string, number> = {};
+      availableUnitIds.forEach(unitId => {
+        clientsByUnit[unitId] = 0;
+      });
+      
+      // Contar novos clientes por unidade no período
+      const newClientsQuery = supabase
+        .from('clients')
+        .select('unit_id')
+        .eq('active', true)
+        .in('unit_id', availableUnitIds)
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+        
+      // Adicionar filtro de origem se necessário
+      if (selectedSource !== 'todos') {
+        newClientsQuery.eq('lead_source', selectedSource);
+      }
+      
+      const newClientsResult = await newClientsQuery;
+      if (newClientsResult.error) throw newClientsResult.error;
+      
+      // Contar novos clientes por unidade
+      const newClientsByUnit: Record<string, number> = {};
+      availableUnitIds.forEach(unitId => {
+        newClientsByUnit[unitId] = 0;
+      });
+      
+      newClientsResult.data.forEach(client => {
+        if (client.unit_id) {
+          newClientsByUnit[client.unit_id] = (newClientsByUnit[client.unit_id] || 0) + 1;
+        }
+      });
+
+      // Mapear cliente IDs para usar na filtragem de atividades
+      const activeClientIds = clientsResult.data.map(client => client.id);
       
       console.log(`Encontrados ${activeClientIds.length} clientes ativos para filtrar atividades`);
 
-      // Filtrar atividades para incluir apenas as de clientes ativos
-      const filteredActivities = activitiesResult.data.filter(activity => 
-        activeClientIds.includes(activity.client_id)
-      );
+      // Buscar atividades de clientes ativos no período selecionado
+      const activitiesQuery = supabase
+        .from('client_activities')
+        .select('id, tipo_atividade, unit_id, scheduled_date')
+        .eq('active', true)
+        .in('client_id', activeClientIds)
+        .in('unit_id', availableUnitIds)
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+      
+      const activitiesResult = await activitiesQuery;
+      
+      if (activitiesResult.error) throw activitiesResult.error;
 
-      console.log(`Filtradas ${filteredActivities.length} atividades de ${activitiesResult.data.length} para clientes ativos`);
+      console.log(`Encontradas ${activitiesResult.data.length} atividades no período`);
 
       // Initialize stats for all available units with zero values
       const unitStats: UnitStats[] = availableUnits.map(unit => ({
         unit_id: unit.unit_id,
         unit_name: unit.units.name,
-        newClients: 0,
+        newClients: newClientsByUnit[unit.unit_id] || 0,
         contactAttempts: 0,
         effectiveContacts: 0,
         scheduledVisits: 0,
@@ -104,15 +126,13 @@ export function useCommercialUnitStats(
         ceConversionRate: 0,
         agConversionRate: 0,
         atConversionRate: 0,
-        maConversionRate: 0  // Adicionando a inicialização da propriedade maConversionRate
+        maConversionRate: 0
       }));
 
-      // Map results to each unit
+      // Map activities to each unit
       unitStats.forEach(unitStat => {
-        const unitClients = clientsResult.data.filter(c => c.unit_id === unitStat.unit_id).length;
-        const unitActivities = filteredActivities.filter(a => a.unit_id === unitStat.unit_id);
+        const unitActivities = activitiesResult.data.filter(a => a.unit_id === unitStat.unit_id);
 
-        unitStat.newClients = unitClients;
         unitStat.contactAttempts = unitActivities.filter(a => 
           ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(a.tipo_atividade)
         ).length;
@@ -125,7 +145,13 @@ export function useCommercialUnitStats(
           a.tipo_atividade === 'Agendamento'
         ).length;
 
-        unitStat.awaitingVisits = unitStat.scheduledVisits;
+        // Para visitas aguardadas, usamos agendamentos planejados para o período
+        unitStat.awaitingVisits = unitActivities.filter(a => 
+          a.tipo_atividade === 'Agendamento' && 
+          a.scheduled_date && 
+          new Date(a.scheduled_date) >= startDate && 
+          new Date(a.scheduled_date) <= endDate
+        ).length;
 
         unitStat.completedVisits = unitActivities.filter(a => 
           a.tipo_atividade === 'Atendimento'
@@ -144,17 +170,16 @@ export function useCommercialUnitStats(
           ? (unitStat.scheduledVisits / unitStat.effectiveContacts) * 100 
           : 0;
 
-        unitStat.atConversionRate = unitStat.scheduledVisits > 0 
-          ? (unitStat.completedVisits / unitStat.scheduledVisits) * 100 
+        unitStat.atConversionRate = unitStat.awaitingVisits > 0 
+          ? (unitStat.completedVisits / unitStat.awaitingVisits) * 100 
           : 0;
           
-        // Calcular a taxa de conversão de matrículas (MA)
         unitStat.maConversionRate = unitStat.completedVisits > 0 
           ? (unitStat.enrollments / unitStat.completedVisits) * 100 
           : 0;
       });
 
-      console.log('Estatísticas calculadas por unidade (apenas clientes e atividades ativas):', unitStats);
+      console.log('Estatísticas calculadas por unidade:', unitStats);
       return unitStats;
     },
   });

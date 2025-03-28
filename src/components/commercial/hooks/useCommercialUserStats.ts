@@ -48,7 +48,6 @@ export function useCommercialUserStats(
       });
 
       // Buscar perfis de usuários únicos para as unidades acessíveis
-      // Usando DISTINCT ON para garantir que cada usuário apareça apenas uma vez
       const { data: userProfiles, error: profilesError } = await supabase
         .from('unit_users')
         .select(`
@@ -68,50 +67,68 @@ export function useCommercialUserStats(
         new Map(userProfiles.map(profile => [profile.user_id, profile])).values()
       );
 
-      console.log(`Encontrados ${userProfiles.length} perfis brutos de usuários`);
-      console.log(`Após deduplicação: ${uniqueUserProfiles.length} perfis únicos de usuários`);
+      console.log(`Encontrados ${userProfiles.length} perfis de usuários, ${uniqueUserProfiles.length} perfis únicos`);
 
       // Mapear IDs de usuários únicos
       const userIds = uniqueUserProfiles.map(up => up.user_id);
 
-      // Buscar clientes e atividades
-      const [clientsResult, activitiesResult] = await Promise.all([
-        supabase
-          .from('clients')
-          .select('id, created_by')
-          .eq('active', true)
-          .in('unit_id', unitFilter)
-          .gte('created_at', startDate.toISOString())
-          .lte('created_at', endDate.toISOString())
-          .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
-        
-        supabase
-          .from('client_activities')
-          .select(`
-            id, 
-            tipo_atividade, 
-            client_id, 
-            created_by,
-            scheduled_date,
-            clients!inner(
-              id,
-              lead_source
-            )
-          `)
-          .eq('active', true)
-          .in('unit_id', unitFilter)
-          .gte('created_at', startDate.toISOString())
-          .lte('created_at', endDate.toISOString())
-      ]);
-
+      // Buscar clientes ativos criados no período e unidade selecionados
+      const clientsQuery = supabase
+        .from('clients')
+        .select('id, created_by')
+        .eq('active', true)
+        .in('unit_id', unitFilter)
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+      
+      // Adicionar filtro de origem se necessário
+      if (selectedSource !== 'todos') {
+        clientsQuery.eq('lead_source', selectedSource);
+      }
+      
+      const clientsResult = await clientsQuery;
+      
       if (clientsResult.error) throw clientsResult.error;
+      
+      console.log(`Encontrados ${clientsResult.data.length} clientes ativos no período`);
+
+      // Buscar atividades de clientes ativos no período
+      // Primeiro obtemos todos os clients ativos
+      const { data: activeClients, error: activeClientsError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('active', true)
+        .in('unit_id', unitFilter);
+        
+      if (activeClientsError) throw activeClientsError;
+      
+      const activeClientIds = activeClients.map(client => client.id);
+      console.log(`Total de ${activeClientIds.length} clientes ativos para filtro de atividades`);
+      
+      // Agora buscamos as atividades desses clientes
+      const activitiesQuery = supabase
+        .from('client_activities')
+        .select(`
+          id, 
+          tipo_atividade, 
+          client_id, 
+          created_by,
+          scheduled_date,
+          clients!inner(
+            id,
+            lead_source
+          )
+        `)
+        .eq('active', true)
+        .in('client_id', activeClientIds)
+        .in('unit_id', unitFilter)
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+      
+      const activitiesResult = await activitiesQuery;
+      
       if (activitiesResult.error) throw activitiesResult.error;
-
-      console.log('Dados brutos obtidos:', {
-        clientes: clientsResult.data?.length,
-        atividades: activitiesResult.data?.length
-      });
-
+      
       // Filtrar atividades pelo lead_source se necessário
       const filteredActivities = selectedSource !== 'todos'
         ? activitiesResult.data.filter(activity => 
@@ -119,7 +136,7 @@ export function useCommercialUserStats(
           )
         : activitiesResult.data;
 
-      console.log(`Atividades após filtro de origem: ${filteredActivities.length}`);
+      console.log(`Atividades encontradas: ${activitiesResult.data.length}, após filtro: ${filteredActivities.length}`);
 
       // Inicializar estatísticas para todos os usuários encontrados
       const userStats: UserStats[] = uniqueUserProfiles.map(userProfile => ({
@@ -135,7 +152,7 @@ export function useCommercialUserStats(
         ceConversionRate: 0,
         agConversionRate: 0,
         atConversionRate: 0,
-        maConversionRate: 0  // Adicionando a inicialização da propriedade maConversionRate
+        maConversionRate: 0
       }));
 
       // Mapear resultados para cada usuário
@@ -162,7 +179,14 @@ export function useCommercialUserStats(
           activity.tipo_atividade === 'Agendamento'
         ).length;
 
-        userStat.awaitingVisits = userStat.scheduledVisits;
+        // Para visitas aguardadas, usamos agendamentos planejados para o período
+        userStat.awaitingVisits = filteredActivities.filter(activity => 
+          activity.created_by === userStat.user_id &&
+          activity.tipo_atividade === 'Agendamento' && 
+          activity.scheduled_date && 
+          new Date(activity.scheduled_date) >= startDate && 
+          new Date(activity.scheduled_date) <= endDate
+        ).length;
 
         userStat.completedVisits = userActivities.filter(activity => 
           activity.tipo_atividade === 'Atendimento'
@@ -185,7 +209,6 @@ export function useCommercialUserStats(
           ? (userStat.completedVisits / userStat.awaitingVisits) * 100 
           : 0;
           
-        // Calcular a taxa de conversão de matrículas (MA)
         userStat.maConversionRate = userStat.completedVisits > 0 
           ? (userStat.enrollments / userStat.completedVisits) * 100 
           : 0;
@@ -196,7 +219,7 @@ export function useCommercialUserStats(
         .filter(user => user.newClients > 0 || user.contactAttempts > 0)
         .sort((a, b) => a.user_name.localeCompare(b.user_name));
 
-      console.log('Estatísticas calculadas por usuário (após deduplicação):', activeUserStats);
+      console.log(`Estatísticas calculadas por usuário: ${activeUserStats.length} usuários ativos`);
       return activeUserStats;
     },
   });

@@ -2,7 +2,7 @@
 import { CommercialFilters } from "./components/CommercialFilters";
 import { useState } from "react";
 import { useCommercialStats } from "./hooks/useCommercialStats";
-import { calculateTotals } from "./utils/stats.utils";
+import { calculateTotals, calculateUserTotals } from "./utils/stats.utils";
 import { CommercialTableOne } from "./components/CommercialTableOne";
 import { CommercialUserTable } from "./components/CommercialUserTable";
 import { CommercialTableThree } from "./components/CommercialTableThree";
@@ -30,7 +30,14 @@ export function CommercialDashboard() {
     selectedUnitId
   );
   
+  // Calculando totais para diários e usuários separadamente
   const totals = calculateTotals(stats);
+  const userTotals = calculateUserTotals(userStats);
+  
+  console.log("Totais calculados para ambas as visualizações:", { 
+    diariosTotals: totals, 
+    userTotals: userTotals 
+  });
 
   return (
     <div className="space-y-6">
@@ -61,7 +68,7 @@ export function CommercialDashboard() {
           
           <div>
             <h2 className="text-lg font-semibold mb-4">Totais por Usuário</h2>
-            <CommercialUserTable stats={userStats} totals={totals} isLoading={isLoadingUserStats} />
+            <CommercialUserTable stats={userStats} totals={userTotals} isLoading={isLoadingUserStats} />
           </div>
           
           <div>
