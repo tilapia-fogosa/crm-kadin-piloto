@@ -39,10 +39,7 @@ export function useAuthState() {
       // Tratamento específico para login bem-sucedido
       if (event === 'SIGNED_IN' && currentSession) {
         console.log("Login realizado com sucesso");
-        toast({
-          title: "Login realizado com sucesso!",
-          description: "Redirecionando para o dashboard...",
-        });
+        // Removendo a toast de login aqui para evitar duplicação com a do AuthContext
         navigate("/dashboard", { replace: true });
       } 
       // Tratamento de logout ou expiração de sessão

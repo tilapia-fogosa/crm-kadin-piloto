@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
@@ -19,6 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasShownWelcomeToast, setHasShownWelcomeToast] = useState(false);
 
   useEffect(() => {
     console.log('Initializing auth state');
@@ -28,6 +28,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         console.log('Initial session:', initialSession ? 'Present' : 'None');
         setSession(initialSession);
+        if (initialSession) {
+          setHasShownWelcomeToast(true);
+        }
       } catch (error) {
         console.error('Error getting initial session:', error);
       } finally {
@@ -46,19 +49,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession);
 
       if (event === 'SIGNED_IN') {
-        console.log('User signed in, showing success toast');
-        toast({
-          title: "Login realizado com sucesso!",
-          description: "Bem-vindo de volta!",
-          variant: "default",
-        });
-        // Só redireciona para o dashboard se estiver na página de autenticação
+        console.log('User signed in, checking if welcome toast should be shown');
+        if (!hasShownWelcomeToast) {
+          console.log('Showing welcome toast');
+          toast({
+            title: "Login realizado com sucesso!",
+            description: "Bem-vindo de volta!",
+            variant: "default",
+          });
+          setHasShownWelcomeToast(true);
+        }
+        
         if (location.pathname.startsWith('/auth')) {
           navigate('/dashboard', { replace: true });
         }
       } else if (event === 'SIGNED_OUT') {
         console.log('User signed out, redirecting to login');
         navigate('/auth', { replace: true });
+        setHasShownWelcomeToast(false);
       }
     });
 
@@ -66,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Cleaning up auth state change listener');
       subscription.unsubscribe();
     };
-  }, [navigate, toast, location.pathname]);
+  }, [navigate, toast, location.pathname, hasShownWelcomeToast]);
 
   useEffect(() => {
     console.log('Route protection check:', {
