@@ -1,6 +1,6 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserStats } from "../hooks/useCommercialUserStats";
+import type { UserStats } from "../types/stats.types";
 import { TotalStats } from "../../kanban/types/activity-dashboard.types";
 
 interface CommercialUserTableProps {
