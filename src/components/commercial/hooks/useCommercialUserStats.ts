@@ -1,10 +1,10 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useUnit } from "@/contexts/UnitContext";
 import { getUserStats } from "../services/userStatsService";
 import { UserStats } from "../types/stats.types";
 
-export { UserStats } from "../types/stats.types";
+// Change this line to use export type
+export type { UserStats } from "../types/stats.types";
 
 /**
  * Hook para obter estatísticas comerciais por usuário
