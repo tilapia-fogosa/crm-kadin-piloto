@@ -19,7 +19,7 @@ export function SchedulingContactType({
     <div className="space-y-2">
       <Label>Tipo de Contato</Label>
       <RadioGroup
-        value={contactType}
+        value={contactType || ''}
         onValueChange={(value: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial') => onContactTypeChange(value)}
         className="flex flex-col space-y-2"
       >

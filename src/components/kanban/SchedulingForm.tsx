@@ -40,7 +40,7 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
   return (
     <div className="space-y-4">
       <SchedulingContactType 
-        contactType={contactType || 'phone'} 
+        contactType={contactType} 
         onContactTypeChange={handleContactTypeChange} 
       />
 
@@ -52,13 +52,18 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
       />
 
       {/* Só exibe o seletor de data se uma unidade estiver selecionada */}
-      {selectedUnitId && (
+      {selectedUnitId ? (
         <div className="space-y-2">
           <AppointmentScheduler 
+            key={`appointment-scheduler-${selectedUnitId}`}
             onSelectSlot={handleScheduledDateChange}
             simplified={true}
             unitId={selectedUnitId}
           />
+        </div>
+      ) : (
+        <div className="p-4 bg-amber-50 text-amber-800 rounded-md text-sm">
+          Selecione uma unidade para visualizar a agenda disponível
         </div>
       )}
 

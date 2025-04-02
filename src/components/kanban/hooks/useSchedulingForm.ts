@@ -20,8 +20,6 @@ export function useSchedulingForm(cardId: string, onSubmit: (scheduling: Schedul
   console.log('useSchedulingForm - Inicializando hook com cardId:', cardId)
   console.log('useSchedulingForm - Verificando unidades disponíveis:', availableUnits)
   
-  // Não inicializa mais automaticamente a unidade selecionada
-
   // Handler para atualizar as notas
   const handleNotesChange = (value: string) => {
     console.log('useSchedulingForm - Notas alteradas para:', value)
