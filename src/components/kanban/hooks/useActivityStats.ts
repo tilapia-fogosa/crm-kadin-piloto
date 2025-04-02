@@ -30,7 +30,9 @@ export function useActivityStats(
         selectedUnitId 
       });
 
-      const [clientsResult, activitiesResult] = await Promise.all([
+      // Buscar dados de clientes e atividades principais
+      const [clientsResult, activitiesResult, awaitingVisitsResult] = await Promise.all([
+        // Clientes criados no período
         supabase.from('clients')
           .select('*')
           .eq('active', true)
@@ -39,6 +41,7 @@ export function useActivityStats(
           .lte('created_at', endDate.toISOString())
           .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
         
+        // Atividades realizadas no período (created_at)
         supabase.from('client_activities')
           .select('*, clients!inner(*)')
           .eq('active', true)
@@ -46,17 +49,31 @@ export function useActivityStats(
           .in('clients.unit_id', unitIds)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
+          .eq(selectedSource !== 'todos' ? 'clients.lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
+          
+        // Visitas aguardadas - busca separada com filtro por scheduled_date
+        supabase.from('client_activities')
+          .select('*, clients!inner(*)')
+          .eq('active', true)
+          .eq('tipo_atividade', 'Agendamento')
+          .eq('clients.active', true)
+          .in('clients.unit_id', unitIds)
+          .gte('scheduled_date', startDate.toISOString())
+          .lte('scheduled_date', endDate.toISOString())
           .eq(selectedSource !== 'todos' ? 'clients.lead_source' : '', selectedSource !== 'todos' ? selectedSource : '')
       ]);
 
       if (clientsResult.error) throw clientsResult.error;
       if (activitiesResult.error) throw activitiesResult.error;
+      if (awaitingVisitsResult.error) throw awaitingVisitsResult.error;
 
       const clients = clientsResult.data;
       const activities = activitiesResult.data;
+      const awaitingVisits = awaitingVisitsResult.data;
 
       console.log('Total de clientes encontrados:', clients.length);
       console.log('Total de atividades encontradas:', activities.length);
+      console.log('Total de visitas aguardadas encontradas:', awaitingVisits.length);
 
       const validDates = Array.from({ length: endDate.getDate() }, (_, index) => {
         const date = new Date(startDate);
@@ -68,9 +85,17 @@ export function useActivityStats(
         const dayStart = new Date(date.setHours(0, 0, 0, 0));
         const dayEnd = new Date(date.setHours(23, 59, 59, 999));
 
+        // Atividades criadas no dia
         const dayActivities = activities.filter(activity => 
           new Date(activity.created_at) >= dayStart && 
           new Date(activity.created_at) <= dayEnd
+        );
+
+        // Visitas aguardadas para o dia
+        const dayAwaitingVisits = awaitingVisits.filter(activity => 
+          activity.scheduled_date && 
+          new Date(activity.scheduled_date) >= dayStart && 
+          new Date(activity.scheduled_date) <= dayEnd
         );
 
         const enrollments = dayActivities.filter(activity => 
@@ -79,6 +104,7 @@ export function useActivityStats(
 
         console.log(`Estatísticas para ${date.toISOString()}:`, {
           totalAtividades: dayActivities.length,
+          visitasAguardadas: dayAwaitingVisits.length,
           matriculas: enrollments
         });
 
@@ -97,12 +123,8 @@ export function useActivityStats(
           scheduledVisits: dayActivities.filter(activity => 
             activity.tipo_atividade === 'Agendamento'
           ).length,
-          awaitingVisits: activities.filter(activity => 
-            activity.tipo_atividade === 'Agendamento' && 
-            activity.scheduled_date && 
-            new Date(activity.scheduled_date) >= dayStart && 
-            new Date(activity.scheduled_date) <= dayEnd
-          ).length,
+          // Agora usando o resultado da nova query para visitas aguardadas
+          awaitingVisits: dayAwaitingVisits.length,
           completedVisits: dayActivities.filter(activity => 
             activity.tipo_atividade === 'Atendimento'
           ).length,
