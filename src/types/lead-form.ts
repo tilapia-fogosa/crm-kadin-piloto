@@ -21,7 +21,8 @@ export const leadFormSchema = z.object({
   metaId: z.string().optional(),
   originalAd: z.string().optional(),
   originalAdset: z.string().optional(),
-  email: z.string().email("Email inválido").optional(),
+  // Changed to explicitly allow empty string or valid email
+  email: z.union([z.literal(''), z.string().email("Email inválido")]).optional(),
   unitId: z.string().min(1, "Unidade é obrigatória"),
 });
 
