@@ -28,6 +28,8 @@ export function UnitSelection({
             onUnitChange(unitId)
           }}
           value={selectedUnitId}
+          placeholder="Escolha uma unidade"
+          required={true}
         />
       </div>
     </div>

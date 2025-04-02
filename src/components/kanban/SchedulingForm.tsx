@@ -7,6 +7,7 @@ import { UnitSelection } from "./components/scheduling/UnitSelection"
 import { ValorizationCheckbox } from "./components/scheduling/ValorizationCheckbox"
 import { SchedulingActionButton } from "./components/scheduling/SchedulingActionButton"
 import { NotesField } from "./components/contact-attempt/NotesField"
+import { useUnit } from "@/contexts/UnitContext"
 
 interface SchedulingFormProps {
   onSubmit: (scheduling: Scheduling) => void
@@ -14,6 +15,8 @@ interface SchedulingFormProps {
 }
 
 export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
+  const { availableUnits } = useUnit()
+  
   // Utilizamos o hook personalizado para gerenciar o estado e lógica do formulário
   const {
     notes,
@@ -41,14 +44,12 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
         onContactTypeChange={handleContactTypeChange} 
       />
 
-      {/* Seleção de unidade (exibida apenas quando o usuário tem acesso a múltiplas unidades) */}
-      {hasMultipleUnits && (
-        <UnitSelection 
-          onUnitChange={handleUnitChange}
-          availableUnitsCount={hasMultipleUnits ? 2 : 1}
-          selectedUnitId={selectedUnitId}
-        />
-      )}
+      {/* Seleção de unidade - sempre exibida */}
+      <UnitSelection 
+        onUnitChange={handleUnitChange}
+        availableUnitsCount={availableUnits.length}
+        selectedUnitId={selectedUnitId || undefined}
+      />
 
       {/* Só exibe o seletor de data se uma unidade estiver selecionada */}
       {selectedUnitId && (
@@ -71,7 +72,10 @@ export function SchedulingForm({ onSubmit, cardId }: SchedulingFormProps) {
         onCheckedChange={handleValorizacaoChange}
       />
 
-      <SchedulingActionButton onSubmit={handleSubmit} />
+      <SchedulingActionButton 
+        onSubmit={handleSubmit} 
+        disabled={!selectedUnitId || !scheduledDate || !contactType}
+      />
     </div>
   )
 }

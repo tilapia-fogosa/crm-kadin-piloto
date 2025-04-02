@@ -14,23 +14,13 @@ export function useSchedulingForm(cardId: string, onSubmit: (scheduling: Schedul
   const [contactType, setContactType] = useState<ContactType>(undefined)
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null)
   const { toast } = useToast()
-  const { availableUnits, selectedUnitId: globalUnitId } = useUnit()
+  const { availableUnits } = useUnit()
   
   // Log das operações principais
   console.log('useSchedulingForm - Inicializando hook com cardId:', cardId)
+  console.log('useSchedulingForm - Verificando unidades disponíveis:', availableUnits)
   
-  // Inicializa a unidade selecionada com a unidade global se o usuário tiver acesso a apenas uma unidade
-  useEffect(() => {
-    console.log('useSchedulingForm - Verificando unidades disponíveis:', availableUnits)
-    
-    if (availableUnits.length === 1) {
-      console.log('useSchedulingForm - Usuário tem acesso a apenas uma unidade. Definindo automaticamente:', availableUnits[0].unit_id)
-      setSelectedUnitId(availableUnits[0].unit_id)
-    } else if (globalUnitId) {
-      console.log('useSchedulingForm - Definindo unidade inicial com base na seleção global:', globalUnitId)
-      setSelectedUnitId(globalUnitId)
-    }
-  }, [availableUnits, globalUnitId])
+  // Não inicializa mais automaticamente a unidade selecionada
 
   // Handler para atualizar as notas
   const handleNotesChange = (value: string) => {

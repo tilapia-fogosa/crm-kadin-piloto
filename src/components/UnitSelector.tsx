@@ -11,19 +11,21 @@ import { useEffect } from "react"
 
 interface UnitSelectorProps {
   onChange?: (unitId: string) => void;
-  value?: string; // Nova propriedade para controlar o valor externamente
+  value?: string; // Propriedade para controlar o valor externamente
+  placeholder?: string; // Nova propriedade para texto placeholder personalizado
+  required?: boolean; // Nova propriedade para indicar se a seleção é obrigatória
 }
 
-export function UnitSelector({ onChange, value }: UnitSelectorProps) {
+export function UnitSelector({ onChange, value, placeholder, required }: UnitSelectorProps) {
   const { selectedUnitId, setSelectedUnitId, availableUnits, isLoading } = useUnit();
 
-  // Notifica o componente pai quando a unidade selecionada muda
+  // Notifica o componente pai quando a unidade selecionada muda através do contexto global
   useEffect(() => {
-    console.log('UnitSelector - Unidade selecionada mudou para:', selectedUnitId);
-    if (selectedUnitId && onChange) {
+    console.log('UnitSelector - Unidade selecionada no contexto global mudou para:', selectedUnitId);
+    if (selectedUnitId && onChange && value === undefined) {
       onChange(selectedUnitId);
     }
-  }, [selectedUnitId, onChange]);
+  }, [selectedUnitId, onChange, value]);
 
   if (isLoading) {
     return <div>Carregando unidades...</div>;
@@ -37,20 +39,25 @@ export function UnitSelector({ onChange, value }: UnitSelectorProps) {
   const currentValue = value !== undefined ? value : selectedUnitId;
   
   console.log('UnitSelector - Renderizando com valor:', currentValue || 'nenhum valor');
+  console.log('UnitSelector - Usando placeholder:', placeholder || 'Selecione uma unidade');
 
   return (
     <Select
       value={currentValue || undefined}
       onValueChange={(value) => {
         console.log('UnitSelector - Seleção alterada para:', value);
-        setSelectedUnitId(value);
+        // Só atualiza o contexto global quando não tem valor controlado externamente
+        if (value !== undefined) {
+          setSelectedUnitId(value);
+        }
         if (onChange) {
           onChange(value);
         }
       }}
+      required={required}
     >
       <SelectTrigger className="w-[200px]">
-        <SelectValue placeholder="Selecione uma unidade" />
+        <SelectValue placeholder={placeholder || "Selecione uma unidade"} />
       </SelectTrigger>
       <SelectContent>
         {availableUnits.map((unitUser) => (

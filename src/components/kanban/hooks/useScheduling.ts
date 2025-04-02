@@ -15,7 +15,7 @@ export function useScheduling() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
-      // Usamos a unitId fornecida no agendamento em vez de buscar a unitId do cliente
+      // Usamos a unitId fornecida no agendamento
       const unitId = scheduling.unitId;
       console.log('useScheduling - Usando unitId do agendamento:', unitId);
       
@@ -39,12 +39,13 @@ export function useScheduling() {
 
       if (activityError) throw activityError
 
+      // Atualiza apenas a data do agendamento no cliente, mantendo a unidade original
       const { error: updateClientError } = await supabase
         .from('clients')
         .update({ 
           scheduled_date: scheduling.scheduledDate.toISOString(),
-          next_contact_date: scheduling.nextContactDate?.toISOString(),
-          unit_id: unitId // Atualiza a unidade do cliente se necessário
+          next_contact_date: scheduling.nextContactDate?.toISOString()
+          // Não atualizamos mais a unit_id do cliente
         })
         .eq('id', scheduling.cardId)
 
