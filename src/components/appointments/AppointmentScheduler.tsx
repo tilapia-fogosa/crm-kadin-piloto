@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Calendar } from "@/components/ui/calendar"
@@ -26,12 +26,16 @@ export function AppointmentScheduler({
   simplified = false, 
   unitId 
 }: AppointmentSchedulerProps) {
+  // Log para depuração
+  console.log('AppointmentScheduler - Iniciando renderização', { simplified, unitId })
+  
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [selectedTime, setSelectedTime] = useState<string>()
   const [viewType, setViewType] = useState<ViewType>("list")
   
   // Passa o unitId para o hook useAvailableSlots
   const { availableSlots, isLoading } = useAvailableSlots(selectedDate, unitId)
+  console.log('AppointmentScheduler - Slots disponíveis:', availableSlots)
 
   const handleDateSelect = (date: Date | undefined) => {
     console.log('AppointmentScheduler - Data selecionada:', date);

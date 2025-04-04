@@ -1,8 +1,8 @@
 
+import React, { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { Clock } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
-import { useState, useEffect } from "react"
 
 interface HorizontalTimeSlotProps {
   date: Date
@@ -25,9 +25,12 @@ export function HorizontalTimeSlot({
   // Log para depuração
   console.log('HorizontalTimeSlot - Disponíveis:', availableSlots)
   console.log('HorizontalTimeSlot - Selecionado:', selectedTime)
+  console.log('HorizontalTimeSlot - Renderizando componente')
 
   // Atualiza o estado do slider quando os slots mudam ou quando um horário é selecionado
   useEffect(() => {
+    console.log('HorizontalTimeSlot - useEffect executando', { availableSlots, selectedTime })
+    
     if (availableSlots.length && selectedTime) {
       const selectedIndex = availableSlots.indexOf(selectedTime)
       if (selectedIndex !== -1) {
@@ -48,6 +51,7 @@ export function HorizontalTimeSlot({
   }
 
   const handleSliderChange = (value: number[]) => {
+    console.log('HorizontalTimeSlot - Slider alterado:', value)
     if (value[0] !== undefined && availableSlots[value[0]]) {
       setSliderValue(value)
       setDisplayedTime(availableSlots[value[0]])
@@ -55,6 +59,7 @@ export function HorizontalTimeSlot({
   }
 
   const handleSelectTime = () => {
+    console.log('HorizontalTimeSlot - Horário selecionado:', displayedTime)
     if (displayedTime) {
       onSelectTime(displayedTime)
     }
