@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import { toast } from "@/components/ui/use-toast"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -23,22 +24,39 @@ export default function ClientsPage() {
 
       console.log('Fetching clients for unit:', selectedUnitId);
       
+      // Modificada a query para incluir as atividades do cliente
       const { data, error } = await supabase
         .from('clients')
         .select(`
           id,
           name,
           phone_number,
+          email,
           lead_source,
           observations,
           status,
-          created_at
+          created_at,
+          original_ad,
+          original_adset,
+          client_activities (
+            id,
+            tipo_contato,
+            tipo_atividade,
+            notes,
+            created_at,
+            next_contact_date,
+            active
+          )
         `)
         .eq('active', true)
         .eq('unit_id', selectedUnitId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      // Log para depuração
+      console.log(`Recebidos ${data?.length} clientes com atividades`);
+      
       return data;
     },
     enabled: !!selectedUnitId
