@@ -1,4 +1,3 @@
-
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -79,6 +78,7 @@ function App() {
                     <Route path="/admin/user-management" element={<UserManagementPage />} />
                     <Route path="/updates" element={<UpdatesPage />} />
                     <Route path="/updates/admin" element={<UpdatesAdminPage />} />
+                    <Route path="/clients/sources" element={<LeadSourcesPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Route>
                 </Routes>
