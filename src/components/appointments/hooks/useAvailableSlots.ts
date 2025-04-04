@@ -25,6 +25,7 @@ export function useAvailableSlots(selectedDate: Date | undefined, unitId?: strin
 
   useEffect(() => {
     if (!selectedDate) {
+      console.log('useAvailableSlots - Data não selecionada, limpando slots');
       setAvailableSlots([])
       return
     }
@@ -104,48 +105,54 @@ export function useAvailableSlots(selectedDate: Date | undefined, unitId?: strin
           }
         }
 
-        // Remove slots já agendados (bloqueando 1 hora completa)
-        const scheduledTimes = scheduledSlots.map(slot => 
-          format(new Date(slot.scheduled_date), 'HH:mm')
-        )
+        // Converte horários agendados para minutos do dia para facilitar comparações
+        const scheduledTimesInMinutes = scheduledSlots.map(slot => {
+          const date = new Date(slot.scheduled_date);
+          return date.getHours() * 60 + date.getMinutes();
+        });
 
-        // Filtra slots disponíveis
-        // Verifica se o slot atual ou o próximo slot (para formar 1 hora) já está agendado
+        console.log('useAvailableSlots - Horários agendados (em minutos):', scheduledTimesInMinutes);
+
+        // Nova lógica: filtrar slots considerando 30 minutos antes e depois dos agendamentos
         const availableSlots = allSlots.filter(slot => {
-          const [hour, minute] = slot.split(':').map(Number)
+          const [hour, minute] = slot.split(':').map(Number);
+          const slotTimeInMinutes = hour * 60 + minute;
           
-          // Verificamos o slot atual
-          const isCurrentSlotScheduled = scheduledTimes.includes(slot)
+          // Verifica se o slot atual ou +/- 30 minutos estão dentro de algum agendamento existente
+          const isBlocked = scheduledTimesInMinutes.some(scheduledTime => {
+            // Bloqueia o slot se ele estiver 30 minutos antes ou 30 minutos depois de um agendamento
+            // Ou se for o próprio horário do agendamento
+            return (
+              // É o próprio horário agendado
+              slotTimeInMinutes === scheduledTime ||
+              // Está 30 minutos depois de um agendamento (que dura 1 hora)
+              (slotTimeInMinutes > scheduledTime && slotTimeInMinutes < scheduledTime + 60) ||
+              // Está 30 minutos antes de um agendamento (considerando que o agendamento começa e usa 30 min antes)
+              (slotTimeInMinutes < scheduledTime && slotTimeInMinutes + 60 > scheduledTime)
+            );
+          });
           
-          // E também verificamos se este slot faria parte de um agendamento existente
-          // (se o horário agendado é até 1 hora antes do slot atual)
-          const isPartOfScheduled = scheduledTimes.some(scheduledTime => {
-            const [schedHour, schedMinute] = scheduledTime.split(':').map(Number)
-            
-            // Verificamos se o slot atual está dentro da janela de 1 hora após um agendamento
-            const slotTimeInMinutes = (hour * 60) + minute
-            const schedTimeInMinutes = (schedHour * 60) + schedMinute
-            
-            // Se o slot atual está até 30 min depois do agendamento, ele faz parte da janela de 1h
-            return slotTimeInMinutes >= schedTimeInMinutes && 
-                  slotTimeInMinutes < (schedTimeInMinutes + 60)
-          })
+          // Log detalhado para depuração
+          if (isBlocked) {
+            console.log(`useAvailableSlots - Slot ${slot} está bloqueado`);
+          }
           
-          return !isCurrentSlotScheduled && !isPartOfScheduled
-        })
+          // Retorna true para slots não bloqueados
+          return !isBlocked;
+        });
 
-        console.log('useAvailableSlots - Slots disponíveis para unidade', unitId, ':', availableSlots);
-        setAvailableSlots(availableSlots)
+        console.log('useAvailableSlots - Slots disponíveis após aplicar regras de bloqueio:', availableSlots);
+        setAvailableSlots(availableSlots);
       } catch (error) {
-        console.error('Erro ao buscar slots:', error)
-        setAvailableSlots([])
+        console.error('Erro ao buscar slots:', error);
+        setAvailableSlots([]);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
 
-    fetchScheduledSlots()
-  }, [selectedDate, unitId])
+    fetchScheduledSlots();
+  }, [selectedDate, unitId]);
 
-  return { availableSlots, isLoading }
+  return { availableSlots, isLoading };
 }
