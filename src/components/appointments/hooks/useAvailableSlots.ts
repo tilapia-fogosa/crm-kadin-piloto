@@ -1,12 +1,22 @@
 
 import { useState, useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
-import { format, setHours, setMinutes } from "date-fns"
+import { format, setHours, setMinutes, getDay } from "date-fns"
 
-// Horário comercial padrão: 8h às 18h
+// Configuração de horários comerciais dinâmicos
 const BUSINESS_HOURS = {
-  start: 8,
-  end: 18
+  // Segunda a Sexta (0 = domingo, 1 = segunda, ..., 6 = sábado)
+  weekday: {
+    start: 8, // 8:00
+    end: 21,  // 21:00
+    interval: 30 // 30 minutos
+  },
+  // Sábado
+  saturday: {
+    start: 8, // 8:00
+    end: 13, // 13:00
+    interval: 30 // 30 minutos
+  }
 }
 
 export function useAvailableSlots(selectedDate: Date | undefined, unitId?: string) {
@@ -53,21 +63,76 @@ export function useAvailableSlots(selectedDate: Date | undefined, unitId?: strin
 
         if (error) throw error
 
-        // Gera todos os slots possíveis do dia
-        const allSlots: string[] = []
-        for (let hour = BUSINESS_HOURS.start; hour < BUSINESS_HOURS.end; hour++) {
-          const timeSlot = format(setMinutes(setHours(selectedDate, hour), 0), 'HH:mm')
-          allSlots.push(timeSlot)
+        // Determina o dia da semana (0 = domingo, 1 = segunda, ..., 6 = sábado)
+        const dayOfWeek = getDay(selectedDate)
+        
+        // Define os horários com base no dia da semana
+        const hoursConfig = dayOfWeek === 6 
+          ? BUSINESS_HOURS.saturday 
+          : BUSINESS_HOURS.weekday
+
+        // Verifica se é domingo (0) - não há atendimento
+        if (dayOfWeek === 0) {
+          console.log('useAvailableSlots - Domingo não há atendimento disponível');
+          setAvailableSlots([])
+          setIsLoading(false)
+          return
         }
 
-        // Remove slots já agendados
+        // Gera todos os slots possíveis com intervalo de 30 minutos
+        const allSlots: string[] = []
+        
+        // Início em horas (8) e minutos (0 ou 30)
+        let currentHour = hoursConfig.start
+        let currentMinute = 0
+        
+        // Enquanto não chegarmos ao fim do horário comercial
+        while (currentHour < hoursConfig.end) {
+          const timeSlot = format(
+            setMinutes(setHours(selectedDate, currentHour), currentMinute), 
+            'HH:mm'
+          )
+          allSlots.push(timeSlot)
+          
+          // Avança 30 minutos
+          currentMinute += hoursConfig.interval
+          
+          // Se passar de 60 minutos, avança uma hora
+          if (currentMinute >= 60) {
+            currentHour += 1
+            currentMinute = 0
+          }
+        }
+
+        // Remove slots já agendados (bloqueando 1 hora completa)
         const scheduledTimes = scheduledSlots.map(slot => 
           format(new Date(slot.scheduled_date), 'HH:mm')
         )
 
-        const availableSlots = allSlots.filter(slot => 
-          !scheduledTimes.includes(slot)
-        )
+        // Filtra slots disponíveis
+        // Verifica se o slot atual ou o próximo slot (para formar 1 hora) já está agendado
+        const availableSlots = allSlots.filter(slot => {
+          const [hour, minute] = slot.split(':').map(Number)
+          
+          // Verificamos o slot atual
+          const isCurrentSlotScheduled = scheduledTimes.includes(slot)
+          
+          // E também verificamos se este slot faria parte de um agendamento existente
+          // (se o horário agendado é até 1 hora antes do slot atual)
+          const isPartOfScheduled = scheduledTimes.some(scheduledTime => {
+            const [schedHour, schedMinute] = scheduledTime.split(':').map(Number)
+            
+            // Verificamos se o slot atual está dentro da janela de 1 hora após um agendamento
+            const slotTimeInMinutes = (hour * 60) + minute
+            const schedTimeInMinutes = (schedHour * 60) + schedMinute
+            
+            // Se o slot atual está até 30 min depois do agendamento, ele faz parte da janela de 1h
+            return slotTimeInMinutes >= schedTimeInMinutes && 
+                  slotTimeInMinutes < (schedTimeInMinutes + 60)
+          })
+          
+          return !isCurrentSlotScheduled && !isPartOfScheduled
+        })
 
         console.log('useAvailableSlots - Slots disponíveis para unidade', unitId, ':', availableSlots);
         setAvailableSlots(availableSlots)
