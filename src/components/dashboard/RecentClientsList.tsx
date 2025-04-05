@@ -67,20 +67,20 @@ export function RecentClientsList() {
   return (
     <div className="rounded-lg border bg-card">
       <div className="flex items-center justify-between p-6">
-        <h3 className="text-lg font-semibold">Últimos 10 Clientes</h3>
+        <h3 className="text-md font-semibold">Últimos 10 Clientes</h3>
       </div>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nome do Cliente</TableHead>
-            <TableHead>Data do Cadastro</TableHead>
-            <TableHead>Status Atual</TableHead>
-            <TableHead>Último Contato</TableHead>
+            <TableHead className="text-xs">Nome do Cliente</TableHead>
+            <TableHead className="text-xs">Data do Cadastro</TableHead>
+            <TableHead className="text-xs">Status Atual</TableHead>
+            <TableHead className="text-xs">Último Contato</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {recentClients?.map((client) => (
-            <TableRow key={client.id}>
+            <TableRow key={client.id} className="text-xs">
               <TableCell>{client.name}</TableCell>
               <TableCell>
                 {new Date(client.created_at).toLocaleDateString()}
