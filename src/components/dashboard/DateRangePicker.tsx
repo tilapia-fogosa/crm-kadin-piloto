@@ -45,8 +45,10 @@ export function DateRangePicker({
       return `${fromDate} - ${toDate}`;
     } else if (dateRange === 'quarter') {
       return 'Últimos 3 meses';
+    } else if (dateRange === 'current-month') {
+      return 'Mês atual';
     } else {
-      return 'Último mês';
+      return 'Mês anterior';
     }
   };
   
@@ -54,11 +56,18 @@ export function DateRangePicker({
     <div className="flex flex-col items-end space-y-2">
       <div className="flex items-center space-x-2">
         <Button 
-          variant={dateRange === 'month' ? 'default' : 'outline'}
+          variant={dateRange === 'current-month' ? 'default' : 'outline'}
           size="sm" 
-          onClick={() => onDateRangeChange('month')}
+          onClick={() => onDateRangeChange('current-month')}
         >
-          Mês
+          Mês Atual
+        </Button>
+        <Button 
+          variant={dateRange === 'previous-month' ? 'default' : 'outline'}
+          size="sm" 
+          onClick={() => onDateRangeChange('previous-month')}
+        >
+          Mês Anterior
         </Button>
         <Button 
           variant={dateRange === 'quarter' ? 'default' : 'outline'}

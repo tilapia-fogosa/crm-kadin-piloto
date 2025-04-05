@@ -28,24 +28,24 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Componente FunnelBar modificado para ter as barras realmente encostadas
+// Componente FunnelBar personalizado para criar um efeito de funil onde as barras estão realmente conectadas
 const FunnelBar = (props: any) => {
   console.log("Renderizando FunnelBar com props:", props);
   
-  const { x, y, width, height, fill, index, dataLength } = props;
+  const { x, y, width, height, fill, index } = props;
   
-  // Nova lógica para ter as barras bem próximas, quase coladas
-  const widthRatio = 1 - (index * 0.05); // Reduzido para 0.05 para menor diminuição entre barras
+  // Nova lógica para ter as barras bem próximas, completamente conectadas
+  const widthRatio = 1 - (index * 0.05); // Pequena redução para manter aparência de funil
   const adjustedWidth = width * widthRatio;
   const xOffset = (width - adjustedWidth) / 2;
   
-  // Reduzir drasticamente o espaço entre as barras
-  const yAdjustment = index > 0 ? 2 : 0; // Apenas 2px de espaço
+  // Ajustar y para que as barras fiquem conectadas (sem espaço)
+  const yPosition = y;
   
   return (
     <Rectangle
       x={x + xOffset}
-      y={y - yAdjustment * index} // Reduzindo ainda mais o espaço
+      y={yPosition}
       width={adjustedWidth}
       height={height}
       fill={fill}
@@ -58,7 +58,7 @@ export function LeadFunnelChart() {
   console.log('Renderizando LeadFunnelChart');
   
   const { selectedUnitId } = useUnit();
-  const [dateRange, setDateRange] = useState<DateRangeType>('month');
+  const [dateRange, setDateRange] = useState<DateRangeType>('current-month'); // Padrão agora é mês atual
   const [customRange, setCustomRange] = useState<DateRange | undefined>({
     from: subMonths(new Date(), 1),
     to: new Date()
@@ -238,20 +238,21 @@ export function LeadFunnelChart() {
         />
       </CardHeader>
       <CardContent>
-        <div className="h-[350px]">
+        <div className="h-[350px] overflow-hidden">
           <ChartContainer config={chartConfig}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartData}
                 layout="vertical"
                 barGap={0}
-                barSize={20} // Reduzido para criar barras mais finas e juntas
+                barSize={20} // Barras mais finas para melhor aparência
                 margin={{
                   top: 20,
                   right: 50,
                   left: 20,
                   bottom: 5
                 }}
+                barCategoryGap={0} // Remove o espaço entre categorias de barras
               >
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                 <XAxis 

@@ -8,10 +8,11 @@ import {
   endOfDay, 
   parseISO, 
   startOfMonth, 
-  endOfMonth 
+  endOfMonth,
+  isAfter
 } from "date-fns";
 
-export type DateRangeType = "month" | "quarter" | "custom";
+export type DateRangeType = "current-month" | "previous-month" | "quarter" | "custom";
 
 export interface LeadFunnelStats {
   totalLeads: number;
@@ -44,6 +45,7 @@ export function useLeadFunnelStats(
       // Determinar datas de início e fim com base no tipo de intervalo
       let queryStartDate: Date;
       let queryEndDate: Date = endOfDay(new Date()); // Hoje por padrão
+      const today = new Date();
       
       if (dateRange === 'custom' && startDate && endDate) {
         // Usar datas personalizadas se fornecidas
@@ -51,10 +53,14 @@ export function useLeadFunnelStats(
         queryEndDate = endOfDay(endDate);
       } else if (dateRange === 'quarter') {
         // Últimos 3 meses completos
-        queryStartDate = startOfMonth(subMonths(new Date(), 3));
+        queryStartDate = startOfMonth(subMonths(today, 3));
+      } else if (dateRange === 'current-month') {
+        // Mês atual (do dia 1 até hoje)
+        queryStartDate = startOfMonth(today);
       } else {
-        // Último mês completo (padrão)
-        queryStartDate = startOfMonth(subMonths(new Date(), 1));
+        // Mês anterior completo (padrão)
+        queryStartDate = startOfMonth(subMonths(today, 1));
+        queryEndDate = endOfMonth(subMonths(today, 1));
       }
       
       console.log('Intervalo de datas para consulta:', {
