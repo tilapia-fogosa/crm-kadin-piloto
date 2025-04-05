@@ -60,11 +60,28 @@ export function ActivityFunnelCard({
     );
   };
 
+  // Função para mostrar a diferença numérica entre períodos
+  const getNumericComparisonElement = (current: number, previous: number) => {
+    const diff = current - previous;
+    const isIncrease = diff > 0;
+    
+    return (
+      <span className={cn(
+        "ml-2 flex items-center text-xs font-medium",
+        isIncrease ? "text-green-600" : diff < 0 ? "text-red-600" : "text-yellow-600"
+      )}>
+        {isIncrease ? <TrendingUp className="mr-1 h-3 w-3" /> : <TrendingDown className="mr-1 h-3 w-3" />}
+        {isIncrease ? "+" : ""}{formatNumber(diff)}
+      </span>
+    );
+  };
+
   // Dados para as linhas do funil
   const funnelRows = [
     {
       label: "Total de Contatos",
       value: formatNumber(period.totalContacts),
+      numericComparison: getNumericComparisonElement(period.totalContacts, period.comparison.totalContacts),
       percent: null, // Não tem percentual
       comparison: period.comparison.totalContacts,
       hasDivider: true,
@@ -72,6 +89,7 @@ export function ActivityFunnelCard({
     {
       label: "Contatos Efetivos",
       value: formatNumber(period.effectiveContacts),
+      numericComparison: getNumericComparisonElement(period.effectiveContacts, period.comparison.effectiveContacts),
       percent: formatPercent(period.effectiveContactsRate),
       previousPercent: period.comparison.effectiveContactsRate,
       hasDivider: true,
@@ -79,6 +97,7 @@ export function ActivityFunnelCard({
     {
       label: "Agendamentos",
       value: formatNumber(period.scheduledVisits),
+      numericComparison: getNumericComparisonElement(period.scheduledVisits, period.comparison.scheduledVisits),
       percent: formatPercent(period.scheduledVisitsRate),
       previousPercent: period.comparison.scheduledVisitsRate,
       hasDivider: true,
@@ -86,6 +105,7 @@ export function ActivityFunnelCard({
     {
       label: "Atendimentos",
       value: formatNumber(period.completedVisits),
+      numericComparison: getNumericComparisonElement(period.completedVisits, period.comparison.completedVisits),
       percent: formatPercent(period.completedVisitsRate),
       previousPercent: period.comparison.completedVisitsRate,
       hasDivider: true,
@@ -93,6 +113,7 @@ export function ActivityFunnelCard({
     {
       label: "Matrículas",
       value: formatNumber(period.enrollments),
+      numericComparison: getNumericComparisonElement(period.enrollments, period.comparison.enrollments),
       percent: formatPercent(period.enrollmentsRate),
       previousPercent: period.comparison.enrollmentsRate,
       hasDivider: false,
@@ -114,7 +135,10 @@ export function ActivityFunnelCard({
                 index % 2 === 0 ? "bg-muted/30" : ""
               )}>
                 <div className="col-span-3 font-medium">{row.label}</div>
-                <div className="col-span-2 text-center">{row.value}</div>
+                <div className="col-span-2 text-center flex items-center justify-center">
+                  {row.value}
+                  {row.numericComparison}
+                </div>
                 <div className="col-span-3 flex items-center justify-end">
                   {row.percent && (
                     <>
