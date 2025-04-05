@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { LeadsChart } from '@/components/dashboard/LeadsChart';
 import { RecentClientsList } from '@/components/dashboard/RecentClientsList';
 import { useLeadsStats } from '@/hooks/useLeadsStats';
@@ -12,10 +12,15 @@ import { AlertTriangle } from 'lucide-react';
 import { LeadFunnelChart } from '@/components/dashboard/LeadFunnelChart';
 
 function Index() {
-  console.log("Rendering Dashboard/Index page");
+  console.log("Renderizando Dashboard/Index page");
   
   const { selectedUnitId, isLoading: isLoadingUnit } = useUnit();
   const { data: leadsStats } = useLeadsStats(selectedUnitId);
+  
+  // Log para verificar a unidade selecionada
+  useEffect(() => {
+    console.log('Dashboard - Unidade selecionada:', selectedUnitId);
+  }, [selectedUnitId]);
   
   return (
     <div className="space-y-6">

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { 
   BarChart, 
@@ -8,10 +8,10 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  Legend, 
   ResponsiveContainer,
-  ReferenceLine,
-  LabelList
+  LabelList,
+  Rectangle,
+  Cell
 } from "recharts";
 import { DateRangePicker } from "./DateRangePicker";
 import { useLeadFunnelStats, DateRangeType } from "@/hooks/useLeadFunnelStats";
@@ -19,6 +19,33 @@ import { useUnit } from "@/contexts/UnitContext";
 import { DateRange } from "react-day-picker";
 import { subMonths } from "date-fns";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
+import { InformationCircleIcon } from "lucide-react";
+
+// Componente personalizado para barras de funil (mais estreitas no topo)
+const FunnelBar = (props: any) => {
+  console.log("Renderizando FunnelBar com props:", props);
+  
+  const { x, y, width, height, fill, index, dataLength } = props;
+  
+  // Calcular a largura da barra com base na posição no funil
+  // A primeira barra (topo do funil) tem a largura total
+  // As barras seguintes são proporcionalmente mais estreitas
+  const widthRatio = 1 - (index * 0.15);
+  const adjustedWidth = width * widthRatio;
+  const xOffset = (width - adjustedWidth) / 2;
+  
+  return (
+    <Rectangle
+      x={x + xOffset}
+      y={y}
+      width={adjustedWidth}
+      height={height}
+      fill={fill}
+      radius={[0, 4, 4, 0]}
+    />
+  );
+};
 
 export function LeadFunnelChart() {
   console.log('Renderizando LeadFunnelChart');
@@ -30,6 +57,11 @@ export function LeadFunnelChart() {
     to: new Date()
   });
   
+  // Log para verificar o estado do filtro de unidade
+  useEffect(() => {
+    console.log('LeadFunnelChart - Unidade selecionada:', selectedUnitId);
+  }, [selectedUnitId]);
+  
   const handleDateRangeChange = (type: DateRangeType, range?: DateRange) => {
     console.log('Alterando range de data:', { type, range });
     setDateRange(type);
@@ -38,12 +70,20 @@ export function LeadFunnelChart() {
     }
   };
   
-  const { data: funnelStats, isLoading } = useLeadFunnelStats(
+  const { data: funnelStats, isLoading, error } = useLeadFunnelStats(
     selectedUnitId,
     dateRange,
     customRange?.from,
     customRange?.to
   );
+  
+  // Log para depuração dos dados recebidos
+  useEffect(() => {
+    console.log('Dados do funil recebidos:', funnelStats);
+    if (error) {
+      console.error('Erro ao buscar dados do funil:', error);
+    }
+  }, [funnelStats, error]);
   
   // Preparar dados para o gráfico
   const prepareChartData = () => {
@@ -54,31 +94,36 @@ export function LeadFunnelChart() {
         name: 'Leads',
         valor: funnelStats.totalLeads,
         taxa: 100, // 100%
-        legenda: 'Leads Recebidos'
+        legenda: 'Leads Recebidos',
+        color: "#3b82f6" // azul
       },
       {
         name: 'Contatos',
         valor: funnelStats.effectiveContacts,
         taxa: funnelStats.effectiveContactRate,
-        legenda: 'Contatos Efetivos'
+        legenda: 'Contatos Efetivos',
+        color: "#10b981" // verde
       },
       {
         name: 'Agendamentos',
         valor: funnelStats.scheduledVisits,
         taxa: funnelStats.scheduledVisitsRate,
-        legenda: 'Agendamentos'
+        legenda: 'Agendamentos',
+        color: "#f59e0b" // âmbar
       },
       {
         name: 'Atendimentos',
         valor: funnelStats.completedVisits,
         taxa: funnelStats.completedVisitsRate,
-        legenda: 'Atendimentos'
+        legenda: 'Atendimentos',
+        color: "#6366f1" // índigo
       },
       {
         name: 'Matrículas',
         valor: funnelStats.enrollments,
         taxa: funnelStats.enrollmentsRate,
-        legenda: 'Matrículas'
+        legenda: 'Matrículas',
+        color: "#ec4899" // rosa
       }
     ];
   };
@@ -107,7 +152,28 @@ export function LeadFunnelChart() {
         </CardHeader>
         <CardContent>
           <div className="h-[350px] flex items-center justify-center">
-            Carregando dados do funil...
+            <Skeleton className="h-[300px] w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Funil de Conversão de Leads</CardTitle>
+          <DateRangePicker 
+            dateRange={dateRange} 
+            onDateRangeChange={handleDateRangeChange}
+            customRange={customRange}
+          />
+        </CardHeader>
+        <CardContent>
+          <div className="h-[350px] flex items-center justify-center flex-col">
+            <p className="text-red-500">Erro ao carregar dados do funil</p>
+            <p className="text-sm text-muted-foreground">{String(error)}</p>
           </div>
         </CardContent>
       </Card>
@@ -127,7 +193,9 @@ export function LeadFunnelChart() {
         </CardHeader>
         <CardContent>
           <div className="h-[350px] flex items-center justify-center">
-            Nenhuma unidade selecionada
+            {selectedUnitId ? 
+              "Nenhum dado disponível para o período selecionado" : 
+              "Nenhuma unidade selecionada"}
           </div>
         </CardContent>
       </Card>
@@ -147,11 +215,12 @@ export function LeadFunnelChart() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <div>
+        <div className="flex items-center space-x-2">
           <CardTitle>Funil de Conversão de Leads</CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">
-            Mostra a conversão de leads por etapa (cada lead contado apenas uma vez em cada etapa)
-          </p>
+          <InformationCircleIcon 
+            className="h-5 w-5 text-muted-foreground cursor-help" 
+            title="Mostra a conversão de leads por etapa (cada lead contado apenas uma vez em cada etapa)"
+          />
         </div>
         <DateRangePicker 
           dateRange={dateRange} 
@@ -170,38 +239,57 @@ export function LeadFunnelChart() {
                 barSize={40}
                 margin={{
                   top: 20,
-                  right: 30,
+                  right: 50,
                   left: 20,
                   bottom: 5
                 }}
               >
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                <XAxis type="number" tickFormatter={formatNumber} />
-                <YAxis type="category" dataKey="legenda" width={120} />
-                <ChartTooltip
-                  content={<ChartTooltipContent />}
-                  formatter={(value: number, name: string) => [
-                    formatNumber(value),
-                    name === 'valor' ? 'Quantidade' : 'Taxa de Conversão'
-                  ]}
+                <XAxis 
+                  type="number" 
+                  tickFormatter={formatNumber} 
+                  domain={[0, 'dataMax']}
                 />
-                <Legend />
+                <YAxis 
+                  type="category" 
+                  dataKey="legenda" 
+                  width={120} 
+                  tickLine={false}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={
+                    <ChartTooltipContent 
+                      formatter={(value: any, name: any, props: any) => {
+                        if (name === 'valor') return [formatNumber(value), 'Quantidade'];
+                        if (name === 'taxa') return [formatPercent(value), 'Taxa de Conversão'];
+                        return [value, name];
+                      }}
+                    />
+                  }
+                />
                 <Bar 
                   dataKey="valor" 
                   name="Quantidade" 
-                  radius={[0, 4, 4, 0]} 
-                  fill="var(--color-lead)"
+                  shape={<FunnelBar />}
                 >
-                  <LabelList dataKey="valor" position="right" formatter={formatNumber} />
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                  <LabelList 
+                    dataKey="valor" 
+                    position="right" 
+                    formatter={formatNumber} 
+                    style={{ fontWeight: 'bold' }}
+                  />
                 </Bar>
-                <ReferenceLine x={0} stroke="#000" />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
         </div>
-        <div className="grid grid-cols-5 gap-4 mt-4">
+        <div className="grid grid-cols-5 gap-4 mt-4 p-2 bg-slate-50 rounded-md">
           {chartData.map((item, index) => (
-            <div key={index} className="text-center">
+            <div key={index} className="text-center p-2 border-r last:border-r-0 border-slate-200">
               <div className="text-sm font-medium">{item.legenda}</div>
               <div className="text-lg font-bold">{formatNumber(item.valor)}</div>
               <div className="text-xs text-muted-foreground">{formatPercent(item.taxa)}</div>

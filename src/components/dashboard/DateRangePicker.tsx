@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Calendar, CalendarRange } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Calendar as CalendarIcon } from "lucide-react";
 import { format, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,17 @@ export function DateRangePicker({
   console.log('Renderizando DateRangePicker:', { dateRange, customRange });
   
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  
+  // Efeito para garantir que o customRange esteja sempre definido quando necessário
+  useEffect(() => {
+    if (dateRange === 'custom' && (!customRange || !customRange.from)) {
+      // Definir intervalo padrão para o último mês se customRange não estiver definido
+      onDateRangeChange('custom', {
+        from: subMonths(new Date(), 1),
+        to: new Date()
+      });
+    }
+  }, [dateRange, customRange, onDateRangeChange]);
   
   // Preparar labels para exibição
   const getDateRangeLabel = () => {
@@ -63,7 +74,7 @@ export function DateRangePicker({
               size="sm" 
               className="ml-auto"
             >
-              <Calendar className="h-4 w-4 mr-2" />
+              <CalendarIcon className="h-4 w-4 mr-2" />
               {dateRange === 'custom' ? getDateRangeLabel() : 'Personalizado'}
             </Button>
           </PopoverTrigger>
@@ -71,7 +82,7 @@ export function DateRangePicker({
             <CalendarComponent
               initialFocus
               mode="range"
-              defaultMonth={subMonths(new Date(), 1)}
+              defaultMonth={customRange?.from || subMonths(new Date(), 1)}
               selected={customRange}
               onSelect={(range) => {
                 if (range) {
@@ -88,7 +99,7 @@ export function DateRangePicker({
         </Popover>
       </div>
       <div className="text-xs text-muted-foreground">
-        {dateRange !== 'custom' ? 'Selecione um período' : getDateRangeLabel()}
+        {getDateRangeLabel()}
       </div>
     </div>
   );
