@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { 
@@ -20,6 +21,12 @@ import { subMonths } from "date-fns";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HelpCircle } from "lucide-react";
+import {
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const FunnelBar = (props: any) => {
   console.log("Renderizando FunnelBar com props:", props);
@@ -206,10 +213,18 @@ export function LeadFunnelChart() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center space-x-2">
           <CardTitle>Funil de Conversão de Leads</CardTitle>
-          <HelpCircle 
-            className="h-5 w-5 text-muted-foreground cursor-help" 
-            title="Mostra a conversão de leads por etapa (cada lead contado apenas uma vez em cada etapa)"
-          />
+          <TooltipProvider>
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-5 w-5 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">
+                  Mostra a conversão de leads por etapa (cada lead contado apenas uma vez em cada etapa)
+                </p>
+              </TooltipContent>
+            </UITooltip>
+          </TooltipProvider>
         </div>
         <DateRangePicker 
           dateRange={dateRange} 
