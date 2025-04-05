@@ -1,7 +1,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { subMonths, format, startOfDay, endOfDay, parseISO } from "date-fns";
+import { 
+  subMonths, 
+  format, 
+  startOfDay, 
+  endOfDay, 
+  parseISO, 
+  startOfMonth, 
+  endOfMonth 
+} from "date-fns";
 
 export type DateRangeType = "month" | "quarter" | "custom";
 
@@ -42,11 +50,11 @@ export function useLeadFunnelStats(
         queryStartDate = startOfDay(startDate);
         queryEndDate = endOfDay(endDate);
       } else if (dateRange === 'quarter') {
-        // Últimos 3 meses
-        queryStartDate = startOfDay(subMonths(new Date(), 3));
+        // Últimos 3 meses completos
+        queryStartDate = startOfMonth(subMonths(new Date(), 3));
       } else {
-        // Último mês (padrão)
-        queryStartDate = startOfDay(subMonths(new Date(), 1));
+        // Último mês completo (padrão)
+        queryStartDate = startOfMonth(subMonths(new Date(), 1));
       }
       
       console.log('Intervalo de datas para consulta:', {
@@ -70,7 +78,7 @@ export function useLeadFunnelStats(
           throw leadsError;
         }
         
-        console.log(`Encontrados ${leads?.length || 0} leads no período`);
+        console.log(`Encontrados ${leads?.length || 0} leads no período para unidade ${unitId}`);
         
         if (!leads || leads.length === 0) {
           console.log('Nenhum lead encontrado no período selecionado');
@@ -89,7 +97,7 @@ export function useLeadFunnelStats(
         
         const leadIds = leads.map(lead => lead.id);
         
-        // 2. Buscar atividades de cada tipo para esses leads
+        // 2. Calcular as estatísticas analisando os status dos leads
         // Buscar leads com contato efetivo (status contato-efetivo ou superior)
         const effectiveContacts = leads.filter(lead => 
           ['contato-efetivo', 'atendimento-agendado', 'atendimento-realizado', 'negociacao', 'matriculado'].includes(lead.status)
@@ -105,21 +113,10 @@ export function useLeadFunnelStats(
           ['atendimento-realizado', 'negociacao', 'matriculado'].includes(lead.status)
         ).length;
         
-        // 3. Buscar matrículas para esses leads no período
-        const { data: enrollments, error: enrollmentsError } = await supabase
-          .from('sales')
-          .select('client_id')
-          .eq('active', true)
-          .eq('unit_id', unitId)
-          .in('client_id', leadIds);
-          
-        if (enrollmentsError) {
-          console.error('Erro ao buscar matrículas:', enrollmentsError);
-          throw enrollmentsError;
-        }
-        
-        // Deduzir matrículas únicas (um lead pode ter várias matrículas, mas contamos apenas uma vez)
-        const uniqueEnrollments = new Set(enrollments?.map(e => e.client_id) || []).size;
+        // 3. Buscar matrículas contando leads com status = 'matriculado'
+        const matriculados = leads.filter(lead => 
+          lead.status === 'matriculado'
+        ).length;
         
         // 4. Calcular taxas
         const totalLeads = leads.length;
@@ -132,11 +129,11 @@ export function useLeadFunnelStats(
           effectiveContacts,
           scheduledVisits,
           completedVisits,
-          enrollments: uniqueEnrollments,
+          enrollments: matriculados,
           effectiveContactRate: calculateRate(effectiveContacts, totalLeads),
           scheduledVisitsRate: calculateRate(scheduledVisits, totalLeads),
           completedVisitsRate: calculateRate(completedVisits, totalLeads),
-          enrollmentsRate: calculateRate(uniqueEnrollments, totalLeads)
+          enrollmentsRate: calculateRate(matriculados, totalLeads)
         };
         
         console.log('Cálculo do funil finalizado:', result);

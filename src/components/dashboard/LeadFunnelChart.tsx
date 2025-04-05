@@ -28,19 +28,25 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+// Componente FunnelBar modificado para ter as barras mais próximas umas das outras
 const FunnelBar = (props: any) => {
   console.log("Renderizando FunnelBar com props:", props);
   
   const { x, y, width, height, fill, index, dataLength } = props;
   
-  const widthRatio = 1 - (index * 0.15);
+  // Reduzindo o espaçamento entre as barras e alterando a lógica de diminuição
+  // para manter a aparência de funil
+  const widthRatio = 1 - (index * 0.08); // Reduzido de 0.15 para 0.08
   const adjustedWidth = width * widthRatio;
   const xOffset = (width - adjustedWidth) / 2;
+  
+  // Ajustando o Y para aproximar as barras
+  const yAdjustment = index > 0 ? 8 : 0; // Move as barras mais próximas, exceto a primeira
   
   return (
     <Rectangle
       x={x + xOffset}
-      y={y}
+      y={y - yAdjustment * index} // Ajusta o Y para aproximar as barras
       width={adjustedWidth}
       height={height}
       fill={fill}
@@ -240,7 +246,7 @@ export function LeadFunnelChart() {
                 data={chartData}
                 layout="vertical"
                 barGap={0}
-                barSize={40}
+                barSize={30} // Reduzido para criar barras mais juntas
                 margin={{
                   top: 20,
                   right: 50,
@@ -259,6 +265,7 @@ export function LeadFunnelChart() {
                   dataKey="legenda" 
                   width={120} 
                   tickLine={false}
+                  interval={0} // Garante que todas as etiquetas são mostradas
                 />
                 <ChartTooltip
                   cursor={false}
