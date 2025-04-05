@@ -6,6 +6,7 @@ import { useLeadsStats } from '@/hooks/useLeadsStats';
 import { useUnit } from '@/contexts/UnitContext';
 import { UnitSelector } from '@/components/UnitSelector';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
+import { ActivityFunnelStats } from '@/components/dashboard/ActivityFunnelStats';
 
 function Index() {
   console.log("Rendering Dashboard/Index page");
@@ -26,8 +27,13 @@ function Index() {
         <div>Selecione uma unidade para ver os dados</div>
       ) : (
         <div className="space-y-6">
+          {/* Primeira linha: Estatísticas de leads */}
           <DashboardStats leadsStats={leadsStats} />
           
+          {/* Segunda e terceira linhas: Funil de conversão */}
+          <ActivityFunnelStats unitId={selectedUnitId} />
+          
+          {/* Quarta linha: Gráfico e lista de clientes recentes */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="w-full">
               <LeadsChart />
