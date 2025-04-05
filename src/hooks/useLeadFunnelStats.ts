@@ -64,12 +64,12 @@ export function useLeadFunnelStats(
       });
 
       try {
-        // 1. Buscar todos os leads criados no período para a unidade
+        // 1. Buscar todos os leads ATIVOS criados no período para a unidade específica
         const { data: leads, error: leadsError } = await supabase
           .from('clients')
           .select('id, created_at, status')
           .eq('unit_id', unitId)
-          .eq('active', true)
+          .eq('active', true) // Garantindo que pegamos apenas leads ativos
           .gte('created_at', queryStartDate.toISOString())
           .lte('created_at', queryEndDate.toISOString());
 
@@ -78,7 +78,7 @@ export function useLeadFunnelStats(
           throw leadsError;
         }
         
-        console.log(`Encontrados ${leads?.length || 0} leads no período para unidade ${unitId}`);
+        console.log(`Encontrados ${leads?.length || 0} leads ATIVOS no período para unidade ${unitId}`);
         
         if (!leads || leads.length === 0) {
           console.log('Nenhum lead encontrado no período selecionado');
@@ -94,8 +94,6 @@ export function useLeadFunnelStats(
             enrollmentsRate: 0
           };
         }
-        
-        const leadIds = leads.map(lead => lead.id);
         
         // 2. Calcular as estatísticas analisando os status dos leads
         // Buscar leads com contato efetivo (status contato-efetivo ou superior)

@@ -28,25 +28,24 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Componente FunnelBar modificado para ter as barras mais próximas umas das outras
+// Componente FunnelBar modificado para ter as barras realmente encostadas
 const FunnelBar = (props: any) => {
   console.log("Renderizando FunnelBar com props:", props);
   
   const { x, y, width, height, fill, index, dataLength } = props;
   
-  // Reduzindo o espaçamento entre as barras e alterando a lógica de diminuição
-  // para manter a aparência de funil
-  const widthRatio = 1 - (index * 0.08); // Reduzido de 0.15 para 0.08
+  // Nova lógica para ter as barras bem próximas, quase coladas
+  const widthRatio = 1 - (index * 0.05); // Reduzido para 0.05 para menor diminuição entre barras
   const adjustedWidth = width * widthRatio;
   const xOffset = (width - adjustedWidth) / 2;
   
-  // Ajustando o Y para aproximar as barras
-  const yAdjustment = index > 0 ? 8 : 0; // Move as barras mais próximas, exceto a primeira
+  // Reduzir drasticamente o espaço entre as barras
+  const yAdjustment = index > 0 ? 2 : 0; // Apenas 2px de espaço
   
   return (
     <Rectangle
       x={x + xOffset}
-      y={y - yAdjustment * index} // Ajusta o Y para aproximar as barras
+      y={y - yAdjustment * index} // Reduzindo ainda mais o espaço
       width={adjustedWidth}
       height={height}
       fill={fill}
@@ -246,7 +245,7 @@ export function LeadFunnelChart() {
                 data={chartData}
                 layout="vertical"
                 barGap={0}
-                barSize={30} // Reduzido para criar barras mais juntas
+                barSize={20} // Reduzido para criar barras mais finas e juntas
                 margin={{
                   top: 20,
                   right: 50,
@@ -266,6 +265,7 @@ export function LeadFunnelChart() {
                   width={120} 
                   tickLine={false}
                   interval={0} // Garante que todas as etiquetas são mostradas
+                  axisLine={false} // Remove a linha do eixo para melhorar a aparência
                 />
                 <ChartTooltip
                   cursor={false}
@@ -283,6 +283,7 @@ export function LeadFunnelChart() {
                   dataKey="valor" 
                   name="Quantidade" 
                   shape={<FunnelBar />}
+                  minPointSize={2} // Garantindo tamanho mínimo para valores pequenos
                 >
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
