@@ -9,6 +9,7 @@ import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { ActivityFunnelStats } from '@/components/dashboard/ActivityFunnelStats';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
+import { LeadFunnelChart } from '@/components/dashboard/LeadFunnelChart';
 
 function Index() {
   console.log("Rendering Dashboard/Index page");
@@ -51,17 +52,20 @@ function Index() {
             </AlertDescription>
           </Alert>
           
-          {/* Segunda e terceira linhas: Funil de conversão */}
+          {/* Segunda e terceira linhas: Funil de conversão de atividades */}
           <ActivityFunnelStats unitId={selectedUnitId} />
           
-          {/* Quarta linha: Gráfico e lista de clientes recentes */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="w-full">
-              <LeadsChart />
-            </div>
-            <div className="w-full">
-              <RecentClientsList />
-            </div>
+          {/* Quarta linha: Funil de conversão de leads */}
+          <LeadFunnelChart />
+          
+          {/* Quinta linha: Gráfico de leads por fonte */}
+          <div className="w-full">
+            <LeadsChart />
+          </div>
+          
+          {/* Sexta linha: Lista de clientes recentes */}
+          <div className="w-full">
+            <RecentClientsList />
           </div>
         </div>
       )}
