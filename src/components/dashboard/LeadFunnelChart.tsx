@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { 
@@ -20,17 +19,13 @@ import { DateRange } from "react-day-picker";
 import { subMonths } from "date-fns";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
-import { InformationCircleIcon } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 
-// Componente personalizado para barras de funil (mais estreitas no topo)
 const FunnelBar = (props: any) => {
   console.log("Renderizando FunnelBar com props:", props);
   
   const { x, y, width, height, fill, index, dataLength } = props;
   
-  // Calcular a largura da barra com base na posição no funil
-  // A primeira barra (topo do funil) tem a largura total
-  // As barras seguintes são proporcionalmente mais estreitas
   const widthRatio = 1 - (index * 0.15);
   const adjustedWidth = width * widthRatio;
   const xOffset = (width - adjustedWidth) / 2;
@@ -57,7 +52,6 @@ export function LeadFunnelChart() {
     to: new Date()
   });
   
-  // Log para verificar o estado do filtro de unidade
   useEffect(() => {
     console.log('LeadFunnelChart - Unidade selecionada:', selectedUnitId);
   }, [selectedUnitId]);
@@ -77,7 +71,6 @@ export function LeadFunnelChart() {
     customRange?.to
   );
   
-  // Log para depuração dos dados recebidos
   useEffect(() => {
     console.log('Dados do funil recebidos:', funnelStats);
     if (error) {
@@ -85,7 +78,6 @@ export function LeadFunnelChart() {
     }
   }, [funnelStats, error]);
   
-  // Preparar dados para o gráfico
   const prepareChartData = () => {
     if (!funnelStats) return [];
     
@@ -93,44 +85,43 @@ export function LeadFunnelChart() {
       {
         name: 'Leads',
         valor: funnelStats.totalLeads,
-        taxa: 100, // 100%
+        taxa: 100,
         legenda: 'Leads Recebidos',
-        color: "#3b82f6" // azul
+        color: "#3b82f6"
       },
       {
         name: 'Contatos',
         valor: funnelStats.effectiveContacts,
         taxa: funnelStats.effectiveContactRate,
         legenda: 'Contatos Efetivos',
-        color: "#10b981" // verde
+        color: "#10b981"
       },
       {
         name: 'Agendamentos',
         valor: funnelStats.scheduledVisits,
         taxa: funnelStats.scheduledVisitsRate,
         legenda: 'Agendamentos',
-        color: "#f59e0b" // âmbar
+        color: "#f59e0b"
       },
       {
         name: 'Atendimentos',
         valor: funnelStats.completedVisits,
         taxa: funnelStats.completedVisitsRate,
         legenda: 'Atendimentos',
-        color: "#6366f1" // índigo
+        color: "#6366f1"
       },
       {
         name: 'Matrículas',
         valor: funnelStats.enrollments,
         taxa: funnelStats.enrollmentsRate,
         legenda: 'Matrículas',
-        color: "#ec4899" // rosa
+        color: "#ec4899"
       }
     ];
   };
   
   const chartData = prepareChartData();
   
-  // Configurações visuais do gráfico
   const chartConfig = {
     lead: { color: "#3b82f6" },
     contato: { color: "#10b981" },
@@ -202,12 +193,10 @@ export function LeadFunnelChart() {
     );
   }
   
-  // Formatador de números para o gráfico
   const formatNumber = (value: number) => {
     return value.toLocaleString('pt-BR');
   };
   
-  // Formatador de percentuais para o gráfico
   const formatPercent = (value: number) => {
     return `${value.toFixed(1)}%`;
   };
@@ -217,7 +206,7 @@ export function LeadFunnelChart() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center space-x-2">
           <CardTitle>Funil de Conversão de Leads</CardTitle>
-          <InformationCircleIcon 
+          <HelpCircle 
             className="h-5 w-5 text-muted-foreground cursor-help" 
             title="Mostra a conversão de leads por etapa (cada lead contado apenas uma vez em cada etapa)"
           />
