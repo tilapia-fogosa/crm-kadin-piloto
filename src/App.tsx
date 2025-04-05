@@ -1,5 +1,5 @@
 
-import React from "react"; // Adicionada a importação explícita do React
+import React from "react"; // Importação explícita do React
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -29,27 +29,23 @@ import UserManagementPage from "@/pages/admin/user-management";
 import UpdatesPage from "@/pages/updates/index";
 import UpdatesAdminPage from "@/pages/updates/admin";
 
-// Criando uma nova instância do QueryClient fora do componente para evitar reinicializações
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 4 * 60 * 60 * 1000, // 4 horas
-      gcTime: 5 * 60 * 60 * 1000, // 5 horas
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-// Log para depuração
-console.log('Inicializando App com QueryClient:', queryClient);
-
+// Componente App que contém o QueryClientProvider
 function App() {
-  // Log para verificar se o componente está renderizando
   console.log('Renderizando componente App');
   
+  // Criar QueryClient dentro do componente (não fora dele)
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 4 * 60 * 60 * 1000, // 4 horas
+        gcTime: 5 * 60 * 60 * 1000, // 5 horas
+        retry: 1,
+        refetchOnWindowFocus: false,
+      },
+    },
+  });
+  
   return (
-    // Não criar uma nova instância de QueryClient a cada renderização
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
