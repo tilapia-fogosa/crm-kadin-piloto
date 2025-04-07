@@ -17,7 +17,7 @@ interface FunnelLabelsProps {
 
 /**
  * Componente que renderiza os rótulos à esquerda e direita do funil
- * Exibe o nome da etapa e os valores de conversão
+ * Exibe o nome da etapa e os valores de conversão utilizando a paleta de laranja
  */
 export const FunnelLabels: React.FC<FunnelLabelsProps> = ({ 
   data, 
