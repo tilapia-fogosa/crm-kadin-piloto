@@ -2,21 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
   ResponsiveContainer,
-  LabelList
+  Tooltip as RechartsTooltip,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis
 } from "recharts";
 import { DateRangePicker } from "./DateRangePicker";
 import { useLeadFunnelStats, DateRangeType } from "@/hooks/useLeadFunnelStats";
 import { useUnit } from "@/contexts/UnitContext";
 import { DateRange } from "react-day-picker";
 import { subMonths } from "date-fns";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
+import { ChartContainer, ChartTooltipContent } from "../ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HelpCircle } from "lucide-react";
 import {
@@ -26,57 +24,31 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Componente para criar barras em formato de trapézio para efeito visual de funil
-const FunnelBar = (props: any) => {
-  console.log("Renderizando FunnelBar com props:", props);
+// Componente personalizado para o tooltip
+const CustomTooltip = ({ active, payload }: any) => {
+  // Log para depuração do tooltip
+  console.log("Tooltip payload:", payload);
   
-  const { x, y, width, height, fill, dataKey, value, index } = props;
-  
-  // Calculando a largura superior e inferior do trapézio
-  // O trapézio vai ficando mais estreito conforme descemos no funil
-  const topWidth = width;
-  const bottomWidth = width * (1 - ((index + 1) * 0.15));
-  
-  // Calculando as coordenadas dos quatro pontos do trapézio
-  const points = [
-    { x: x, y: y }, // Ponto superior esquerdo
-    { x: x + topWidth, y: y }, // Ponto superior direito
-    { x: x + ((topWidth - bottomWidth) / 2) + bottomWidth, y: y + height }, // Ponto inferior direito
-    { x: x + (topWidth - bottomWidth) / 2, y: y + height } // Ponto inferior esquerdo
-  ];
-  
-  // Convertendo os pontos para formato do polígono SVG
-  const pointsString = points.map(point => `${point.x},${point.y}`).join(' ');
-  
-  return (
-    <g>
-      <polygon 
-        points={pointsString} 
-        fill={fill} 
-        stroke={fill}
-      />
-      {value > 0 && (
-        <text 
-          x={x + width + 10} 
-          y={y + height / 2} 
-          textAnchor="start" 
-          dominantBaseline="middle"
-          fill="#000"
-          fontSize="12"
-          fontWeight="bold"
-        >
-          {value}
-        </text>
-      )}
-    </g>
-  );
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    
+    return (
+      <div className="bg-white p-3 border rounded-md shadow-md">
+        <p className="font-bold text-gray-800">{data.legenda}</p>
+        <p className="text-sm text-gray-600">Quantidade: <span className="font-medium">{data.valor}</span></p>
+        <p className="text-sm text-gray-600">Taxa de Conversão: <span className="font-medium">{data.taxa.toFixed(1)}%</span></p>
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export function LeadFunnelChart() {
   console.log('Renderizando LeadFunnelChart');
   
   const { selectedUnitId } = useUnit();
-  const [dateRange, setDateRange] = useState<DateRangeType>('current-month'); // Padrão agora é mês atual
+  const [dateRange, setDateRange] = useState<DateRangeType>('current-month');
   const [customRange, setCustomRange] = useState<DateRange | undefined>({
     from: subMonths(new Date(), 1),
     to: new Date()
@@ -108,9 +80,11 @@ export function LeadFunnelChart() {
     }
   }, [funnelStats, error]);
   
+  // Preparar dados para o gráfico de funil simétrico
   const prepareChartData = () => {
     if (!funnelStats) return [];
     
+    // Criamos o array de dados para o funil
     return [
       {
         name: 'Leads',
@@ -160,6 +134,7 @@ export function LeadFunnelChart() {
     matricula: { color: "#ec4899" }
   };
   
+  // Renderização para os diferentes estados
   if (isLoading) {
     return (
       <Card>
@@ -231,6 +206,33 @@ export function LeadFunnelChart() {
     return `${value.toFixed(1)}%`;
   };
   
+  // Função para mapear valores para renderizar o funil simétrico
+  const transformDataForSymmetricalFunnel = (data: any[]) => {
+    console.log("Transformando dados para funil simétrico:", data);
+    
+    // Valor máximo para dimensionar o funil
+    const maxValue = Math.max(...data.map(item => item.valor)) * 1.2;
+    
+    return data.map((item, index) => {
+      // Calculamos a largura relativa ao valor máximo
+      const funnelWidth = (item.valor / maxValue) * 100;
+      
+      return {
+        ...item,
+        // Valores para a área esquerda e direita do funil (simétrico)
+        left: (100 - funnelWidth) / 2,
+        right: (100 - funnelWidth) / 2 + funnelWidth,
+        // Para uso no gráfico de área
+        valueLeft: (100 - funnelWidth) / 2,
+        valueRight: funnelWidth,
+        // Para identificar posição no funil
+        step: index
+      };
+    });
+  };
+  
+  const symmetricalData = transformDataForSymmetricalFunnel(chartData);
+  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -256,61 +258,87 @@ export function LeadFunnelChart() {
         />
       </CardHeader>
       <CardContent>
-        <div className="h-[350px] overflow-hidden">
-          <ChartContainer config={chartConfig}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                layout="vertical"
-                margin={{
-                  top: 20,
-                  right: 50,
-                  left: 20,
-                  bottom: 5
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                <XAxis 
-                  type="number" 
-                  domain={[0, Math.max(funnelStats.totalLeads * 1.1, 10)]}
-                  hide // Escondendo o eixo X para melhorar a visualização do funil
-                />
-                <YAxis 
-                  type="category" 
-                  dataKey="legenda" 
-                  width={120} 
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <ChartTooltip
-                  cursor={false}
-                  content={
-                    <ChartTooltipContent 
-                      formatter={(value: any, name: any, props: any) => {
-                        if (name === 'valor') return [formatNumber(value), 'Quantidade'];
-                        if (name === 'taxa') return [formatPercent(value), 'Taxa de Conversão'];
-                        return [value, name];
-                      }}
-                    />
-                  }
-                />
-                {chartData.map((entry, index) => (
-                  <Bar 
-                    key={entry.name}
-                    dataKey="valor" 
-                    name="Quantidade" 
-                    fill={entry.color}
-                    shape={<FunnelBar />}
-                    isAnimationActive={true}
-                    animationDuration={800}
-                    animationEasing="ease-in-out"
-                  />
+        {/* Gráfico de funil simétrico usando áreas */}
+        <div className="h-[350px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={symmetricalData}
+              margin={{ top: 20, right: 30, left: 30, bottom: 60 }}
+              layout="vertical"
+            >
+              <XAxis 
+                type="number" 
+                domain={[0, 100]} 
+                hide 
+              />
+              <YAxis 
+                dataKey="step" 
+                type="number" 
+                domain={[0, 4]} 
+                hide 
+              />
+              <RechartsTooltip content={<CustomTooltip />} />
+              <defs>
+                {symmetricalData.map((entry, index) => (
+                  <linearGradient key={`gradient-${index}`} id={`gradientLeft${index}`} x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor={entry.color} stopOpacity={0} />
+                    <stop offset="100%" stopColor={entry.color} stopOpacity={0.8} />
+                  </linearGradient>
                 ))}
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+                {symmetricalData.map((entry, index) => (
+                  <linearGradient key={`gradient-right-${index}`} id={`gradientRight${index}`} x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor={entry.color} stopOpacity={0.8} />
+                    <stop offset="100%" stopColor={entry.color} stopOpacity={0} />
+                  </linearGradient>
+                ))}
+              </defs>
+              {/* Lado esquerdo do funil */}
+              <Area 
+                dataKey="valueLeft" 
+                stackId="1" 
+                stroke="none" 
+                isAnimationActive={true}
+                fill={(_, index) => `url(#gradientLeft${index})`}
+              />
+              {/* Lado direito do funil */}
+              <Area 
+                dataKey="valueRight" 
+                stackId="1" 
+                stroke="none" 
+                isAnimationActive={true}
+                fill={(_, index) => `url(#gradientRight${index})`}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
-        <div className="grid grid-cols-5 gap-4 mt-4 p-2 bg-slate-50 rounded-md">
+        
+        {/* Labels à esquerda e direita do funil */}
+        <div className="relative -mt-[350px] h-[350px] pointer-events-none">
+          {symmetricalData.map((item, index) => (
+            <div 
+              key={index} 
+              className="absolute flex justify-between w-full px-8"
+              style={{ 
+                top: `${20 + (index * 70)}px`, 
+              }}
+            >
+              {/* Label esquerdo */}
+              <div className="text-right">
+                <span className="font-bold" style={{ color: item.color }}>{item.legenda}</span>
+              </div>
+              
+              {/* Label direito com números */}
+              <div className="text-left">
+                <span className="font-bold" style={{ color: item.color }}>
+                  {formatNumber(item.valor)} <span className="text-sm">({formatPercent(item.taxa)})</span>
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Estatísticas resumidas */}
+        <div className="grid grid-cols-5 gap-4 mt-16 p-2 bg-slate-50 rounded-md">
           {chartData.map((item, index) => (
             <div key={index} className="text-center p-2 border-r last:border-r-0 border-slate-200">
               <div className="text-sm font-medium">{item.legenda}</div>
