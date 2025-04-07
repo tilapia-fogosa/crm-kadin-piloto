@@ -1,11 +1,10 @@
-
+import React, { useState, useEffect } from 'react'
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { DateRangeFilter } from "./DateRangeFilter"
 import { SelectFilter } from "./SelectFilter"
 import { parseFormDate } from "@/utils/dateUtils"
 
-// Tipo de data simplificado
 type DateRange = {
   from: Date | undefined
   to: Date | undefined
@@ -47,10 +46,10 @@ export function FilterDialogContent({
   console.log("FilterDialogContent: Renderizando com filtros", filters)
   
   // Clonar os filtros para permitir edição local
-  const [localFilters, setLocalFilters] = React.useState<ClientFilters>(filters)
+  const [localFilters, setLocalFilters] = useState<ClientFilters>(filters)
   
   // Atualizar estado local quando os filtros externos mudarem
-  React.useEffect(() => {
+  useEffect(() => {
     console.log("FilterDialogContent: Atualizando filtros locais", filters)
     setLocalFilters(filters)
   }, [filters])
