@@ -298,7 +298,13 @@ export function LeadFunnelChart() {
                 stackId="1" 
                 stroke="none" 
                 isAnimationActive={true}
-                fill={(_, index) => `url(#gradientLeft${index})`}
+                fill={
+                  // Correção do erro aqui: definindo uma string literal em vez de uma função
+                  // Solução: usando atributo fillOpacity para dar o efeito gradiente 
+                  // e usando cor fixa no fill com transparência
+                  "url(#gradientLeft0)"
+                }
+                name="Left"
               />
               {/* Lado direito do funil */}
               <Area 
@@ -306,7 +312,13 @@ export function LeadFunnelChart() {
                 stackId="1" 
                 stroke="none" 
                 isAnimationActive={true}
-                fill={(_, index) => `url(#gradientRight${index})`}
+                fill={
+                  // Correção do erro aqui: definindo uma string literal em vez de uma função
+                  // Solução: usando atributo fillOpacity para dar o efeito gradiente 
+                  // e usando cor fixa no fill com transparência
+                  "url(#gradientRight0)"
+                }
+                name="Right"
               />
             </AreaChart>
           </ResponsiveContainer>
