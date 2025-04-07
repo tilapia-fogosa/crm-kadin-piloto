@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from 'react'
-import { format, isValid, parseISO } from 'date-fns'
+import { format, isValid, parseISO, endOfDay, startOfDay } from 'date-fns'
 
 type Client = {
   id: string
@@ -90,19 +90,41 @@ export function useClientFiltering(clients: Client[] = []) {
       console.log('Aplicando filtro de data:', filters.dateRange)
       
       result = result.filter(client => {
+        // Parseamos a data do cliente
         const clientDate = parseISO(client.created_at)
-        if (!isValid(clientDate)) return false
+        if (!isValid(clientDate)) {
+          console.log('Data inválida para cliente:', client.id, client.created_at)
+          return false
+        }
         
-        const isAfterFrom = filters.dateRange?.from 
-          ? clientDate >= filters.dateRange.from 
+        // Aplicamos startOfDay à data "from" para garantir que comece às 00:00:00
+        const fromDate = filters.dateRange?.from 
+          ? startOfDay(filters.dateRange.from)
+          : undefined
+        
+        // Aplicamos endOfDay à data "to" para garantir que termine às 23:59:59.999
+        const toDate = filters.dateRange?.to 
+          ? endOfDay(filters.dateRange.to) 
+          : undefined
+        
+        // Verificação da data "from"
+        const isAfterFrom = fromDate 
+          ? clientDate >= fromDate 
           : true
           
-        const isBeforeTo = filters.dateRange?.to 
-          ? clientDate <= filters.dateRange.to 
+        // Verificação da data "to"
+        const isBeforeTo = toDate 
+          ? clientDate <= toDate 
           : true
-          
-        return isAfterFrom && isBeforeTo
+        
+        const includeClient = isAfterFrom && isBeforeTo
+        
+        console.log(`Cliente ${client.id} (${format(clientDate, 'dd/MM/yyyy HH:mm:ss')}): ${includeClient ? 'incluído' : 'excluído'} no filtro de ${fromDate ? format(fromDate, 'dd/MM/yyyy HH:mm:ss') : 'sem início'} até ${toDate ? format(toDate, 'dd/MM/yyyy HH:mm:ss') : 'sem fim'}`)
+        
+        return includeClient
       })
+      
+      console.log(`Após filtro de data: ${result.length} clientes encontrados`)
     }
 
     if (filters.status) {
