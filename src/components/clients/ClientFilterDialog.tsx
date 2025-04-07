@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -52,6 +53,7 @@ export function ClientFilterDialog({
 
   // Atualizar estado local quando os filtros externos mudarem
   useEffect(() => {
+    console.log("ClientFilterDialog: Atualizando filtros locais", filters)
     setLocalFilters(filters)
   }, [filters])
 
@@ -144,6 +146,7 @@ export function ClientFilterDialog({
                     mode="range"
                     selected={localFilters.dateRange || { from: undefined, to: undefined }}
                     onSelect={(range) => {
+                      console.log("Nova seleção de data:", range)
                       setLocalFilters({
                         ...localFilters,
                         dateRange: range || null
@@ -163,17 +166,20 @@ export function ClientFilterDialog({
             <div className="grid gap-2">
               <label className="text-sm font-medium">Status</label>
               <Select
-                value={localFilters.status || ""}
-                onValueChange={(value) => setLocalFilters({
-                  ...localFilters,
-                  status: value || null
-                })}
+                value={localFilters.status || "all"}
+                onValueChange={(value) => {
+                  console.log("Novo status selecionado:", value)
+                  setLocalFilters({
+                    ...localFilters,
+                    status: value === "all" ? null : value
+                  })
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   {filterOptions.statuses.map((status) => (
                     <SelectItem key={status} value={status}>
                       {status}
@@ -187,17 +193,20 @@ export function ClientFilterDialog({
             <div className="grid gap-2">
               <label className="text-sm font-medium">Origem do Lead</label>
               <Select
-                value={localFilters.leadSource || ""}
-                onValueChange={(value) => setLocalFilters({
-                  ...localFilters,
-                  leadSource: value || null
-                })}
+                value={localFilters.leadSource || "all"}
+                onValueChange={(value) => {
+                  console.log("Nova origem selecionada:", value)
+                  setLocalFilters({
+                    ...localFilters,
+                    leadSource: value === "all" ? null : value
+                  })
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma origem" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas</SelectItem>
+                  <SelectItem value="all">Todas</SelectItem>
                   {filterOptions.leadSources.map((source) => (
                     <SelectItem key={source} value={source}>
                       {source}
@@ -211,17 +220,20 @@ export function ClientFilterDialog({
             <div className="grid gap-2">
               <label className="text-sm font-medium">Anúncio</label>
               <Select
-                value={localFilters.originalAd || ""}
-                onValueChange={(value) => setLocalFilters({
-                  ...localFilters,
-                  originalAd: value || null
-                })}
+                value={localFilters.originalAd || "all"}
+                onValueChange={(value) => {
+                  console.log("Novo anúncio selecionado:", value)
+                  setLocalFilters({
+                    ...localFilters,
+                    originalAd: value === "all" ? null : value
+                  })
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um anúncio" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   {filterOptions.originalAds.map((ad) => (
                     <SelectItem key={ad} value={ad}>
                       {ad}
@@ -235,17 +247,20 @@ export function ClientFilterDialog({
             <div className="grid gap-2">
               <label className="text-sm font-medium">Responsável pelo Cadastro</label>
               <Select
-                value={localFilters.registrationName || ""}
-                onValueChange={(value) => setLocalFilters({
-                  ...localFilters,
-                  registrationName: value || null
-                })}
+                value={localFilters.registrationName || "all"}
+                onValueChange={(value) => {
+                  console.log("Novo responsável selecionado:", value)
+                  setLocalFilters({
+                    ...localFilters,
+                    registrationName: value === "all" ? null : value
+                  })
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um responsável" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   {filterOptions.registrationNames.map((name) => (
                     <SelectItem key={name} value={name}>
                       {name}
