@@ -18,7 +18,7 @@ interface FunnelSummaryProps {
 /**
  * Componente que renderiza um resumo das estatísticas do funil
  * Exibe um grid com todas as etapas do funil e seus valores
- * Utiliza a paleta de laranja para cada estágio
+ * Utiliza a escala de laranja para cada estágio
  */
 export const FunnelSummary: React.FC<FunnelSummaryProps> = ({ 
   data, 

@@ -49,51 +49,34 @@ export const SymmetricalFunnelChart: React.FC<SymmetricalFunnelChartProps> = ({ 
           <YAxis 
             dataKey="step" 
             type="number" 
-            domain={[0, 4]} 
+            domain={[0, data.length - 1]} 
             hide 
           />
           <RechartsTooltip content={<FunnelTooltip />} />
+          
+          {/* Definir gradientes para cada etapa do funil */}
           <defs>
             {data.map((entry, index) => (
-              <linearGradient key={`gradient-left-${index}`} id={`gradientLeft${index}`} x1="0" y1="0" x2="1" y2="0">
+              <linearGradient key={`gradient-${index}`} id={`gradient${index}`} x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor={entry.color} stopOpacity={0} />
-                <stop offset="100%" stopColor={entry.color} stopOpacity={0.8} />
-              </linearGradient>
-            ))}
-            {data.map((entry, index) => (
-              <linearGradient key={`gradient-right-${index}`} id={`gradientRight${index}`} x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor={entry.color} stopOpacity={0.8} />
+                <stop offset="50%" stopColor={entry.color} stopOpacity={0.9} />
                 <stop offset="100%" stopColor={entry.color} stopOpacity={0} />
               </linearGradient>
             ))}
           </defs>
           
-          {/* Mapeia cada etapa do funil com seu respectivo gradiente */}
-          {data.map((item, index) => (
-            <React.Fragment key={`area-${index}`}>
-              {/* Lado esquerdo do funil */}
-              <Area 
-                dataKey="valueLeft" 
-                stackId="1" 
-                stroke="none" 
-                isAnimationActive={true}
-                fill={`url(#gradientLeft${index})`}
-                name="Left"
-                fillOpacity={1}
-                filter={index === data.length - 1 ? "none" : undefined}
-              />
-              {/* Lado direito do funil */}
-              <Area 
-                dataKey="valueRight" 
-                stackId="1" 
-                stroke="none" 
-                isAnimationActive={true}
-                fill={`url(#gradientRight${index})`}
-                name="Right"
-                fillOpacity={1}
-                filter={index === data.length - 1 ? "none" : undefined}
-              />
-            </React.Fragment>
+          {/* Renderizar cada etapa do funil como uma área única */}
+          {data.map((_, index) => (
+            <Area 
+              key={`area-${index}`}
+              dataKey={`valueRight`}
+              stackId="1"
+              stroke="none"
+              fill={`url(#gradient${index})`}
+              fillOpacity={1}
+              isAnimationActive={true}
+              data={[data[index]]}
+            />
           ))}
         </AreaChart>
       </ResponsiveContainer>

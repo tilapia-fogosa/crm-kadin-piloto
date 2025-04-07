@@ -17,7 +17,7 @@ interface FunnelLabelsProps {
 
 /**
  * Componente que renderiza os rótulos à esquerda e direita do funil
- * Exibe o nome da etapa e os valores de conversão utilizando a paleta de laranja
+ * Exibe o nome da etapa e os valores de conversão utilizando a escala de laranja
  */
 export const FunnelLabels: React.FC<FunnelLabelsProps> = ({ 
   data, 
@@ -26,6 +26,10 @@ export const FunnelLabels: React.FC<FunnelLabelsProps> = ({
 }) => {
   console.log("Renderizando FunnelLabels com dados:", data);
   
+  // Calculamos o espaçamento vertical baseado no número de etapas
+  const verticalSpacing = 320 / (data.length + 1);
+  const topOffset = 15; // Um pequeno offset inicial
+  
   return (
     <div className="relative -mt-[350px] h-[350px] pointer-events-none">
       {data.map((item, index) => (
@@ -33,7 +37,7 @@ export const FunnelLabels: React.FC<FunnelLabelsProps> = ({
           key={index} 
           className="absolute flex justify-between w-full px-8"
           style={{ 
-            top: `${20 + (index * 70)}px`, 
+            top: `${topOffset + (index * verticalSpacing)}px`, 
           }}
         >
           {/* Label esquerdo */}
