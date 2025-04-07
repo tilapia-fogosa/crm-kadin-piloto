@@ -10,6 +10,8 @@ import { useUnit } from "@/contexts/UnitContext"
 import { Input } from "@/components/ui/input"
 import { useClientFiltering } from "@/hooks/useClientFiltering"
 import { ClientsPagination } from "@/components/clients/ClientsPagination"
+import { ClientFilterDialog } from "@/components/clients/ClientFilterDialog"
+import { Search } from "lucide-react"
 
 export default function ClientsPage() {
   const [clientToDelete, setClientToDelete] = useState<any>(null)
@@ -38,6 +40,7 @@ export default function ClientsPage() {
           created_at,
           original_ad,
           original_adset,
+          registration_name,
           client_activities (
             id,
             tipo_contato,
@@ -69,7 +72,12 @@ export default function ClientsPage() {
     setCurrentPage,
     paginatedClients,
     totalPages,
-    totalResults
+    totalResults,
+    filters,
+    applyFilters,
+    resetFilters,
+    isFilterActive,
+    filterOptions
   } = useClientFiltering(clients)
 
   useEffect(() => {
@@ -123,16 +131,28 @@ export default function ClientsPage() {
         <div>Selecione uma unidade para ver os clientes</div>
       ) : (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center space-x-2">
-              <Input
-                type="search"
-                placeholder="Buscar por nome ou telefone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Buscar por nome ou telefone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-[250px] pl-8 md:w-[300px]"
+                />
+              </div>
+              
+              <ClientFilterDialog 
+                filters={filters}
+                filterOptions={filterOptions}
+                applyFilters={applyFilters}
+                resetFilters={resetFilters}
+                isFilterActive={isFilterActive}
               />
             </div>
+            
             <div className="text-sm text-muted-foreground">
               Total: {totalResults} clientes
             </div>
