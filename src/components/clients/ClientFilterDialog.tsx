@@ -3,14 +3,13 @@ import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CalendarIcon, FilterIcon, X } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
+import { FilterIcon, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { formatDateForInput, parseFormDate } from "@/utils/dateUtils"
 
-// Tipo de filtros - Atualizado para compatibilidade com react-day-picker
+// Tipo de filtros - Atualizado para compatibilidade com useClientFiltering
 type DateRange = {
   from: Date | undefined
   to: Date | undefined
@@ -49,28 +48,44 @@ export function ClientFilterDialog({
   // Estado local para os filtros (permitindo cancelar mudanças)
   const [localFilters, setLocalFilters] = useState<ClientFilters>(filters)
   const [open, setOpen] = useState(false)
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  
+  // Estados para inputs de data
+  const [fromDate, setFromDate] = useState<string>("")
+  const [toDate, setToDate] = useState<string>("")
 
   // Atualizar estado local quando os filtros externos mudarem
   useEffect(() => {
     console.log("ClientFilterDialog: Atualizando filtros locais", filters)
     setLocalFilters(filters)
+    
+    // Atualizar inputs de data
+    if (filters.dateRange?.from) {
+      setFromDate(formatDateForInput(filters.dateRange.from))
+    } else {
+      setFromDate("")
+    }
+    
+    if (filters.dateRange?.to) {
+      setToDate(formatDateForInput(filters.dateRange.to))
+    } else {
+      setToDate("")
+    }
   }, [filters])
 
-  // Formatador de data para exibição
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return ""
-    return format(date, "dd/MM/yyyy", { locale: ptBR })
-  }
-
-  // Obter descrição do intervalo de datas selecionado
-  const getDateRangeText = () => {
-    if (!localFilters.dateRange?.from) return "Selecionar período"
+  // Atualizar o filtro de data quando os inputs mudarem
+  const handleDateChange = (from: string, to: string) => {
+    console.log("Atualizando filtro de data:", { from, to })
     
-    const fromText = formatDate(localFilters.dateRange.from)
-    const toText = localFilters.dateRange.to ? formatDate(localFilters.dateRange.to) : formatDate(localFilters.dateRange.from)
+    const fromDateObj = parseFormDate(from)
+    const toDateObj = parseFormDate(to)
     
-    return `${fromText} - ${toText}`
+    setLocalFilters({
+      ...localFilters,
+      dateRange: {
+        from: fromDateObj,
+        to: toDateObj
+      }
+    })
   }
 
   // Manipulador para aplicar os filtros
@@ -91,6 +106,8 @@ export function ClientFilterDialog({
       registrationName: null
     }
     setLocalFilters(emptyFilters)
+    setFromDate("")
+    setToDate("")
   }
 
   // Manipulador para resetar os filtros (botão externo)
@@ -127,44 +144,42 @@ export function ClientFilterDialog({
           </DialogHeader>
           
           <div className="py-4 space-y-4">
-            {/* Filtro por período (created_at) */}
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Período de cadastro</label>
-              <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {getDateRangeText()}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    selected={localFilters.dateRange || { from: undefined, to: undefined }}
-                    onSelect={(range) => {
-                      console.log("Nova seleção de data:", range)
-                      setLocalFilters({
-                        ...localFilters,
-                        dateRange: range || null
-                      })
-                      if (range?.from && range?.to) {
-                        setIsDatePickerOpen(false)
-                      }
+            {/* Filtro por período (created_at) - Usando inputs HTML simples */}
+            <div className="space-y-4">
+              <Label className="text-sm font-medium">Período de cadastro</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date-from">De</Label>
+                  <Input 
+                    id="date-from"
+                    type="date" 
+                    value={fromDate} 
+                    onChange={(e) => {
+                      const newValue = e.target.value
+                      setFromDate(newValue)
+                      handleDateChange(newValue, toDate)
                     }}
-                    locale={ptBR}
-                    numberOfMonths={2}
                   />
-                </PopoverContent>
-              </Popover>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="date-to">Até</Label>
+                  <Input 
+                    id="date-to"
+                    type="date" 
+                    value={toDate} 
+                    onChange={(e) => {
+                      const newValue = e.target.value
+                      setToDate(newValue)
+                      handleDateChange(fromDate, newValue)
+                    }}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Filtro por Status */}
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Status</label>
+              <Label className="text-sm font-medium">Status</Label>
               <Select
                 value={localFilters.status || "all"}
                 onValueChange={(value) => {
@@ -191,7 +206,7 @@ export function ClientFilterDialog({
 
             {/* Filtro por Origem (lead_source) */}
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Origem do Lead</label>
+              <Label className="text-sm font-medium">Origem do Lead</Label>
               <Select
                 value={localFilters.leadSource || "all"}
                 onValueChange={(value) => {
@@ -218,7 +233,7 @@ export function ClientFilterDialog({
 
             {/* Filtro por Anúncio (original_ad) */}
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Anúncio</label>
+              <Label className="text-sm font-medium">Anúncio</Label>
               <Select
                 value={localFilters.originalAd || "all"}
                 onValueChange={(value) => {
@@ -245,7 +260,7 @@ export function ClientFilterDialog({
 
             {/* Filtro por Responsável (registration_name) */}
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Responsável pelo Cadastro</label>
+              <Label className="text-sm font-medium">Responsável pelo Cadastro</Label>
               <Select
                 value={localFilters.registrationName || "all"}
                 onValueChange={(value) => {

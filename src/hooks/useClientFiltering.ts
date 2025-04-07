@@ -14,6 +14,7 @@ type Client = {
   [key: string]: any
 }
 
+// Tipo de data simplificado compatível com componentes NextContactDate/NextContactDateTime
 type DateRange = {
   from: Date | undefined
   to: Date | undefined
