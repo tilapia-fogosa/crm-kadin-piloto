@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -10,7 +9,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 
-// Tipo de filtros
+// Tipo de filtros - Atualizado para compatibilidade com react-day-picker
 type DateRange = {
   from: Date | undefined
   to: Date | undefined

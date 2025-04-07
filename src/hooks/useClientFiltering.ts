@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react'
 import { format, isValid, parseISO } from 'date-fns'
 
@@ -46,8 +45,8 @@ export function useClientFiltering(clients: Client[] = []) {
   console.log('Current page:', currentPage)
   console.log('Active filters:', filters)
 
-  // Valores únicos para os filtros de dropdown
   const filterOptions = useMemo(() => {
+    console.log('Calculando opções de filtro a partir de', clients.length, 'clientes');
     const statusSet = new Set<string>()
     const leadSourceSet = new Set<string>()
     const originalAdSet = new Set<string>()
@@ -68,16 +67,13 @@ export function useClientFiltering(clients: Client[] = []) {
     }
   }, [clients])
 
-  // Aplicar todos os filtros aos clientes
   const filteredClients = useMemo(() => {
     if (!clients.length) return []
     
-    // Log do início do processo de filtragem
     console.log('Iniciando filtragem de clientes...')
     
     let result = clients
 
-    // Filtragem por texto (nome ou telefone)
     if (searchTerm.trim()) {
       const normalizedSearch = searchTerm.toLowerCase().trim()
       console.log('Aplicando filtro de texto:', normalizedSearch)
@@ -88,7 +84,6 @@ export function useClientFiltering(clients: Client[] = []) {
       )
     }
 
-    // Filtro por período (created_at)
     if (filters.dateRange?.from) {
       console.log('Aplicando filtro de data:', filters.dateRange)
       
@@ -96,7 +91,6 @@ export function useClientFiltering(clients: Client[] = []) {
         const clientDate = parseISO(client.created_at)
         if (!isValid(clientDate)) return false
         
-        // Verificar se a data está dentro do intervalo
         const isAfterFrom = filters.dateRange?.from 
           ? clientDate >= filters.dateRange.from 
           : true
@@ -109,25 +103,21 @@ export function useClientFiltering(clients: Client[] = []) {
       })
     }
 
-    // Filtro por status
     if (filters.status) {
       console.log('Aplicando filtro de status:', filters.status)
       result = result.filter(client => client.status === filters.status)
     }
 
-    // Filtro por origem (lead_source)
     if (filters.leadSource) {
       console.log('Aplicando filtro de origem:', filters.leadSource)
       result = result.filter(client => client.lead_source === filters.leadSource)
     }
 
-    // Filtro por anúncio (original_ad)
     if (filters.originalAd) {
       console.log('Aplicando filtro de anúncio:', filters.originalAd)
       result = result.filter(client => client.original_ad === filters.originalAd)
     }
 
-    // Filtro por responsável (registration_name)
     if (filters.registrationName) {
       console.log('Aplicando filtro de responsável:', filters.registrationName)
       result = result.filter(client => client.registration_name === filters.registrationName)
@@ -137,7 +127,6 @@ export function useClientFiltering(clients: Client[] = []) {
     return result
   }, [clients, searchTerm, filters])
 
-  // Paginação dos resultados
   const paginatedClients = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
     return filteredClients.slice(startIndex, startIndex + itemsPerPage)
@@ -145,7 +134,6 @@ export function useClientFiltering(clients: Client[] = []) {
 
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage)
 
-  // Verificar se algum filtro está ativo
   useMemo(() => {
     const hasActiveFilters = filters.dateRange?.from !== undefined || 
       filters.status !== null || 
@@ -156,14 +144,12 @@ export function useClientFiltering(clients: Client[] = []) {
     setIsFilterActive(hasActiveFilters)
   }, [filters])
 
-  // Função para aplicar novos filtros
   const applyFilters = (newFilters: ClientFilters) => {
     console.log('Aplicando novos filtros:', newFilters)
     setFilters(newFilters)
-    setCurrentPage(1) // Resetar para a primeira página ao filtrar
+    setCurrentPage(1)
   }
 
-  // Função para resetar todos os filtros
   const resetFilters = () => {
     console.log('Resetando todos os filtros')
     setFilters(initialFilters)
