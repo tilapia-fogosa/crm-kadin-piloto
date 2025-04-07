@@ -26,6 +26,52 @@ export interface LeadFunnelStats {
   enrollmentsRate: number;
 }
 
+// Função auxiliar para determinar a progressão máxima do cliente baseado nas atividades
+const getClientMaxProgression = (activities: any[] = []) => {
+  // Log inicial para rastreamento
+  console.log(`Analisando ${activities.length} atividades para determinar progressão máxima`);
+  
+  // Define resultado padrão (nenhuma progressão)
+  let result = {
+    hasEffectiveContact: false,
+    hasScheduledVisit: false,
+    hasCompletedVisit: false,
+    hasEnrollment: false
+  };
+  
+  // Se não há atividades, retorna padrão
+  if (!activities || activities.length === 0) {
+    return result;
+  }
+  
+  // Analisa cada atividade para determinar a progressão máxima
+  activities.forEach(activity => {
+    const tipo = activity.tipo_atividade;
+    
+    // Verifica cada tipo de atividade e marca na progressão
+    if (['Contato Efetivo', 'Agendamento', 'Atendimento', 'Matrícula'].includes(tipo)) {
+      result.hasEffectiveContact = true;
+    }
+    
+    if (['Agendamento', 'Atendimento', 'Matrícula'].includes(tipo)) {
+      result.hasScheduledVisit = true;
+    }
+    
+    if (['Atendimento', 'Matrícula'].includes(tipo)) {
+      result.hasCompletedVisit = true;
+    }
+    
+    if (tipo === 'Matrícula') {
+      result.hasEnrollment = true;
+    }
+  });
+  
+  // Log final para depuração
+  console.log("Progressão máxima determinada:", result);
+  
+  return result;
+};
+
 export function useLeadFunnelStats(
   unitId: string | null,
   dateRange: DateRangeType,
@@ -70,21 +116,18 @@ export function useLeadFunnelStats(
       });
 
       try {
-        // 1. Buscar todos os leads ATIVOS criados no período para a unidade específica
+        // Buscar todos os leads ATIVOS E INATIVOS criados no período (incluindo perdidos)
         const { data: leads, error: leadsError } = await supabase
           .from('clients')
-          .select('id, created_at, status')
+          .select('id, created_at, status, client_activities(id, tipo_atividade, created_at)')
           .eq('unit_id', unitId)
-          .eq('active', true) // Garantindo que pegamos apenas leads ativos
           .gte('created_at', queryStartDate.toISOString())
           .lte('created_at', queryEndDate.toISOString());
-
+        
         if (leadsError) {
           console.error('Erro ao buscar leads:', leadsError);
           throw leadsError;
         }
-        
-        console.log(`Encontrados ${leads?.length || 0} leads ATIVOS no período para unidade ${unitId}`);
         
         if (!leads || leads.length === 0) {
           console.log('Nenhum lead encontrado no período selecionado');
@@ -101,28 +144,29 @@ export function useLeadFunnelStats(
           };
         }
         
-        // 2. Calcular as estatísticas analisando os status dos leads
-        // Buscar leads com contato efetivo (status contato-efetivo ou superior)
-        const effectiveContacts = leads.filter(lead => 
-          ['contato-efetivo', 'atendimento-agendado', 'atendimento-realizado', 'negociacao', 'matriculado'].includes(lead.status)
-        ).length;
+        console.log(`Encontrados ${leads.length} leads no período para unidade ${unitId}`);
         
-        // Buscar leads com agendamento (status atendimento-agendado ou superior)
-        const scheduledVisits = leads.filter(lead => 
-          ['atendimento-agendado', 'atendimento-realizado', 'negociacao', 'matriculado'].includes(lead.status)
-        ).length;
+        // Processar cada lead para determinar sua progressão máxima
+        let effectiveContacts = 0;
+        let scheduledVisits = 0;
+        let completedVisits = 0;
+        let enrollments = 0;
         
-        // Buscar leads com atendimento realizado (status atendimento-realizado ou superior)
-        const completedVisits = leads.filter(lead => 
-          ['atendimento-realizado', 'negociacao', 'matriculado'].includes(lead.status)
-        ).length;
+        leads.forEach(lead => {
+          // Analisar atividades para determinar a progressão máxima do lead
+          const progression = getClientMaxProgression(lead.client_activities);
+          
+          // Incrementar contadores com base na progressão
+          if (progression.hasEffectiveContact) effectiveContacts++;
+          if (progression.hasScheduledVisit) scheduledVisits++;
+          if (progression.hasCompletedVisit) completedVisits++;
+          if (progression.hasEnrollment) enrollments++;
+          
+          // Log detalhado para cada lead
+          console.log(`Lead ${lead.id} (status: ${lead.status}) - Progressão:`, progression);
+        });
         
-        // 3. Buscar matrículas contando leads com status = 'matriculado'
-        const matriculados = leads.filter(lead => 
-          lead.status === 'matriculado'
-        ).length;
-        
-        // 4. Calcular taxas
+        // Calcular taxas de conversão
         const totalLeads = leads.length;
         const calculateRate = (value: number, total: number) => {
           return total > 0 ? (value / total) * 100 : 0;
@@ -133,11 +177,11 @@ export function useLeadFunnelStats(
           effectiveContacts,
           scheduledVisits,
           completedVisits,
-          enrollments: matriculados,
+          enrollments,
           effectiveContactRate: calculateRate(effectiveContacts, totalLeads),
           scheduledVisitsRate: calculateRate(scheduledVisits, totalLeads),
           completedVisitsRate: calculateRate(completedVisits, totalLeads),
-          enrollmentsRate: calculateRate(matriculados, totalLeads)
+          enrollmentsRate: calculateRate(enrollments, totalLeads)
         };
         
         console.log('Cálculo do funil finalizado:', result);

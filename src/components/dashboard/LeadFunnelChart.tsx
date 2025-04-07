@@ -9,9 +9,7 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  LabelList,
-  Rectangle,
-  Cell
+  LabelList
 } from "recharts";
 import { DateRangePicker } from "./DateRangePicker";
 import { useLeadFunnelStats, DateRangeType } from "@/hooks/useLeadFunnelStats";
@@ -28,29 +26,49 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Componente FunnelBar personalizado para criar um efeito de funil onde as barras estão realmente conectadas
+// Componente para criar barras em formato de trapézio para efeito visual de funil
 const FunnelBar = (props: any) => {
   console.log("Renderizando FunnelBar com props:", props);
   
-  const { x, y, width, height, fill, index } = props;
+  const { x, y, width, height, fill, dataKey, value, index } = props;
   
-  // Nova lógica para ter as barras bem próximas, completamente conectadas
-  const widthRatio = 1 - (index * 0.05); // Pequena redução para manter aparência de funil
-  const adjustedWidth = width * widthRatio;
-  const xOffset = (width - adjustedWidth) / 2;
+  // Calculando a largura superior e inferior do trapézio
+  // O trapézio vai ficando mais estreito conforme descemos no funil
+  const topWidth = width;
+  const bottomWidth = width * (1 - ((index + 1) * 0.15));
   
-  // Ajustar y para que as barras fiquem conectadas (sem espaço)
-  const yPosition = y;
+  // Calculando as coordenadas dos quatro pontos do trapézio
+  const points = [
+    { x: x, y: y }, // Ponto superior esquerdo
+    { x: x + topWidth, y: y }, // Ponto superior direito
+    { x: x + ((topWidth - bottomWidth) / 2) + bottomWidth, y: y + height }, // Ponto inferior direito
+    { x: x + (topWidth - bottomWidth) / 2, y: y + height } // Ponto inferior esquerdo
+  ];
+  
+  // Convertendo os pontos para formato do polígono SVG
+  const pointsString = points.map(point => `${point.x},${point.y}`).join(' ');
   
   return (
-    <Rectangle
-      x={x + xOffset}
-      y={yPosition}
-      width={adjustedWidth}
-      height={height}
-      fill={fill}
-      radius={[0, 4, 4, 0]}
-    />
+    <g>
+      <polygon 
+        points={pointsString} 
+        fill={fill} 
+        stroke={fill}
+      />
+      {value > 0 && (
+        <text 
+          x={x + width + 10} 
+          y={y + height / 2} 
+          textAnchor="start" 
+          dominantBaseline="middle"
+          fill="#000"
+          fontSize="12"
+          fontWeight="bold"
+        >
+          {value}
+        </text>
+      )}
+    </g>
   );
 };
 
@@ -225,7 +243,7 @@ export function LeadFunnelChart() {
               </TooltipTrigger>
               <TooltipContent>
                 <p className="max-w-xs">
-                  Mostra a conversão de leads por etapa (cada lead contado apenas uma vez em cada etapa)
+                  Mostra a conversão de leads por etapa, baseado no histórico de atividades de cada lead
                 </p>
               </TooltipContent>
             </UITooltip>
@@ -244,29 +262,25 @@ export function LeadFunnelChart() {
               <BarChart
                 data={chartData}
                 layout="vertical"
-                barGap={0}
-                barSize={20} // Barras mais finas para melhor aparência
                 margin={{
                   top: 20,
                   right: 50,
                   left: 20,
                   bottom: 5
                 }}
-                barCategoryGap={0} // Remove o espaço entre categorias de barras
               >
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                 <XAxis 
                   type="number" 
-                  tickFormatter={formatNumber} 
-                  domain={[0, 'dataMax']}
+                  domain={[0, Math.max(funnelStats.totalLeads * 1.1, 10)]}
+                  hide // Escondendo o eixo X para melhorar a visualização do funil
                 />
                 <YAxis 
                   type="category" 
                   dataKey="legenda" 
                   width={120} 
                   tickLine={false}
-                  interval={0} // Garante que todas as etiquetas são mostradas
-                  axisLine={false} // Remove a linha do eixo para melhorar a aparência
+                  axisLine={false}
                 />
                 <ChartTooltip
                   cursor={false}
@@ -280,22 +294,18 @@ export function LeadFunnelChart() {
                     />
                   }
                 />
-                <Bar 
-                  dataKey="valor" 
-                  name="Quantidade" 
-                  shape={<FunnelBar />}
-                  minPointSize={2} // Garantindo tamanho mínimo para valores pequenos
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                  <LabelList 
+                {chartData.map((entry, index) => (
+                  <Bar 
+                    key={entry.name}
                     dataKey="valor" 
-                    position="right" 
-                    formatter={formatNumber} 
-                    style={{ fontWeight: 'bold' }}
+                    name="Quantidade" 
+                    fill={entry.color}
+                    shape={<FunnelBar />}
+                    isAnimationActive={true}
+                    animationDuration={800}
+                    animationEasing="ease-in-out"
                   />
-                </Bar>
+                ))}
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>

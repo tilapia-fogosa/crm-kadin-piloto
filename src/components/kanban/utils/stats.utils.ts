@@ -4,7 +4,7 @@ import { DailyStats, TotalStats } from "../types/activity-dashboard.types";
 export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | null => {
   if (!stats) return null;
   
-  console.log('Calculating totals for activity dashboard stats');
+  console.log('Calculando totais para activity dashboard stats');
   
   // First calculate raw totals
   const rawTotals = stats.reduce((acc, day) => ({
@@ -44,4 +44,51 @@ export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | n
 
   console.log('Totals calculated:', totals);
   return totals;
+};
+
+// Função utilitária para calcular a progressão máxima de um cliente
+// com base em suas atividades
+export const getClientMaxProgression = (activities: any[] = []) => {
+  // Log inicial para rastreamento
+  console.log(`Analisando ${activities.length} atividades para determinar progressão máxima`);
+  
+  // Define resultado padrão (nenhuma progressão)
+  let result = {
+    hasEffectiveContact: false,
+    hasScheduledVisit: false,
+    hasCompletedVisit: false,
+    hasEnrollment: false
+  };
+  
+  // Se não há atividades, retorna padrão
+  if (!activities || activities.length === 0) {
+    return result;
+  }
+  
+  // Analisa cada atividade para determinar a progressão máxima
+  activities.forEach(activity => {
+    const tipo = activity.tipo_atividade;
+    
+    // Verifica cada tipo de atividade e marca na progressão
+    if (['Contato Efetivo', 'Agendamento', 'Atendimento', 'Matrícula'].includes(tipo)) {
+      result.hasEffectiveContact = true;
+    }
+    
+    if (['Agendamento', 'Atendimento', 'Matrícula'].includes(tipo)) {
+      result.hasScheduledVisit = true;
+    }
+    
+    if (['Atendimento', 'Matrícula'].includes(tipo)) {
+      result.hasCompletedVisit = true;
+    }
+    
+    if (tipo === 'Matrícula') {
+      result.hasEnrollment = true;
+    }
+  });
+  
+  // Log final para depuração
+  console.log("Progressão máxima determinada:", result);
+  
+  return result;
 };
