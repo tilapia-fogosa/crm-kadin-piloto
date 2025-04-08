@@ -9,6 +9,7 @@ export interface FunnelDataItem {
   taxa: number;
   legenda: string;
   color: string;
+  stageConversionRate?: number; // Taxa de conversão em relação à etapa anterior
 }
 
 export interface SymmetricalFunnelDataItem extends FunnelDataItem {
@@ -64,7 +65,7 @@ export const prepareBasicFunnelData = (funnelStats: any): FunnelDataItem[] => {
   const totalItems = 5; // Total de etapas no funil
   
   // Criamos o array de dados para o funil com a escala de laranja
-  return [
+  const data = [
     {
       name: 'Leads',
       valor: funnelStats.totalLeads,
@@ -101,6 +102,22 @@ export const prepareBasicFunnelData = (funnelStats: any): FunnelDataItem[] => {
       color: generateOrangeShade(4, totalItems)
     }
   ];
+  
+  // Calcular a taxa de conversão entre etapas
+  for (let i = 1; i < data.length; i++) {
+    const previousStageValue = data[i-1].valor;
+    const currentStageValue = data[i].valor;
+    
+    // Evitar divisão por zero
+    if (previousStageValue > 0) {
+      data[i].stageConversionRate = (currentStageValue / previousStageValue) * 100;
+      console.log(`Taxa de conversão de ${data[i-1].name} para ${data[i].name}: ${data[i].stageConversionRate?.toFixed(1)}%`);
+    } else {
+      data[i].stageConversionRate = 0;
+    }
+  }
+  
+  return data;
 };
 
 /**
