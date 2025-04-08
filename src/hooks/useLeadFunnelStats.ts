@@ -44,8 +44,14 @@ const getClientMaxProgression = (activities: any[] = []) => {
     return result;
   }
   
-  // Analisa cada atividade para determinar a progressão máxima
-  activities.forEach(activity => {
+  // Filtra para considerar apenas atividades ativas (não excluídas logicamente)
+  const activeActivities = activities.filter(activity => activity.active === true);
+  
+  // Log para mostrar quantas atividades foram filtradas
+  console.log(`Considerando ${activeActivities.length} atividades ativas de ${activities.length} totais`);
+  
+  // Analisa cada atividade ativa para determinar a progressão máxima
+  activeActivities.forEach(activity => {
     const tipo = activity.tipo_atividade;
     
     // Verifica cada tipo de atividade e marca na progressão
@@ -116,11 +122,12 @@ export function useLeadFunnelStats(
       });
 
       try {
-        // Buscar todos os leads ATIVOS E INATIVOS criados no período (incluindo perdidos)
+        // Buscar todos os leads ATIVOS criados no período (excluindo logicamente excluídos)
         const { data: leads, error: leadsError } = await supabase
           .from('clients')
-          .select('id, created_at, status, client_activities(id, tipo_atividade, created_at)')
+          .select('id, created_at, status, client_activities(id, tipo_atividade, created_at, active)')
           .eq('unit_id', unitId)
+          .eq('active', true) // Filtrar apenas clientes ativos
           .gte('created_at', queryStartDate.toISOString())
           .lte('created_at', queryEndDate.toISOString());
         
@@ -144,7 +151,7 @@ export function useLeadFunnelStats(
           };
         }
         
-        console.log(`Encontrados ${leads.length} leads no período para unidade ${unitId}`);
+        console.log(`Encontrados ${leads.length} leads ativos no período para unidade ${unitId}`);
         
         // Processar cada lead para determinar sua progressão máxima
         let effectiveContacts = 0;
