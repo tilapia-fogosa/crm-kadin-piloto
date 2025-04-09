@@ -1,4 +1,3 @@
-
 /**
  * Utilitários para processamento e transformação de dados para o gráfico de funil
  */
@@ -65,41 +64,46 @@ export const prepareBasicFunnelData = (funnelStats: any): FunnelDataItem[] => {
   const totalItems = 5; // Total de etapas no funil
   
   // Criamos o array de dados para o funil com a escala de laranja
-  const data = [
+  const data: FunnelDataItem[] = [
     {
       name: 'Leads',
       valor: funnelStats.totalLeads,
       taxa: 100,
       legenda: 'Leads Recebidos',
-      color: generateOrangeShade(0, totalItems)
+      color: generateOrangeShade(0, totalItems),
+      stageConversionRate: undefined
     },
     {
       name: 'Contatos',
       valor: funnelStats.effectiveContacts,
       taxa: funnelStats.effectiveContactRate,
       legenda: 'Contatos Efetivos',
-      color: generateOrangeShade(1, totalItems)
+      color: generateOrangeShade(1, totalItems),
+      stageConversionRate: undefined
     },
     {
       name: 'Agendamentos',
       valor: funnelStats.scheduledVisits,
       taxa: funnelStats.scheduledVisitsRate,
       legenda: 'Agendamentos',
-      color: generateOrangeShade(2, totalItems)
+      color: generateOrangeShade(2, totalItems),
+      stageConversionRate: undefined
     },
     {
       name: 'Atendimentos',
       valor: funnelStats.completedVisits,
       taxa: funnelStats.completedVisitsRate,
       legenda: 'Atendimentos',
-      color: generateOrangeShade(3, totalItems)
+      color: generateOrangeShade(3, totalItems),
+      stageConversionRate: undefined
     },
     {
       name: 'Matrículas',
       valor: funnelStats.enrollments,
       taxa: funnelStats.enrollmentsRate,
       legenda: 'Matrículas',
-      color: generateOrangeShade(4, totalItems)
+      color: generateOrangeShade(4, totalItems),
+      stageConversionRate: undefined
     }
   ];
   
