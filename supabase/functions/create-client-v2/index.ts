@@ -72,8 +72,45 @@ serve(async (req) => {
       )
     }
 
-    // Normalize lead source
-    const normalizedSource = normalizeLead(payload.lead_source)
+    // Normalize lead source by querying the lead_sources table
+    let normalizedSource = 'outros' // Default value
+    
+    if (payload.lead_source) {
+      const sourceLower = payload.lead_source.toLowerCase().trim()
+      console.log('Buscando origens de leads para normalização:', sourceLower)
+      
+      // Fetch all lead sources from the database
+      const { data: leadSources, error: sourcesError } = await supabase
+        .from('lead_sources')
+        .select('id, name')
+      
+      if (sourcesError) {
+        console.error('Erro ao buscar origens de leads:', sourcesError)
+      } else {
+        console.log(`Encontradas ${leadSources.length} origens de leads para normalização`)
+        
+        // First check for direct match by ID
+        const directMatch = leadSources.find(source => 
+          source.id.toLowerCase() === sourceLower
+        )
+        
+        // Then check for match by name
+        const nameMatch = leadSources.find(source => 
+          source.name.toLowerCase() === sourceLower
+        )
+        
+        if (directMatch) {
+          normalizedSource = directMatch.id
+          console.log(`Origem encontrada por ID: ${normalizedSource}`)
+        } else if (nameMatch) {
+          normalizedSource = nameMatch.id
+          console.log(`Origem encontrada por nome: ${normalizedSource}`)
+        } else {
+          console.log(`Nenhuma correspondência encontrada para '${sourceLower}', usando 'outros'`)
+        }
+      }
+    }
+    
     console.log('Lead source normalizado:', normalizedSource)
 
     // Find unit by unit_number
@@ -163,23 +200,3 @@ serve(async (req) => {
     )
   }
 })
-
-function normalizeLead(source?: string): string {
-  if (!source) return 'outros'
-  
-  const normalized = source.toLowerCase().trim()
-  
-  switch (normalized) {
-    case 'fb':
-      return 'facebook'
-    case 'ig':
-      return 'instagram'
-    case 'website':
-    case 'whatsapp':
-    case 'webhook':
-    case 'indicacao':
-      return normalized
-    default:
-      return 'outros'
-  }
-}

@@ -88,8 +88,8 @@ serve(async (req) => {
     
     if (sourcesError) {
       console.error('Erro ao buscar origens de leads:', sourcesError)
-      // Se falhar ao buscar as origens, usamos o mapeamento padrão
-      console.log('Usando mapeamento padrão para origens de leads')
+      // Continuamos o processo mesmo com erro, usando mapeamento padrão
+      console.log('Continuando com mapeamento padrão devido ao erro')
     }
 
     // Normalizar o lead source
@@ -99,6 +99,8 @@ serve(async (req) => {
       
       // Verificar se a origem existe na tabela lead_sources
       if (leadSources && leadSources.length > 0) {
+        console.log(`Verificando '${sourceLower}' contra ${leadSources.length} origens`)
+        
         // Procurar por correspondência direta pelo ID
         const directMatch = leadSources.find(source => 
           source.id.toLowerCase() === sourceLower
@@ -116,34 +118,10 @@ serve(async (req) => {
           normalizedSource = nameMatch.id
           console.log(`Origem encontrada por nome: ${normalizedSource}`)
         } else {
-          // Tentar mapeamento para origens comuns
-          const defaultMapping: Record<string, string> = {
-            'fb': 'facebook',
-            'ig': 'instagram',
-            'website': 'website',
-            'whatsapp': 'whatsapp',
-            'webhook': 'webhook',
-            'indicacao': 'indicacao',
-            'franqueador': 'franqueador',
-            'outros': 'outros'
-          }
-          normalizedSource = defaultMapping[sourceLower] || 'outros'
-          console.log(`Origem mapeada usando valores padrão: ${normalizedSource}`)
+          console.log(`Nenhuma correspondência encontrada para '${sourceLower}', usando 'outros'`)
         }
       } else {
-        // Usar mapeamento estático caso não consiga acessar a tabela
-        const staticMapping: Record<string, string> = {
-          'fb': 'facebook',
-          'ig': 'instagram',
-          'website': 'website',
-          'whatsapp': 'whatsapp',
-          'webhook': 'webhook',
-          'indicacao': 'indicacao',
-          'franqueador': 'franqueador',
-          'outros': 'outros'
-        }
-        normalizedSource = staticMapping[sourceLower] || 'outros'
-        console.log(`Origem mapeada usando valores estáticos: ${normalizedSource}`)
+        console.log('Nenhuma origem de lead disponível, usando valor padrão: outros')
       }
     }
     

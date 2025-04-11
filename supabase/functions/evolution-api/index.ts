@@ -66,6 +66,8 @@ serve(async (req) => {
             } else if (nameMatch) {
               message.lead_source = nameMatch.id
               console.log(`Origem encontrada por nome: ${message.lead_source}`)
+            } else {
+              console.log(`Nenhuma correspondência encontrada para '${sourceLower}', mantendo valor original`)
             }
           }
           
