@@ -1,15 +1,20 @@
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { CopyIcon } from "lucide-react"
+import { CopyIcon, ExternalLink } from "lucide-react"
+import { Link } from "react-router-dom"
 
 const makeExample = {
+  // Campos obrigatórios
   name: "João Silva",
   phone_number: "+5511999999999",
   unit_number: 1,
   registration_cpf: "123.456.789-00",
   registration_name: "Maria Silva",
+  
+  // Campos opcionais
   email: "joao@email.com",
-  lead_source: "fb",
+  lead_source: "facebook", // ID da origem cadastrada no sistema
   observations: "Cliente interessado no curso de inglês",
   meta_id: "123456789",
   original_ad: "Anúncio Principal - Curso de Inglês",
@@ -88,9 +93,40 @@ Prefer: return=minimal`}
           <ul className="list-disc pl-6 space-y-2">
             <li><code>name</code> - Nome do lead</li>
             <li><code>phone_number</code> - Telefone do lead</li>
+            <li><code>unit_number</code> - Número da unidade</li>
             <li><code>registration_cpf</code> - CPF do responsável pelo cadastro</li>
             <li><code>registration_name</code> - Nome do responsável pelo cadastro</li>
           </ul>
+        </div>
+
+        <div className="mt-6 bg-secondary p-4 rounded-lg">
+          <h3 className="text-xl font-semibold mb-4">Campos Opcionais</h3>
+          <ul className="list-disc pl-6 space-y-2">
+            <li><code>email</code> - E-mail do lead</li>
+            <li><code>lead_source</code> - Origem do lead (consulte a <Link to="/clients/sources" className="text-primary font-medium flex items-center gap-1 inline-flex">Tabela de Origens <ExternalLink className="h-3 w-3" /></Link>)</li>
+            <li><code>observations</code> - Observações adicionais</li>
+            <li><code>meta_id</code> - ID do Meta para rastreamento</li>
+            <li><code>original_ad</code> - Nome do anúncio original</li>
+            <li><code>original_adset</code> - Nome do conjunto de anúncios</li>
+            <li><code>age_range</code> - Faixa etária do lead</li>
+          </ul>
+        </div>
+
+        <div className="mt-6">
+          <h3 className="text-xl font-semibold mb-2">Origens de Leads Suportadas</h3>
+          <p className="text-muted-foreground mb-3">
+            Para o campo <code>lead_source</code>, utilize os IDs disponíveis na página de origens. Acesse a lista completa:
+          </p>
+          <Button variant="outline" className="mb-4" asChild>
+            <Link to="/clients/sources" className="flex items-center gap-2">
+              <ExternalLink className="h-4 w-4" />
+              Ver Tabela de Origens
+            </Link>
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            * Você pode adicionar novas origens de leads na página de origens, que serão automaticamente 
+            reconhecidas pelo sistema.
+          </p>
         </div>
 
         <div className="mt-6">

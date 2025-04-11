@@ -40,6 +40,9 @@ interface NavItemsProps {
 }
 
 export function NavItems({ currentPath }: NavItemsProps) {
+  // Adicionar logs para depuração
+  console.log('Renderizando NavItems, path atual:', currentPath);
+
   return (
     <div className="space-y-4 px-4">
       <div className="space-y-1">

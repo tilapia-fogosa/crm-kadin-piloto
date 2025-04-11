@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.1.0'
 
 console.log("Normalize Lead Source Function initialized")
 
@@ -16,15 +17,10 @@ interface LeadPayload {
   age_range?: string
 }
 
-const leadSourceMapping: Record<string, string> = {
-  'fb': 'facebook',
-  'ig': 'instagram',
-  'website': 'website',
-  'whatsapp': 'whatsapp',
-  'webhook': 'webhook',
-  'indicacao': 'indicacao',
-  'outros': 'outros'
-}
+// Criação do cliente Supabase
+const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -84,13 +80,74 @@ serve(async (req) => {
     console.log('original_adset:', payload.original_adset)
     console.log('age_range:', payload.age_range)
 
+    // Buscar todas as origens de leads do banco de dados
+    console.log('Buscando origens de leads no banco de dados')
+    const { data: leadSources, error: sourcesError } = await supabase
+      .from('lead_sources')
+      .select('id, name')
+    
+    if (sourcesError) {
+      console.error('Erro ao buscar origens de leads:', sourcesError)
+      // Se falhar ao buscar as origens, usamos o mapeamento padrão
+      console.log('Usando mapeamento padrão para origens de leads')
+    }
+
     // Normalizar o lead source
     let normalizedSource = 'outros'
     if (payload.lead_source) {
       const sourceLower = payload.lead_source.toLowerCase().trim()
-      normalizedSource = leadSourceMapping[sourceLower] || 'outros'
-      console.log('Lead source normalizado:', normalizedSource)
+      
+      // Verificar se a origem existe na tabela lead_sources
+      if (leadSources && leadSources.length > 0) {
+        // Procurar por correspondência direta pelo ID
+        const directMatch = leadSources.find(source => 
+          source.id.toLowerCase() === sourceLower
+        )
+        
+        // Procurar por correspondência pelo nome
+        const nameMatch = leadSources.find(source => 
+          source.name.toLowerCase() === sourceLower
+        )
+        
+        if (directMatch) {
+          normalizedSource = directMatch.id
+          console.log(`Origem encontrada por ID: ${normalizedSource}`)
+        } else if (nameMatch) {
+          normalizedSource = nameMatch.id
+          console.log(`Origem encontrada por nome: ${normalizedSource}`)
+        } else {
+          // Tentar mapeamento para origens comuns
+          const defaultMapping: Record<string, string> = {
+            'fb': 'facebook',
+            'ig': 'instagram',
+            'website': 'website',
+            'whatsapp': 'whatsapp',
+            'webhook': 'webhook',
+            'indicacao': 'indicacao',
+            'franqueador': 'franqueador',
+            'outros': 'outros'
+          }
+          normalizedSource = defaultMapping[sourceLower] || 'outros'
+          console.log(`Origem mapeada usando valores padrão: ${normalizedSource}`)
+        }
+      } else {
+        // Usar mapeamento estático caso não consiga acessar a tabela
+        const staticMapping: Record<string, string> = {
+          'fb': 'facebook',
+          'ig': 'instagram',
+          'website': 'website',
+          'whatsapp': 'whatsapp',
+          'webhook': 'webhook',
+          'indicacao': 'indicacao',
+          'franqueador': 'franqueador',
+          'outros': 'outros'
+        }
+        normalizedSource = staticMapping[sourceLower] || 'outros'
+        console.log(`Origem mapeada usando valores estáticos: ${normalizedSource}`)
+      }
     }
+    
+    console.log('Lead source normalizado:', normalizedSource)
 
     // Criar o objeto de lead com todos os campos
     const lead = {
@@ -108,14 +165,11 @@ serve(async (req) => {
     console.log('Tentando inserir lead na tabela:', lead)
 
     // Criar cliente usando o service_role key para garantir inserção
-    const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
+    const response = await fetch(`${supabaseUrl}/rest/v1/leads`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'apikey': supabaseServiceKey,
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
