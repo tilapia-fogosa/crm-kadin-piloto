@@ -16,6 +16,12 @@ export default function LeadSourcesPage() {
 
   return (
     <div className="container mx-auto py-10">
+      <h1 className="text-3xl font-bold mb-6">Origens de Leads</h1>
+      <div className="mb-6">
+        <p className="text-muted-foreground">
+          Gerencie as origens de leads utilizadas pelo sistema. Origens personalizadas podem ser adicionadas, editadas ou removidas conforme necessário.
+        </p>
+      </div>
       <LeadSourcesTable />
     </div>
   );

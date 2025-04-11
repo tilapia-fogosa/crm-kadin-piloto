@@ -1,8 +1,7 @@
-
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, InfoIcon } from "lucide-react";
+import { Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -64,7 +63,6 @@ const LeadSourcesTable = () => {
     enabled: !!session,
   });
 
-  // Recarrega os dados quando o componente for montado
   useEffect(() => {
     console.log('LeadSourcesTable montado, recarregando dados...');
     if (session) {
@@ -138,18 +136,6 @@ const LeadSourcesTable = () => {
         </Dialog>
       </div>
 
-      <div className="bg-secondary/50 p-4 rounded-md mb-4">
-        <div className="flex items-start gap-2">
-          <InfoIcon className="h-5 w-5 mt-0.5 text-muted-foreground flex-shrink-0" />
-          <div>
-            <p className="text-sm text-muted-foreground">
-              As origens listadas abaixo são válidas para uso em integrações via API ou Make.
-              Use o <strong>ID</strong> da origem no campo <code>lead_source</code> das requisições.
-            </p>
-          </div>
-        </div>
-      </div>
-
       <Table>
         <TableHeader>
           <TableRow>
@@ -176,7 +162,7 @@ const LeadSourcesTable = () => {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger>
-                          <Badge variant="secondary">Sistema</Badge>
+                          <Badge variant="secondary" className="text-white bg-[#222222]">Sistema</Badge>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs text-xs">

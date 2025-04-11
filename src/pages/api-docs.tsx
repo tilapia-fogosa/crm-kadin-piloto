@@ -62,13 +62,12 @@ const ApiDocsPage = () => {
               </Button>
             </div>
             
-            <div className="bg-secondary p-4 rounded-lg mb-6">
+            <div className="border rounded-lg p-4 mb-6">
               <h3 className="text-lg font-medium mb-2">Sobre as Origens</h3>
               <p>Esta tabela mostra todas as origens de leads configuradas no sistema. Utilize o ID da origem quando enviar leads através da API ou integrações.</p>
               <ul className="list-disc pl-6 mt-2">
                 <li>O campo <code>lead_source</code> deve conter o ID da origem (coluna esquerda)</li>
                 <li>Novas origens podem ser adicionadas na página <Link to="/clients/sources" className="text-primary">Gerenciar Origens</Link></li>
-                <li>Todas as origens listadas aqui são automaticamente aceitas pelo sistema</li>
               </ul>
             </div>
             
