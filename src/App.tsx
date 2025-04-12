@@ -54,7 +54,7 @@ function App() {
             <SidebarProvider>
               <div className="flex min-h-screen w-full">
                 <Routes>
-                  {/* Public routes */}
+                  {/* Public routes - authentication */}
                   <Route path="/auth" element={<LoginPage />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   
@@ -65,14 +65,14 @@ function App() {
                     </ProtectedRoute>
                   } />
 
-                  {/* Special route for password change - accessible with valid session but not inside layout */}
+                  {/* Special route for password change - accessible with valid session but outside layout */}
                   <Route path="/auth/change-password" element={
                     <ProtectedRoute>
                       <ChangePassword />
                     </ProtectedRoute>
                   } />
 
-                  {/* Protected routes */}
+                  {/* Protected routes with layout */}
                   <Route element={
                     <ProtectedRoute>
                       <ProtectedLayout />

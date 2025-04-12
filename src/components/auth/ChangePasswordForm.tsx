@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function ChangePasswordForm() {
   const [password, setPassword] = useState("");
@@ -15,29 +15,7 @@ export function ChangePasswordForm() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  // Verifica a sessão usando React Query
-  const { data: session, isLoading: isCheckingSession } = useQuery({
-    queryKey: ['session-password-change'],
-    queryFn: async () => {
-      console.log('Checking session for password change form');
-      const { data: { session } } = await supabase.auth.getSession();
-      return session;
-    },
-  });
-
-  // Log para debugging
-  useEffect(() => {
-    console.log('ChangePasswordForm: Session state:', session ? 'Logged in' : 'Not logged in');
-  }, [session]);
-
-  // Redireciona para /auth se não houver sessão
-  useEffect(() => {
-    if (!isCheckingSession && !session) {
-      console.log('Sessão não encontrada, redirecionando para /auth');
-      navigate("/auth", { replace: true });
-    }
-  }, [session, isCheckingSession, navigate]);
+  const { session } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,16 +100,6 @@ export function ChangePasswordForm() {
     }
   };
 
-  // Mostra loading enquanto verifica a sessão
-  if (isCheckingSession) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">Verificando sessão...</span>
-      </div>
-    );
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <h1 className="text-2xl font-bold text-center mb-6">Alterar Senha</h1>
@@ -150,6 +118,7 @@ export function ChangePasswordForm() {
               required
               minLength={6}
               disabled={loading}
+              placeholder="******"
             />
           </div>
         </div>
@@ -167,6 +136,7 @@ export function ChangePasswordForm() {
               required
               minLength={6}
               disabled={loading}
+              placeholder="******"
             />
           </div>
         </div>
