@@ -64,7 +64,11 @@ export function RequestPasswordChange() {
     if (!session) {
       console.log('Sem sessão, redirecionando para login');
       setIsRedirecting(true);
-      navigate('/auth', { replace: true });
+      
+      // Adiciona pequeno atraso para garantir que o redirecionamento funcionará
+      setTimeout(() => {
+        navigate('/auth', { replace: true });
+      }, 50);
       return;
     }
     
@@ -78,9 +82,12 @@ export function RequestPasswordChange() {
       if (profile.access_blocked) {
         console.log('Acesso do usuário está bloqueado, fazendo logout');
         setIsRedirecting(true);
+        
         // Fazemos logout e redirecionamos para login
         supabase.auth.signOut().then(() => {
-          navigate('/auth', { replace: true });
+          setTimeout(() => {
+            navigate('/auth', { replace: true });
+          }, 50);
         });
         return;
       } 
@@ -88,8 +95,11 @@ export function RequestPasswordChange() {
       if (!profile.must_change_password) {
         console.log('Usuário não precisa trocar a senha, redirecionando para dashboard');
         setIsRedirecting(true);
+        
         // Se não precisa trocar a senha, redireciona para o dashboard
-        navigate('/dashboard', { replace: true });
+        setTimeout(() => {
+          navigate('/dashboard', { replace: true });
+        }, 50);
         return;
       }
     }
@@ -100,9 +110,9 @@ export function RequestPasswordChange() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+        <span className="text-muted-foreground">
           {isRedirecting ? 'Redirecionando...' : 'Verificando perfil...'}
         </span>
       </div>

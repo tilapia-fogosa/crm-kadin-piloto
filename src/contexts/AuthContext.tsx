@@ -1,8 +1,8 @@
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, debugSession } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -20,8 +20,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
-
+  const isAuthInitialized = useRef(false);
+  const isProcessingRedirect = useRef(false);
+  
   // Função para verificar se o usuário precisa alterar a senha
   const checkPasswordChangeRequirement = useCallback(async (userId: string) => {
     console.log('Verificando necessidade de troca de senha para:', userId);
@@ -48,113 +49,142 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Função para lidar com mudanças no estado de autenticação
-  const handleAuthChange = useCallback(async (newSession: Session | null) => {
-    console.log('Alteração de estado de autenticação detectada:', newSession ? 'Com sessão' : 'Sem sessão');
+  // Função para processar navegação pós-login
+  const handlePostLoginNavigation = useCallback(async (currentSession: Session | null) => {
+    console.log('Processando navegação pós-login:', currentSession ? 'Com sessão' : 'Sem sessão');
     
-    if (newSession) {
-      setSession(newSession);
-      
-      // Mostra toast de boas-vindas apenas no login
-      if (!session) {
-        console.log('Mostrando toast de boas-vindas');
-        toast({
-          title: "Login realizado com sucesso!",
-          description: "Bem-vindo de volta!",
-          variant: "default",
-        });
-      }
-      
-      // Verifica necessidade de troca de senha apenas se mudou a sessão
-      if (!session || session.user.id !== newSession.user.id) {
-        try {
-          const { mustChangePassword, accessBlocked } = 
-            await checkPasswordChangeRequirement(newSession.user.id);
-          
-          if (accessBlocked) {
-            console.log('Acesso do usuário está bloqueado, fazendo logout');
-            await supabase.auth.signOut();
-            navigate('/auth', { replace: true });
-            return;
-          }
-          
-          if (mustChangePassword) {
-            console.log('Usuário precisa trocar a senha, redirecionando');
-            navigate('/auth/change-password', { replace: true });
-            return;
-          }
-          
-          // Redireciona para dashboard se estiver na página de auth
-          if (location.pathname === '/auth') {
-            console.log('Redirecionando para dashboard da página de auth');
-            navigate('/dashboard', { replace: true });
-          }
-        } catch (error) {
-          console.error('Erro ao processar pós-login:', error);
-        }
-      }
-    } else {
-      // Limpeza de sessão
-      setSession(null);
-      
-      // Redireciona para login se não estiver em uma rota de auth
-      if (!location.pathname.startsWith('/auth')) {
-        console.log('Usuário desconectado, redirecionando para login');
-        navigate('/auth', { replace: true });
-      }
+    if (isProcessingRedirect.current) {
+      console.log('Já existe um redirecionamento em andamento, ignorando');
+      return;
     }
-  }, [session, navigate, location.pathname, toast, checkPasswordChangeRequirement]);
-
-  // Inicialização única do estado de autenticação
-  useEffect(() => {
-    console.log('Inicializando estado de autenticação, initializing:', isInitialized);
     
-    if (isInitialized) return;
+    if (!currentSession) {
+      console.log('Sem sessão, não há redirecionamento a fazer');
+      return;
+    }
+    
+    try {
+      isProcessingRedirect.current = true;
+      
+      // Verificar requisitos de senha e bloqueio
+      const { mustChangePassword, accessBlocked } = 
+        await checkPasswordChangeRequirement(currentSession.user.id);
+      
+      if (accessBlocked) {
+        console.log('Acesso do usuário está bloqueado, fazendo logout');
+        await supabase.auth.signOut();
+        toast({
+          title: "Acesso bloqueado",
+          description: "Seu acesso foi bloqueado. Entre em contato com o administrador.",
+          variant: "destructive",
+        });
+        navigate('/auth', { replace: true });
+        return;
+      }
+      
+      if (mustChangePassword) {
+        console.log('Usuário precisa trocar a senha, redirecionando');
+        
+        // Adicionar um pequeno atraso antes do redirecionamento para evitar problemas de rota
+        setTimeout(() => {
+          navigate('/auth/change-password', { replace: true });
+        }, 100);
+        return;
+      }
+      
+      // Se estiver na página de login e tiver sessão válida, redireciona para dashboard
+      if (location.pathname === '/auth') {
+        console.log('Redirecionando para dashboard da página de auth');
+        
+        // Adicionar um pequeno atraso antes do redirecionamento para garantir que o estado foi atualizado
+        setTimeout(() => {
+          navigate('/dashboard', { replace: true });
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Erro ao processar navegação pós-login:', error);
+    } finally {
+      isProcessingRedirect.current = false;
+    }
+  }, [navigate, location.pathname, toast, checkPasswordChangeRequirement]);
+
+  // Inicialização do estado de autenticação
+  useEffect(() => {
+    console.log('Inicializando estado de autenticação:', { 
+      isAuthInitialized: isAuthInitialized.current,
+      path: location.pathname
+    });
+    
+    if (isAuthInitialized.current) {
+      console.log('Autenticação já inicializada, ignorando');
+      return;
+    }
     
     const initAuth = async () => {
       try {
-        console.log('Obtendo sessão inicial');
+        console.log('Inicializando autenticação');
         setIsLoading(true);
+        isAuthInitialized.current = true;
         
-        // Configura o listener de mudança de estado ANTES de checar a sessão inicial
+        // Configurar listener de estado de autenticação
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-          console.log('Evento de estado de autenticação:', event, currentSession ? 'Com sessão' : 'Sem sessão');
+          console.log('Evento de autenticação recebido:', event, currentSession ? 'Com sessão' : 'Sem sessão');
           
-          if (event === 'SIGNED_IN') {
-            console.log('Usuário fez login');
-            handleAuthChange(currentSession);
-          } else if (event === 'SIGNED_OUT') {
+          // Atualizar estado de sessão de forma síncrona
+          setSession(currentSession);
+          
+          // Evento de login ou atualização de token - processar navegação
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            if (currentSession) {
+              console.log(`Evento ${event}: atualizando sessão e verificando navegação`);
+              
+              // Verificar e processar navegação imediatamente
+              setTimeout(() => {
+                handlePostLoginNavigation(currentSession);
+              }, 0);
+            }
+          } 
+          // Evento de logout - redirecionar para login se necessário
+          else if (event === 'SIGNED_OUT') {
             console.log('Usuário fez logout');
-            handleAuthChange(null);
-          } else if (event === 'TOKEN_REFRESHED') {
-            console.log('Token atualizado');
-            handleAuthChange(currentSession);
+            setSession(null);
+            
+            if (!location.pathname.startsWith('/auth')) {
+              console.log('Redirecionando para login após logout');
+              navigate('/auth', { replace: true });
+            }
           }
         });
         
-        // DEPOIS configura o listener, obtém a sessão inicial
+        // Verificar sessão inicial
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        console.log('Sessão inicial:', initialSession ? 'Presente' : 'Nenhuma');
+        console.log('Sessão inicial verificada:', initialSession ? 'Presente' : 'Nenhuma');
         
-        // Atualiza o estado com a sessão inicial
-        await handleAuthChange(initialSession);
+        // Atualizar estado com a sessão inicial
+        setSession(initialSession);
         
-        setIsInitialized(true);
+        // Processar navegação baseada na sessão inicial
+        if (initialSession) {
+          console.log('Processando navegação com sessão inicial');
+          setTimeout(() => {
+            handlePostLoginNavigation(initialSession);
+          }, 0);
+        }
+        
         setIsLoading(false);
         
         return () => {
-          console.log('Limpando listener de estado de autenticação');
+          console.log('Limpando subscription de autenticação');
           subscription.unsubscribe();
         };
       } catch (error) {
         console.error('Erro ao inicializar autenticação:', error);
         setIsLoading(false);
-        setIsInitialized(true);
       }
     };
 
     initAuth();
-  }, [handleAuthChange, isInitialized]);
+  }, [handlePostLoginNavigation, location.pathname]);
 
   // Função para fazer logout
   const signOut = async () => {

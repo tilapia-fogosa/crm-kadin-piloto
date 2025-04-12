@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,16 +14,29 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const { toast } = useToast();
   const { session, isLoading } = useAuth();
 
-  console.log('Renderizando LoginPage:', { hasSession: !!session, isLoading });
+  console.log('Renderizando LoginPage:', { 
+    hasSession: !!session, 
+    isLoading,
+    loginSuccess
+  });
+
+  // Verifica se já está logado ou se acabou de logar com sucesso
+  useEffect(() => {
+    if (loginSuccess && session) {
+      console.log('Login bem-sucedido com sessão válida, aguardando redirecionamento automático');
+    }
+  }, [loginSuccess, session]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Iniciando processo de login");
     
     setLoginError(null);
+    setLoginSuccess(false);
 
     if (!email || !password) {
       console.log("Campos vazios detectados");
@@ -49,35 +62,54 @@ export default function LoginPage() {
         }
         
         setLoginError(errorMessage);
+        setLoginSuccess(false);
       } else {
         console.log("Login bem sucedido:", data.user?.id);
+        
+        // Marca login como bem-sucedido
+        setLoginSuccess(true);
+        
         toast({
           title: "Login realizado com sucesso!",
-          description: "Bem-vindo de volta!",
+          description: "Redirecionando...",
         });
-        // Não precisamos redirecionar aqui, o AuthContext fará isso
+
+        // Deixa o AuthContext lidar com o redirecionamento
+        // Apenas exibe mensagem de sucesso e aguarda
       }
     } catch (error) {
       console.error("Erro inesperado:", error);
       setLoginError("Ocorreu um erro inesperado. Tente novamente.");
+      setLoginSuccess(false);
     } finally {
       setLoading(false);
     }
   };
 
-  if (isLoading) {
+  // Se estiver carregando ou acabou de logar com sucesso, mostra o loader
+  if (isLoading || loginSuccess) {
     return (
       <AuthLayout>
-        <div className="flex justify-center items-center p-8">
+        <div className="flex flex-col justify-center items-center p-8 space-y-4">
           <Loader2 className="h-8 w-8 animate-spin" />
+          <p className="text-center text-sm">
+            {loginSuccess ? "Login bem-sucedido! Redirecionando..." : "Verificando autenticação..."}
+          </p>
         </div>
       </AuthLayout>
     );
   }
 
-  // Se já estiver logado, não mostra o formulário de login
+  // Se já estiver logado, não mostra o formulário de login (redundante, mas por segurança)
   if (session) {
-    return null;
+    return (
+      <AuthLayout>
+        <div className="flex flex-col justify-center items-center p-8 space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <p className="text-center text-sm">Você já está logado. Redirecionando...</p>
+        </div>
+      </AuthLayout>
+    );
   }
 
   return (

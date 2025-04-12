@@ -17,9 +17,17 @@ export const supabase = createClient<Database>(
       persistSession: true,
       autoRefreshToken: true,
       storageKey: 'supabase.auth.token',
+      detectSessionInUrl: false, // Desabilita detecção automática na URL para evitar problemas
     },
   }
 );
 
 // Log de inicialização do cliente Supabase
 console.log('Supabase client inicializado com configuração de persistência');
+
+// Função auxiliar para depuração de sessão
+export const debugSession = async () => {
+  const { data } = await supabase.auth.getSession();
+  console.log('DEBUG SESSION:', data.session ? 'Sessão encontrada' : 'Sem sessão');
+  return data.session;
+};
