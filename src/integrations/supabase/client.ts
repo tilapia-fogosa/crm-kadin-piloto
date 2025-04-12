@@ -17,18 +17,22 @@ export const supabase = createClient<Database>(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      flowType: 'implicit', // Explicitamente define o tipo de fluxo
-      storage: localStorage, // Garante que está usando localStorage para persistência
+      storage: localStorage,
     },
   }
 );
 
 // Log de inicialização do cliente Supabase
-console.log('Supabase client inicializado com configuração de persistência atualizada');
+console.log('Supabase client inicializado com configuração padrão');
 
 // Função auxiliar para depuração de sessão
 export const debugSession = async () => {
   const { data } = await supabase.auth.getSession();
-  console.log('DEBUG SESSION:', data.session ? 'Sessão encontrada' : 'Sem sessão', data.session);
+  console.log('DEBUG SESSION:', data.session ? 'Sessão encontrada' : 'Sem sessão', 
+    data.session ? {
+      userId: data.session.user.id,
+      expiresAt: new Date(data.session.expires_at! * 1000).toLocaleString()
+    } : null
+  );
   return data.session;
 };

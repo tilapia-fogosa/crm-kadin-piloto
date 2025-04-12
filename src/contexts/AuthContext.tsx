@@ -1,11 +1,11 @@
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-// Definição simplificada do contexto de autenticação
+// Definição do contexto de autenticação
 interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
@@ -15,147 +15,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  console.log('AuthProvider: Inicializando...');
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
-  
-  // Função para verificar se o usuário precisa alterar a senha
-  const checkPasswordChangeRequirement = useCallback(async (userId: string): Promise<boolean> => {
-    console.log('AuthProvider: Verificando necessidade de troca de senha para:', userId);
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('must_change_password, access_blocked')
-        .eq('id', userId)
-        .single();
-        
-      if (error) {
-        console.error('AuthProvider: Erro ao verificar requisito de troca de senha:', error);
-        return false;
-      }
-      
-      if (profile?.access_blocked) {
-        console.log('AuthProvider: Acesso do usuário está bloqueado');
-        await supabase.auth.signOut();
-        toast({
-          title: "Acesso bloqueado",
-          description: "Seu acesso foi bloqueado. Entre em contato com o administrador.",
-          variant: "destructive",
-        });
-        return false;
-      }
-      
-      console.log('AuthProvider: Perfil verificado, must_change_password =', profile?.must_change_password);
-      return profile?.must_change_password || false;
-    } catch (err) {
-      console.error('AuthProvider: Exceção na verificação de troca de senha:', err);
-      return false;
-    }
-  }, [toast]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
 
-  // Função para processar navegação pós-login
-  const handlePostLoginNavigation = useCallback(async (currentSession: Session) => {
-    console.log('AuthProvider: Processando navegação pós-login');
-    
-    try {
-      // Verificar requisito de troca de senha
-      const mustChangePassword = await checkPasswordChangeRequirement(currentSession.user.id);
-      
-      if (mustChangePassword) {
-        console.log('AuthProvider: Usuário precisa trocar senha, redirecionando para /auth/change-password');
-        navigate('/auth/change-password', { replace: true });
-      } else {
-        console.log('AuthProvider: Redirecionando para dashboard após login bem-sucedido');
-        navigate('/dashboard', { replace: true });
-      }
-    } catch (error) {
-      console.error('AuthProvider: Erro ao processar navegação pós-login:', error);
-    }
-  }, [navigate, checkPasswordChangeRequirement]);
-
-  // Efeito para lidar com eventos de autenticação
-  useEffect(() => {
-    if (isInitialized) {
-      console.log('AuthProvider: Já inicializado, ignorando');
-      return;
-    }
-    
-    console.log('AuthProvider: Configurando ouvinte de eventos de autenticação');
-    setIsInitialized(true);
-    
-    // Configurar ouvinte de eventos de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      console.log('AuthProvider: Evento de autenticação:', event);
-      
-      // Atualizar estado com a sessão atual
-      setSession(currentSession);
-      
-      // Processar eventos específicos
-      if (event === 'SIGNED_IN') {
-        console.log('AuthProvider: Usuário autenticado');
-        setIsLoading(false);
-        
-        if (currentSession) {
-          console.log('AuthProvider: Processando navegação pós-login após SIGNED_IN');
-          // Use setTimeout para evitar problemas de concorrência
-          setTimeout(() => {
-            handlePostLoginNavigation(currentSession);
-          }, 100);
-        }
-      } 
-      else if (event === 'SIGNED_OUT') {
-        console.log('AuthProvider: Usuário desconectado');
-        setIsLoading(false);
-        
-        // Redirecionar para página de login se necessário
-        navigate('/auth', { replace: true });
-      }
-      else if (event === 'TOKEN_REFRESHED') {
-        console.log('AuthProvider: Token atualizado');
-        setIsLoading(false);
-      }
-      else if (event === 'INITIAL_SESSION') {
-        console.log('AuthProvider: Sessão inicial verificada:', currentSession ? 'Presente' : 'Ausente');
-        setIsLoading(false);
-        
-        if (currentSession) {
-          // Use setTimeout para evitar problemas de concorrência
-          setTimeout(() => {
-            handlePostLoginNavigation(currentSession);
-          }, 100);
-        }
-      }
-    });
-    
-    // Verificar sessão inicial
-    const initializeSession = async () => {
-      try {
-        console.log('AuthProvider: Verificando sessão inicial');
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        
-        console.log('AuthProvider: Sessão inicial obtida:', initialSession ? 'Presente' : 'Ausente');
-        setSession(initialSession);
-        
-        if (!initialSession) {
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('AuthProvider: Erro ao verificar sessão inicial:', error);
-        setIsLoading(false);
-      }
-    };
-    
-    initializeSession();
-    
-    // Limpar subscription ao desmontar
-    return () => {
-      console.log('AuthProvider: Limpando subscription');
-      subscription.unsubscribe();
-    };
-  }, [navigate, handlePostLoginNavigation, isInitialized]);
+  console.log('AuthProvider: Inicializando...', { 
+    path: location.pathname,
+    isLoading 
+  });
 
   // Função para fazer logout
   const signOut = async () => {
@@ -177,22 +46,140 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
   };
-  
-  // Valor do contexto
-  const value = {
-    session,
-    isLoading,
-    signOut,
+
+  // Função para verificar se o usuário precisa alterar a senha
+  const checkPasswordRequirement = async (userId: string) => {
+    console.log('AuthProvider: Verificando necessidade de troca de senha');
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('must_change_password, access_blocked')
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error('AuthProvider: Erro ao verificar perfil:', error);
+        return false;
+      }
+      
+      if (data?.access_blocked) {
+        console.log('AuthProvider: Acesso bloqueado, forçando logout');
+        toast({
+          title: "Acesso bloqueado",
+          description: "Seu acesso foi bloqueado. Entre em contato com o administrador.",
+          variant: "destructive",
+        });
+        await signOut();
+        return false;
+      }
+      
+      console.log('AuthProvider: Perfil verificado, must_change_password =', data?.must_change_password);
+      return data?.must_change_password || false;
+    } catch (err) {
+      console.error('AuthProvider: Erro ao verificar perfil:', err);
+      return false;
+    }
   };
+
+  // Efeito para lidar com navegação pós-login
+  useEffect(() => {
+    if (!session || isLoading) return;
+    
+    // Não redireciona se estiver na página de login e não tiver sessão
+    if (!session && location.pathname === '/auth') return;
+
+    // Não redireciona se já estiver em alguma rota protegida
+    if (session && !location.pathname.startsWith('/auth')) return;
+
+    // Verifica se precisa trocar senha apenas se tiver sessão e estiver em /auth
+    const handleRedirect = async () => {
+      console.log('AuthProvider: Verificando redirecionamento necessário');
+      
+      // Se está na página de login com sessão válida, redireciona
+      if (session && location.pathname === '/auth') {
+        console.log('AuthProvider: Logado e na página de login, redirecionando');
+        
+        try {
+          // Verifica se precisa trocar senha
+          const mustChangePassword = await checkPasswordRequirement(session.user.id);
+          
+          if (mustChangePassword) {
+            console.log('AuthProvider: Redirecionando para troca de senha');
+            navigate('/auth/change-password', { replace: true });
+          } else {
+            console.log('AuthProvider: Redirecionando para dashboard');
+            navigate('/dashboard', { replace: true });
+          }
+        } catch (error) {
+          console.error('AuthProvider: Erro ao redirecionar:', error);
+        }
+      }
+    };
+    
+    handleRedirect();
+  }, [session, isLoading, location.pathname, navigate]);
+
+  // Efeito para lidar com eventos de autenticação
+  useEffect(() => {
+    console.log('AuthProvider: Configurando ouvinte de eventos de autenticação');
+    setIsLoading(true);
+    
+    // Verifica sessão existente primeiro
+    const initSession = async () => {
+      try {
+        console.log('AuthProvider: Verificando sessão existente');
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log('AuthProvider: Sessão existente:', currentSession ? 'Presente' : 'Ausente');
+        
+        if (currentSession) {
+          setSession(currentSession);
+        }
+      } catch (error) {
+        console.error('AuthProvider: Erro ao verificar sessão existente:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    initSession();
+    
+    // Configura ouvinte para mudanças na autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      console.log('AuthProvider: Evento de autenticação:', event);
+      
+      // Atualiza estado da sessão
+      setSession(currentSession);
+      
+      // Finaliza carregamento
+      setIsLoading(false);
+      
+      // Handle eventos específicos
+      if (event === 'SIGNED_IN') {
+        console.log('AuthProvider: Usuário fez login');
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Redirecionando...",
+        });
+      } else if (event === 'SIGNED_OUT') {
+        console.log('AuthProvider: Usuário fez logout');
+      }
+    });
+    
+    // Limpa subscription
+    return () => {
+      console.log('AuthProvider: Limpando subscription');
+      subscription.unsubscribe();
+    };
+  }, [toast]);
 
   console.log('AuthProvider: Renderizando com estado:', { 
     hasSession: !!session, 
     isLoading, 
-    isInitialized 
+    currentPath: location.pathname 
   });
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ session, isLoading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

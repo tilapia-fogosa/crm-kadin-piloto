@@ -2,138 +2,132 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChangePasswordForm } from "./ChangePasswordForm";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 export function RequestPasswordChange() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [profileChecked, setProfileChecked] = useState(false);
   const navigate = useNavigate();
-  const [isRedirecting, setIsRedirecting] = useState(false);
-  const { session, isLoading: authLoading } = useAuth();
+  const { session } = useAuth();
   const { toast } = useToast();
 
   console.log('RequestPasswordChange: Iniciando componente', {
     hasSession: !!session,
-    authLoading
-  });
-
-  // Só verifica o perfil se já tiver sessão autenticada
-  const enabled = !!session && !authLoading;
-
-  const { data: profile, isLoading: profileLoading, error } = useQuery({
-    queryKey: ['user-profile-password-check', session?.user.id],
-    queryFn: async () => {
-      console.log('RequestPasswordChange: Verificando perfil do usuário');
-      
-      if (!session?.user) {
-        console.log('RequestPasswordChange: Nenhum usuário autenticado encontrado');
-        throw new Error('Usuário não autenticado');
-      }
-
-      console.log('RequestPasswordChange: Consultando perfil para usuário:', session.user.id);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('must_change_password, access_blocked')
-        .eq('id', session.user.id)
-        .single();
-
-      if (error) {
-        console.error('RequestPasswordChange: Erro ao buscar perfil:', error);
-        throw error;
-      }
-      
-      console.log('RequestPasswordChange: Dados do perfil:', data);
-      return data;
-    },
-    enabled,
-    retry: 1,
+    isLoading
   });
 
   useEffect(() => {
-    console.log('RequestPasswordChange: effect executando', {
-      authLoading,
-      profileLoading,
-      session: !!session,
-      profile
-    });
-    
-    // Se auth estiver carregando, espera
-    if (authLoading) return;
-    
-    // Se não tem sessão, redireciona para login
+    // Verificação de sessão
     if (!session) {
-      console.log('RequestPasswordChange: Sem sessão, redirecionando para login');
-      setIsRedirecting(true);
-      navigate('/auth', { replace: true });
-      return;
+      console.log('RequestPasswordChange: Sem sessão, aguardando...');
+      
+      // Aguarda um pouco para verificar se a sessão está sendo carregada
+      const timer = setTimeout(() => {
+        if (!session) {
+          console.log('RequestPasswordChange: Sem sessão após tempo de espera, redirecionando');
+          navigate('/auth', { replace: true });
+        }
+      }, 2000);
+      
+      return () => clearTimeout(timer);
     }
     
-    // Se profile ainda está carregando, espera
-    if (enabled && profileLoading) return;
-    
-    // Se tem perfil, verifica regras
-    if (profile) {
-      console.log('RequestPasswordChange: Perfil carregado, verificando estado de acesso');
-      
-      if (profile.access_blocked) {
-        console.log('RequestPasswordChange: Acesso do usuário está bloqueado, fazendo logout');
-        setIsRedirecting(true);
+    // Se tem sessão, verifica o perfil
+    const checkProfile = async () => {
+      try {
+        console.log('RequestPasswordChange: Verificando perfil do usuário');
         
-        // Fazemos logout e redirecionamos para login
-        supabase.auth.signOut().then(() => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('must_change_password, access_blocked')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (error) {
+          console.error('RequestPasswordChange: Erro ao buscar perfil:', error);
           toast({
-            title: "Acesso bloqueado",
-            description: "Seu acesso foi bloqueado. Entre em contato com o administrador.",
-            variant: "destructive",
+            title: 'Erro',
+            description: 'Não foi possível verificar seu perfil',
+            variant: 'destructive',
           });
           navigate('/auth', { replace: true });
+          return;
+        }
+        
+        console.log('RequestPasswordChange: Dados do perfil:', data);
+        
+        // Verifica se acesso está bloqueado
+        if (data.access_blocked) {
+          console.log('RequestPasswordChange: Acesso bloqueado');
+          toast({
+            title: 'Acesso bloqueado',
+            description: 'Seu acesso foi bloqueado. Entre em contato com o administrador.',
+            variant: 'destructive',
+          });
+          
+          // Faz logout e redireciona
+          await supabase.auth.signOut();
+          navigate('/auth', { replace: true });
+          return;
+        }
+        
+        // Verifica se precisa trocar senha
+        if (!data.must_change_password) {
+          console.log('RequestPasswordChange: Não precisa trocar senha, redirecionando');
+          navigate('/dashboard', { replace: true });
+          return;
+        }
+        
+        // Configura estado
+        setMustChangePassword(true);
+        setProfileChecked(true);
+        setIsLoading(false);
+        
+      } catch (error) {
+        console.error('RequestPasswordChange: Erro ao verificar perfil', error);
+        toast({
+          title: 'Erro',
+          description: 'Falha ao verificar seu perfil',
+          variant: 'destructive',
         });
-        return;
-      } 
-      
-      if (!profile.must_change_password) {
-        console.log('RequestPasswordChange: Usuário não precisa trocar a senha, redirecionando para dashboard');
-        setIsRedirecting(true);
-        navigate('/dashboard', { replace: true });
-        return;
+        navigate('/auth', { replace: true });
       }
-    }
-  }, [profile, profileLoading, authLoading, session, navigate, enabled, toast]);
+    };
+    
+    checkProfile();
+    
+  }, [session, navigate, toast]);
 
-  // Condição de loading
-  const isLoading = authLoading || (enabled && profileLoading) || isRedirecting;
-
-  if (isLoading) {
+  // Se estiver carregando ou não tiver verificado o perfil, mostra loader
+  if (isLoading || !profileChecked) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
         <span className="text-muted-foreground">
-          {isRedirecting ? 'Redirecionando...' : 'Verificando perfil...'}
+          Verificando suas informações...
         </span>
       </div>
     );
   }
 
-  // Se tiver erro, mostra
-  if (error) {
+  // Se precisa trocar senha, mostra o formulário
+  if (mustChangePassword) {
+    console.log('RequestPasswordChange: Renderizando formulário de troca de senha');
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-red-500">
-          Erro ao verificar perfil. Por favor, tente novamente.
+        <div className="w-full max-w-sm p-4">
+          <ChangePasswordForm />
         </div>
       </div>
     );
   }
 
-  // Mostra o formulário se chegou até aqui (tem sessão e precisa trocar senha)
-  console.log('RequestPasswordChange: Renderizando formulário de troca de senha');
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-sm p-4">
-        <ChangePasswordForm />
-      </div>
-    </div>
-  );
+  // Fallback - não deveria chegar aqui devido aos redirecionamentos acima
+  console.log('RequestPasswordChange: Estado inesperado, redirecionando');
+  navigate('/auth', { replace: true });
+  return null;
 }

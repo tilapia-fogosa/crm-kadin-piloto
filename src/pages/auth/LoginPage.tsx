@@ -25,13 +25,13 @@ export default function LoginPage() {
     currentPath: window.location.pathname
   });
 
-  // Redirecionar se já estiver logado
+  // Essa verificação garante que não vamos redirecionar duas vezes
+  // O redirecionamento primário é feito pelo ProtectedRoute
   useEffect(() => {
     if (session && !isLoading) {
-      console.log('LoginPage: Usuário já autenticado, redirecionando para dashboard');
-      navigate('/dashboard', { replace: true });
+      console.log('LoginPage: Usuário já autenticado, redirecionamento será feito pelo ProtectedRoute');
     }
-  }, [session, isLoading, navigate]);
+  }, [session, isLoading]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,15 +65,18 @@ export default function LoginPage() {
         setLoginError(errorMessage);
         setLoading(false);
       } else {
-        console.log("LoginPage: Login bem-sucedido:", data);
+        console.log("LoginPage: Login bem-sucedido:", data.session ? "Sessão válida" : "Sem sessão");
         
+        // A redireção será feita pelo AuthContext via onAuthStateChange
         toast({
           title: "Login realizado com sucesso!",
           description: "Redirecionando...",
         });
         
-        // O redirecionamento será tratado pelo AuthContext
-        // Mantemos o loading ativo para indicar que o processo está em andamento
+        // Mantenha o loading ativo brevemente para dar tempo ao redirecionamento
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
       }
     } catch (error) {
       console.error("LoginPage: Erro inesperado:", error);
@@ -82,7 +85,8 @@ export default function LoginPage() {
     }
   };
 
-  // Exibir estado de carregamento
+  // Se estiver carregando ou já tiver sessão, mostra o loader
+  // Esta verificação impede que o formulário de login seja renderizado durante o redirecionamento
   if (isLoading || (session && window.location.pathname === '/auth')) {
     return (
       <AuthLayout>
@@ -113,7 +117,6 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
-                required
                 className="pl-10"
               />
             </div>
@@ -129,7 +132,6 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
-                required
                 className="pl-10"
               />
             </div>

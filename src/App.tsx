@@ -49,7 +49,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        {/* Importante: AuthProvider deve vir antes de UpdatesProvider */}
+        {/* Importante: AuthProvider precisa estar antes de qualquer outro contexto que dependa dele */}
         <AuthProvider>
           <UpdatesProvider>
             <SidebarProvider>
