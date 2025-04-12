@@ -13,20 +13,21 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const { toast } = useToast();
   const { session, isLoading } = useAuth();
+
+  console.log('Renderizando LoginPage:', { hasSession: !!session, isLoading });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Iniciando processo de login");
+    
+    setLoginError(null);
 
     if (!email || !password) {
       console.log("Campos vazios detectados");
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Por favor, preencha email e senha."
-      });
+      setLoginError("Por favor, preencha email e senha.");
       return;
     }
 
@@ -34,28 +35,31 @@ export default function LoginPage() {
     console.log("Tentando login para:", email);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
         console.error("Erro no login:", error);
+        let errorMessage = "Email ou senha incorretos";
+        
+        if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Email ainda não confirmado";
+        }
+        
+        setLoginError(errorMessage);
+      } else {
+        console.log("Login bem sucedido:", data.user?.id);
         toast({
-          variant: "destructive",
-          title: "Erro no login",
-          description: error.message.includes("Invalid login") 
-            ? "Email ou senha incorretos"
-            : error.message
+          title: "Login realizado com sucesso!",
+          description: "Bem-vindo de volta!",
         });
+        // Não precisamos redirecionar aqui, o AuthContext fará isso
       }
     } catch (error) {
       console.error("Erro inesperado:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Ocorreu um erro inesperado. Tente novamente."
-      });
+      setLoginError("Ocorreu um erro inesperado. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -71,7 +75,7 @@ export default function LoginPage() {
     );
   }
 
-  // If already logged in, don't show login form
+  // Se já estiver logado, não mostra o formulário de login
   if (session) {
     return null;
   }
@@ -115,6 +119,12 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
+
+        {loginError && (
+          <div className="p-3 rounded text-center bg-red-100 text-red-800 border border-red-300">
+            {loginError}
+          </div>
+        )}
 
         <Button className="w-full" type="submit" disabled={loading}>
           {loading ? (

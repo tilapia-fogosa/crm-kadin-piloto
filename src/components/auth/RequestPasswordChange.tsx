@@ -12,20 +12,25 @@ export function RequestPasswordChange() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const { session, isLoading: authLoading } = useAuth();
 
+  console.log('RequestPasswordChange: Iniciando componente', {
+    hasSession: !!session,
+    authLoading
+  });
+
   // Só verifica o perfil se já tiver sessão autenticada
   const enabled = !!session && !authLoading;
 
   const { data: profile, isLoading: profileLoading, error } = useQuery({
     queryKey: ['user-profile-password-check', session?.user.id],
     queryFn: async () => {
-      console.log('Checking user profile for password change requirement');
+      console.log('Verificando perfil do usuário para requisito de troca de senha');
       
       if (!session?.user) {
-        console.log('No authenticated user found');
+        console.log('Nenhum usuário autenticado encontrado');
         throw new Error('Usuário não autenticado');
       }
 
-      console.log('Querying profile for user:', session.user.id);
+      console.log('Consultando perfil para usuário:', session.user.id);
       const { data, error } = await supabase
         .from('profiles')
         .select('must_change_password, access_blocked')
@@ -33,11 +38,11 @@ export function RequestPasswordChange() {
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Erro ao buscar perfil:', error);
         throw error;
       }
       
-      console.log('Profile data:', data);
+      console.log('Dados do perfil:', data);
       return data;
     },
     enabled,
@@ -45,7 +50,7 @@ export function RequestPasswordChange() {
   });
 
   useEffect(() => {
-    console.log('RequestPasswordChange component mounted', {
+    console.log('RequestPasswordChange: effect executando', {
       authLoading,
       profileLoading,
       session: !!session,
@@ -57,7 +62,7 @@ export function RequestPasswordChange() {
     
     // Se não tem sessão, redireciona para login
     if (!session) {
-      console.log('No session, redirecting to login');
+      console.log('Sem sessão, redirecionando para login');
       setIsRedirecting(true);
       navigate('/auth', { replace: true });
       return;
@@ -68,10 +73,10 @@ export function RequestPasswordChange() {
     
     // Se tem perfil, verifica regras
     if (profile) {
-      console.log('Profile loaded, checking access state');
+      console.log('Perfil carregado, verificando estado de acesso');
       
       if (profile.access_blocked) {
-        console.log('User access is blocked, signing out');
+        console.log('Acesso do usuário está bloqueado, fazendo logout');
         setIsRedirecting(true);
         // Fazemos logout e redirecionamos para login
         supabase.auth.signOut().then(() => {
@@ -81,7 +86,7 @@ export function RequestPasswordChange() {
       } 
       
       if (!profile.must_change_password) {
-        console.log('User does not need to change password, redirecting to dashboard');
+        console.log('Usuário não precisa trocar a senha, redirecionando para dashboard');
         setIsRedirecting(true);
         // Se não precisa trocar a senha, redireciona para o dashboard
         navigate('/dashboard', { replace: true });
@@ -116,6 +121,7 @@ export function RequestPasswordChange() {
   }
 
   // Mostra o formulário se chegou até aqui (tem sessão e precisa trocar senha)
+  console.log('Renderizando formulário de troca de senha');
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-sm p-4">

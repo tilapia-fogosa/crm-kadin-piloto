@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
+
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,18 +14,17 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  console.log('AuthProvider rendering');
+  console.log('AuthProvider renderizando');
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasShownWelcomeToast, setHasShownWelcomeToast] = useState(false);
-  const authInitialized = useRef(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Função para verificar se o usuário precisa alterar a senha
-  const checkPasswordChangeRequirement = async (userId: string) => {
-    console.log('Checking if user needs to change password:', userId);
+  const checkPasswordChangeRequirement = useCallback(async (userId: string) => {
+    console.log('Verificando necessidade de troca de senha para:', userId);
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -33,127 +33,138 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
         
       if (error) {
-        console.error('Error checking password change requirement:', error);
+        console.error('Erro ao verificar requisito de troca de senha:', error);
         return { mustChangePassword: false, accessBlocked: false };
       }
       
-      console.log('Password change profile check result:', profile);
+      console.log('Resultado da verificação do perfil para troca de senha:', profile);
       return { 
         mustChangePassword: profile?.must_change_password || false, 
         accessBlocked: profile?.access_blocked || false 
       };
     } catch (err) {
-      console.error('Exception in password change check:', err);
+      console.error('Exceção na verificação de troca de senha:', err);
       return { mustChangePassword: false, accessBlocked: false };
     }
-  };
+  }, []);
 
-  // Initialize auth state once
-  useEffect(() => {
-    console.log('Initializing auth state, authInitialized:', authInitialized.current);
+  // Função para lidar com mudanças no estado de autenticação
+  const handleAuthChange = useCallback(async (newSession: Session | null) => {
+    console.log('Alteração de estado de autenticação detectada:', newSession ? 'Com sessão' : 'Sem sessão');
     
-    if (authInitialized.current) return;
-    
-    async function initializeAuth() {
-      try {
-        console.log('Getting initial session');
-        setIsLoading(true);
-        
-        // Get initial session
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        console.log('Initial session:', initialSession ? 'Present' : 'None');
-        
-        if (initialSession) {
-          setSession(initialSession);
-          setHasShownWelcomeToast(true);
+    if (newSession) {
+      setSession(newSession);
+      
+      // Mostra toast de boas-vindas apenas no login
+      if (!session) {
+        console.log('Mostrando toast de boas-vindas');
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Bem-vindo de volta!",
+          variant: "default",
+        });
+      }
+      
+      // Verifica necessidade de troca de senha apenas se mudou a sessão
+      if (!session || session.user.id !== newSession.user.id) {
+        try {
+          const { mustChangePassword, accessBlocked } = 
+            await checkPasswordChangeRequirement(newSession.user.id);
+          
+          if (accessBlocked) {
+            console.log('Acesso do usuário está bloqueado, fazendo logout');
+            await supabase.auth.signOut();
+            navigate('/auth', { replace: true });
+            return;
+          }
+          
+          if (mustChangePassword) {
+            console.log('Usuário precisa trocar a senha, redirecionando');
+            navigate('/auth/change-password', { replace: true });
+            return;
+          }
+          
+          // Redireciona para dashboard se estiver na página de auth
+          if (location.pathname === '/auth') {
+            console.log('Redirecionando para dashboard da página de auth');
+            navigate('/dashboard', { replace: true });
+          }
+        } catch (error) {
+          console.error('Erro ao processar pós-login:', error);
         }
-      } catch (error) {
-        console.error('Error getting initial session:', error);
-      } finally {
-        setIsLoading(false);
-        authInitialized.current = true;
+      }
+    } else {
+      // Limpeza de sessão
+      setSession(null);
+      
+      // Redireciona para login se não estiver em uma rota de auth
+      if (!location.pathname.startsWith('/auth')) {
+        console.log('Usuário desconectado, redirecionando para login');
+        navigate('/auth', { replace: true });
       }
     }
+  }, [session, navigate, location.pathname, toast, checkPasswordChangeRequirement]);
 
-    initializeAuth();
+  // Inicialização única do estado de autenticação
+  useEffect(() => {
+    console.log('Inicializando estado de autenticação, initializing:', isInitialized);
     
-    // Set up the auth state change listener
-    console.log('Setting up auth state change listener');
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      console.log('Auth state changed:', event, newSession ? 'Has session' : 'No session');
-      
-      if (event === 'SIGNED_IN') {
-        console.log('User signed in');
-        setSession(newSession);
+    if (isInitialized) return;
+    
+    const initAuth = async () => {
+      try {
+        console.log('Obtendo sessão inicial');
+        setIsLoading(true);
         
-        // Show welcome toast
-        if (!hasShownWelcomeToast) {
-          console.log('Showing welcome toast');
-          toast({
-            title: "Login realizado com sucesso!",
-            description: "Bem-vindo de volta!",
-            variant: "default",
-          });
-          setHasShownWelcomeToast(true);
-        }
+        // Configura o listener de mudança de estado ANTES de checar a sessão inicial
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+          console.log('Evento de estado de autenticação:', event, currentSession ? 'Com sessão' : 'Sem sessão');
+          
+          if (event === 'SIGNED_IN') {
+            console.log('Usuário fez login');
+            handleAuthChange(currentSession);
+          } else if (event === 'SIGNED_OUT') {
+            console.log('Usuário fez logout');
+            handleAuthChange(null);
+          } else if (event === 'TOKEN_REFRESHED') {
+            console.log('Token atualizado');
+            handleAuthChange(currentSession);
+          }
+        });
         
-        // Check password change requirement
-        if (newSession) {
-          // Use setTimeout to avoid race conditions with state updates
-          setTimeout(async () => {
-            try {
-              const { mustChangePassword, accessBlocked } = 
-                await checkPasswordChangeRequirement(newSession.user.id);
-              
-              if (accessBlocked) {
-                console.log('User access is blocked, signing out');
-                await supabase.auth.signOut();
-                navigate('/auth', { replace: true });
-                return;
-              }
-              
-              if (mustChangePassword) {
-                console.log('User must change password, redirecting');
-                navigate('/auth/change-password', { replace: true });
-                return;
-              }
-              
-              // Otherwise redirect to dashboard if on auth page
-              if (location.pathname.startsWith('/auth') && 
-                  location.pathname !== '/auth/change-password') {
-                console.log('Redirecting to dashboard from auth page');
-                navigate('/dashboard', { replace: true });
-              }
-            } catch (error) {
-              console.error('Error handling post sign-in:', error);
-            }
-          }, 0);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        console.log('User signed out');
-        setSession(null);
-        setHasShownWelcomeToast(false);
-        navigate('/auth', { replace: true });
-      } else if (event === 'TOKEN_REFRESHED') {
-        console.log('Token refreshed');
-        setSession(newSession);
+        // DEPOIS configura o listener, obtém a sessão inicial
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log('Sessão inicial:', initialSession ? 'Presente' : 'Nenhuma');
+        
+        // Atualiza o estado com a sessão inicial
+        await handleAuthChange(initialSession);
+        
+        setIsInitialized(true);
+        setIsLoading(false);
+        
+        return () => {
+          console.log('Limpando listener de estado de autenticação');
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Erro ao inicializar autenticação:', error);
+        setIsLoading(false);
+        setIsInitialized(true);
       }
-    });
-
-    return () => {
-      console.log('Cleaning up auth state change listener');
-      subscription.unsubscribe();
     };
-  }, [navigate, toast, location.pathname, hasShownWelcomeToast]);
 
+    initAuth();
+  }, [handleAuthChange, isInitialized]);
+
+  // Função para fazer logout
   const signOut = async () => {
-    console.log('Signing out user');
+    console.log('Iniciando processo de logout');
     try {
       setIsLoading(true);
       await supabase.auth.signOut();
-      console.log('User signed out successfully');
+      console.log('Logout realizado com sucesso');
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('Erro ao fazer logout:', error);
       toast({
         title: "Erro ao fazer logout",
         description: "Tente novamente.",
@@ -174,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
 }
