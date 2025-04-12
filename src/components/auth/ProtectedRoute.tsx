@@ -16,6 +16,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       pathname: location.pathname
     });
 
+    // Se não estiver carregando e não tiver sessão, redireciona para login
+    // Exceto na rota de troca de senha, que tem lógica especial
     if (!isLoading && !session && !location.pathname.startsWith('/auth')) {
       console.log('Unauthorized access, redirecting to login');
       navigate("/auth", { replace: true });

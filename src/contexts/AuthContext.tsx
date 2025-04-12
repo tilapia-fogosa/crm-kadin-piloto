@@ -64,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Verificar se o usuário precisa alterar a senha
         if (newSession) {
           try {
+            console.log('Checking if user needs to change password');
             const { data: profile, error } = await supabase
               .from('profiles')
               .select('must_change_password')
@@ -74,7 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               console.error('Error checking password change requirement:', error);
             } else if (profile && profile.must_change_password) {
               console.log('User must change password, redirecting');
-              navigate('/auth/change-password', { replace: true });
+              // Use setTimeout para evitar conflito com outras navegações
+              setTimeout(() => {
+                navigate('/auth/change-password', { replace: true });
+              }, 0);
               return; // Interrompe a execução para não redirecionar para o dashboard
             }
           } catch (error) {
@@ -82,7 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
         
-        if (location.pathname.startsWith('/auth')) {
+        // Apenas redireciona para o dashboard se não estiver na rota de alteração de senha
+        if (location.pathname.startsWith('/auth') && location.pathname !== '/auth/change-password') {
+          console.log('Redirecting to dashboard from auth page');
           navigate('/dashboard', { replace: true });
         }
       } else if (event === 'SIGNED_OUT') {
@@ -99,17 +105,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [navigate, toast, location.pathname, hasShownWelcomeToast]);
 
   useEffect(() => {
-    console.log('Route protection check:', {
-      isLoading,
-      hasSession: !!session,
-      currentPath: location.pathname
-    });
-
+    // Apenas executa após carregar a sessão inicial
     if (!isLoading) {
-      if (session && location.pathname === '/auth') {
+      console.log('Route protection check:', {
+        hasSession: !!session,
+        currentPath: location.pathname
+      });
+
+      const isChangePasswordPage = location.pathname === '/auth/change-password';
+      
+      // Se tem sessão mas está na página de login (não na troca de senha), vai para dashboard
+      if (session && location.pathname === '/auth' && !isChangePasswordPage) {
         console.log('Authenticated user on auth page, redirecting to dashboard');
         navigate('/dashboard', { replace: true });
-      } else if (!session && !location.pathname.startsWith('/auth')) {
+      } 
+      // Se não tem sessão e não está em uma rota pública, redireciona para login
+      else if (!session && !location.pathname.startsWith('/auth')) {
         console.log('Unauthenticated user on protected route, redirecting to login');
         navigate('/auth', { replace: true });
       }

@@ -57,12 +57,18 @@ function App() {
                   {/* Public routes */}
                   <Route path="/auth" element={<LoginPage />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/auth/change-password" element={<ChangePassword />} />
                   
                   {/* Root redirect */}
                   <Route path="/" element={
                     <ProtectedRoute>
                       <Navigate to="/dashboard" replace />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Special route for password change - accessible with valid session but not inside layout */}
+                  <Route path="/auth/change-password" element={
+                    <ProtectedRoute>
+                      <ChangePassword />
                     </ProtectedRoute>
                   } />
 

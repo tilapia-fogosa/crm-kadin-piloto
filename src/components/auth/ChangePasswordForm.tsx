@@ -18,24 +18,33 @@ export function ChangePasswordForm() {
 
   // Verifica a sessão usando React Query
   const { data: session, isLoading: isCheckingSession } = useQuery({
-    queryKey: ['session'],
+    queryKey: ['session-password-change'],
     queryFn: async () => {
+      console.log('Checking session for password change form');
       const { data: { session } } = await supabase.auth.getSession();
       return session;
     },
   });
 
+  // Log para debugging
+  useEffect(() => {
+    console.log('ChangePasswordForm: Session state:', session ? 'Logged in' : 'Not logged in');
+  }, [session]);
+
   // Redireciona para /auth se não houver sessão
   useEffect(() => {
     if (!isCheckingSession && !session) {
-      console.log("Sessão não encontrada, redirecionando para /auth");
+      console.log('Sessão não encontrada, redirecionando para /auth');
       navigate("/auth", { replace: true });
     }
   }, [session, isCheckingSession, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Iniciando processo de alteração de senha');
+    
     if (password !== confirmPassword) {
+      console.log('Senhas não coincidem');
       toast({
         title: "Erro",
         description: "As senhas não coincidem",
@@ -45,6 +54,7 @@ export function ChangePasswordForm() {
     }
 
     if (password.length < 6) {
+      console.log('Senha muito curta');
       toast({
         title: "Erro",
         description: "A senha deve ter pelo menos 6 caracteres",
@@ -54,6 +64,7 @@ export function ChangePasswordForm() {
     }
 
     if (!session) {
+      console.log('Sessão expirada');
       toast({
         title: "Erro",
         description: "Sessão expirada. Por favor, faça login novamente.",
@@ -65,28 +76,40 @@ export function ChangePasswordForm() {
 
     setLoading(true);
     try {
+      console.log('Atualizando senha do usuário');
       // Atualiza a senha
       const { error: passwordError } = await supabase.auth.updateUser({
         password: password,
       });
 
-      if (passwordError) throw passwordError;
+      if (passwordError) {
+        console.error('Erro ao atualizar senha:', passwordError);
+        throw passwordError;
+      }
 
+      console.log('Senha atualizada com sucesso, atualizando flag must_change_password');
       // Atualiza o flag must_change_password no perfil
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ must_change_password: false })
         .eq('id', session.user.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Erro ao atualizar perfil:', profileError);
+        throw profileError;
+      }
 
+      console.log('Perfil atualizado com sucesso');
       toast({
         title: "Sucesso",
         description: "Senha alterada com sucesso",
       });
 
-      // Redireciona para o dashboard usando o navigate
-      navigate("/dashboard", { replace: true });
+      // Pequeno atraso para garantir que os estados sejam atualizados corretamente
+      setTimeout(() => {
+        // Redireciona para o dashboard usando o navigate
+        navigate("/dashboard", { replace: true });
+      }, 500);
     } catch (error: any) {
       console.error("Erro ao alterar senha:", error);
       toast({
@@ -101,7 +124,12 @@ export function ChangePasswordForm() {
 
   // Mostra loading enquanto verifica a sessão
   if (isCheckingSession) {
-    return <div>Carregando...</div>;
+    return (
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Verificando sessão...</span>
+      </div>
+    );
   }
 
   return (
@@ -121,6 +149,7 @@ export function ChangePasswordForm() {
               className="pl-10"
               required
               minLength={6}
+              disabled={loading}
             />
           </div>
         </div>
@@ -137,6 +166,7 @@ export function ChangePasswordForm() {
               className="pl-10"
               required
               minLength={6}
+              disabled={loading}
             />
           </div>
         </div>
