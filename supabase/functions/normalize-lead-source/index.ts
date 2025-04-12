@@ -30,6 +30,10 @@ const commonAbbreviations: Record<string, string> = {
   'face': 'facebook',
   'wpp': 'whatsapp',
   'zap': 'whatsapp',
+  'whats': 'whatsapp',
+  'tt': 'tiktok',
+  'tiktok': 'tiktok',
+  'yt': 'youtube'
 }
 
 serve(async (req) => {
@@ -83,7 +87,7 @@ serve(async (req) => {
     console.log('name:', payload.name)
     console.log('phone_number:', payload.phone_number)
     console.log('email:', payload.email)
-    console.log('lead_source:', payload.lead_source)
+    console.log('lead_source (original):', payload.lead_source)
     console.log('observations:', payload.observations)
     console.log('meta_id:', payload.meta_id)
     console.log('original_ad:', payload.original_ad)
@@ -104,20 +108,33 @@ serve(async (req) => {
 
     // Normalizar o lead source
     let normalizedSource = 'outros'
+    let originalLeadSource = null
+    
     if (payload.lead_source) {
-      // Pré-processamento: transformar a fonte para minúsculo e remover espaços extras
-      let sourceLower = payload.lead_source.toLowerCase().trim()
+      originalLeadSource = payload.lead_source
       
-      // Verificar se é uma abreviação conhecida e substituir
+      // ETAPA 1: Pré-processamento - transformar a fonte para minúsculo e remover espaços extras
+      let sourceLower = payload.lead_source.toLowerCase().trim()
+      console.log(`Lead source após normalização inicial: "${sourceLower}"`)
+      
+      // ETAPA 2: Verificar se é uma abreviação conhecida e substituir
       if (sourceLower in commonAbbreviations) {
         const originalSource = sourceLower
         sourceLower = commonAbbreviations[sourceLower]
         console.log(`Abreviação detectada: "${originalSource}" convertida para "${sourceLower}"`)
       }
       
-      // Verificar se a origem existe na tabela lead_sources
+      // ETAPA 3: Verificar se a origem existe na tabela lead_sources
       if (leadSources && leadSources.length > 0) {
         console.log(`Verificando '${sourceLower}' contra ${leadSources.length} origens`)
+        
+        // Imprimir todas as origens disponíveis para debugging
+        if (leadSources.length < 10) {
+          console.log('Origens disponíveis:')
+          leadSources.forEach(source => {
+            console.log(`- ID: "${source.id}", Nome: "${source.name}"`)
+          })
+        }
         
         // Procurar por correspondência direta pelo ID (case insensitive)
         const directMatch = leadSources.find(source => 
@@ -131,19 +148,19 @@ serve(async (req) => {
         
         if (directMatch) {
           normalizedSource = directMatch.id
-          console.log(`Origem encontrada por ID: ${normalizedSource}`)
+          console.log(`✅ Origem encontrada por ID: "${normalizedSource}"`)
         } else if (nameMatch) {
           normalizedSource = nameMatch.id
-          console.log(`Origem encontrada por nome: ${normalizedSource}`)
+          console.log(`✅ Origem encontrada por nome: "${normalizedSource}"`)
         } else {
-          console.log(`Nenhuma correspondência encontrada para '${sourceLower}', usando 'outros'`)
+          console.log(`❌ Nenhuma correspondência encontrada para '${sourceLower}', usando 'outros'`)
         }
       } else {
         console.log('Nenhuma origem de lead disponível, usando valor padrão: outros')
       }
     }
     
-    console.log('Lead source normalizado:', normalizedSource)
+    console.log(`Origem original: "${originalLeadSource}" -> Normalizada: "${normalizedSource}"`)
 
     // Criar o objeto de lead com todos os campos
     const lead = {
@@ -196,7 +213,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         message: 'Lead registrado com sucesso',
-        normalized_source: normalizedSource 
+        normalized_source: normalizedSource,
+        original_source: originalLeadSource
       }),
       { 
         headers: { 

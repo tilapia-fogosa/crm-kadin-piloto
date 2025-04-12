@@ -18,6 +18,10 @@ const commonAbbreviations: Record<string, string> = {
   'face': 'facebook',
   'wpp': 'whatsapp',
   'zap': 'whatsapp',
+  'whats': 'whatsapp',
+  'tt': 'tiktok',
+  'tiktok': 'tiktok',
+  'yt': 'youtube'
 }
 
 serve(async (req) => {
@@ -46,17 +50,20 @@ serve(async (req) => {
       // Normalizar lead source antes de enviar a mensagem
       if (message && message.lead_source) {
         try {
-          // Pré-processamento: transformar a fonte para minúsculo e remover espaços extras
-          let sourceLower = message.lead_source.toLowerCase().trim()
+          console.log('Lead source original:', message.lead_source)
           
-          // Verificar se é uma abreviação conhecida e substituir
+          // ETAPA 1: Pré-processamento - transformar a fonte para minúsculo e remover espaços extras
+          let sourceLower = message.lead_source.toLowerCase().trim()
+          console.log('Lead source após normalização inicial:', sourceLower)
+          
+          // ETAPA 2: Verificar se é uma abreviação conhecida e substituir
           if (sourceLower in commonAbbreviations) {
             const originalSource = sourceLower
             sourceLower = commonAbbreviations[sourceLower]
             console.log(`Abreviação detectada: "${originalSource}" convertida para "${sourceLower}"`)
           }
           
-          // Buscar todas as origens de leads do banco de dados
+          // ETAPA 3: Buscar todas as origens de leads do banco de dados
           console.log('Buscando origens de leads no banco de dados')
           const { data: leadSources, error: sourcesError } = await supabase
             .from('lead_sources')
@@ -67,7 +74,15 @@ serve(async (req) => {
           } else {
             console.log(`Encontradas ${leadSources.length} origens de leads`)
             
-            // Verificar se a origem existe na tabela lead_sources
+            // Imprimir algumas origens para debugging
+            if (leadSources.length < 10) {
+              console.log('Origens disponíveis:')
+              leadSources.forEach(source => {
+                console.log(`- ID: "${source.id}", Nome: "${source.name}"`)
+              })
+            }
+            
+            // ETAPA 4: Verificar se a origem existe na tabela lead_sources
             
             // Procurar por correspondência direta pelo ID
             const directMatch = leadSources.find(source => 
@@ -81,12 +96,12 @@ serve(async (req) => {
             
             if (directMatch) {
               message.lead_source = directMatch.id
-              console.log(`Origem encontrada por ID: ${message.lead_source}`)
+              console.log(`✅ Origem encontrada por ID: "${message.lead_source}"`)
             } else if (nameMatch) {
               message.lead_source = nameMatch.id
-              console.log(`Origem encontrada por nome: ${message.lead_source}`)
+              console.log(`✅ Origem encontrada por nome: "${message.lead_source}"`)
             } else {
-              console.log(`Nenhuma correspondência encontrada para '${sourceLower}', mantendo valor original`)
+              console.log(`❌ Nenhuma correspondência encontrada para '${sourceLower}', mantendo valor original`)
             }
           }
           
