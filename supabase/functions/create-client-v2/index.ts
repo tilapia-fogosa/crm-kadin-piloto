@@ -25,6 +25,32 @@ interface ClientPayload {
   age_range?: string
 }
 
+// Mapeamento de abreviações comuns para fontes completas
+const commonAbbreviations: Record<string, string> = {
+  'fb': 'facebook',
+  'ig': 'instagram',
+  'insta': 'instagram',
+  'face': 'facebook',
+  'wpp': 'whatsapp',
+  'zap': 'whatsapp',
+  'whats': 'whatsapp',
+  'tt': 'tiktok',
+  'tiktok': 'tiktok',
+  'yt': 'youtube',
+  'youtube': 'youtube',
+  'tw': 'twitter',
+  'twitter': 'twitter',
+  'google': 'google',
+  'ggl': 'google',
+  'site': 'site',
+  'web': 'site',
+  'email': 'email',
+  'mail': 'email',
+  'linkedn': 'linkedin',
+  'lkdn': 'linkedin',
+  'in': 'linkedin'
+}
+
 serve(async (req) => {
   console.log('Received request to create-client-v2')
   
@@ -74,9 +100,22 @@ serve(async (req) => {
 
     // Normalize lead source by querying the lead_sources table
     let normalizedSource = 'outros' // Default value
+    let originalLeadSource = null
     
     if (payload.lead_source) {
-      const sourceLower = payload.lead_source.toLowerCase().trim()
+      originalLeadSource = payload.lead_source
+      
+      // ETAPA 1: Pré-processamento - transformar a fonte para minúsculo e remover espaços extras
+      let sourceLower = payload.lead_source.toLowerCase().trim()
+      console.log(`Lead source após normalização inicial: "${sourceLower}"`)
+      
+      // ETAPA 2: Verificar se é uma abreviação conhecida e substituir
+      if (sourceLower in commonAbbreviations) {
+        const originalSource = sourceLower
+        sourceLower = commonAbbreviations[sourceLower]
+        console.log(`Abreviação detectada: "${originalSource}" convertida para "${sourceLower}"`)
+      }
+      
       console.log('Buscando origens de leads para normalização:', sourceLower)
       
       // Fetch all lead sources from the database
@@ -89,29 +128,37 @@ serve(async (req) => {
       } else {
         console.log(`Encontradas ${leadSources.length} origens de leads para normalização`)
         
-        // First check for direct match by ID
+        // Imprimir algumas origens para debugging
+        if (leadSources.length < 20) {
+          console.log('Origens disponíveis:')
+          leadSources.forEach(source => {
+            console.log(`- ID: "${source.id}", Nome: "${source.name}"`)
+          })
+        }
+        
+        // First check for direct match by ID (case insensitive)
         const directMatch = leadSources.find(source => 
           source.id.toLowerCase() === sourceLower
         )
         
-        // Then check for match by name
+        // Then check for match by name (case insensitive)
         const nameMatch = leadSources.find(source => 
           source.name.toLowerCase() === sourceLower
         )
         
         if (directMatch) {
           normalizedSource = directMatch.id
-          console.log(`Origem encontrada por ID: ${normalizedSource}`)
+          console.log(`✅ Origem encontrada por ID: "${normalizedSource}"`)
         } else if (nameMatch) {
           normalizedSource = nameMatch.id
-          console.log(`Origem encontrada por nome: ${normalizedSource}`)
+          console.log(`✅ Origem encontrada por nome: "${normalizedSource}"`)
         } else {
-          console.log(`Nenhuma correspondência encontrada para '${sourceLower}', usando 'outros'`)
+          console.log(`❌ Nenhuma correspondência encontrada para '${sourceLower}', usando 'outros'`)
         }
       }
     }
     
-    console.log('Lead source normalizado:', normalizedSource)
+    console.log(`Origem original: "${originalLeadSource}" -> Normalizada: "${normalizedSource}"`)
 
     // Find unit by unit_number
     console.log('Buscando unidade com número:', payload.unit_number)
@@ -177,6 +224,7 @@ serve(async (req) => {
         success: true,
         message: 'Cliente registrado com sucesso',
         normalized_source: normalizedSource,
+        original_source: originalLeadSource,
         unit_id: unit.id
       }),
       {

@@ -21,7 +21,19 @@ const commonAbbreviations: Record<string, string> = {
   'whats': 'whatsapp',
   'tt': 'tiktok',
   'tiktok': 'tiktok',
-  'yt': 'youtube'
+  'yt': 'youtube',
+  'youtube': 'youtube',
+  'tw': 'twitter',
+  'twitter': 'twitter',
+  'google': 'google',
+  'ggl': 'google',
+  'site': 'site',
+  'web': 'site',
+  'email': 'email',
+  'mail': 'email',
+  'linkedn': 'linkedin',
+  'lkdn': 'linkedin',
+  'in': 'linkedin'
 }
 
 serve(async (req) => {
@@ -75,7 +87,7 @@ serve(async (req) => {
             console.log(`Encontradas ${leadSources.length} origens de leads`)
             
             // Imprimir algumas origens para debugging
-            if (leadSources.length < 10) {
+            if (leadSources.length < 20) {
               console.log('Origens disponíveis:')
               leadSources.forEach(source => {
                 console.log(`- ID: "${source.id}", Nome: "${source.name}"`)
@@ -84,12 +96,12 @@ serve(async (req) => {
             
             // ETAPA 4: Verificar se a origem existe na tabela lead_sources
             
-            // Procurar por correspondência direta pelo ID
+            // Procurar por correspondência direta pelo ID (case insensitive)
             const directMatch = leadSources.find(source => 
               source.id.toLowerCase() === sourceLower
             )
             
-            // Procurar por correspondência pelo nome
+            // Procurar por correspondência pelo nome (case insensitive)
             const nameMatch = leadSources.find(source => 
               source.name.toLowerCase() === sourceLower
             )

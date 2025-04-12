@@ -33,7 +33,19 @@ const commonAbbreviations: Record<string, string> = {
   'whats': 'whatsapp',
   'tt': 'tiktok',
   'tiktok': 'tiktok',
-  'yt': 'youtube'
+  'yt': 'youtube',
+  'youtube': 'youtube',
+  'tw': 'twitter',
+  'twitter': 'twitter',
+  'google': 'google',
+  'ggl': 'google',
+  'site': 'site',
+  'web': 'site',
+  'email': 'email',
+  'mail': 'email',
+  'linkedn': 'linkedin',
+  'lkdn': 'linkedin',
+  'in': 'linkedin'
 }
 
 serve(async (req) => {
@@ -129,7 +141,7 @@ serve(async (req) => {
         console.log(`Verificando '${sourceLower}' contra ${leadSources.length} origens`)
         
         // Imprimir todas as origens disponíveis para debugging
-        if (leadSources.length < 10) {
+        if (leadSources.length < 20) {
           console.log('Origens disponíveis:')
           leadSources.forEach(source => {
             console.log(`- ID: "${source.id}", Nome: "${source.name}"`)
