@@ -22,6 +22,16 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+// Mapeamento de abreviações comuns para fontes completas
+const commonAbbreviations: Record<string, string> = {
+  'fb': 'facebook',
+  'ig': 'instagram',
+  'insta': 'instagram',
+  'face': 'facebook',
+  'wpp': 'whatsapp',
+  'zap': 'whatsapp',
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -95,18 +105,26 @@ serve(async (req) => {
     // Normalizar o lead source
     let normalizedSource = 'outros'
     if (payload.lead_source) {
-      const sourceLower = payload.lead_source.toLowerCase().trim()
+      // Pré-processamento: transformar a fonte para minúsculo e remover espaços extras
+      let sourceLower = payload.lead_source.toLowerCase().trim()
+      
+      // Verificar se é uma abreviação conhecida e substituir
+      if (sourceLower in commonAbbreviations) {
+        const originalSource = sourceLower
+        sourceLower = commonAbbreviations[sourceLower]
+        console.log(`Abreviação detectada: "${originalSource}" convertida para "${sourceLower}"`)
+      }
       
       // Verificar se a origem existe na tabela lead_sources
       if (leadSources && leadSources.length > 0) {
         console.log(`Verificando '${sourceLower}' contra ${leadSources.length} origens`)
         
-        // Procurar por correspondência direta pelo ID
+        // Procurar por correspondência direta pelo ID (case insensitive)
         const directMatch = leadSources.find(source => 
           source.id.toLowerCase() === sourceLower
         )
         
-        // Procurar por correspondência pelo nome
+        // Procurar por correspondência pelo nome (case insensitive)
         const nameMatch = leadSources.find(source => 
           source.name.toLowerCase() === sourceLower
         )

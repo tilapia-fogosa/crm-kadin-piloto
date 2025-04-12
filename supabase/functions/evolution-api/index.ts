@@ -10,6 +10,16 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+// Mapeamento de abreviações comuns para fontes completas
+const commonAbbreviations: Record<string, string> = {
+  'fb': 'facebook',
+  'ig': 'instagram',
+  'insta': 'instagram',
+  'face': 'facebook',
+  'wpp': 'whatsapp',
+  'zap': 'whatsapp',
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -36,6 +46,16 @@ serve(async (req) => {
       // Normalizar lead source antes de enviar a mensagem
       if (message && message.lead_source) {
         try {
+          // Pré-processamento: transformar a fonte para minúsculo e remover espaços extras
+          let sourceLower = message.lead_source.toLowerCase().trim()
+          
+          // Verificar se é uma abreviação conhecida e substituir
+          if (sourceLower in commonAbbreviations) {
+            const originalSource = sourceLower
+            sourceLower = commonAbbreviations[sourceLower]
+            console.log(`Abreviação detectada: "${originalSource}" convertida para "${sourceLower}"`)
+          }
+          
           // Buscar todas as origens de leads do banco de dados
           console.log('Buscando origens de leads no banco de dados')
           const { data: leadSources, error: sourcesError } = await supabase
@@ -48,7 +68,6 @@ serve(async (req) => {
             console.log(`Encontradas ${leadSources.length} origens de leads`)
             
             // Verificar se a origem existe na tabela lead_sources
-            const sourceLower = message.lead_source.toLowerCase().trim()
             
             // Procurar por correspondência direta pelo ID
             const directMatch = leadSources.find(source => 
