@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
@@ -58,6 +59,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             variant: "default",
           });
           setHasShownWelcomeToast(true);
+        }
+        
+        // Verificar se o usuário precisa alterar a senha
+        if (newSession) {
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('must_change_password')
+              .eq('id', newSession.user.id)
+              .single();
+              
+            if (error) {
+              console.error('Error checking password change requirement:', error);
+            } else if (profile && profile.must_change_password) {
+              console.log('User must change password, redirecting');
+              navigate('/auth/change-password', { replace: true });
+              return; // Interrompe a execução para não redirecionar para o dashboard
+            }
+          } catch (error) {
+            console.error('Error in password change check:', error);
+          }
         }
         
         if (location.pathname.startsWith('/auth')) {

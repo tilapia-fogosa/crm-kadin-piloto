@@ -1,17 +1,31 @@
 
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "react-router-dom";
 import { UpdatesButton } from "./updates-button";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
 
 export function UserProfile() {
   const { session, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     await signOut();
+  };
+
+  // Função para navegar para a página de alteração de senha
+  const handleChangePassword = () => {
+    console.log('Navegando para página de alteração de senha');
+    navigate('/auth/change-password');
   };
 
   return (
@@ -19,11 +33,33 @@ export function UserProfile() {
       {/* Botão de atualizações acima do nome do usuário */}
       <UpdatesButton currentPath={location.pathname} />
       
-      {session?.user?.user_metadata?.full_name && (
-        <div className="text-[#FF6B00] text-sm font-medium px-2">
-          {session.user.user_metadata.full_name}
-        </div>
-      )}
+      <div className="flex items-center justify-between">
+        {session?.user?.user_metadata?.full_name && (
+          <div className="text-[#FF6B00] text-sm font-medium px-2">
+            {session.user.user_metadata.full_name}
+          </div>
+        )}
+        
+        {/* Menu de configurações */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 rounded-full hover:bg-[#FF6B00] hover:text-white transition-colors duration-200"
+            >
+              <Settings className="h-4 w-4" />
+              <span className="sr-only">Configurações</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={handleChangePassword}>
+              Alterar senha
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      
       <Button
         variant="ghost"
         className={cn(

@@ -28,6 +28,7 @@ import SchedulePage from "@/pages/Schedule";
 import UserManagementPage from "@/pages/admin/user-management";
 import UpdatesPage from "@/pages/updates/index";
 import UpdatesAdminPage from "@/pages/updates/admin";
+import ChangePassword from "@/pages/auth/ChangePassword";
 
 // Componente App que contém o QueryClientProvider
 function App() {
@@ -56,6 +57,7 @@ function App() {
                   {/* Public routes */}
                   <Route path="/auth" element={<LoginPage />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/auth/change-password" element={<ChangePassword />} />
                   
                   {/* Root redirect */}
                   <Route path="/" element={
