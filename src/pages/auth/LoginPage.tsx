@@ -8,44 +8,45 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, User, Lock } from "lucide-react";
 import { AuthLayout } from "@/components/layouts/AuthLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [loginSuccess, setLoginSuccess] = useState(false);
   const { toast } = useToast();
   const { session, isLoading } = useAuth();
+  const navigate = useNavigate();
 
-  console.log('Renderizando LoginPage:', { 
+  console.log('LoginPage: Renderizando', { 
     hasSession: !!session, 
     isLoading,
-    loginSuccess
+    currentPath: window.location.pathname
   });
 
-  // Verifica se já está logado ou se acabou de logar com sucesso
+  // Redirecionar se já estiver logado
   useEffect(() => {
-    if (loginSuccess && session) {
-      console.log('Login bem-sucedido com sessão válida, aguardando redirecionamento automático');
+    if (session && !isLoading) {
+      console.log('LoginPage: Usuário já autenticado, redirecionando para dashboard');
+      navigate('/dashboard', { replace: true });
     }
-  }, [loginSuccess, session]);
+  }, [session, isLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Iniciando processo de login");
+    console.log("LoginPage: Iniciando processo de login");
     
     setLoginError(null);
-    setLoginSuccess(false);
 
     if (!email || !password) {
-      console.log("Campos vazios detectados");
+      console.log("LoginPage: Campos vazios detectados");
       setLoginError("Por favor, preencha email e senha.");
       return;
     }
 
     setLoading(true);
-    console.log("Tentando login para:", email);
+    console.log("LoginPage: Tentando login para:", email);
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -54,7 +55,7 @@ export default function LoginPage() {
       });
 
       if (error) {
-        console.error("Erro no login:", error);
+        console.error("LoginPage: Erro no login:", error);
         let errorMessage = "Email ou senha incorretos";
         
         if (error.message.includes("Email not confirmed")) {
@@ -62,51 +63,34 @@ export default function LoginPage() {
         }
         
         setLoginError(errorMessage);
-        setLoginSuccess(false);
+        setLoading(false);
       } else {
-        console.log("Login bem sucedido:", data.user?.id);
-        
-        // Marca login como bem-sucedido
-        setLoginSuccess(true);
+        console.log("LoginPage: Login bem-sucedido:", data);
         
         toast({
           title: "Login realizado com sucesso!",
           description: "Redirecionando...",
         });
-
-        // Deixa o AuthContext lidar com o redirecionamento
-        // Apenas exibe mensagem de sucesso e aguarda
+        
+        // O redirecionamento será tratado pelo AuthContext
+        // Mantemos o loading ativo para indicar que o processo está em andamento
       }
     } catch (error) {
-      console.error("Erro inesperado:", error);
+      console.error("LoginPage: Erro inesperado:", error);
       setLoginError("Ocorreu um erro inesperado. Tente novamente.");
-      setLoginSuccess(false);
-    } finally {
       setLoading(false);
     }
   };
 
-  // Se estiver carregando ou acabou de logar com sucesso, mostra o loader
-  if (isLoading || loginSuccess) {
+  // Exibir estado de carregamento
+  if (isLoading || (session && window.location.pathname === '/auth')) {
     return (
       <AuthLayout>
         <div className="flex flex-col justify-center items-center p-8 space-y-4">
           <Loader2 className="h-8 w-8 animate-spin" />
           <p className="text-center text-sm">
-            {loginSuccess ? "Login bem-sucedido! Redirecionando..." : "Verificando autenticação..."}
+            {session ? "Redirecionando..." : "Verificando autenticação..."}
           </p>
-        </div>
-      </AuthLayout>
-    );
-  }
-
-  // Se já estiver logado, não mostra o formulário de login (redundante, mas por segurança)
-  if (session) {
-    return (
-      <AuthLayout>
-        <div className="flex flex-col justify-center items-center p-8 space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <p className="text-center text-sm">Você já está logado. Redirecionando...</p>
         </div>
       </AuthLayout>
     );

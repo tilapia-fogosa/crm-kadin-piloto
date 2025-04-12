@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
@@ -8,17 +8,15 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
-  // Log de início da verificação de proteção
-  console.log('ProtectedRoute iniciando verificação:', {
+  // Log de verificação de proteção inicial
+  console.log('ProtectedRoute: Iniciando verificação', {
     path: location.pathname,
     hasSession: !!session,
-    isLoading,
-    hasCheckedAuth
+    isLoading
   });
 
-  // Efeito para verificação de autenticação
+  // Efeito para redirecionamento
   useEffect(() => {
     // Se ainda estiver carregando, aguarda finalização
     if (isLoading) {
@@ -26,20 +24,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    console.log('ProtectedRoute: verificando acesso para', {
+    console.log('ProtectedRoute: Verificando acesso para', {
       path: location.pathname,
-      hasSession: !!session,
-      hasCheckedAuth
+      hasSession: !!session
     });
-
-    // Se já fez a verificação inicial, evita múltiplos redirecionamentos
-    if (hasCheckedAuth) {
-      console.log('ProtectedRoute: Já realizou verificação inicial');
-      return;
-    }
-
-    // Indica que já realizou a verificação inicial
-    setHasCheckedAuth(true);
 
     const isChangePasswordPage = location.pathname === '/auth/change-password';
     const isLoginPage = location.pathname === '/auth';
@@ -47,29 +35,21 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     // Se NÃO tem sessão e NÃO está em rota pública de auth
     if (!session && !location.pathname.startsWith('/auth')) {
       console.log('ProtectedRoute: Acesso não autorizado, redirecionando para login');
-      
-      // Adiciona pequeno atraso para garantir que o redirecionamento funcionará
-      setTimeout(() => {
-        navigate("/auth", { replace: true });
-      }, 50);
+      navigate("/auth", { replace: true });
       return;
     }
     
     // Se tem sessão e está tentando acessar login
     if (session && isLoginPage) {
-      console.log('ProtectedRoute: Usuário já autenticado, redirecionando para dashboard');
-      
-      // Adiciona pequeno atraso para garantir que o redirecionamento funcionará
-      setTimeout(() => {
-        navigate("/dashboard", { replace: true });
-      }, 50);
+      console.log('ProtectedRoute: Usuário já autenticado em página de login, redirecionando para dashboard');
+      navigate("/dashboard", { replace: true });
       return;
     }
 
-  }, [session, isLoading, navigate, location.pathname, hasCheckedAuth]);
+  }, [session, isLoading, navigate, location.pathname]);
 
-  // Se ainda está carregando e não fez a verificação inicial, mostra o loader
-  if (isLoading || !hasCheckedAuth) {
+  // Se ainda está carregando, mostra o loader
+  if (isLoading) {
     console.log('ProtectedRoute: Exibindo loader durante verificação');
     return (
       <div className="flex flex-col items-center justify-center h-screen">
@@ -79,9 +59,9 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Se não tiver sessão e não estiver em rota pública, não renderiza
+  // Se não tiver sessão e não estiver em rota pública, exibe loader durante redirecionamento
   if (!session && !location.pathname.startsWith('/auth')) {
-    console.log('ProtectedRoute: Acesso negado, aguardando redirecionamento');
+    console.log('ProtectedRoute: Acesso negado, exibindo loader durante redirecionamento');
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin mb-2" />
