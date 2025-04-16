@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, endOfMonth, startOfDay, isAfter } from "date-fns";
 import { DailyStats } from "../../kanban/types/activity-dashboard.types";
-import { createSafeDate } from "@/utils/dateUtils";
+import { createSafeDate, normalizeToStartOfDay, normalizeToEndOfDay } from "@/utils/dateUtils";
 
 export function useCommercialStats(
   selectedSource: string,
@@ -21,7 +21,6 @@ export function useCommercialStats(
       // Criação segura de datas de início e fim do mês
       const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
       const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
-      const today = startOfDay(new Date());
 
       console.log('Buscando estatísticas comerciais:', { 
         startDate: startDate.toISOString(), 
@@ -30,13 +29,17 @@ export function useCommercialStats(
         selectedUnitId
       });
 
+      // Datas ISO para uso no Supabase (garantindo compatibilidade de timezone)
+      const startDateIso = startDate.toISOString();
+      const endDateIso = endDate.toISOString();
+
       const [clientsResult, activitiesResult] = await Promise.all([
         supabase.from('clients')
           .select('*')
           .eq('active', true)
           .eq(selectedUnitId ? 'unit_id' : '', selectedUnitId || '')
-          .gte('created_at', startDate.toISOString())
-          .lte('created_at', endDate.toISOString())
+          .gte('created_at', startDateIso)
+          .lte('created_at', endDateIso)
           .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
         
         supabase.from('client_activities')
@@ -44,8 +47,8 @@ export function useCommercialStats(
           .eq('active', true)
           .eq('clients.active', true)
           .eq(selectedUnitId ? 'unit_id' : '', selectedUnitId || '')
-          .gte('created_at', startDate.toISOString())
-          .lte('created_at', endDate.toISOString())
+          .gte('created_at', startDateIso)
+          .lte('created_at', endDateIso)
           .eq(selectedSource !== 'todos' ? 'clients.lead_source' : '', selectedSource !== 'todos' ? selectedSource : '')
       ]);
 
@@ -55,7 +58,7 @@ export function useCommercialStats(
       console.log('Total de clientes encontrados:', clientsResult.data.length);
       console.log('Total de atividades encontradas:', activitiesResult.data.length);
 
-      // Incluir todos os dias do mês, sem filtrar pela data atual
+      // CORREÇÃO: Incluir todos os dias do mês, sem filtrar pela data atual
       const validDates: Date[] = [];
       let currentDate = new Date(startDate);
       
@@ -65,15 +68,16 @@ export function useCommercialStats(
       }
 
       const dailyStats = validDates.map(date => {
-        const dayStart = new Date(date);
-        dayStart.setHours(0, 0, 0, 0);
-        
-        const dayEnd = new Date(date);
-        dayEnd.setHours(23, 59, 59, 999);
+        // Criando novas instâncias de Date para evitar modificação acidental
+        const dayStart = normalizeToStartOfDay(new Date(date));
+        const dayEnd = normalizeToEndOfDay(new Date(date));
 
         const dayActivities = activitiesResult.data.filter(activity => {
+          if (!activity.created_at) return false;
           const activityDate = new Date(activity.created_at);
-          return activityDate >= dayStart && activityDate <= dayEnd;
+          // Comparação usando timestamp para evitar problemas de timezone
+          return activityDate.getTime() >= dayStart.getTime() && 
+                 activityDate.getTime() <= dayEnd.getTime();
         });
 
         const enrollments = dayActivities.filter(activity => 
@@ -81,6 +85,17 @@ export function useCommercialStats(
         ).length;
 
         const formattedDate = date.toISOString().split('T')[0];
+        
+        // Log detalhado para depuração das datas problemáticas
+        const isRecentDate = date.getDate() >= 15 && date.getMonth() === 3; // Abril é mês 3 (0-indexed)
+        if (isRecentDate) {
+          console.log(`COMERCIAL - VERIFICAÇÃO DE DATA [${formattedDate}]:`, {
+            dayStart: dayStart.toISOString(),
+            dayEnd: dayEnd.toISOString(),
+            totalDayActivities: dayActivities.length
+          });
+        }
+        
         console.log(`Estatísticas comerciais para ${formattedDate}:`, {
           totalAtividades: dayActivities.length,
           matriculas: enrollments
@@ -89,8 +104,11 @@ export function useCommercialStats(
         return {
           date,
           newClients: clientsResult.data.filter(client => {
+            if (!client.created_at) return false;
             const clientDate = new Date(client.created_at);
-            return clientDate >= dayStart && clientDate <= dayEnd;
+            // Comparação usando timestamp para evitar problemas de timezone
+            return clientDate.getTime() >= dayStart.getTime() && 
+                   clientDate.getTime() <= dayEnd.getTime();
           }).length,
           contactAttempts: dayActivities.filter(activity => 
             ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
@@ -101,12 +119,14 @@ export function useCommercialStats(
           scheduledVisits: dayActivities.filter(activity => 
             activity.tipo_atividade === 'Agendamento'
           ).length,
-          awaitingVisits: activitiesResult.data.filter(activity => 
-            activity.tipo_atividade === 'Agendamento' && 
-            activity.scheduled_date && 
-            new Date(activity.scheduled_date) >= dayStart && 
-            new Date(activity.scheduled_date) <= dayEnd
-          ).length,
+          awaitingVisits: activitiesResult.data.filter(activity => {
+            if (!activity.scheduled_date) return false;
+            const scheduledDate = new Date(activity.scheduled_date);
+            // Comparação usando timestamp para evitar problemas de timezone
+            return activity.tipo_atividade === 'Agendamento' && 
+                   scheduledDate.getTime() >= dayStart.getTime() && 
+                   scheduledDate.getTime() <= dayEnd.getTime();
+          }).length,
           completedVisits: dayActivities.filter(activity => 
             activity.tipo_atividade === 'Atendimento'
           ).length,
