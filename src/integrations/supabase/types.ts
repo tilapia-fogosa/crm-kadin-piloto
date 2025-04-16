@@ -9,6 +9,96 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      alunos: {
+        Row: {
+          active: boolean
+          codigo: string | null
+          created_at: string
+          curso: string | null
+          dias_apostila: number | null
+          dias_supera: number | null
+          email: string | null
+          id: string
+          idade: number | null
+          indice: string | null
+          matricula: string | null
+          nome: string
+          telefone: string | null
+          turma_id: string
+          ultima_correcao_ah: string | null
+          ultima_falta: string | null
+          ultima_pagina: number | null
+          ultimo_nivel: string | null
+          vencimento_contrato: string | null
+        }
+        Insert: {
+          active?: boolean
+          codigo?: string | null
+          created_at?: string
+          curso?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
+          id?: string
+          idade?: number | null
+          indice?: string | null
+          matricula?: string | null
+          nome: string
+          telefone?: string | null
+          turma_id: string
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultimo_nivel?: string | null
+          vencimento_contrato?: string | null
+        }
+        Update: {
+          active?: boolean
+          codigo?: string | null
+          created_at?: string
+          curso?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
+          id?: string
+          idade?: number | null
+          indice?: string | null
+          matricula?: string | null
+          nome?: string
+          telefone?: string | null
+          turma_id?: string
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultimo_nivel?: string | null
+          vencimento_contrato?: string | null
+        }
+        Relationships: []
+      }
+      apostilas: {
+        Row: {
+          created_at: string
+          exercicios_por_pagina: number | null
+          id: string
+          nome: string
+          total_paginas: number
+        }
+        Insert: {
+          created_at?: string
+          exercicios_por_pagina?: number | null
+          id?: string
+          nome: string
+          total_paginas: number
+        }
+        Update: {
+          created_at?: string
+          exercicios_por_pagina?: number | null
+          id?: string
+          nome?: string
+          total_paginas?: number
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           active: boolean
@@ -393,6 +483,24 @@ export type Database = {
           },
         ]
       }
+      dados_importantes: {
+        Row: {
+          data: string | null
+          id: number
+          key: string
+        }
+        Insert: {
+          data?: string | null
+          id?: number
+          key: string
+        }
+        Update: {
+          data?: string | null
+          id?: number
+          key?: string
+        }
+        Relationships: []
+      }
       data_imports: {
         Row: {
           active: boolean
@@ -442,6 +550,38 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faltas_alunos: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data_falta: string
+          id: string
+          motivo: string | null
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data_falta: string
+          id?: string
+          motivo?: string | null
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data_falta?: string
+          id?: string
+          motivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faltas_alunos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
             referencedColumns: ["id"]
           },
         ]
@@ -810,6 +950,129 @@ export type Database = {
           },
           {
             foreignKeyName: "pedagogical_schedules_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      presencas: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data_aula: string
+          id: string
+          is_reposicao: boolean
+          observacao: string | null
+          presente: boolean
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data_aula: string
+          id?: string
+          is_reposicao?: boolean
+          observacao?: string | null
+          presente?: boolean
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data_aula?: string
+          id?: string
+          is_reposicao?: boolean
+          observacao?: string | null
+          presente?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "presencas_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produtividade_abaco: {
+        Row: {
+          aluno_id: string
+          apostila: string | null
+          comentario: string | null
+          created_at: string
+          data_aula: string
+          erros: number | null
+          exercicios: number | null
+          fez_desafio: boolean | null
+          id: string
+          is_reposicao: boolean
+          pagina: string | null
+          presente: boolean
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string
+          data_aula: string
+          erros?: number | null
+          exercicios?: number | null
+          fez_desafio?: boolean | null
+          id?: string
+          is_reposicao?: boolean
+          pagina?: string | null
+          presente?: boolean
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string
+          data_aula?: string
+          erros?: number | null
+          exercicios?: number | null
+          fez_desafio?: boolean | null
+          id?: string
+          is_reposicao?: boolean
+          pagina?: string | null
+          presente?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produtividade_abaco_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professores: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          unit_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          unit_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professores_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
@@ -1340,6 +1603,59 @@ export type Database = {
         }
         Relationships: []
       }
+      turmas: {
+        Row: {
+          created_at: string
+          dia_semana: Database["public"]["Enums"]["dia_semana"]
+          horario: string
+          id: string
+          nome: string
+          professor_id: string
+        }
+        Insert: {
+          created_at?: string
+          dia_semana: Database["public"]["Enums"]["dia_semana"]
+          horario: string
+          id?: string
+          nome: string
+          professor_id: string
+        }
+        Update: {
+          created_at?: string
+          dia_semana?: Database["public"]["Enums"]["dia_semana"]
+          horario?: string
+          id?: string
+          nome?: string
+          professor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "turmas_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unidades: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       unit_users: {
         Row: {
           active: boolean
@@ -1744,6 +2060,14 @@ export type Database = {
       }
     }
     Enums: {
+      dia_semana:
+        | "segunda"
+        | "terca"
+        | "quarta"
+        | "quinta"
+        | "sexta"
+        | "sabado"
+        | "domingo"
       due_day: "5" | "10" | "15" | "20" | "25"
       gender: "masculino" | "feminino"
       marital_status: "solteiro" | "casado" | "divorciado" | "viuvo" | "outro"
@@ -1878,6 +2202,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      dia_semana: [
+        "segunda",
+        "terca",
+        "quarta",
+        "quinta",
+        "sexta",
+        "sabado",
+        "domingo",
+      ],
       due_day: ["5", "10", "15", "20", "25"],
       gender: ["masculino", "feminino"],
       marital_status: ["solteiro", "casado", "divorciado", "viuvo", "outro"],

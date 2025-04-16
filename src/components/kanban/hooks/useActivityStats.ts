@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, setYear, setMonth, startOfDay, isAfter } from "date-fns";
+import { startOfMonth, endOfMonth, setYear, setMonth, startOfDay, isAfter, parseISO } from "date-fns";
 import { DailyStats } from "../types/activity-dashboard.types";
 import { UserUnit } from "./useUserUnit";
 
@@ -15,21 +15,35 @@ export function useActivityStats(
   return useQuery({
     queryKey: ['activity-dashboard', selectedSource, selectedMonth, selectedYear, selectedUnitId, userUnits?.map(u => u.unit_id)],
     queryFn: async () => {
-      const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
-      const endDate = endOfMonth(startDate);
+      // Correção: Criar datas de forma segura, evitando modificações involuntárias
+      // Convertendo strings para números e criando novas instâncias de Date
+      const monthNum = parseInt(selectedMonth);
+      const yearNum = parseInt(selectedYear);
+      
+      // Log inicial para tracking
+      console.log('Activity Stats - Parâmetros de filtragem:', { 
+        selectedMonth: monthNum, 
+        selectedYear: yearNum,
+        selectedSource,
+        selectedUnitId 
+      });
+      
+      // Criar uma nova data para o início do mês selecionado
+      const baseDate = new Date();
+      const startDate = startOfMonth(new Date(yearNum, monthNum));
+      const endDate = endOfMonth(new Date(yearNum, monthNum));
+      const today = startOfDay(new Date());
+
+      console.log('Activity Stats - Período de consulta:', { 
+        startDate: startDate.toISOString(), 
+        endDate: endDate.toISOString(),
+        today: today.toISOString()
+      });
+
       const unitIds = selectedUnitId === 'todas' 
         ? userUnits?.map(u => u.unit_id) || []
         : [selectedUnitId];
-      const today = startOfDay(new Date());
-
-      console.log('Fetching activity dashboard stats:', { 
-        startDate: startDate.toISOString(), 
-        endDate: endDate.toISOString(),
-        selectedSource,
-        unitIds,
-        selectedUnitId 
-      });
-
+        
       // Buscar dados de clientes e atividades principais
       const [clientsResult, activitiesResult, awaitingVisitsResult] = await Promise.all([
         // Clientes criados no período
@@ -75,34 +89,55 @@ export function useActivityStats(
       console.log('Total de atividades encontradas:', activities.length);
       console.log('Total de visitas aguardadas encontradas:', awaitingVisits.length);
 
-      const validDates = Array.from({ length: endDate.getDate() }, (_, index) => {
-        const date = new Date(startDate);
-        date.setDate(index + 1);
-        return !isAfter(startOfDay(date), today) ? date : null;
-      }).filter(date => date !== null) as Date[];
+      // Melhoria: Array de datas válidas no mês escolhido (até o dia atual)
+      // Gerando datas com base no startDate e endDate (início e fim do mês selecionado)
+      const validDates: Date[] = [];
+      let currentDate = new Date(startDate);
+      
+      while (currentDate <= endDate) {
+        // Só adiciona datas que não são futuras em relação a hoje
+        if (!isAfter(startOfDay(new Date(currentDate)), today)) {
+          validDates.push(new Date(currentDate));
+        }
+        // Avança para o próximo dia
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      console.log(`Gerando estatísticas para ${validDates.length} dias no período`);
 
       const dailyStats = validDates.map(date => {
-        const dayStart = new Date(date.setHours(0, 0, 0, 0));
-        const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+        // Criando novas instâncias de Date para evitar modificação acidental
+        const dayStart = new Date(date);
+        dayStart.setHours(0, 0, 0, 0);
+        
+        const dayEnd = new Date(date);
+        dayEnd.setHours(23, 59, 59, 999);
 
         // Atividades criadas no dia
-        const dayActivities = activities.filter(activity => 
-          new Date(activity.created_at) >= dayStart && 
-          new Date(activity.created_at) <= dayEnd
-        );
+        const dayActivities = activities.filter(activity => {
+          const activityDate = new Date(activity.created_at);
+          return activityDate >= dayStart && activityDate <= dayEnd;
+        });
 
         // Visitas aguardadas para o dia
-        const dayAwaitingVisits = awaitingVisits.filter(activity => 
-          activity.scheduled_date && 
-          new Date(activity.scheduled_date) >= dayStart && 
-          new Date(activity.scheduled_date) <= dayEnd
-        );
+        const dayAwaitingVisits = awaitingVisits.filter(activity => {
+          if (!activity.scheduled_date) return false;
+          const scheduledDate = new Date(activity.scheduled_date);
+          return scheduledDate >= dayStart && scheduledDate <= dayEnd;
+        });
+
+        const dayClients = clients.filter(client => {
+          const clientDate = new Date(client.created_at);
+          return clientDate >= dayStart && clientDate <= dayEnd;
+        });
 
         const enrollments = dayActivities.filter(activity => 
           activity.tipo_atividade === 'Matrícula'
         ).length;
 
-        console.log(`Estatísticas para ${date.toISOString()}:`, {
+        const formattedDate = date.toISOString().split('T')[0];
+        console.log(`Estatísticas para ${formattedDate}:`, {
+          clientes: dayClients.length,
           totalAtividades: dayActivities.length,
           visitasAguardadas: dayAwaitingVisits.length,
           matriculas: enrollments
@@ -110,10 +145,7 @@ export function useActivityStats(
 
         return {
           date,
-          newClients: clients.filter(client => 
-            new Date(client.created_at) >= dayStart && 
-            new Date(client.created_at) <= dayEnd
-          ).length,
+          newClients: dayClients.length,
           contactAttempts: dayActivities.filter(activity => 
             ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
           ).length,
@@ -123,7 +155,7 @@ export function useActivityStats(
           scheduledVisits: dayActivities.filter(activity => 
             activity.tipo_atividade === 'Agendamento'
           ).length,
-          // Agora usando o resultado da nova query para visitas aguardadas
+          // Usando o resultado da nova query para visitas aguardadas
           awaitingVisits: dayAwaitingVisits.length,
           completedVisits: dayActivities.filter(activity => 
             activity.tipo_atividade === 'Atendimento'
