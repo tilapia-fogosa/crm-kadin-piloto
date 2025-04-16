@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, endOfMonth, setYear, setMonth, startOfDay, isAfter, parseISO } from "date-fns";
 import { DailyStats } from "../types/activity-dashboard.types";
 import { UserUnit } from "./useUserUnit";
+import { createSafeDate } from "@/utils/dateUtils";
 
 export function useActivityStats(
   selectedSource: string,
@@ -15,36 +16,34 @@ export function useActivityStats(
   return useQuery({
     queryKey: ['activity-dashboard', selectedSource, selectedMonth, selectedYear, selectedUnitId, userUnits?.map(u => u.unit_id)],
     queryFn: async () => {
-      // Correção: Criar datas de forma segura, evitando modificações involuntárias
-      // Convertendo strings para números e criando novas instâncias de Date
+      // Conversão segura de strings para números
       const monthNum = parseInt(selectedMonth);
       const yearNum = parseInt(selectedYear);
       
-      // Log inicial para tracking
+      // Log inicial detalhado
       console.log('Activity Stats - Parâmetros de filtragem:', { 
         selectedMonth: monthNum, 
         selectedYear: yearNum,
         selectedSource,
-        selectedUnitId 
+        selectedUnitId,
+        currentDate: new Date().toISOString()
       });
       
-      // Criar uma nova data para o início do mês selecionado
-      const baseDate = new Date();
-      const startDate = startOfMonth(new Date(yearNum, monthNum));
-      const endDate = endOfMonth(new Date(yearNum, monthNum));
-      const today = startOfDay(new Date());
-
-      console.log('Activity Stats - Período de consulta:', { 
+      // Criação segura de datas de início e fim do mês
+      // Corrigindo a criação de datas - monthNum já é 0-indexed nos valores do select (0-11)
+      const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
+      const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
+      
+      console.log('Activity Stats - Período de consulta corrigido:', { 
         startDate: startDate.toISOString(), 
-        endDate: endDate.toISOString(),
-        today: today.toISOString()
+        endDate: endDate.toISOString()
       });
 
       const unitIds = selectedUnitId === 'todas' 
         ? userUnits?.map(u => u.unit_id) || []
         : [selectedUnitId];
         
-      // Buscar dados de clientes e atividades principais
+      // Busca dados no Supabase
       const [clientsResult, activitiesResult, awaitingVisitsResult] = await Promise.all([
         // Clientes criados no período
         supabase.from('clients')
@@ -89,21 +88,20 @@ export function useActivityStats(
       console.log('Total de atividades encontradas:', activities.length);
       console.log('Total de visitas aguardadas encontradas:', awaitingVisits.length);
 
-      // Melhoria: Array de datas válidas no mês escolhido (até o dia atual)
-      // Gerando datas com base no startDate e endDate (início e fim do mês selecionado)
+      // CORREÇÃO IMPORTANTE: Gerar datas para todos os dias do mês, sem filtrar por data atual
+      // Isso permite mostrar todos os dias, mesmo os futuros ou passados
       const validDates: Date[] = [];
       let currentDate = new Date(startDate);
       
       while (currentDate <= endDate) {
-        // Só adiciona datas que não são futuras em relação a hoje
-        if (!isAfter(startOfDay(new Date(currentDate)), today)) {
-          validDates.push(new Date(currentDate));
-        }
+        // Adicionamos todos os dias do mês selecionado, sem filtrar pela data atual
+        validDates.push(new Date(currentDate));
+        
         // Avança para o próximo dia
         currentDate.setDate(currentDate.getDate() + 1);
       }
       
-      console.log(`Gerando estatísticas para ${validDates.length} dias no período`);
+      console.log(`Gerando estatísticas para ${validDates.length} dias no período (todos os dias do mês)`);
 
       const dailyStats = validDates.map(date => {
         // Criando novas instâncias de Date para evitar modificação acidental
@@ -112,6 +110,8 @@ export function useActivityStats(
         
         const dayEnd = new Date(date);
         dayEnd.setHours(23, 59, 59, 999);
+        
+        const formattedDate = dayStart.toISOString().split('T')[0];
 
         // Atividades criadas no dia
         const dayActivities = activities.filter(activity => {
@@ -135,7 +135,6 @@ export function useActivityStats(
           activity.tipo_atividade === 'Matrícula'
         ).length;
 
-        const formattedDate = date.toISOString().split('T')[0];
         console.log(`Estatísticas para ${formattedDate}:`, {
           clientes: dayClients.length,
           totalAtividades: dayActivities.length,

@@ -1,8 +1,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, setYear, setMonth, startOfDay, isAfter } from "date-fns";
+import { startOfMonth, endOfMonth, startOfDay, isAfter } from "date-fns";
 import { DailyStats } from "../../kanban/types/activity-dashboard.types";
+import { createSafeDate } from "@/utils/dateUtils";
 
 export function useCommercialStats(
   selectedSource: string,
@@ -13,15 +14,20 @@ export function useCommercialStats(
   return useQuery({
     queryKey: ['commercial-dashboard', selectedSource, selectedMonth, selectedYear, selectedUnitId],
     queryFn: async () => {
-      const startDate = startOfMonth(setYear(setMonth(new Date(), parseInt(selectedMonth)), parseInt(selectedYear)));
-      const endDate = endOfMonth(startDate);
+      // Conversão segura de strings para números
+      const monthNum = parseInt(selectedMonth);
+      const yearNum = parseInt(selectedYear);
+      
+      // Criação segura de datas de início e fim do mês
+      const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
+      const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
       const today = startOfDay(new Date());
 
       console.log('Buscando estatísticas comerciais:', { 
         startDate: startDate.toISOString(), 
         endDate: endDate.toISOString(),
         selectedSource,
-        selectedUnitId 
+        selectedUnitId
       });
 
       const [clientsResult, activitiesResult] = await Promise.all([
@@ -49,36 +55,43 @@ export function useCommercialStats(
       console.log('Total de clientes encontrados:', clientsResult.data.length);
       console.log('Total de atividades encontradas:', activitiesResult.data.length);
 
-      const validDates = Array.from({ length: endDate.getDate() }, (_, index) => {
-        const date = new Date(startDate);
-        date.setDate(index + 1);
-        return !isAfter(startOfDay(date), today) ? date : null;
-      }).filter(date => date !== null) as Date[];
+      // Incluir todos os dias do mês, sem filtrar pela data atual
+      const validDates: Date[] = [];
+      let currentDate = new Date(startDate);
+      
+      while (currentDate <= endDate) {
+        validDates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
 
       const dailyStats = validDates.map(date => {
-        const dayStart = new Date(date.setHours(0, 0, 0, 0));
-        const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+        const dayStart = new Date(date);
+        dayStart.setHours(0, 0, 0, 0);
+        
+        const dayEnd = new Date(date);
+        dayEnd.setHours(23, 59, 59, 999);
 
-        const dayActivities = activitiesResult.data.filter(activity => 
-          new Date(activity.created_at) >= dayStart && 
-          new Date(activity.created_at) <= dayEnd
-        );
+        const dayActivities = activitiesResult.data.filter(activity => {
+          const activityDate = new Date(activity.created_at);
+          return activityDate >= dayStart && activityDate <= dayEnd;
+        });
 
         const enrollments = dayActivities.filter(activity => 
           activity.tipo_atividade === 'Matrícula'
         ).length;
 
-        console.log(`Estatísticas para ${date.toISOString()}:`, {
+        const formattedDate = date.toISOString().split('T')[0];
+        console.log(`Estatísticas comerciais para ${formattedDate}:`, {
           totalAtividades: dayActivities.length,
           matriculas: enrollments
         });
 
         return {
           date,
-          newClients: clientsResult.data.filter(client => 
-            new Date(client.created_at) >= dayStart && 
-            new Date(client.created_at) <= dayEnd
-          ).length,
+          newClients: clientsResult.data.filter(client => {
+            const clientDate = new Date(client.created_at);
+            return clientDate >= dayStart && clientDate <= dayEnd;
+          }).length,
           contactAttempts: dayActivities.filter(activity => 
             ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
           ).length,

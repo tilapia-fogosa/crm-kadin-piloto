@@ -25,9 +25,10 @@ export const formatDateForInput = (date: Date | undefined): string => {
   return '';
 };
 
-// Nova função para criar datas seguras (sem mutações acidentais)
+// Função melhorada para criar datas seguras (sem mutações acidentais)
 export const createSafeDate = (year: number, month: number, day: number = 1): Date => {
   // month é 0-indexed no JavaScript (janeiro = 0)
+  // Os valores de mês nos nossos selects já são 0-indexed (0-11)
   console.log(`Criando data segura: Ano=${year}, Mês=${month}, Dia=${day}`);
   return new Date(year, month, day);
 };
