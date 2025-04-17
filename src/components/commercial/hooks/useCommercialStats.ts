@@ -3,7 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, endOfMonth, startOfDay, isAfter } from "date-fns";
 import { DailyStats } from "../../kanban/types/activity-dashboard.types";
-import { createSafeDate, normalizeToStartOfDay, normalizeToEndOfDay } from "@/utils/dateUtils";
+import { 
+  createSafeDate, 
+  normalizeToStartOfDay, 
+  normalizeToEndOfDay, 
+  isSameLocalDate 
+} from "@/utils/dateUtils";
 
 export function useCommercialStats(
   selectedSource: string,
@@ -68,31 +73,33 @@ export function useCommercialStats(
       }
 
       const dailyStats = validDates.map(date => {
-        // Criando novas instâncias de Date para evitar modificação acidental
-        const dayStart = normalizeToStartOfDay(new Date(date));
-        const dayEnd = normalizeToEndOfDay(new Date(date));
+        // Formatação para logging
+        const formattedDate = date.toISOString().split('T')[0];
 
+        // Clientes criados no dia
+        const dayClients = clientsResult.data.filter(client => {
+          if (!client.created_at) return false;
+          const clientDate = new Date(client.created_at);
+          return isSameLocalDate(date, clientDate);
+        });
+
+        // Atividades criadas no dia
         const dayActivities = activitiesResult.data.filter(activity => {
           if (!activity.created_at) return false;
           const activityDate = new Date(activity.created_at);
-          // Comparação usando timestamp para evitar problemas de timezone
-          return activityDate.getTime() >= dayStart.getTime() && 
-                 activityDate.getTime() <= dayEnd.getTime();
+          return isSameLocalDate(date, activityDate);
         });
 
         const enrollments = dayActivities.filter(activity => 
           activity.tipo_atividade === 'Matrícula'
         ).length;
 
-        const formattedDate = date.toISOString().split('T')[0];
-        
         // Log detalhado para depuração das datas problemáticas
         const isRecentDate = date.getDate() >= 15 && date.getMonth() === 3; // Abril é mês 3 (0-indexed)
         if (isRecentDate) {
           console.log(`COMERCIAL - VERIFICAÇÃO DE DATA [${formattedDate}]:`, {
-            dayStart: dayStart.toISOString(),
-            dayEnd: dayEnd.toISOString(),
-            totalDayActivities: dayActivities.length
+            totalDayActivities: dayActivities.length,
+            tiposAtividade: dayActivities.map(a => a.tipo_atividade)
           });
         }
         
@@ -103,13 +110,7 @@ export function useCommercialStats(
 
         return {
           date,
-          newClients: clientsResult.data.filter(client => {
-            if (!client.created_at) return false;
-            const clientDate = new Date(client.created_at);
-            // Comparação usando timestamp para evitar problemas de timezone
-            return clientDate.getTime() >= dayStart.getTime() && 
-                   clientDate.getTime() <= dayEnd.getTime();
-          }).length,
+          newClients: dayClients.length,
           contactAttempts: dayActivities.filter(activity => 
             ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
           ).length,
@@ -122,10 +123,8 @@ export function useCommercialStats(
           awaitingVisits: activitiesResult.data.filter(activity => {
             if (!activity.scheduled_date) return false;
             const scheduledDate = new Date(activity.scheduled_date);
-            // Comparação usando timestamp para evitar problemas de timezone
-            return activity.tipo_atividade === 'Agendamento' && 
-                   scheduledDate.getTime() >= dayStart.getTime() && 
-                   scheduledDate.getTime() <= dayEnd.getTime();
+            return isSameLocalDate(date, scheduledDate) && 
+                   activity.tipo_atividade === 'Agendamento';
           }).length,
           completedVisits: dayActivities.filter(activity => 
             activity.tipo_atividade === 'Atendimento'

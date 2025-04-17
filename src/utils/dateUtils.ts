@@ -69,3 +69,32 @@ export const toISODateString = (date: Date): string => {
   console.log(`Convertendo para ISO Date String: ${date.toISOString()} -> ${isoString}`);
   return isoString;
 };
+
+/**
+ * Compara duas datas sem considerar a hora e a timezone
+ * @param date1 Primeira data para comparação
+ * @param date2 Segunda data para comparação
+ * @returns true se as datas são iguais desconsiderando horário
+ */
+export const isSameLocalDate = (date1: Date, date2: Date): boolean => {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  
+  const result = 
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate();
+  
+  console.log(`Comparando datas locais: ${date1.toISOString()} e ${date2.toISOString()} => ${result ? 'Iguais' : 'Diferentes'}`);
+  return result;
+};
+
+/**
+ * Converte uma data UTC para o dia local correspondente
+ * Importante para comparar datas armazenadas em UTC com datas locais
+ */
+export const utcToLocalDay = (utcDate: Date): Date => {
+  const localDate = new Date(utcDate);
+  console.log(`Convertendo UTC para dia local: ${utcDate.toISOString()} -> ${localDate.toISOString()}`);
+  return localDate;
+};
