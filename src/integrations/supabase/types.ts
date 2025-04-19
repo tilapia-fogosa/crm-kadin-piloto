@@ -22,6 +22,7 @@ export type Database = {
           idade: number | null
           indice: string | null
           matricula: string | null
+          niveldesafio: number | null
           nome: string
           telefone: string | null
           turma_id: string
@@ -43,6 +44,7 @@ export type Database = {
           idade?: number | null
           indice?: string | null
           matricula?: string | null
+          niveldesafio?: number | null
           nome: string
           telefone?: string | null
           turma_id: string
@@ -64,6 +66,7 @@ export type Database = {
           idade?: number | null
           indice?: string | null
           matricula?: string | null
+          niveldesafio?: number | null
           nome?: string
           telefone?: string | null
           turma_id?: string
@@ -553,6 +556,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      estagiarios: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          nome: string
+          unit_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          unit_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          unit_id?: string
+        }
+        Relationships: []
       }
       faltas_alunos: {
         Row: {
@@ -1044,6 +1071,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "produtividade_abaco_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produtividade_ah: {
+        Row: {
+          aluno_id: string
+          apostila: string | null
+          comentario: string | null
+          created_at: string
+          erros: number | null
+          exercicios: number | null
+          id: string
+          professor_correcao: string | null
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string
+          erros?: number | null
+          exercicios?: number | null
+          id?: string
+          professor_correcao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string
+          erros?: number | null
+          exercicios?: number | null
+          id?: string
+          professor_correcao?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produtividade_ah_aluno_id_fkey"
             columns: ["aluno_id"]
             isOneToOne: false
             referencedRelation: "alunos"
