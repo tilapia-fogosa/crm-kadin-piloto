@@ -1,5 +1,6 @@
 
 import { DailyStats, TotalStats } from "../types/activity-dashboard.types";
+import { format, isSameDay } from "date-fns";
 
 /**
  * Calcula estatísticas totais a partir de estatísticas diárias
@@ -19,6 +20,13 @@ export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | n
   const rawTotals = stats.reduce((acc, day) => {
     // Validação extra para cada dia
     if (!day) return acc;
+    
+    // Log detalhado para depuração
+    console.log(`[STATS] Processando dia ${format(day.date, 'dd/MM/yyyy')}:`, {
+      newClients: day.newClients,
+      contactAttempts: day.contactAttempts,
+      effectiveContacts: day.effectiveContacts
+    });
     
     return {
       newClients: acc.newClients + (day.newClients || 0),

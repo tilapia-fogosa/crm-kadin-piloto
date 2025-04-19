@@ -1,4 +1,6 @@
 
+import { format, startOfDay, endOfDay, parseISO } from "date-fns";
+
 /**
  * Utilitários para manipulação de datas
  * Inclui funções para parsing, formatação e normalização de datas
@@ -24,7 +26,7 @@ export const createSafeDate = (year: number, month: number, day: number = 1): Da
     return new Date(); // Retornar data atual como fallback
   }
   
-  console.log(`[DATE UTILS] Data criada: ${date.toISOString()}`);
+  console.log(`[DATE UTILS] Data criada: ${date.toISOString()} (${format(date, 'dd/MM/yyyy')})`);
   return date;
 };
 
@@ -39,13 +41,7 @@ export const formatDateForInput = (date: Date | undefined): string => {
   // Verificar se é uma Data válida
   if (date instanceof Date && !isNaN(date.getTime())) {
     // Garantir timezone local na formatação
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const formattedDate = `${year}-${month}-${day}`;
-    
-    console.log(`[DATE UTILS] Formatando ${date.toISOString()} para entrada: ${formattedDate}`);
-    return formattedDate;
+    return format(date, 'yyyy-MM-dd');
   }
   
   return '';
@@ -60,8 +56,8 @@ export const parseFormDate = (dateString: string | undefined): Date | undefined 
   if (!dateString) return undefined;
   
   try {
-    // Criar uma nova instância de Data
-    const date = new Date(dateString);
+    // Usar parseISO do date-fns para parsing consistente
+    const date = parseISO(dateString);
     
     // Verificar se a data é válida
     if (isNaN(date.getTime())) {
@@ -89,12 +85,13 @@ export const isSameLocalDate = (date1: Date, date2: Date): boolean => {
     return false;
   }
   
-  const result = 
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate();
+  // Usar startOfDay para comparação consistente
+  const day1 = startOfDay(date1);
+  const day2 = startOfDay(date2);
   
-  console.log(`[DATE UTILS] Comparando ${date1.toISOString()} e ${date2.toISOString()} => ${result ? 'Iguais' : 'Diferentes'}`);
+  const result = day1.getTime() === day2.getTime();
+  
+  console.log(`[DATE UTILS] Comparando ${format(date1, 'dd/MM/yyyy')} e ${format(date2, 'dd/MM/yyyy')} => ${result ? 'Iguais' : 'Diferentes'}`);
   return result;
 };
 
@@ -109,10 +106,9 @@ export const normalizeToStartOfDay = (date: Date): Date => {
     return new Date();
   }
   
-  const normalizedDate = new Date(date);
-  normalizedDate.setHours(0, 0, 0, 0);
+  const normalizedDate = startOfDay(date);
   
-  console.log(`[DATE UTILS] Normalizado início: ${date.toISOString()} -> ${normalizedDate.toISOString()}`);
+  console.log(`[DATE UTILS] Normalizado início: ${format(date, 'dd/MM/yyyy HH:mm:ss')} -> ${format(normalizedDate, 'dd/MM/yyyy HH:mm:ss')}`);
   return normalizedDate;
 };
 
@@ -127,10 +123,9 @@ export const normalizeToEndOfDay = (date: Date): Date => {
     return new Date();
   }
   
-  const normalizedDate = new Date(date);
-  normalizedDate.setHours(23, 59, 59, 999);
+  const normalizedDate = endOfDay(date);
   
-  console.log(`[DATE UTILS] Normalizado fim: ${date.toISOString()} -> ${normalizedDate.toISOString()}`);
+  console.log(`[DATE UTILS] Normalizado fim: ${format(date, 'dd/MM/yyyy HH:mm:ss')} -> ${format(normalizedDate, 'dd/MM/yyyy HH:mm:ss')}`);
   return normalizedDate;
 };
 
@@ -146,8 +141,8 @@ export const toISODateString = (date: Date): string => {
   }
   
   try {
-    const isoString = date.toISOString().split('T')[0];
-    console.log(`[DATE UTILS] ISO Date String: ${date.toISOString()} -> ${isoString}`);
+    const isoString = format(date, 'yyyy-MM-dd');
+    console.log(`[DATE UTILS] ISO Date String: ${format(date, 'dd/MM/yyyy')} -> ${isoString}`);
     return isoString;
   } catch (error) {
     console.error('[DATE UTILS] Erro ao formatar data para ISO:', error);

@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, addDays } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, addDays } from "date-fns";
 import { DailyStats } from "../types/activity-dashboard.types";
 import { processDailyStats } from "../utils/activity/activityStatsProcessor";
 
@@ -43,12 +43,17 @@ export function useActivityStats(
       }
       
       // Criação de datas de início e fim do mês
+      // Importante: O mês em JavaScript é 0-indexed (0-11, 0 = Janeiro)
       const startDate = startOfMonth(new Date(yearNum, monthNum));
       const endDate = endOfMonth(new Date(yearNum, monthNum));
       
       console.log('[STATS QUERY] Período calculado:', {
         startDate: startDate.toISOString(),
-        endDate: endDate.toISOString()
+        endDate: endDate.toISOString(),
+        ano: yearNum,
+        mes: monthNum,
+        diaInicio: startDate.getDate(),
+        diaFim: endDate.getDate()
       });
 
       // Determinar IDs das unidades para filtro
@@ -90,25 +95,18 @@ export function useActivityStats(
       
       console.log(`[STATS QUERY] Encontrados ${clients?.length || 0} clientes no período`);
       
-      // Buscar atividades no período com join para clientes
-      const activitiesQuery = supabase
+      // Buscar atividades no período com left join para clientes
+      // Mudança importante: LEFT JOIN ao invés de INNER JOIN para não perder atividades
+      const { data: activities, error: activitiesError } = await supabase
         .from('client_activities')
         .select(`
           *,
-          clients!inner(*)
+          clients(*)
         `)
         .eq('active', true)
-        .eq('clients.active', true)
         .in('unit_id', unitIds)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
-      
-      // Aplicar filtro de origem se necessário
-      if (selectedSource !== 'todos') {
-        activitiesQuery.eq('clients.lead_source', selectedSource);
-      }
-      
-      const { data: activities, error: activitiesError } = await activitiesQuery;
 
       if (activitiesError) {
         console.error('[STATS QUERY] Erro ao buscar atividades:', activitiesError);
@@ -116,29 +114,32 @@ export function useActivityStats(
       }
       
       console.log(`[STATS QUERY] Encontradas ${activities?.length || 0} atividades no período`);
+      
+      // Filtrar atividades de clientes ativos e origem selecionada
+      const filteredActivities = activities.filter(activity => {
+        // Verificar se o cliente existe e está ativo
+        if (!activity.clients) return selectedSource === 'todos'; // Se não tem cliente, inclui apenas se buscando todas origens
+        
+        // Verificar se a origem do cliente corresponde à selecionada (se não for 'todos')
+        return selectedSource === 'todos' || activity.clients.lead_source === selectedSource;
+      });
+      
+      console.log(`[STATS QUERY] Após filtro, ${filteredActivities.length} atividades serão processadas`);
 
       // Gerar array com todas as datas do mês
-      const dailyStats: DailyStats[] = [];
-      let currentDate = new Date(startDate);
+      const allDates = eachDayOfInterval({ start: startDate, end: endDate });
+      console.log(`[STATS QUERY] Processando ${allDates.length} dias do mês`);
       
-      // Validação extra para evitar loops infinitos
-      const maxDays = 31;
-      let dayCount = 0;
-      
-      while (currentDate <= endDate && dayCount < maxDays) {
-        const dateClone = new Date(currentDate);
-        const dayStats = processDailyStats(
-          dateClone, 
-          activities || [], 
-          clients || []
-        );
+      // Processar estatísticas para cada dia
+      const dailyStats: DailyStats[] = allDates.map(date => {
+        // Log para rastreamento de processamento
+        console.log(`[STATS QUERY] Processando estatísticas para ${format(date, 'dd/MM/yyyy')}`);
         
-        dailyStats.push(dayStats);
-        currentDate = addDays(currentDate, 1);
-        dayCount++;
-      }
+        // Calcular estatísticas do dia
+        return processDailyStats(date, filteredActivities, clients || []);
+      });
 
-      console.log(`[STATS QUERY] Processadas estatísticas para ${dailyStats.length} dias`);
+      console.log(`[STATS QUERY] Processamento concluído. Retornando estatísticas de ${dailyStats.length} dias`);
       return dailyStats;
     },
     enabled: !!userUnits && userUnits.length > 0,

@@ -1,23 +1,6 @@
 
 import { DailyStats } from "../../types/activity-dashboard.types";
-
-/**
- * Verifica se duas datas são o mesmo dia no calendário, ignorando o tempo
- * @param date1 Primeira data para comparação
- * @param date2 Segunda data para comparação
- * @returns True se as datas representam o mesmo dia
- */
-const isSameDay = (date1: Date, date2: Date): boolean => {
-  // Log para debug
-  console.log(`Comparando datas: ${date1.toISOString()} e ${date2.toISOString()}`);
-  
-  // Comparação por ano, mês e dia
-  return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-  );
-};
+import { format, isSameDay } from "date-fns";
 
 /**
  * Agrupa atividades por dia e calcula estatísticas
@@ -32,10 +15,10 @@ export const processDailyStats = (
   clients: any[]
 ): DailyStats => {
   // Log inicial com data formatada para legibilidade
-  const dateStr = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+  const dateStr = format(date, 'yyyy-MM-dd');
   console.log(`[STATS] Processando estatísticas para ${dateStr}`);
   
-  // Filtrar atividades do dia - com validação de dados
+  // Filtrar atividades do dia usando isSameDay do date-fns para comparação segura
   const dayActivities = activities.filter(activity => {
     if (!activity?.created_at) {
       console.log(`[STATS] Atividade sem data de criação encontrada`);
@@ -57,7 +40,7 @@ export const processDailyStats = (
     }
   });
 
-  // Filtrar clientes criados no dia - com validação de dados
+  // Filtrar clientes criados no dia usando isSameDay do date-fns
   const dayClients = clients.filter(client => {
     if (!client?.created_at) {
       console.log(`[STATS] Cliente sem data de criação encontrado`);
@@ -79,7 +62,7 @@ export const processDailyStats = (
     }
   });
 
-  // Calcular visitas aguardadas para o dia - com validação de dados
+  // Calcular visitas aguardadas para o dia usando isSameDay do date-fns
   const dayAwaitingVisits = activities.filter(activity => {
     if (!activity?.scheduled_date || activity.tipo_atividade !== 'Agendamento') {
       return false;
