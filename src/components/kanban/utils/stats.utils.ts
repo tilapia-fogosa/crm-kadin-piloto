@@ -25,7 +25,8 @@ export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | n
     console.log(`[STATS] Processando dia ${format(day.date, 'dd/MM/yyyy')}:`, {
       newClients: day.newClients,
       contactAttempts: day.contactAttempts,
-      effectiveContacts: day.effectiveContacts
+      effectiveContacts: day.effectiveContacts,
+      enrollments: day.enrollments
     });
     
     return {

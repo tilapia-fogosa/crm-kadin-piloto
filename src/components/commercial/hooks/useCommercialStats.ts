@@ -7,7 +7,8 @@ import {
   createSafeDate, 
   normalizeToStartOfDay, 
   normalizeToEndOfDay, 
-  isSameLocalDate 
+  isSameLocalDate,
+  getUTCDateOnly
 } from "@/utils/dateUtils";
 
 export function useCommercialStats(
@@ -31,7 +32,8 @@ export function useCommercialStats(
         startDate: startDate.toISOString(), 
         endDate: endDate.toISOString(),
         selectedSource,
-        selectedUnitId
+        selectedUnitId,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       });
 
       // Datas ISO para uso no Supabase (garantindo compatibilidade de timezone)
@@ -63,6 +65,13 @@ export function useCommercialStats(
       console.log('Total de clientes encontrados:', clientsResult.data.length);
       console.log('Total de atividades encontradas:', activitiesResult.data.length);
 
+      // Detalhamento por unidade para debug
+      const activityByUnit = activitiesResult.data.reduce((acc: Record<string, number>, activity) => {
+        acc[activity.unit_id] = (acc[activity.unit_id] || 0) + 1;
+        return acc;
+      }, {});
+      console.log('Distribuição de atividades por unidade:', activityByUnit);
+
       // CORREÇÃO: Incluir todos os dias do mês, sem filtrar pela data atual
       const validDates: Date[] = [];
       let currentDate = new Date(startDate);
@@ -75,19 +84,24 @@ export function useCommercialStats(
       const dailyStats = validDates.map(date => {
         // Formatação para logging
         const formattedDate = date.toISOString().split('T')[0];
+        
+        // Normalizar data de referência para comparações
+        const refDateNormalized = getUTCDateOnly(date);
 
         // Clientes criados no dia
         const dayClients = clientsResult.data.filter(client => {
           if (!client.created_at) return false;
           const clientDate = new Date(client.created_at);
-          return isSameLocalDate(date, clientDate);
+          const clientDateNormalized = getUTCDateOnly(clientDate);
+          return refDateNormalized.getTime() === clientDateNormalized.getTime();
         });
 
         // Atividades criadas no dia
         const dayActivities = activitiesResult.data.filter(activity => {
           if (!activity.created_at) return false;
           const activityDate = new Date(activity.created_at);
-          return isSameLocalDate(date, activityDate);
+          const activityDateNormalized = getUTCDateOnly(activityDate);
+          return refDateNormalized.getTime() === activityDateNormalized.getTime();
         });
 
         const enrollments = dayActivities.filter(activity => 
@@ -99,7 +113,8 @@ export function useCommercialStats(
         if (isRecentDate) {
           console.log(`COMERCIAL - VERIFICAÇÃO DE DATA [${formattedDate}]:`, {
             totalDayActivities: dayActivities.length,
-            tiposAtividade: dayActivities.map(a => a.tipo_atividade)
+            tiposAtividade: dayActivities.map(a => a.tipo_atividade),
+            refDateNormalized: refDateNormalized.toISOString()
           });
         }
         
@@ -123,7 +138,8 @@ export function useCommercialStats(
           awaitingVisits: activitiesResult.data.filter(activity => {
             if (!activity.scheduled_date) return false;
             const scheduledDate = new Date(activity.scheduled_date);
-            return isSameLocalDate(date, scheduledDate) && 
+            const scheduledDateNormalized = getUTCDateOnly(scheduledDate);
+            return refDateNormalized.getTime() === scheduledDateNormalized.getTime() && 
                    activity.tipo_atividade === 'Agendamento';
           }).length,
           completedVisits: dayActivities.filter(activity => 

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, addDays } from "date-fns";
 import { DailyStats } from "../types/activity-dashboard.types";
 import { processDailyStats } from "../utils/activity/activityStatsProcessor";
+import { createSafeDate } from "@/utils/dateUtils";
 
 /**
  * Hook para buscar e processar estatísticas de atividades
@@ -44,8 +45,8 @@ export function useActivityStats(
       
       // Criação de datas de início e fim do mês
       // Importante: O mês em JavaScript é 0-indexed (0-11, 0 = Janeiro)
-      const startDate = startOfMonth(new Date(yearNum, monthNum));
-      const endDate = endOfMonth(new Date(yearNum, monthNum));
+      const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
+      const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
       
       console.log('[STATS QUERY] Período calculado:', {
         startDate: startDate.toISOString(),
@@ -53,7 +54,8 @@ export function useActivityStats(
         ano: yearNum,
         mes: monthNum,
         diaInicio: startDate.getDate(),
-        diaFim: endDate.getDate()
+        diaFim: endDate.getDate(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       });
 
       // Determinar IDs das unidades para filtro
@@ -95,8 +97,7 @@ export function useActivityStats(
       
       console.log(`[STATS QUERY] Encontrados ${clients?.length || 0} clientes no período`);
       
-      // Buscar atividades no período com left join para clientes
-      // Mudança importante: LEFT JOIN ao invés de INNER JOIN para não perder atividades
+      // Buscar atividades no período
       const { data: activities, error: activitiesError } = await supabase
         .from('client_activities')
         .select(`
@@ -114,6 +115,20 @@ export function useActivityStats(
       }
       
       console.log(`[STATS QUERY] Encontradas ${activities?.length || 0} atividades no período`);
+      
+      // Detalhamento por unidade para debug
+      const activityByUnit = activities.reduce((acc: Record<string, number>, activity) => {
+        acc[activity.unit_id] = (acc[activity.unit_id] || 0) + 1;
+        return acc;
+      }, {});
+      console.log('[STATS QUERY] Distribuição de atividades por unidade:', activityByUnit);
+      
+      // Detalhamento por tipo de atividade para debug
+      const activityByType = activities.reduce((acc: Record<string, number>, activity) => {
+        acc[activity.tipo_atividade] = (acc[activity.tipo_atividade] || 0) + 1;
+        return acc;
+      }, {});
+      console.log('[STATS QUERY] Distribuição de atividades por tipo:', activityByType);
       
       // Filtrar atividades de clientes ativos e origem selecionada
       const filteredActivities = activities.filter(activity => {
@@ -133,13 +148,23 @@ export function useActivityStats(
       // Processar estatísticas para cada dia
       const dailyStats: DailyStats[] = allDates.map(date => {
         // Log para rastreamento de processamento
-        console.log(`[STATS QUERY] Processando estatísticas para ${format(date, 'dd/MM/yyyy')}`);
+        console.log(`[STATS QUERY] Processando estatísticas para ${format(date, 'dd/MM/yyyy')} (${date.toISOString()})`);
         
         // Calcular estatísticas do dia
         return processDailyStats(date, filteredActivities, clients || []);
       });
 
       console.log(`[STATS QUERY] Processamento concluído. Retornando estatísticas de ${dailyStats.length} dias`);
+      
+      // Verificar se há dias com matriculas
+      const enrollmentDays = dailyStats.filter(day => day.enrollments > 0);
+      if (enrollmentDays.length > 0) {
+        console.log('[STATS QUERY] Dias com matrículas:', enrollmentDays.map(day => ({ 
+          date: format(day.date, 'dd/MM/yyyy'), 
+          enrollments: day.enrollments 
+        })));
+      }
+      
       return dailyStats;
     },
     enabled: !!userUnits && userUnits.length > 0,

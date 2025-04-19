@@ -85,13 +85,29 @@ export const isSameLocalDate = (date1: Date, date2: Date): boolean => {
     return false;
   }
   
-  // Usar startOfDay para comparação consistente
-  const day1 = startOfDay(date1);
-  const day2 = startOfDay(date2);
+  // Normalizar ambas as datas para UTC e comparar apenas o dia/mês/ano
+  const normalizedDate1 = new Date(Date.UTC(
+    date1.getFullYear(),
+    date1.getMonth(),
+    date1.getDate()
+  ));
   
-  const result = day1.getTime() === day2.getTime();
+  const normalizedDate2 = new Date(Date.UTC(
+    date2.getFullYear(),
+    date2.getMonth(),
+    date2.getDate()
+  ));
   
-  console.log(`[DATE UTILS] Comparando ${format(date1, 'dd/MM/yyyy')} e ${format(date2, 'dd/MM/yyyy')} => ${result ? 'Iguais' : 'Diferentes'}`);
+  const result = normalizedDate1.getTime() === normalizedDate2.getTime();
+  
+  // Log detalhado para debugging
+  console.log(`[DATE UTILS] Comparando datas:
+    Data 1: ${date1.toISOString()} (${format(date1, 'dd/MM/yyyy')})
+    Data 2: ${date2.toISOString()} (${format(date2, 'dd/MM/yyyy')})
+    Normalizada 1: ${normalizedDate1.toISOString()}
+    Normalizada 2: ${normalizedDate2.toISOString()}
+    Resultado: ${result ? 'IGUAIS' : 'DIFERENTES'}`);
+  
   return result;
 };
 
@@ -148,4 +164,31 @@ export const toISODateString = (date: Date): string => {
     console.error('[DATE UTILS] Erro ao formatar data para ISO:', error);
     return '';
   }
+};
+
+/**
+ * Extrai apenas ano/mês/dia de uma data para comparação entre fusos horários
+ * @param date Data para normalização
+ * @returns Data normalizada para UTC com apenas ano/mês/dia
+ */
+export const getUTCDateOnly = (date: Date): Date => {
+  if (!(date instanceof Date)) {
+    console.error('[DATE UTILS] Tentativa de normalizar objeto não-Data');
+    return new Date();
+  }
+  
+  // Criar uma nova data UTC apenas com ano/mês/dia
+  const normalizedDate = new Date(Date.UTC(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate()
+  ));
+  
+  console.log(`[DATE UTILS] Data UTC normalizada: 
+    Original: ${date.toISOString()} 
+    Local: ${format(date, 'yyyy-MM-dd')} 
+    Normalizada: ${normalizedDate.toISOString()}`
+  );
+  
+  return normalizedDate;
 };
