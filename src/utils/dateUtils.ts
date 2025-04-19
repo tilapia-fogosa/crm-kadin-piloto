@@ -4,18 +4,39 @@
  * Inclui funções para parsing, formatação e normalização de datas
  */
 
-export const parseFormDate = (dateString: string | undefined): Date | undefined => {
-  if (!dateString) return undefined;
-  // Criar uma nova instância de Data
-  const date = new Date(dateString);
-  console.log(`parseFormDate: Convertendo "${dateString}" para Data: ${date.toISOString()}`);
-  return isNaN(date.getTime()) ? undefined : date;
+/**
+ * Cria uma data segura para o ano e mês especificados
+ * @param year Ano (formato de 4 dígitos)
+ * @param month Mês (0-11, sendo 0 = Janeiro)
+ * @param day Dia do mês (1-31)
+ * @returns Nova instância de Date
+ */
+export const createSafeDate = (year: number, month: number, day: number = 1): Date => {
+  // Log para rastreamento
+  console.log(`[DATE UTILS] Criando data: Ano=${year}, Mês=${month}, Dia=${day}`);
+  
+  // Garantir que estamos criando uma nova instância
+  const date = new Date(year, month, day);
+  
+  // Validar se a data é válida
+  if (isNaN(date.getTime())) {
+    console.error(`[DATE UTILS] Data inválida criada: ${date}`);
+    return new Date(); // Retornar data atual como fallback
+  }
+  
+  console.log(`[DATE UTILS] Data criada: ${date.toISOString()}`);
+  return date;
 };
 
+/**
+ * Formata uma data para exibição em campos de entrada
+ * @param date Data a ser formatada
+ * @returns String no formato YYYY-MM-DD
+ */
 export const formatDateForInput = (date: Date | undefined): string => {
   if (!date) return '';
   
-  // Verificar se é uma Data válida e criar string no formato YYYY-MM-DD
+  // Verificar se é uma Data válida
   if (date instanceof Date && !isNaN(date.getTime())) {
     // Garantir timezone local na formatação
     const year = date.getFullYear();
@@ -23,78 +44,113 @@ export const formatDateForInput = (date: Date | undefined): string => {
     const day = String(date.getDate()).padStart(2, '0');
     const formattedDate = `${year}-${month}-${day}`;
     
-    console.log(`formatDateForInput: Convertendo data ${date.toISOString()} para formato input: ${formattedDate}`);
+    console.log(`[DATE UTILS] Formatando ${date.toISOString()} para entrada: ${formattedDate}`);
     return formattedDate;
   }
   
   return '';
 };
 
-// Função melhorada para criar datas seguras (sem mutações acidentais)
-export const createSafeDate = (year: number, month: number, day: number = 1): Date => {
-  // month é 0-indexed no JavaScript (janeiro = 0)
-  // Os valores de mês nos nossos selects já são 0-indexed (0-11)
-  console.log(`Criando data segura: Ano=${year}, Mês=${month}, Dia=${day}`);
-  return new Date(year, month, day);
-};
-
 /**
- * Normaliza uma data para início do dia (00:00:00) na timezone local
- * Importante para comparações de datas sem considerar a hora
+ * Converte uma string de data de um formulário para um objeto Date
+ * @param dateString String de data (formato YYYY-MM-DD)
+ * @returns Objeto Date ou undefined se inválido
  */
-export const normalizeToStartOfDay = (date: Date): Date => {
-  const normalizedDate = new Date(date);
-  normalizedDate.setHours(0, 0, 0, 0);
-  console.log(`Normalizando para início do dia: ${date.toISOString()} -> ${normalizedDate.toISOString()}`);
-  return normalizedDate;
+export const parseFormDate = (dateString: string | undefined): Date | undefined => {
+  if (!dateString) return undefined;
+  
+  try {
+    // Criar uma nova instância de Data
+    const date = new Date(dateString);
+    
+    // Verificar se a data é válida
+    if (isNaN(date.getTime())) {
+      console.error(`[DATE UTILS] Data inválida: "${dateString}"`);
+      return undefined;
+    }
+    
+    console.log(`[DATE UTILS] Data parseada: "${dateString}" => ${date.toISOString()}`);
+    return date;
+  } catch (error) {
+    console.error(`[DATE UTILS] Erro ao parsear data "${dateString}":`, error);
+    return undefined;
+  }
 };
 
 /**
- * Normaliza uma data para fim do dia (23:59:59.999) na timezone local
- * Importante para comparações de datas sem considerar a hora
- */
-export const normalizeToEndOfDay = (date: Date): Date => {
-  const normalizedDate = new Date(date);
-  normalizedDate.setHours(23, 59, 59, 999);
-  console.log(`Normalizando para fim do dia: ${date.toISOString()} -> ${normalizedDate.toISOString()}`);
-  return normalizedDate;
-};
-
-/**
- * Converte uma data para formato ISO sem timezone (YYYY-MM-DD)
- * Útil para queries Supabase que precisam de data sem hora
- */
-export const toISODateString = (date: Date): string => {
-  const isoString = date.toISOString().split('T')[0];
-  console.log(`Convertendo para ISO Date String: ${date.toISOString()} -> ${isoString}`);
-  return isoString;
-};
-
-/**
- * Compara duas datas sem considerar a hora e a timezone
+ * Compara duas datas sem considerar a hora
  * @param date1 Primeira data para comparação
  * @param date2 Segunda data para comparação
  * @returns true se as datas são iguais desconsiderando horário
  */
 export const isSameLocalDate = (date1: Date, date2: Date): boolean => {
-  const d1 = new Date(date1);
-  const d2 = new Date(date2);
+  if (!(date1 instanceof Date) || !(date2 instanceof Date)) {
+    console.error('[DATE UTILS] Tentativa de comparar objeto não-Data');
+    return false;
+  }
   
   const result = 
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate();
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate();
   
-  console.log(`Comparando datas locais: ${date1.toISOString()} e ${date2.toISOString()} => ${result ? 'Iguais' : 'Diferentes'}`);
+  console.log(`[DATE UTILS] Comparando ${date1.toISOString()} e ${date2.toISOString()} => ${result ? 'Iguais' : 'Diferentes'}`);
   return result;
 };
 
 /**
- * Converte uma data UTC para o dia local correspondente
- * Importante para comparar datas armazenadas em UTC com datas locais
+ * Normaliza uma data para início do dia (00:00:00)
+ * @param date Data a ser normalizada
+ * @returns Nova instância de Data com horário zerado
  */
-export const utcToLocalDay = (utcDate: Date): Date => {
-  const localDate = new Date(utcDate);
-  console.log(`Convertendo UTC para dia local: ${utcDate.toISOString()} -> ${localDate.toISOString()}`);
-  return localDate;
+export const normalizeToStartOfDay = (date: Date): Date => {
+  if (!(date instanceof Date)) {
+    console.error('[DATE UTILS] Tentativa de normalizar objeto não-Data');
+    return new Date();
+  }
+  
+  const normalizedDate = new Date(date);
+  normalizedDate.setHours(0, 0, 0, 0);
+  
+  console.log(`[DATE UTILS] Normalizado início: ${date.toISOString()} -> ${normalizedDate.toISOString()}`);
+  return normalizedDate;
+};
+
+/**
+ * Normaliza uma data para fim do dia (23:59:59.999)
+ * @param date Data a ser normalizada
+ * @returns Nova instância de Data com horário no fim do dia
+ */
+export const normalizeToEndOfDay = (date: Date): Date => {
+  if (!(date instanceof Date)) {
+    console.error('[DATE UTILS] Tentativa de normalizar objeto não-Data');
+    return new Date();
+  }
+  
+  const normalizedDate = new Date(date);
+  normalizedDate.setHours(23, 59, 59, 999);
+  
+  console.log(`[DATE UTILS] Normalizado fim: ${date.toISOString()} -> ${normalizedDate.toISOString()}`);
+  return normalizedDate;
+};
+
+/**
+ * Converte uma data para formato ISO (YYYY-MM-DD)
+ * @param date Data a ser convertida
+ * @returns String no formato YYYY-MM-DD
+ */
+export const toISODateString = (date: Date): string => {
+  if (!(date instanceof Date)) {
+    console.error('[DATE UTILS] Tentativa de formatar objeto não-Data');
+    return '';
+  }
+  
+  try {
+    const isoString = date.toISOString().split('T')[0];
+    console.log(`[DATE UTILS] ISO Date String: ${date.toISOString()} -> ${isoString}`);
+    return isoString;
+  } catch (error) {
+    console.error('[DATE UTILS] Erro ao formatar data para ISO:', error);
+    return '';
+  }
 };

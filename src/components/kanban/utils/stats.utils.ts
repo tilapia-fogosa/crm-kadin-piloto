@@ -1,21 +1,35 @@
 
 import { DailyStats, TotalStats } from "../types/activity-dashboard.types";
 
+/**
+ * Calcula estatísticas totais a partir de estatísticas diárias
+ * @param stats Array de estatísticas diárias
+ * @returns Objeto com totais ou null se não houver dados
+ */
 export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | null => {
-  if (!stats) return null;
+  // Validação de entrada
+  if (!stats || stats.length === 0) {
+    console.log('[STATS] Sem dados para calcular totais');
+    return null;
+  }
   
-  console.log('Calculando totais para activity dashboard stats');
+  console.log(`[STATS] Calculando totais para ${stats.length} dias`);
   
-  // First calculate raw totals
-  const rawTotals = stats.reduce((acc, day) => ({
-    newClients: acc.newClients + day.newClients,
-    contactAttempts: acc.contactAttempts + day.contactAttempts,
-    effectiveContacts: acc.effectiveContacts + day.effectiveContacts,
-    scheduledVisits: acc.scheduledVisits + day.scheduledVisits,
-    awaitingVisits: acc.awaitingVisits + day.awaitingVisits,
-    completedVisits: acc.completedVisits + day.completedVisits,
-    enrollments: acc.enrollments + day.enrollments
-  }), {
+  // Calcular totais iniciais
+  const rawTotals = stats.reduce((acc, day) => {
+    // Validação extra para cada dia
+    if (!day) return acc;
+    
+    return {
+      newClients: acc.newClients + (day.newClients || 0),
+      contactAttempts: acc.contactAttempts + (day.contactAttempts || 0),
+      effectiveContacts: acc.effectiveContacts + (day.effectiveContacts || 0),
+      scheduledVisits: acc.scheduledVisits + (day.scheduledVisits || 0),
+      awaitingVisits: acc.awaitingVisits + (day.awaitingVisits || 0),
+      completedVisits: acc.completedVisits + (day.completedVisits || 0),
+      enrollments: acc.enrollments + (day.enrollments || 0)
+    };
+  }, {
     newClients: 0,
     contactAttempts: 0,
     effectiveContacts: 0,
@@ -25,7 +39,10 @@ export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | n
     enrollments: 0
   });
 
-  // Then calculate percentages based on final totals
+  // Log para inspeção de valores brutos
+  console.log('[STATS] Valores brutos calculados:', rawTotals);
+
+  // Calcular porcentagens com proteção contra divisão por zero
   const totals: TotalStats = {
     ...rawTotals,
     ceConversionRate: rawTotals.contactAttempts > 0 
@@ -42,15 +59,26 @@ export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | n
       : 0
   };
 
-  console.log('Totals calculated:', totals);
+  // Log final com todos os valores calculados
+  console.log('[STATS] Totais calculados:', {
+    ...totals,
+    ceConversionRate: totals.ceConversionRate.toFixed(1) + '%',
+    agConversionRate: totals.agConversionRate.toFixed(1) + '%',
+    atConversionRate: totals.atConversionRate.toFixed(1) + '%',
+    maConversionRate: totals.maConversionRate.toFixed(1) + '%'
+  });
+  
   return totals;
 };
 
-// Função utilitária para calcular a progressão máxima de um cliente
-// com base em suas atividades
+/**
+ * Determina a progressão máxima de um cliente com base nas atividades
+ * @param activities Array de atividades do cliente
+ * @returns Objeto com status de progressão
+ */
 export const getClientMaxProgression = (activities: any[] = []) => {
   // Log inicial para rastreamento
-  console.log(`Analisando ${activities.length} atividades para determinar progressão máxima`);
+  console.log(`[STATS] Analisando ${activities.length} atividades para progressão máxima`);
   
   // Define resultado padrão (nenhuma progressão)
   let result = {
@@ -62,12 +90,20 @@ export const getClientMaxProgression = (activities: any[] = []) => {
   
   // Se não há atividades, retorna padrão
   if (!activities || activities.length === 0) {
+    console.log('[STATS] Sem atividades para analisar');
     return result;
   }
   
   // Analisa cada atividade para determinar a progressão máxima
   activities.forEach(activity => {
+    // Validação para garantir que a atividade tem tipo
+    if (!activity || !activity.tipo_atividade) {
+      console.log('[STATS] Atividade inválida encontrada');
+      return;
+    }
+    
     const tipo = activity.tipo_atividade;
+    console.log(`[STATS] Analisando atividade: ${tipo}`);
     
     // Verifica cada tipo de atividade e marca na progressão
     if (['Contato Efetivo', 'Agendamento', 'Atendimento', 'Matrícula'].includes(tipo)) {
@@ -88,7 +124,7 @@ export const getClientMaxProgression = (activities: any[] = []) => {
   });
   
   // Log final para depuração
-  console.log("Progressão máxima determinada:", result);
+  console.log("[STATS] Progressão máxima determinada:", result);
   
   return result;
 };
