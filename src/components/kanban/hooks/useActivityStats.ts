@@ -67,34 +67,71 @@ export function useActivityStats(
         return [];
       }
 
-      // Buscar clientes e atividades com filtros otimizados
-      let query = supabase
+      // 1. Buscar novos clientes (baseado no created_at do cliente)
+      let newClientsQuery = supabase
         .from('clients')
-        .select('*, client_activities(*)')
+        .select('*')
         .eq('active', true)
         .in('unit_id', unitIds)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
       if (selectedSource !== 'todos') {
-        query = query.eq('lead_source', selectedSource);
+        newClientsQuery = newClientsQuery.eq('lead_source', selectedSource);
       }
 
-      const { data: clients, error: clientsError } = await query;
+      const { data: newClients, error: newClientsError } = await newClientsQuery;
 
-      if (clientsError) {
-        console.error('[STATS QUERY] Erro ao buscar clientes:', clientsError);
-        throw clientsError;
+      if (newClientsError) {
+        console.error('[STATS QUERY] Erro ao buscar novos clientes:', newClientsError);
+        throw newClientsError;
       }
 
-      // Extrair todas as atividades dos clientes
-      const activities = clients?.flatMap(client => 
-        client.client_activities?.filter((activity: any) => activity.active) || []
-      );
+      // 2. Buscar atividades do período (baseado no created_at da atividade)
+      let activitiesQuery = supabase
+        .from('client_activities')
+        .select('*, clients!inner(*)')
+        .eq('active', true)
+        .eq('clients.active', true)
+        .in('unit_id', unitIds)
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      if (selectedSource !== 'todos') {
+        activitiesQuery = activitiesQuery.eq('clients.lead_source', selectedSource);
+      }
+
+      const { data: activities, error: activitiesError } = await activitiesQuery;
+
+      if (activitiesError) {
+        console.error('[STATS QUERY] Erro ao buscar atividades:', activitiesError);
+        throw activitiesError;
+      }
+
+      // 3. Buscar visitas aguardadas (baseado no scheduled_date do cliente)
+      let scheduledVisitsQuery = supabase
+        .from('clients')
+        .select('*')
+        .eq('active', true)
+        .in('unit_id', unitIds)
+        .gte('scheduled_date', startDate.toISOString())
+        .lte('scheduled_date', endDate.toISOString());
+
+      if (selectedSource !== 'todos') {
+        scheduledVisitsQuery = scheduledVisitsQuery.eq('lead_source', selectedSource);
+      }
+
+      const { data: scheduledClients, error: scheduledError } = await scheduledVisitsQuery;
+
+      if (scheduledError) {
+        console.error('[STATS QUERY] Erro ao buscar visitas agendadas:', scheduledError);
+        throw scheduledError;
+      }
 
       console.log(`[STATS QUERY] Dados coletados:
-        Clientes: ${clients?.length || 0}
+        Novos Clientes: ${newClients?.length || 0}
         Atividades: ${activities?.length || 0}
+        Visitas Aguardadas: ${scheduledClients?.length || 0}
         Unidades: ${unitIds.join(', ')}
       `);
 
@@ -104,7 +141,7 @@ export function useActivityStats(
       
       // Processar estatísticas para cada dia
       const dailyStats: DailyStats[] = allDates.map(date => {
-        return processDailyStats(date, activities, clients || []);
+        return processDailyStats(date, activities || [], newClients || [], scheduledClients || []);
       });
 
       console.log(`[STATS QUERY] Processamento concluído. Retornando estatísticas de ${dailyStats.length} dias`);
