@@ -25,6 +25,7 @@ export type Database = {
           niveldesafio: number | null
           nome: string
           telefone: string | null
+          texto_devolutiva: string | null
           turma_id: string
           ultima_correcao_ah: string | null
           ultima_falta: string | null
@@ -47,6 +48,7 @@ export type Database = {
           niveldesafio?: number | null
           nome: string
           telefone?: string | null
+          texto_devolutiva?: string | null
           turma_id: string
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
@@ -69,6 +71,7 @@ export type Database = {
           niveldesafio?: number | null
           nome?: string
           telefone?: string | null
+          texto_devolutiva?: string | null
           turma_id?: string
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
@@ -556,6 +559,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      devolutivas_config: {
+        Row: {
+          created_at: string | null
+          id: string
+          texto_geral: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          texto_geral?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          texto_geral?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       estagiarios: {
         Row: {

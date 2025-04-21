@@ -1,4 +1,3 @@
-
 import { format, startOfDay, endOfDay, parseISO } from "date-fns";
 
 /**
@@ -112,7 +111,7 @@ export const isSameLocalDate = (date1: Date, date2: Date): boolean => {
 };
 
 /**
- * Normaliza uma data para início do dia (00:00:00)
+ * Normaliza uma data para início do dia (00:00:00) em UTC
  * @param date Data a ser normalizada
  * @returns Nova instância de Data com horário zerado
  */
@@ -124,12 +123,17 @@ export const normalizeToStartOfDay = (date: Date): Date => {
   
   const normalizedDate = startOfDay(date);
   
-  console.log(`[DATE UTILS] Normalizado início: ${format(date, 'dd/MM/yyyy HH:mm:ss')} -> ${format(normalizedDate, 'dd/MM/yyyy HH:mm:ss')}`);
+  console.log(`[DATE UTILS] Normalizado início: 
+    Original: ${date.toISOString()}
+    Normalizado: ${normalizedDate.toISOString()}
+    Local: ${format(normalizedDate, 'dd/MM/yyyy HH:mm:ss')}
+  `);
+  
   return normalizedDate;
 };
 
 /**
- * Normaliza uma data para fim do dia (23:59:59.999)
+ * Normaliza uma data para fim do dia (23:59:59.999) em UTC
  * @param date Data a ser normalizada
  * @returns Nova instância de Data com horário no fim do dia
  */
@@ -141,35 +145,19 @@ export const normalizeToEndOfDay = (date: Date): Date => {
   
   const normalizedDate = endOfDay(date);
   
-  console.log(`[DATE UTILS] Normalizado fim: ${format(date, 'dd/MM/yyyy HH:mm:ss')} -> ${format(normalizedDate, 'dd/MM/yyyy HH:mm:ss')}`);
+  console.log(`[DATE UTILS] Normalizado fim: 
+    Original: ${date.toISOString()}
+    Normalizado: ${normalizedDate.toISOString()}
+    Local: ${format(normalizedDate, 'dd/MM/yyyy HH:mm:ss')}
+  `);
+  
   return normalizedDate;
 };
 
 /**
- * Converte uma data para formato ISO (YYYY-MM-DD)
- * @param date Data a ser convertida
- * @returns String no formato YYYY-MM-DD
- */
-export const toISODateString = (date: Date): string => {
-  if (!(date instanceof Date)) {
-    console.error('[DATE UTILS] Tentativa de formatar objeto não-Data');
-    return '';
-  }
-  
-  try {
-    const isoString = format(date, 'yyyy-MM-dd');
-    console.log(`[DATE UTILS] ISO Date String: ${format(date, 'dd/MM/yyyy')} -> ${isoString}`);
-    return isoString;
-  } catch (error) {
-    console.error('[DATE UTILS] Erro ao formatar data para ISO:', error);
-    return '';
-  }
-};
-
-/**
- * Extrai apenas ano/mês/dia de uma data para comparação entre fusos horários
+ * Extrai apenas ano/mês/dia de uma data, normalizando para início do dia em UTC
  * @param date Data para normalização
- * @returns Data normalizada para UTC com apenas ano/mês/dia
+ * @returns Data normalizada com apenas ano/mês/dia
  */
 export const getUTCDateOnly = (date: Date): Date => {
   if (!(date instanceof Date)) {
@@ -177,18 +165,13 @@ export const getUTCDateOnly = (date: Date): Date => {
     return new Date();
   }
   
-  // Criar uma nova data UTC apenas com ano/mês/dia
-  const normalizedDate = new Date(Date.UTC(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate()
-  ));
+  const normalizedDate = startOfDay(date);
   
   console.log(`[DATE UTILS] Data UTC normalizada: 
     Original: ${date.toISOString()} 
-    Local: ${format(date, 'yyyy-MM-dd')} 
-    Normalizada: ${normalizedDate.toISOString()}`
-  );
+    Normalizada: ${normalizedDate.toISOString()}
+    Local: ${format(normalizedDate, 'yyyy-MM-dd')}
+  `);
   
   return normalizedDate;
 };

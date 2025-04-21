@@ -1,7 +1,6 @@
-
 import { DailyStats } from "../../types/activity-dashboard.types";
 import { format } from "date-fns";
-import { getUTCDateOnly, isSameLocalDate } from "@/utils/dateUtils";
+import { getUTCDateOnly } from "@/utils/dateUtils";
 
 /**
  * Agrupa atividades por dia e calcula estatísticas
@@ -17,16 +16,17 @@ export const processDailyStats = (
 ): DailyStats => {
   // Log inicial com data formatada para legibilidade
   const dateStr = format(date, 'yyyy-MM-dd');
-  console.log(`[STATS] Processando estatísticas para ${dateStr} - data original: ${date.toISOString()}`);
+  console.log(`[STATS PROCESSOR] Processando estatísticas para ${dateStr}`);
+  console.log(`[STATS PROCESSOR] Data original: ${date.toISOString()}`);
   
   // Normalizar a data de referência para comparações consistentes
   const normalizedRefDate = getUTCDateOnly(date);
-  console.log(`[STATS] Data de referência normalizada: ${normalizedRefDate.toISOString()}`);
+  console.log(`[STATS PROCESSOR] Data de referência normalizada: ${normalizedRefDate.toISOString()}`);
   
   // Filtrar atividades do dia usando nossa função personalizada
   const dayActivities = activities.filter(activity => {
     if (!activity?.created_at) {
-      console.log(`[STATS] Atividade sem data de criação encontrada`);
+      console.log(`[STATS PROCESSOR] Atividade sem data de criação encontrada`);
       return false;
     }
     
@@ -36,42 +36,52 @@ export const processDailyStats = (
       const normalizedActivityDate = getUTCDateOnly(activityDate);
       
       // Comparar as datas normalizadas
-      const matches = normalizedRefDate.getTime() === normalizedActivityDate.getTime();
+      const matches = normalizedActivityDate.getTime() === normalizedRefDate.getTime();
       
-      // Log detalhado para atividades importantes
-      if (matches || (activity.tipo_atividade === 'Matrícula')) {
-        console.log(`[STATS] Atividade ID=${activity.id} tipo=${activity.tipo_atividade} data_original=${activityDate.toISOString()} data_normalizada=${normalizedActivityDate.toISOString()} ref_date=${normalizedRefDate.toISOString()} incluída=${matches ? 'SIM' : 'NÃO'} para ${dateStr}`);
+      // Log detalhado para atividades
+      if (matches) {
+        console.log(`[STATS PROCESSOR] Atividade incluída:
+          ID: ${activity.id}
+          Tipo: ${activity.tipo_atividade}
+          Data Original: ${activityDate.toISOString()}
+          Data Normalizada: ${normalizedActivityDate.toISOString()}
+          Unidade: ${activity.unit_id}
+        `);
       }
       
       return matches;
     } catch (error) {
-      console.error(`[STATS] Erro ao processar data da atividade:`, error);
+      console.error(`[STATS PROCESSOR] Erro ao processar data da atividade:`, error);
       return false;
     }
   });
 
-  // Filtrar clientes criados no dia usando nossa função personalizada  
+  // Filtrar clientes criados no dia
   const dayClients = clients.filter(client => {
     if (!client?.created_at) {
-      console.log(`[STATS] Cliente sem data de criação encontrado`);
+      console.log(`[STATS PROCESSOR] Cliente sem data de criação encontrado`);
       return false;
     }
     
     try {
       const clientDate = new Date(client.created_at);
-      // Normalizar a data do cliente
       const normalizedClientDate = getUTCDateOnly(clientDate);
       
-      // Comparar as datas normalizadas
-      const matches = normalizedRefDate.getTime() === normalizedClientDate.getTime();
+      const matches = normalizedClientDate.getTime() === normalizedRefDate.getTime();
       
       if (matches) {
-        console.log(`[STATS] Cliente ID=${client.id} nome=${client.name} data_original=${clientDate.toISOString()} data_normalizada=${normalizedClientDate.toISOString()} incluído para ${dateStr}`);
+        console.log(`[STATS PROCESSOR] Cliente incluído:
+          ID: ${client.id}
+          Nome: ${client.name}
+          Data Original: ${clientDate.toISOString()}
+          Data Normalizada: ${normalizedClientDate.toISOString()}
+          Unidade: ${client.unit_id}
+        `);
       }
       
       return matches;
     } catch (error) {
-      console.error(`[STATS] Erro ao processar data do cliente:`, error);
+      console.error(`[STATS PROCESSOR] Erro ao processar data do cliente:`, error);
       return false;
     }
   });
@@ -91,25 +101,25 @@ export const processDailyStats = (
       const matches = normalizedRefDate.getTime() === normalizedScheduledDate.getTime();
       
       if (matches) {
-        console.log(`[STATS] Agendamento ID=${activity.id} data_original=${scheduledDate.toISOString()} data_normalizada=${normalizedScheduledDate.toISOString()} aguardado para ${dateStr}`);
+        console.log(`[STATS PROCESSOR] Agendamento ID=${activity.id} data_original=${scheduledDate.toISOString()} data_normalizada=${normalizedScheduledDate.toISOString()} aguardado para ${dateStr}`);
       }
       
       return matches;
     } catch (error) {
-      console.error(`[STATS] Erro ao processar data agendada:`, error);
+      console.error(`[STATS PROCESSOR] Erro ao processar data agendada:`, error);
       return false;
     }
   });
 
   // Log para contagem de itens identificados
-  console.log(`[STATS] Para ${dateStr}: ${dayActivities.length} atividades, ${dayClients.length} novos clientes, ${dayAwaitingVisits.length} visitas aguardadas`);
+  console.log(`[STATS PROCESSOR] Para ${dateStr}: ${dayActivities.length} atividades, ${dayClients.length} novos clientes, ${dayAwaitingVisits.length} visitas aguardadas`);
 
   // Detalhamento de tipos de atividade para ajudar no debug
   const activityTypes = dayActivities.reduce((acc: Record<string, number>, activity) => {
     acc[activity.tipo_atividade] = (acc[activity.tipo_atividade] || 0) + 1;
     return acc;
   }, {});
-  console.log(`[STATS] Detalhamento de atividades para ${dateStr}:`, activityTypes);
+  console.log(`[STATS PROCESSOR] Detalhamento de atividades para ${dateStr}:`, activityTypes);
 
   // Calcular estatísticas do dia
   const contactAttempts = dayActivities.filter(activity => 
@@ -168,7 +178,7 @@ export const processDailyStats = (
   };
 
   // Log para rastreamento de valores calculados
-  console.log(`[STATS] Estatísticas calculadas para ${dateStr}:`, {
+  console.log(`[STATS PROCESSOR] Estatísticas calculadas para ${dateStr}:`, {
     newClients: stats.newClients,
     contactAttempts: stats.contactAttempts,
     effectiveContacts: stats.effectiveContacts,
