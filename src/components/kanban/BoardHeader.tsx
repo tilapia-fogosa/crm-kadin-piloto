@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { RefreshCw, FileSpreadsheet } from "lucide-react"
+import { RefreshCw, FileSpreadsheet, Search } from "lucide-react"
 import { ActivityDashboard } from "./ActivityDashboard"
 import { CalendarDashboard } from "./CalendarDashboard"
 import { Input } from "@/components/ui/input"
