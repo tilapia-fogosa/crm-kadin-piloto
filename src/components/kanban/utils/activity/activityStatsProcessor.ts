@@ -1,3 +1,4 @@
+
 import { DailyStats } from "../../types/activity-dashboard.types";
 import { format } from "date-fns";
 import { compareDates } from "@/utils/date";
@@ -19,15 +20,6 @@ export const processDailyStats = (
   // Log inicial com data formatada para legibilidade
   const dateStr = format(date, 'yyyy-MM-dd');
   console.log(`[STATS PROCESSOR] Processando estatísticas para ${dateStr}`);
-  
-  // Função auxiliar para comparar datas ignorando timezone
-  const compareDates = (date1: Date, date2: Date): boolean => {
-    return (
-      date1.getFullYear() === date2.getFullYear() &&
-      date1.getMonth() === date2.getMonth() &&
-      date1.getDate() === date2.getDate()
-    );
-  };
   
   // 1. Processar novos clientes do dia (baseado no created_at do cliente)
   const dayClients = newClients.filter(client => {
