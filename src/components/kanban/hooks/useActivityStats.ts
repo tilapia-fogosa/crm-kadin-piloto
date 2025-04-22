@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { DailyStats } from "../types/activity-dashboard.types";
 import { processDailyStats } from "../utils/activity/activityStatsProcessor";
-import { createSafeDate, getDateRangeForSQL } from "@/utils/date";
+import { createSafeDate } from "@/utils/date";
 
 export function useActivityStats(
   selectedSource: string,
@@ -39,7 +39,7 @@ export function useActivityStats(
         return [];
       }
       
-      // Criação de datas de início e fim do mês
+      // Criação de datas de início e fim do mês usando a nova função
       const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
       const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
       

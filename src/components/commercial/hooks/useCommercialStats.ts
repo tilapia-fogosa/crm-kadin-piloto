@@ -1,14 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, startOfDay, isAfter } from "date-fns";
+import { startOfMonth, endOfMonth, startOfDay, format } from "date-fns";
 import { DailyStats } from "../../kanban/types/activity-dashboard.types";
-import { 
-  createSafeDate, 
-  normalizeToStartOfDay, 
-  normalizeToEndOfDay, 
-  isSameLocalDate,
-  getUTCDateOnly
-} from "@/utils/date"
+import { createSafeDate, getDateString } from "@/utils/date";
 
 export function useCommercialStats(
   selectedSource: string,
@@ -23,7 +17,7 @@ export function useCommercialStats(
       const monthNum = parseInt(selectedMonth);
       const yearNum = parseInt(selectedYear);
       
-      // Criação segura de datas de início e fim do mês
+      // Criação segura de datas de início e fim do mês usando a nova função
       const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
       const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
 
@@ -85,13 +79,13 @@ export function useCommercialStats(
         const formattedDate = date.toISOString().split('T')[0];
         
         // Normalizar data de referência para comparações
-        const refDateNormalized = getUTCDateOnly(date);
+        const refDateNormalized = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
         // Clientes criados no dia
         const dayClients = clientsResult.data.filter(client => {
           if (!client.created_at) return false;
           const clientDate = new Date(client.created_at);
-          const clientDateNormalized = getUTCDateOnly(clientDate);
+          const clientDateNormalized = new Date(clientDate.getFullYear(), clientDate.getMonth(), clientDate.getDate());
           return refDateNormalized.getTime() === clientDateNormalized.getTime();
         });
 
@@ -99,7 +93,7 @@ export function useCommercialStats(
         const dayActivities = activitiesResult.data.filter(activity => {
           if (!activity.created_at) return false;
           const activityDate = new Date(activity.created_at);
-          const activityDateNormalized = getUTCDateOnly(activityDate);
+          const activityDateNormalized = new Date(activityDate.getFullYear(), activityDate.getMonth(), activityDate.getDate());
           return refDateNormalized.getTime() === activityDateNormalized.getTime();
         });
 
@@ -137,7 +131,7 @@ export function useCommercialStats(
           awaitingVisits: activitiesResult.data.filter(activity => {
             if (!activity.scheduled_date) return false;
             const scheduledDate = new Date(activity.scheduled_date);
-            const scheduledDateNormalized = getUTCDateOnly(scheduledDate);
+            const scheduledDateNormalized = new Date(scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate());
             return refDateNormalized.getTime() === scheduledDateNormalized.getTime() && 
                    activity.tipo_atividade === 'Agendamento';
           }).length,
