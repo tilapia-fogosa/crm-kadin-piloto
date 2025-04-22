@@ -1,4 +1,3 @@
-
 import { useClientData } from "./hooks/useClientData"
 import { useActivityOperations } from "./hooks/useActivityOperations"
 import { useWhatsApp } from "./hooks/useWhatsApp"
@@ -9,6 +8,7 @@ import { useLocation } from "react-router-dom"
 import { BoardHeader } from "./BoardHeader"
 import { KanbanColumn } from "./KanbanColumn"
 import { useUserUnit } from "./hooks/useUserUnit"
+import { DashboardButtons } from "./components/dashboard/DashboardButtons"
 
 export function KanbanBoard() {
   // Estado para controlar a unidade selecionada
@@ -116,19 +116,24 @@ export function KanbanBoard() {
   const columns = transformClientsToColumnData(filteredClients)
 
   return (
-    <div className="flex flex-col w-full">
-      <BoardHeader 
-        showPendingOnly={showPendingOnly}
-        setShowPendingOnly={setShowPendingOnly}
-        onRefresh={() => refetch()}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        availableUnits={userUnits || []}
-        selectedUnitId={selectedUnitId}
-        setSelectedUnitId={setSelectedUnitId}
-        isMultiUnit={isMultiUnit || false}
-      />
-
+    <div className="flex flex-col h-full">
+      <div className="flex justify-between mb-4 gap-4">
+        <BoardHeader 
+          showPendingOnly={showPendingOnly}
+          setShowPendingOnly={setShowPendingOnly}
+          onRefresh={() => refetch()}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          availableUnits={userUnits || []}
+          selectedUnitId={selectedUnitId}
+          setSelectedUnitId={setSelectedUnitId}
+          isMultiUnit={isMultiUnit || false}
+        />
+        <div className="flex-shrink-0">
+          <DashboardButtons />
+        </div>
+      </div>
+      
       <div className="overflow-x-auto w-full">
         <div className="inline-flex gap-4 p-4 min-w-max">
           {columns.map((column, index) => (
