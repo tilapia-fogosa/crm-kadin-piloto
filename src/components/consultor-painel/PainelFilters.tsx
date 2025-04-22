@@ -56,13 +56,15 @@ export function PainelFilters({
     totalUnidades: userUnits.length
   });
 
-  // Função para alternar uma unidade na seleção
+  // Função para alternar uma unidade na seleção - Corrigindo o tipo retornado
   const toggleUnitSelection = (unitId: string) => {
-    setSelectedUnitIds(prev => 
-      prev.includes(unitId)
-        ? prev.filter(id => id !== unitId)
-        : [...prev, unitId]
-    );
+    console.log('Toggling unit:', unitId);
+    const newSelectedUnits = selectedUnitIds.includes(unitId)
+      ? selectedUnitIds.filter(id => id !== unitId)
+      : [...selectedUnitIds, unitId];
+    
+    // Corrigido: agora passamos diretamente um array de strings, não uma função
+    setSelectedUnitIds(newSelectedUnits);
   };
 
   // Função para selecionar todas as unidades

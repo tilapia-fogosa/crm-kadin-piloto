@@ -1,7 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { PainelFilters } from './PainelFilters';
