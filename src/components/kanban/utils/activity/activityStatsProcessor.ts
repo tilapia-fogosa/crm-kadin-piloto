@@ -1,7 +1,7 @@
 
 import { DailyStats } from "../../types/activity-dashboard.types";
 import { format } from "date-fns";
-import { getUTCDateOnly } from "@/utils/dateUtils";
+import { areSameDates } from "@/utils/dateUtils";
 
 /**
  * Agrupa atividades por dia e calcula estatísticas
@@ -21,17 +21,13 @@ export const processDailyStats = (
   const dateStr = format(date, 'yyyy-MM-dd');
   console.log(`[STATS PROCESSOR] Processando estatísticas para ${dateStr}`);
   
-  // Normalizar a data de referência para comparações consistentes
-  const normalizedRefDate = getUTCDateOnly(date);
-  
   // 1. Processar novos clientes do dia (baseado no created_at do cliente)
   const dayClients = newClients.filter(client => {
     if (!client?.created_at) return false;
     
     try {
       const clientDate = new Date(client.created_at);
-      const normalizedClientDate = getUTCDateOnly(clientDate);
-      return normalizedClientDate.getTime() === normalizedRefDate.getTime();
+      return areSameDates(clientDate, date);
     } catch (error) {
       console.error(`[STATS PROCESSOR] Erro ao processar data do cliente:`, error);
       return false;
@@ -44,8 +40,20 @@ export const processDailyStats = (
     
     try {
       const activityDate = new Date(activity.created_at);
-      const normalizedActivityDate = getUTCDateOnly(activityDate);
-      return normalizedActivityDate.getTime() === normalizedRefDate.getTime();
+      const matches = areSameDates(activityDate, date);
+      
+      // Log detalhado para diagnóstico em datas críticas
+      if (date.getDate() >= 15 && date.getMonth() === 3) { // Abril é mês 3 (0-indexed)
+        console.log(`[STATS PROCESSOR] Verificação detalhada de atividade:
+          ID: ${activity.id}
+          Tipo: ${activity.tipo_atividade}
+          Created: ${activity.created_at}
+          Data Ref: ${date.toISOString()}
+          Matches: ${matches}
+        `);
+      }
+      
+      return matches;
     } catch (error) {
       console.error(`[STATS PROCESSOR] Erro ao processar data da atividade:`, error);
       return false;
@@ -58,8 +66,7 @@ export const processDailyStats = (
     
     try {
       const scheduledDate = new Date(client.scheduled_date);
-      const normalizedScheduledDate = getUTCDateOnly(scheduledDate);
-      return normalizedRefDate.getTime() === normalizedScheduledDate.getTime();
+      return areSameDates(scheduledDate, date);
     } catch (error) {
       console.error(`[STATS PROCESSOR] Erro ao processar data agendada:`, error);
       return false;
@@ -108,6 +115,7 @@ export const processDailyStats = (
 
   // Log detalhado das estatísticas calculadas
   console.log(`[STATS PROCESSOR] Estatísticas para ${dateStr}:`, {
+    data: dateStr,
     newClients: dayClients.length,
     contactAttempts,
     effectiveContacts,
@@ -115,10 +123,8 @@ export const processDailyStats = (
     awaitingVisits,
     completedVisits,
     enrollments,
-    ceConversionRate: ceConversionRate.toFixed(1) + '%',
-    agConversionRate: agConversionRate.toFixed(1) + '%',
-    atConversionRate: atConversionRate.toFixed(1) + '%',
-    maConversionRate: maConversionRate.toFixed(1) + '%'
+    totalActivities: dayActivities.length,
+    activityTypes: dayActivities.map(a => a.tipo_atividade).join(', ')
   });
 
   // Retornar objeto com as estatísticas calculadas

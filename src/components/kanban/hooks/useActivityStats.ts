@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { DailyStats } from "../types/activity-dashboard.types";
 import { processDailyStats } from "../utils/activity/activityStatsProcessor";
-import { createSafeDate } from "@/utils/dateUtils";
+import { createSafeDate, getDateRangeForSQL } from "@/utils/dateUtils";
 
 export function useActivityStats(
   selectedSource: string,
@@ -44,9 +44,13 @@ export function useActivityStats(
       const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
       const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
       
-      console.log('[STATS QUERY] Período calculado:', {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
+      // Gerar strings ISO para query SQL direta
+      const startISO = startDate.toISOString();
+      const endISO = endDate.toISOString();
+      
+      console.log('[STATS QUERY] Período calculado para SQL:', {
+        startDate: startISO,
+        endDate: endISO,
         ano: yearNum,
         mes: monthNum
       });
@@ -67,14 +71,14 @@ export function useActivityStats(
         return [];
       }
 
-      // 1. Buscar novos clientes (baseado no created_at do cliente)
+      // 1. Buscar novos clientes usando BETWEEN para range preciso
       let newClientsQuery = supabase
         .from('clients')
         .select('*')
         .eq('active', true)
         .in('unit_id', unitIds)
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString());
+        .gte('created_at', startISO)
+        .lte('created_at', endISO);
 
       if (selectedSource !== 'todos') {
         newClientsQuery = newClientsQuery.eq('lead_source', selectedSource);
@@ -87,15 +91,15 @@ export function useActivityStats(
         throw newClientsError;
       }
 
-      // 2. Buscar atividades do período (baseado no created_at da atividade)
+      // 2. Buscar atividades do período usando BETWEEN para range preciso
       let activitiesQuery = supabase
         .from('client_activities')
         .select('*, clients!inner(*)')
         .eq('active', true)
         .eq('clients.active', true)
         .in('unit_id', unitIds)
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString());
+        .gte('created_at', startISO)
+        .lte('created_at', endISO);
 
       if (selectedSource !== 'todos') {
         activitiesQuery = activitiesQuery.eq('clients.lead_source', selectedSource);
@@ -108,14 +112,14 @@ export function useActivityStats(
         throw activitiesError;
       }
 
-      // 3. Buscar visitas aguardadas (baseado no scheduled_date do cliente)
+      // 3. Buscar visitas aguardadas usando BETWEEN para range preciso
       let scheduledVisitsQuery = supabase
         .from('clients')
         .select('*')
         .eq('active', true)
         .in('unit_id', unitIds)
-        .gte('scheduled_date', startDate.toISOString())
-        .lte('scheduled_date', endDate.toISOString());
+        .gte('scheduled_date', startISO)
+        .lte('scheduled_date', endISO);
 
       if (selectedSource !== 'todos') {
         scheduledVisitsQuery = scheduledVisitsQuery.eq('lead_source', selectedSource);
@@ -128,12 +132,25 @@ export function useActivityStats(
         throw scheduledError;
       }
 
-      console.log(`[STATS QUERY] Dados coletados:
+      // Log detalhado de diagnóstico
+      console.log(`[STATS QUERY] Dados coletados do banco:
         Novos Clientes: ${newClients?.length || 0}
-        Atividades: ${activities?.length || 0}
+        Atividades: ${activities?.length || 0} 
+        Tipos: ${activities?.map(a => a.tipo_atividade).join(', ')}
         Visitas Aguardadas: ${scheduledClients?.length || 0}
         Unidades: ${unitIds.join(', ')}
       `);
+      
+      // Log detalhado para atividades após 15/04
+      const activitiesAfter15 = activities?.filter(a => {
+        const aDate = new Date(a.created_at);
+        return aDate.getDate() >= 15 && aDate.getMonth() === 3; // Abril = 3
+      }) || [];
+      
+      console.log(`[STATS QUERY] Análise de atividades após 15/04: ${activitiesAfter15.length} atividades`);
+      activitiesAfter15.forEach(a => {
+        console.log(`Atividade ${a.id}: ${a.tipo_atividade} criada em ${a.created_at}`);
+      });
 
       // Gerar array com todas as datas do mês
       const allDates = eachDayOfInterval({ start: startDate, end: endDate });

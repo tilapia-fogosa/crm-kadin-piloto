@@ -1,3 +1,4 @@
+
 import { format, startOfDay, endOfDay, parseISO } from "date-fns";
 
 /**
@@ -84,34 +85,23 @@ export const isSameLocalDate = (date1: Date, date2: Date): boolean => {
     return false;
   }
   
-  // Normalizar ambas as datas para UTC e comparar apenas o dia/mês/ano
-  const normalizedDate1 = new Date(Date.UTC(
-    date1.getFullYear(),
-    date1.getMonth(),
-    date1.getDate()
-  ));
+  // Comparação simplificada baseada em dia, mês e ano
+  const sameDate = (
+    date1.getDate() === date2.getDate() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getFullYear() === date2.getFullYear()
+  );
   
-  const normalizedDate2 = new Date(Date.UTC(
-    date2.getFullYear(),
-    date2.getMonth(),
-    date2.getDate()
-  ));
-  
-  const result = normalizedDate1.getTime() === normalizedDate2.getTime();
-  
-  // Log detalhado para debugging
   console.log(`[DATE UTILS] Comparando datas:
     Data 1: ${date1.toISOString()} (${format(date1, 'dd/MM/yyyy')})
     Data 2: ${date2.toISOString()} (${format(date2, 'dd/MM/yyyy')})
-    Normalizada 1: ${normalizedDate1.toISOString()}
-    Normalizada 2: ${normalizedDate2.toISOString()}
-    Resultado: ${result ? 'IGUAIS' : 'DIFERENTES'}`);
+    Resultado: ${sameDate ? 'IGUAIS' : 'DIFERENTES'}`);
   
-  return result;
+  return sameDate;
 };
 
 /**
- * Normaliza uma data para início do dia (00:00:00) em UTC
+ * Normaliza uma data para início do dia (00:00:00)
  * @param date Data a ser normalizada
  * @returns Nova instância de Data com horário zerado
  */
@@ -133,7 +123,7 @@ export const normalizeToStartOfDay = (date: Date): Date => {
 };
 
 /**
- * Normaliza uma data para fim do dia (23:59:59.999) em UTC
+ * Normaliza uma data para fim do dia (23:59:59.999)
  * @param date Data a ser normalizada
  * @returns Nova instância de Data com horário no fim do dia
  */
@@ -155,23 +145,66 @@ export const normalizeToEndOfDay = (date: Date): Date => {
 };
 
 /**
- * Extrai apenas ano/mês/dia de uma data, normalizando para início do dia em UTC
- * @param date Data para normalização
- * @returns Data normalizada com apenas ano/mês/dia
+ * Função simplificada para comparar apenas a parte da data (ano, mês, dia)
+ * Substitui o método getUTCDateOnly
+ * @param date1 Primeira data para comparação
+ * @param date2 Segunda data para comparação
+ * @returns true se as datas são iguais (ano, mês, dia)
  */
-export const getUTCDateOnly = (date: Date): Date => {
-  if (!(date instanceof Date)) {
-    console.error('[DATE UTILS] Tentativa de normalizar objeto não-Data');
-    return new Date();
+export const areSameDates = (date1: Date, date2: Date): boolean => {
+  if (!(date1 instanceof Date) || !(date2 instanceof Date)) {
+    console.error('[DATE UTILS] Tentativa de comparar objeto não-Data');
+    return false;
   }
   
-  const normalizedDate = startOfDay(date);
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
   
-  console.log(`[DATE UTILS] Data UTC normalizada: 
-    Original: ${date.toISOString()} 
-    Normalizada: ${normalizedDate.toISOString()}
-    Local: ${format(normalizedDate, 'yyyy-MM-dd')}
-  `);
+  const result = (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
   
-  return normalizedDate;
+  console.log(`[DATE UTILS] Comparação de datas simplificada:
+    Data 1: ${d1.toISOString()} (${format(d1, 'dd/MM/yyyy')})
+    Data 2: ${d2.toISOString()} (${format(d2, 'dd/MM/yyyy')})
+    Resultado: ${result ? 'MESMA DATA' : 'DATAS DIFERENTES'}`);
+  
+  return result;
+};
+
+/**
+ * Retorna um intervalo de datas ISO para consulta SQL
+ * @param date Data de referência 
+ * @returns Objeto com strings ISO para início e fim do dia
+ */
+export const getDateRangeForSQL = (date: Date): { start: string, end: string } => {
+  if (!(date instanceof Date)) {
+    console.error('[DATE UTILS] Tentativa de usar objeto não-Data');
+    date = new Date();
+  }
+  
+  // Criar data de início (00:00:00) e fim (23:59:59) do dia
+  const startDate = new Date(date);
+  startDate.setHours(0, 0, 0, 0);
+  
+  const endDate = new Date(date);
+  endDate.setHours(23, 59, 59, 999);
+  
+  const start = startDate.toISOString();
+  const end = endDate.toISOString();
+  
+  console.log(`[DATE UTILS] Range SQL para ${format(date, 'dd/MM/yyyy')}:
+    Início: ${start}
+    Fim: ${end}`);
+  
+  return { start, end };
+};
+
+// Mantemos getUTCDateOnly temporariamente para compatibilidade com código existente
+// mas recomendamos usar areSameDates para novas implementações
+export const getUTCDateOnly = (date: Date): Date => {
+  console.log('[DATE UTILS] AVISO: getUTCDateOnly está obsoleto, use areSameDates');
+  return startOfDay(date);
 };
