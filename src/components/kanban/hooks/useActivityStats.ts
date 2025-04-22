@@ -1,10 +1,9 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { DailyStats } from "../types/activity-dashboard.types";
 import { processDailyStats } from "../utils/activity/activityStatsProcessor";
-import { createSafeDate, getDateRangeForSQL } from "@/utils/dateUtils";
+import { createSafeDate, getDateRangeForSQL } from "@/utils/date";
 
 export function useActivityStats(
   selectedSource: string,

@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, endOfMonth, startOfDay, isAfter } from "date-fns";
@@ -9,7 +8,7 @@ import {
   normalizeToEndOfDay, 
   isSameLocalDate,
   getUTCDateOnly
-} from "@/utils/dateUtils";
+} from "@/utils/date"
 
 export function useCommercialStats(
   selectedSource: string,

@@ -5,7 +5,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Student } from "@/types/enrollment";
 import { useEnrollmentForm } from "../EnrollmentFormProvider";
-import { parseFormDate, formatDateForInput } from "@/utils/dateUtils";
+import { parseFormDate, formatDateForInput } from "@/utils/date";
 
 const personalDataSchema = z.object({
   full_name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),

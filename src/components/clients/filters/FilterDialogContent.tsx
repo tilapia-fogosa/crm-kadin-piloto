@@ -3,7 +3,7 @@ import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/compon
 import { Button } from "@/components/ui/button"
 import { DateRangeFilter } from "./DateRangeFilter"
 import { SelectFilter } from "./SelectFilter"
-import { parseFormDate } from "@/utils/dateUtils"
+import { parseFormDate } from "@/utils/date"
 
 type DateRange = {
   from: Date | undefined

@@ -1,5 +1,4 @@
-
-import { startOfDay, endOfDay } from "date-fns";
+import { startOfDay, endOfDay, format } from "date-fns";
 
 /**
  * Retorna um intervalo de datas ISO para consulta SQL
