@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ConsultorDailyPanel } from '@/components/consultor-painel/ConsultorDailyPanel';

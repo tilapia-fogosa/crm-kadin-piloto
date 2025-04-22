@@ -57,33 +57,50 @@ export async function fetchConsultorActivities(
       };
     });
     
-    // Executar a consulta Supabase (usando função SQL personalizada)
-    // Aqui estamos usando o método fetchDailyActivities para contornar a limitação de RPC
-    const result = await fetchDailyActivities(
-      userId,
-      selectedMonth,
-      selectedYear,
-      selectedUnitIds
-    );
+    // Executar a consulta Supabase (usando SQL direto em vez de RPC)
+    const { data: activities, error } = await supabase
+      .from('client_activities')
+      .select(`
+        created_at,
+        tipo_atividade,
+        active,
+        unit_id,
+        client_id,
+        clients!inner(active)
+      `)
+      .eq('active', true)
+      .in('unit_id', selectedUnitIds)
+      .gte('created_at', startDate.toISOString())
+      .lte('created_at', endDate.toISOString())
+      .eq('clients.active', true);
+
+    if (error) throw error;
     
-    console.log('[CONSULTOR API] Dados recebidos:', result ? result.length : 0, 'registros');
+    console.log('[CONSULTOR API] Dados recebidos:', activities ? activities.length : 0, 'registros');
     
-    // Mesclar os dados recebidos com o mapa inicial
-    if (result && result.length > 0) {
-      result.forEach(item => {
-        // A data vem como string no formato 'YYYY-MM-DD'
-        const dateKey = item.dia.split('T')[0]; // Garantir formato YYYY-MM-DD
+    // Processar os dados recebidos
+    if (activities && activities.length > 0) {
+      activities.forEach(activity => {
+        const dateKey = activity.created_at.split('T')[0];
         
         if (initialData[dateKey]) {
-          // Atualizar o registro existente com os dados da consulta
-          initialData[dateKey] = {
-            ...initialData[dateKey],
-            tentativa_contato: item.tentativa_contato || 0,
-            contato_efetivo: item.contato_efetivo || 0,
-            atendimento_agendado: item.atendimento_agendado || 0,
-            atendimento_realizado: item.atendimento_realizado || 0,
-            matriculas: item.matriculas || 0
-          };
+          switch (activity.tipo_atividade) {
+            case 'Tentativa de Contato':
+              initialData[dateKey].tentativa_contato++;
+              break;
+            case 'Contato Efetivo':
+              initialData[dateKey].contato_efetivo++;
+              break;
+            case 'Agendamento':
+              initialData[dateKey].atendimento_agendado++;
+              break;
+            case 'Atendimento':
+              initialData[dateKey].atendimento_realizado++;
+              break;
+            case 'Matrícula':
+              initialData[dateKey].matriculas++;
+              break;
+          }
         }
       });
     }
@@ -100,102 +117,6 @@ export async function fetchConsultorActivities(
   } catch (error) {
     console.error('[CONSULTOR API] Erro na função fetchConsultorActivities:', error);
     console.timeEnd('[CONSULTOR API] Tempo de execução');
-    throw error;
-  }
-}
-
-/**
- * Função para buscar dados de atividades diárias
- * Implementa a lógica de consulta SQL diretamente via Supabase query
- * 
- * @param userId - ID do usuário 
- * @param month - Mês selecionado
- * @param year - Ano selecionado
- * @param unitIds - IDs das unidades
- * @returns Array de atividades diárias (API format)
- */
-async function fetchDailyActivities(
-  userId: string,
-  month: number,
-  year: number,
-  unitIds: string[]
-): Promise<ApiDailyActivityData[]> {
-  console.log('[CONSULTOR API] Executando consulta SQL para atividades diárias');
-  
-  try {
-    // Construir a primeira parte da consulta - selecionando dias do mês
-    const firstDayOfMonth = new Date(year, month - 1, 1).toISOString().split('T')[0];
-    const lastDayOfMonth = new Date(year, month, 0).toISOString().split('T')[0];
-    
-    // Consulta usando SQL direto em vez de RPC
-    const { data, error } = await supabase
-      .from('client_activities')
-      .select(`
-        created_at,
-        tipo_atividade,
-        active,
-        unit_id,
-        client_id,
-        clients!inner(active)
-      `)
-      .eq('active', true)
-      .in('unit_id', unitIds)
-      .gte('created_at', firstDayOfMonth)
-      .lte('created_at', `${lastDayOfMonth}T23:59:59`)
-      .eq('clients.active', true);
-    
-    if (error) {
-      console.error('[CONSULTOR API] Erro na consulta SQL:', error);
-      throw error;
-    }
-    
-    // Processamento dos dados para o formato esperado
-    console.log('[CONSULTOR API] Processando dados brutos:', data ? data.length : 0, 'registros');
-    
-    // Agrupar por dia
-    const activityByDay: Record<string, ApiDailyActivityData> = {};
-    
-    if (data && data.length > 0) {
-      data.forEach(item => {
-        // Extrair a data no formato YYYY-MM-DD
-        const day = item.created_at.split('T')[0];
-        
-        // Inicializar o dia se ainda não existir
-        if (!activityByDay[day]) {
-          activityByDay[day] = {
-            dia: day,
-            tentativa_contato: 0,
-            contato_efetivo: 0,
-            atendimento_agendado: 0,
-            atendimento_realizado: 0,
-            matriculas: 0
-          };
-        }
-        
-        // Incrementar o contador apropriado
-        switch (item.tipo_atividade) {
-          case 'Tentativa de Contato':
-            activityByDay[day].tentativa_contato++;
-            break;
-          case 'Contato Efetivo':
-            activityByDay[day].contato_efetivo++;
-            break;
-          case 'Agendamento':
-            activityByDay[day].atendimento_agendado++;
-            break;
-          case 'Atendimento':
-            activityByDay[day].atendimento_realizado++;
-            break;
-          case 'Matrícula':
-            activityByDay[day].matriculas++;
-            break;
-        }
-      });
-    }
-    
-    return Object.values(activityByDay);
-  } catch (error) {
-    console.error('[CONSULTOR API] Erro ao buscar atividades diárias:', error);
     throw error;
   }
 }
