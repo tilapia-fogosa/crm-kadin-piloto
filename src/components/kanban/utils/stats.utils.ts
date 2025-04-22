@@ -8,45 +8,34 @@ import { format } from "date-fns";
  * @returns Objeto com totais ou null se não houver dados
  */
 export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | null => {
-  // Validação de entrada
   if (!stats || stats.length === 0) {
     console.log('[STATS] Sem dados para calcular totais');
     return null;
   }
-  
+
   console.log(`[STATS] Calculando totais para ${stats.length} dias`);
-  
-  // Filtrar dias inválidos e calcular totais iniciais
+
+  // Garante uso de zero para campos ausentes ou não numéricos
+  const asNumber = (value: any) => Number.isFinite(value) ? value : 0;
+
   const validStats = stats.filter(day => day !== null && day !== undefined);
-  
+
   if (validStats.length === 0) {
-    console.log('[STATS] Nenhum dia válido para calcular totais');
+    console.log('[STATS] Nenhum dia válido para totais');
     return null;
   }
-  
-  // Calcular totais somando os valores de cada dia
+
   const rawTotals = validStats.reduce((acc, day) => {
-    // Log detalhado para as primeiras 3 entradas (como amostra)
-    const isDetailedLog = acc.newClients < 10; // Limitamos logs detalhados
-    
-    if (isDetailedLog) {
-      console.log(`[STATS] Processando dia ${format(day.date, 'dd/MM/yyyy')}:`, {
-        novosClientes: day.newClients,
-        tentativas: day.contactAttempts,
-        contatos: day.effectiveContacts,
-        visitas: day.completedVisits,
-        matriculas: day.enrollments
-      });
-    }
-    
+    // Força a soma de números apenas
+    const add = (a: any, b: any) => asNumber(a) + asNumber(b);
     return {
-      newClients: acc.newClients + (day.newClients || 0),
-      contactAttempts: acc.contactAttempts + (day.contactAttempts || 0),
-      effectiveContacts: acc.effectiveContacts + (day.effectiveContacts || 0),
-      scheduledVisits: acc.scheduledVisits + (day.scheduledVisits || 0),
-      awaitingVisits: acc.awaitingVisits + (day.awaitingVisits || 0),
-      completedVisits: acc.completedVisits + (day.completedVisits || 0),
-      enrollments: acc.enrollments + (day.enrollments || 0)
+      newClients: add(acc.newClients, day.newClients),
+      contactAttempts: add(acc.contactAttempts, day.contactAttempts),
+      effectiveContacts: add(acc.effectiveContacts, day.effectiveContacts),
+      scheduledVisits: add(acc.scheduledVisits, day.scheduledVisits),
+      awaitingVisits: add(acc.awaitingVisits, day.awaitingVisits),
+      completedVisits: add(acc.completedVisits, day.completedVisits),
+      enrollments: add(acc.enrollments, day.enrollments),
     };
   }, {
     newClients: 0,
@@ -58,10 +47,9 @@ export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | n
     enrollments: 0
   });
 
-  // Log para inspeção de valores brutos
-  console.log('[STATS] Totais brutos calculados:', rawTotals);
+  // Log para inspeção dos totais
+  console.log('[STATS] Totais brutos:', rawTotals);
 
-  // Calcular porcentagens com proteção contra divisão por zero
   const totals: TotalStats = {
     ...rawTotals,
     ceConversionRate: rawTotals.contactAttempts > 0 
@@ -78,78 +66,6 @@ export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | n
       : 0
   };
 
-  // Log final com todos os valores calculados
-  console.log('[STATS] Totais finais calculados:', {
-    novosClientes: totals.newClients,
-    tentativas: totals.contactAttempts,
-    contatosEfetivos: totals.effectiveContacts, 
-    agendamentos: totals.scheduledVisits,
-    visitasAguardadas: totals.awaitingVisits,
-    visitasRealizadas: totals.completedVisits,
-    matriculas: totals.enrollments,
-    conversaoCE: totals.ceConversionRate.toFixed(1) + '%',
-    conversaoAG: totals.agConversionRate.toFixed(1) + '%',
-    conversaoAT: totals.atConversionRate.toFixed(1) + '%',
-    conversaoMA: totals.maConversionRate.toFixed(1) + '%'
-  });
-  
+  console.log('[STATS] Totais finais:', totals);
   return totals;
-};
-
-/**
- * Determina a progressão máxima de um cliente com base nas atividades
- * @param activities Array de atividades do cliente
- * @returns Objeto com status de progressão
- */
-export const getClientMaxProgression = (activities: any[] = []) => {
-  // Log inicial para rastreamento
-  console.log(`[STATS] Analisando ${activities.length} atividades para progressão máxima`);
-  
-  // Define resultado padrão (nenhuma progressão)
-  let result = {
-    hasEffectiveContact: false,
-    hasScheduledVisit: false,
-    hasCompletedVisit: false,
-    hasEnrollment: false
-  };
-  
-  // Se não há atividades, retorna padrão
-  if (!activities || activities.length === 0) {
-    console.log('[STATS] Sem atividades para analisar');
-    return result;
-  }
-  
-  // Analisa cada atividade para determinar a progressão máxima
-  activities.forEach(activity => {
-    // Validação para garantir que a atividade tem tipo
-    if (!activity || !activity.tipo_atividade) {
-      console.log('[STATS] Atividade inválida encontrada');
-      return;
-    }
-    
-    const tipo = activity.tipo_atividade;
-    console.log(`[STATS] Analisando atividade: ${tipo}`);
-    
-    // Verifica cada tipo de atividade e marca na progressão
-    if (['Contato Efetivo', 'Agendamento', 'Atendimento', 'Matrícula'].includes(tipo)) {
-      result.hasEffectiveContact = true;
-    }
-    
-    if (['Agendamento', 'Atendimento', 'Matrícula'].includes(tipo)) {
-      result.hasScheduledVisit = true;
-    }
-    
-    if (['Atendimento', 'Matrícula'].includes(tipo)) {
-      result.hasCompletedVisit = true;
-    }
-    
-    if (tipo === 'Matrícula') {
-      result.hasEnrollment = true;
-    }
-  });
-  
-  // Log final para depuração
-  console.log("[STATS] Progressão máxima determinada:", result);
-  
-  return result;
 };
