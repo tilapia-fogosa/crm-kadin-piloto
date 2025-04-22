@@ -1,8 +1,8 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DailyStats, TotalStats } from "../../types/activity-dashboard.types";
+import React from "react";
 
 interface ActivityTableProps {
   stats: DailyStats[] | undefined;
@@ -11,6 +11,15 @@ interface ActivityTableProps {
 }
 
 export function ActivityTable({ stats, totals, isLoading }: ActivityTableProps) {
+  React.useEffect(() => {
+    if (stats) {
+      console.log("[ACTIVITY TABLE] Dias recebidos para renderização:", stats.map(d => format(d.date, 'dd/MM/yyyy')));
+      stats.forEach(day =>
+        console.log(`[ACTIVITY TABLE] Dia: ${format(day.date, 'dd/MM/yyyy')}, Novos: ${day.newClients}, Contatos: ${day.contactAttempts}, Efetivos: ${day.effectiveContacts}, Agendamentos: ${day.scheduledVisits}, Realizadas: ${day.completedVisits}, Matrículas: ${day.enrollments}`)
+      );
+    }
+  }, [stats]);
+
   return (
     <Table>
       <TableHeader>
@@ -54,6 +63,7 @@ export function ActivityTable({ stats, totals, isLoading }: ActivityTableProps) 
               <TableRow key={day.date.toISOString()} className="hover:bg-muted/50 [&>td]:px-2.5">
                 <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
                   {format(day.date, 'dd/MM/yyyy', { locale: ptBR })}
+                  <span className="block text-[10px] text-gray-400">(ISO: {day.date.toISOString().split('T')[0]})</span>
                 </TableCell>
                 <TableCell className="text-center text-xs py-0">{day.newClients}</TableCell>
                 <TableCell className="text-center text-xs py-0">{day.contactAttempts}</TableCell>

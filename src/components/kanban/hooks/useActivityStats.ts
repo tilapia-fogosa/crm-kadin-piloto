@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
@@ -23,7 +22,6 @@ export function useActivityStats(
         console.error('[ACTIVITY STATS] Mês ou ano não selecionados');
         return [];
       }
-      console.log('[ACTIVITY STATS] Iniciando busca com:', {selectedMonth, selectedYear, selectedSource, selectedUnitId});
       const monthNum = parseInt(selectedMonth);
       const yearNum = parseInt(selectedYear);
       if (isNaN(monthNum) || isNaN(yearNum)) {
@@ -46,7 +44,10 @@ export function useActivityStats(
         console.error('[ACTIVITY STATS] Nenhuma unidade para filtro');
         return [];
       }
-      // SQL de clientes (garantir sempre data >= início <= fim)
+
+      // FETCH de dados com logs detalhados em cada etapa
+
+      // --- NOVOS CLIENTES
       let newClientsQuery = supabase.from('clients')
         .select('id, created_at')
         .eq('active', true)
@@ -57,11 +58,15 @@ export function useActivityStats(
       if (selectedSource !== 'todos') {
         newClientsQuery = newClientsQuery.eq('lead_source', selectedSource);
       }
+
       const { data: newClients, error: newClientsError } = await newClientsQuery;
       if (newClientsError) throw newClientsError;
-      console.log('[ACTIVITY STATS] Clientes carregados:', newClients?.length);
+      console.log(`[ACTIVITY STATS] Clientes carregados: ${newClients?.length}`);
+      if (newClients) {
+        newClients.forEach(c => console.log(`[CLIENT] ${c.id} criado em ${c.created_at}`));
+      }
 
-      // IDs para filtrar atividades (apenas se fonte não for todos)
+      // --- ATIVIDADES
       let clientIds: string[] = [];
       if (selectedSource !== 'todos' && newClients) {
         clientIds = newClients.map((client: any) => client.id);
@@ -70,7 +75,6 @@ export function useActivityStats(
           return [];
         }
       }
-      // Atividades do período
       let activitiesQuery = supabase.from('client_activities')
         .select('id, tipo_atividade, created_at, scheduled_date, client_id')
         .eq('active', true)
@@ -83,9 +87,12 @@ export function useActivityStats(
       }
       const { data: activities, error: activitiesError } = await activitiesQuery;
       if (activitiesError) throw activitiesError;
-      console.log('[ACTIVITY STATS] Atividades carregadas:', activities?.length);
+      console.log(`[ACTIVITY STATS] Atividades carregadas: ${activities?.length}`);
+      if (activities) {
+        activities.forEach(a => console.log(`[ACTIVITY] ${a.id}, ${a.tipo_atividade}, criado em ${a.created_at}, client ${a.client_id}`));
+      }
 
-      // Agendadas "aguardadas" do período (scheduled_date)
+      // --- AGENDADAS (aguardadas)
       let scheduledVisitsQuery = supabase.from('client_activities')
         .select('id, client_id, scheduled_date')
         .eq('active', true)
@@ -99,25 +106,30 @@ export function useActivityStats(
       }
       const { data: scheduledVisits, error: scheduledError } = await scheduledVisitsQuery;
       if (scheduledError) throw scheduledError;
-      console.log('[ACTIVITY STATS] Agendadas carregadas:', scheduledVisits?.length);
+      console.log(`[ACTIVITY STATS] Agendadas carregadas: ${scheduledVisits?.length}`);
+      if (scheduledVisits) {
+        scheduledVisits.forEach(sv => console.log(`[SCHEDULED] id: ${sv.id} client: ${sv.client_id} data: ${sv.scheduled_date}`));
+      }
 
-      // Array de todos os dias do mês
+      // Array de todos os dias do mês (inclusive após 15)
       const allDates = eachDayOfInterval({ start: startDate, end: endDate });
-      console.log('[ACTIVITY STATS] Dias do mês:', allDates.length);
+      console.log(`[ACTIVITY STATS] Dias do mês gerados (${allDates.length}):`, allDates.map(d => d.toISOString().split('T')[0]).join(', '));
 
-      // Processar por dia e logar detalhadamente
+      // Processamento detalhado com log por dia
       const dailyStats: DailyStats[] = allDates.map(date => {
+        console.log(`[ACTIVITY STATS] === Processando stats para ${date.toISOString().split('T')[0]} ===`);
         const stats = processDailyStats(
           date,
           activities || [],
           newClients || [],
           scheduledVisits || []
         );
-        console.log(`[ACTIVITY STATS] Stats processado para dia ${format(date, 'dd/MM/yyyy')}:`, stats);
+        // Loga estatísticas por dia
+        console.log(`[ACTIVITY STATS] Stats calculados para dia ${date.toISOString().split('T')[0]}:`, stats);
         return stats;
       });
 
-      console.log('[ACTIVITY STATS] Processamento completo! Dias processados:', dailyStats.length);
+      console.log(`[ACTIVITY STATS] Processamento completo! Dias processados: ${dailyStats.length}`);
       return dailyStats;
     },
     enabled: !!userUnits && userUnits.length > 0,
