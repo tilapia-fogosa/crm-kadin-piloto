@@ -1,6 +1,7 @@
 
 import { DailyStats } from "../../types/activity-dashboard.types";
-import { format, isSameDay } from "date-fns";
+import { format } from "date-fns";
+import { normalizeDate, isSameLocalDay } from "@/utils/date";
 
 /**
  * Agrupa atividades por dia e calcula estatísticas de forma otimizada
@@ -19,15 +20,12 @@ export const processDailyStats = (
   const dateStr = format(date, 'yyyy-MM-dd');
   console.log(`[STATS PROCESSOR] Processando dia ${format(date, 'dd/MM/yyyy')}`);
   
-  // Pré-processar os dados para evitar comparações repetidas
-  
   // 1. Filtrar clientes criados no dia (baseado no created_at)
   const dayClients = newClients.filter(client => {
     if (!client?.created_at) return false;
     
     try {
-      const clientDate = new Date(client.created_at);
-      return isSameDay(clientDate, date);
+      return isSameLocalDay(new Date(client.created_at), date);
     } catch (error) {
       console.error(`[STATS PROCESSOR] Erro ao processar data do cliente:`, error);
       return false;
@@ -39,8 +37,7 @@ export const processDailyStats = (
     if (!activity?.created_at) return false;
     
     try {
-      const activityDate = new Date(activity.created_at);
-      return isSameDay(activityDate, date);
+      return isSameLocalDay(new Date(activity.created_at), date);
     } catch (error) {
       console.error(`[STATS PROCESSOR] Erro ao processar data da atividade:`, error);
       return false;
@@ -52,8 +49,7 @@ export const processDailyStats = (
     if (!visit?.scheduled_date) return false;
     
     try {
-      const scheduledDate = new Date(visit.scheduled_date);
-      return isSameDay(scheduledDate, date);
+      return isSameLocalDay(new Date(visit.scheduled_date), date);
     } catch (error) {
       console.error(`[STATS PROCESSOR] Erro ao processar data agendada:`, error);
       return false;

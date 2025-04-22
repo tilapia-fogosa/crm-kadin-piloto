@@ -37,3 +37,61 @@ export const createSafeDate = (year: number, month: number): Date => {
 export const getDateString = (date: Date): string => {
   return format(date, 'yyyy-MM-dd');
 };
+
+/**
+ * Normaliza uma data para comparar apenas dia, mês e ano (sem hora)
+ * Esta função retorna uma nova data com o mesmo dia/mês/ano mas com hora zerada (00:00:00)
+ * @param date Data para normalizar
+ * @returns Data normalizada (somente data, sem horário)
+ */
+export const normalizeDate = (date: Date | string | null | undefined): Date | null => {
+  // Validação de entrada
+  if (!date) {
+    console.log('[DATE UTILS] Data inválida ou nula para normalização');
+    return null;
+  }
+
+  try {
+    // Converter para objeto Date se for string
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    // Verificar se é uma data válida
+    if (isNaN(dateObj.getTime())) {
+      console.error('[DATE UTILS] Data inválida para normalização:', date);
+      return null;
+    }
+    
+    // Criar nova data apenas com ano, mês e dia (hora zerada)
+    const normalized = new Date(
+      dateObj.getFullYear(),
+      dateObj.getMonth(),
+      dateObj.getDate(),
+      0, 0, 0, 0
+    );
+    
+    return normalized;
+  } catch (error) {
+    console.error('[DATE UTILS] Erro ao normalizar data:', error);
+    return null;
+  }
+};
+
+/**
+ * Compara se duas datas representam o mesmo dia, independente do horário
+ * @param date1 Primeira data
+ * @param date2 Segunda data
+ * @returns true se as datas representam o mesmo dia
+ */
+export const isSameLocalDay = (date1: Date | string | null | undefined, date2: Date | string | null | undefined): boolean => {
+  // Normalizar as duas datas
+  const normalizedDate1 = normalizeDate(date1);
+  const normalizedDate2 = normalizeDate(date2);
+  
+  // Se alguma data for inválida, retorna false
+  if (!normalizedDate1 || !normalizedDate2) {
+    return false;
+  }
+  
+  // Comparar as datas normalizadas
+  return normalizedDate1.getTime() === normalizedDate2.getTime();
+};

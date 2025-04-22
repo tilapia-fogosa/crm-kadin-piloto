@@ -1,6 +1,6 @@
 
 import { DailyStats, TotalStats } from "../types/activity-dashboard.types";
-import { format, isSameDay } from "date-fns";
+import { format } from "date-fns";
 
 /**
  * Calcula estatísticas totais a partir de estatísticas diárias
@@ -16,18 +16,28 @@ export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | n
   
   console.log(`[STATS] Calculando totais para ${stats.length} dias`);
   
-  // Calcular totais iniciais
-  const rawTotals = stats.reduce((acc, day) => {
-    // Validação extra para cada dia
-    if (!day) return acc;
+  // Filtrar dias inválidos e calcular totais iniciais
+  const validStats = stats.filter(day => day !== null && day !== undefined);
+  
+  if (validStats.length === 0) {
+    console.log('[STATS] Nenhum dia válido para calcular totais');
+    return null;
+  }
+  
+  // Calcular totais somando os valores de cada dia
+  const rawTotals = validStats.reduce((acc, day) => {
+    // Log detalhado para as primeiras 3 entradas (como amostra)
+    const isDetailedLog = acc.newClients < 10; // Limitamos logs detalhados
     
-    // Log detalhado para depuração
-    console.log(`[STATS] Processando dia ${format(day.date, 'dd/MM/yyyy')}:`, {
-      newClients: day.newClients,
-      contactAttempts: day.contactAttempts,
-      effectiveContacts: day.effectiveContacts,
-      enrollments: day.enrollments
-    });
+    if (isDetailedLog) {
+      console.log(`[STATS] Processando dia ${format(day.date, 'dd/MM/yyyy')}:`, {
+        novosClientes: day.newClients,
+        tentativas: day.contactAttempts,
+        contatos: day.effectiveContacts,
+        visitas: day.completedVisits,
+        matriculas: day.enrollments
+      });
+    }
     
     return {
       newClients: acc.newClients + (day.newClients || 0),
@@ -49,7 +59,7 @@ export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | n
   });
 
   // Log para inspeção de valores brutos
-  console.log('[STATS] Valores brutos calculados:', rawTotals);
+  console.log('[STATS] Totais brutos calculados:', rawTotals);
 
   // Calcular porcentagens com proteção contra divisão por zero
   const totals: TotalStats = {
@@ -69,12 +79,18 @@ export const calculateTotals = (stats: DailyStats[] | undefined): TotalStats | n
   };
 
   // Log final com todos os valores calculados
-  console.log('[STATS] Totais calculados:', {
-    ...totals,
-    ceConversionRate: totals.ceConversionRate.toFixed(1) + '%',
-    agConversionRate: totals.agConversionRate.toFixed(1) + '%',
-    atConversionRate: totals.atConversionRate.toFixed(1) + '%',
-    maConversionRate: totals.maConversionRate.toFixed(1) + '%'
+  console.log('[STATS] Totais finais calculados:', {
+    novosClientes: totals.newClients,
+    tentativas: totals.contactAttempts,
+    contatosEfetivos: totals.effectiveContacts, 
+    agendamentos: totals.scheduledVisits,
+    visitasAguardadas: totals.awaitingVisits,
+    visitasRealizadas: totals.completedVisits,
+    matriculas: totals.enrollments,
+    conversaoCE: totals.ceConversionRate.toFixed(1) + '%',
+    conversaoAG: totals.agConversionRate.toFixed(1) + '%',
+    conversaoAT: totals.atConversionRate.toFixed(1) + '%',
+    conversaoMA: totals.maConversionRate.toFixed(1) + '%'
   });
   
   return totals;

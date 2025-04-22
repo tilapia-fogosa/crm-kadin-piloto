@@ -1,10 +1,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, isSameDay, format } from "date-fns";
+import { startOfMonth, endOfMonth, format, eachDayOfInterval } from "date-fns";
 import { DailyStats } from "../../kanban/types/activity-dashboard.types";
-import { createSafeDate } from "@/utils/date";
+import { createSafeDate, isSameLocalDay } from "@/utils/date";
 
+/**
+ * Hook para buscar estatísticas comerciais filtradas por mês, ano, origem e unidade
+ */
 export function useCommercialStats(
   selectedSource: string,
   selectedMonth: string,
@@ -14,32 +17,38 @@ export function useCommercialStats(
   return useQuery({
     queryKey: ['commercial-dashboard', selectedSource, selectedMonth, selectedYear, selectedUnitId],
     queryFn: async () => {
-      // Conversão segura de strings para números
+      // 1. Validação e conversão dos parâmetros
       const monthNum = parseInt(selectedMonth);
       const yearNum = parseInt(selectedYear);
       
-      // Criação segura de datas de início e fim do mês
+      if (isNaN(monthNum) || isNaN(yearNum)) {
+        console.error('[COMMERCIAL STATS] Valores inválidos para mês ou ano');
+        return [];
+      }
+      
+      // 2. Calcular datas de início e fim do mês
       const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
       const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
 
-      console.log('Buscando estatísticas comerciais:', { 
+      // 3. Converter para formato ISO para consultas
+      const startDateIso = startDate.toISOString();
+      const endDateIso = endDate.toISOString();
+
+      console.log('[COMMERCIAL STATS] Buscando estatísticas comerciais:', { 
         startDate: format(startDate, 'dd/MM/yyyy'), 
         endDate: format(endDate, 'dd/MM/yyyy'),
         selectedSource,
         selectedUnitId
       });
 
-      // Datas ISO para uso no Supabase
-      const startDateIso = startDate.toISOString();
-      const endDateIso = endDate.toISOString();
-
-      // Construir as queries com filtros aplicados diretamente
+      // 4. CONSULTA 1: Buscar clientes do período
       let clientsQuery = supabase.from('clients')
         .select('id, created_at')
         .eq('active', true)
         .gte('created_at', startDateIso)
         .lte('created_at', endDateIso);
       
+      // Aplicar filtros adicionais
       if (selectedSource !== 'todos') {
         clientsQuery = clientsQuery.eq('lead_source', selectedSource);
       }
@@ -48,6 +57,7 @@ export function useCommercialStats(
         clientsQuery = clientsQuery.eq('unit_id', selectedUnitId);
       }
 
+      // 5. CONSULTA 2: Buscar atividades do período
       let activitiesQuery = supabase.from('client_activities')
         .select('id, tipo_atividade, created_at, scheduled_date, clients!inner(id, lead_source)')
         .eq('active', true)
@@ -55,6 +65,7 @@ export function useCommercialStats(
         .gte('created_at', startDateIso)
         .lte('created_at', endDateIso);
       
+      // Aplicar filtros adicionais
       if (selectedSource !== 'todos') {
         activitiesQuery = activitiesQuery.eq('clients.lead_source', selectedSource);
       }
@@ -63,48 +74,51 @@ export function useCommercialStats(
         activitiesQuery = activitiesQuery.eq('unit_id', selectedUnitId);
       }
       
-      // Executar queries em paralelo
+      // 6. Executar as consultas em paralelo
       const [clientsResult, activitiesResult] = await Promise.all([
         clientsQuery,
         activitiesQuery
       ]);
 
-      if (clientsResult.error) throw clientsResult.error;
-      if (activitiesResult.error) throw activitiesResult.error;
-
-      console.log('Total de clientes encontrados:', clientsResult.data.length);
-      console.log('Total de atividades encontradas:', activitiesResult.data.length);
-      
-      // Gerar array com todas as datas do mês
-      const allDates: Date[] = [];
-      let currentDate = new Date(startDate);
-      
-      while (currentDate <= endDate) {
-        allDates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
+      // 7. Validar respostas e tratar erros
+      if (clientsResult.error) {
+        console.error('[COMMERCIAL STATS] Erro ao buscar clientes:', clientsResult.error);
+        throw clientsResult.error;
+      }
+      if (activitiesResult.error) {
+        console.error('[COMMERCIAL STATS] Erro ao buscar atividades:', activitiesResult.error);
+        throw activitiesResult.error;
       }
 
-      // Calcular estatísticas para cada dia
+      console.log('[COMMERCIAL STATS] Dados coletados:',  {
+        clientes: clientsResult.data.length,
+        atividades: activitiesResult.data.length
+      });
+      
+      // 8. Gerar lista de dias do mês
+      const allDates = eachDayOfInterval({ start: startDate, end: endDate });
+      
+      // 9. Processamento dia a dia
       const dailyStats = allDates.map(date => {
-        // Clientes criados no dia (usar isSameDay para comparação eficiente)
+        // 9.1 Filtrar clientes do dia
         const dayClients = clientsResult.data.filter(client => {
           if (!client.created_at) return false;
-          return isSameDay(new Date(client.created_at), date);
+          return isSameLocalDay(new Date(client.created_at), date);
         });
 
-        // Atividades criadas no dia
+        // 9.2 Filtrar atividades do dia (created_at)
         const dayActivities = activitiesResult.data.filter(activity => {
           if (!activity.created_at) return false;
-          return isSameDay(new Date(activity.created_at), date);
+          return isSameLocalDay(new Date(activity.created_at), date);
         });
         
-        // Visitas aguardadas para o dia
+        // 9.3 Filtrar visitas agendadas para o dia (scheduled_date)
         const dayAwaitingVisits = activitiesResult.data.filter(activity => {
           if (!activity.scheduled_date || activity.tipo_atividade !== 'Agendamento') return false;
-          return isSameDay(new Date(activity.scheduled_date), date);
+          return isSameLocalDay(new Date(activity.scheduled_date), date);
         });
 
-        // Calcular totais por tipo de atividade
+        // 9.4 Calcular totais por tipo de atividade
         const contactAttempts = dayActivities.filter(activity => 
           ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
         ).length;
@@ -129,13 +143,14 @@ export function useCommercialStats(
 
         // Log resumido apenas para dias com dados
         if (dayActivities.length > 0 || dayClients.length > 0) {
-          console.log(`Estatísticas comerciais para ${format(date, 'dd/MM/yyyy')}:`, {
+          console.log(`[COMMERCIAL STATS] Dia ${format(date, 'dd/MM/yyyy')}:`, {
             novosClientes: dayClients.length,
             atividades: dayActivities.length,
             matriculas: enrollments
           });
         }
 
+        // 9.5 Montar objeto de estatísticas do dia
         return {
           date,
           newClients: dayClients.length,
@@ -145,14 +160,14 @@ export function useCommercialStats(
           awaitingVisits,
           completedVisits,
           enrollments,
-          ceConversionRate: 0,
+          ceConversionRate: 0, // Será calculado na próxima etapa
           agConversionRate: 0,
           atConversionRate: 0,
           maConversionRate: 0
         };
       });
 
-      // Calcular taxas de conversão
+      // 10. Calcular taxas de conversão para cada dia
       return dailyStats.map(day => ({
         ...day,
         ceConversionRate: day.contactAttempts > 0 ? (day.effectiveContacts / day.contactAttempts) * 100 : 0,

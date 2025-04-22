@@ -1,5 +1,6 @@
 
-import { format, startOfDay, isSameDay } from "date-fns";
+import { format } from "date-fns";
+import { normalizeDate } from "./utils";
 
 /**
  * Compara duas datas ignorando timezone e hora
@@ -13,8 +14,17 @@ export const compareDates = (date1: Date, date2: Date): boolean => {
     return false;
   }
   
-  // Utilizar a função isSameDay do date-fns que já faz toda a lógica necessária
-  const result = isSameDay(date1, date2);
+  // Normalizar ambas as datas para comparar apenas dia/mês/ano
+  const normalizedDate1 = normalizeDate(date1);
+  const normalizedDate2 = normalizeDate(date2);
+  
+  // Se alguma data for inválida, retorna false
+  if (!normalizedDate1 || !normalizedDate2) {
+    return false;
+  }
+  
+  // Comparar timestamps das datas normalizadas
+  const result = normalizedDate1.getTime() === normalizedDate2.getTime();
   
   // Log simplificado apenas quando necessário para debug
   if (process.env.NODE_ENV === 'development') {
