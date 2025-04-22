@@ -1,5 +1,5 @@
 
-import { format, startOfDay } from "date-fns";
+import { format, startOfDay, isSameDay } from "date-fns";
 
 /**
  * Compara duas datas ignorando timezone e hora
@@ -13,21 +13,13 @@ export const compareDates = (date1: Date, date2: Date): boolean => {
     return false;
   }
   
-  // Normalizar as datas para início do dia
-  const d1 = startOfDay(new Date(date1));
-  const d2 = startOfDay(new Date(date2));
+  // Utilizar a função isSameDay do date-fns que já faz toda a lógica necessária
+  const result = isSameDay(date1, date2);
   
-  const result = (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  );
-  
-  console.log(`[DATE UTILS] Comparação detalhada de datas:
-    Data 1: ${format(d1, 'dd/MM/yyyy HH:mm:ss')} (${d1.toISOString()})
-    Data 2: ${format(d2, 'dd/MM/yyyy HH:mm:ss')} (${d2.toISOString()})
-    Resultado: ${result ? 'MESMA DATA' : 'DATAS DIFERENTES'}
-  `);
+  // Log simplificado apenas quando necessário para debug
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[DATE UTILS] Comparação de datas: ${format(date1, 'dd/MM/yyyy')} e ${format(date2, 'dd/MM/yyyy')} => ${result ? 'IGUAIS' : 'DIFERENTES'}`);
+  }
   
   return result;
 };

@@ -1,8 +1,9 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, startOfDay, format } from "date-fns";
+import { startOfMonth, endOfMonth, isSameDay, format } from "date-fns";
 import { DailyStats } from "../../kanban/types/activity-dashboard.types";
-import { createSafeDate, getDateString } from "@/utils/date";
+import { createSafeDate } from "@/utils/date";
 
 export function useCommercialStats(
   selectedSource: string,
@@ -17,39 +18,55 @@ export function useCommercialStats(
       const monthNum = parseInt(selectedMonth);
       const yearNum = parseInt(selectedYear);
       
-      // Criação segura de datas de início e fim do mês usando a nova função
+      // Criação segura de datas de início e fim do mês
       const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
       const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
 
       console.log('Buscando estatísticas comerciais:', { 
-        startDate: startDate.toISOString(), 
-        endDate: endDate.toISOString(),
+        startDate: format(startDate, 'dd/MM/yyyy'), 
+        endDate: format(endDate, 'dd/MM/yyyy'),
         selectedSource,
-        selectedUnitId,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        selectedUnitId
       });
 
-      // Datas ISO para uso no Supabase (garantindo compatibilidade de timezone)
+      // Datas ISO para uso no Supabase
       const startDateIso = startDate.toISOString();
       const endDateIso = endDate.toISOString();
 
+      // Construir as queries com filtros aplicados diretamente
+      let clientsQuery = supabase.from('clients')
+        .select('id, created_at')
+        .eq('active', true)
+        .gte('created_at', startDateIso)
+        .lte('created_at', endDateIso);
+      
+      if (selectedSource !== 'todos') {
+        clientsQuery = clientsQuery.eq('lead_source', selectedSource);
+      }
+      
+      if (selectedUnitId) {
+        clientsQuery = clientsQuery.eq('unit_id', selectedUnitId);
+      }
+
+      let activitiesQuery = supabase.from('client_activities')
+        .select('id, tipo_atividade, created_at, scheduled_date, clients!inner(id, lead_source)')
+        .eq('active', true)
+        .eq('clients.active', true)
+        .gte('created_at', startDateIso)
+        .lte('created_at', endDateIso);
+      
+      if (selectedSource !== 'todos') {
+        activitiesQuery = activitiesQuery.eq('clients.lead_source', selectedSource);
+      }
+      
+      if (selectedUnitId) {
+        activitiesQuery = activitiesQuery.eq('unit_id', selectedUnitId);
+      }
+      
+      // Executar queries em paralelo
       const [clientsResult, activitiesResult] = await Promise.all([
-        supabase.from('clients')
-          .select('*')
-          .eq('active', true)
-          .eq(selectedUnitId ? 'unit_id' : '', selectedUnitId || '')
-          .gte('created_at', startDateIso)
-          .lte('created_at', endDateIso)
-          .eq(selectedSource !== 'todos' ? 'lead_source' : '', selectedSource !== 'todos' ? selectedSource : ''),
-        
-        supabase.from('client_activities')
-          .select('*, clients!inner(*)')
-          .eq('active', true)
-          .eq('clients.active', true)
-          .eq(selectedUnitId ? 'unit_id' : '', selectedUnitId || '')
-          .gte('created_at', startDateIso)
-          .lte('created_at', endDateIso)
-          .eq(selectedSource !== 'todos' ? 'clients.lead_source' : '', selectedSource !== 'todos' ? selectedSource : '')
+        clientsQuery,
+        activitiesQuery
       ]);
 
       if (clientsResult.error) throw clientsResult.error;
@@ -57,87 +74,76 @@ export function useCommercialStats(
 
       console.log('Total de clientes encontrados:', clientsResult.data.length);
       console.log('Total de atividades encontradas:', activitiesResult.data.length);
-
-      // Detalhamento por unidade para debug
-      const activityByUnit = activitiesResult.data.reduce((acc: Record<string, number>, activity) => {
-        acc[activity.unit_id] = (acc[activity.unit_id] || 0) + 1;
-        return acc;
-      }, {});
-      console.log('Distribuição de atividades por unidade:', activityByUnit);
-
-      // CORREÇÃO: Incluir todos os dias do mês, sem filtrar pela data atual
-      const validDates: Date[] = [];
+      
+      // Gerar array com todas as datas do mês
+      const allDates: Date[] = [];
       let currentDate = new Date(startDate);
       
       while (currentDate <= endDate) {
-        validDates.push(new Date(currentDate));
+        allDates.push(new Date(currentDate));
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
-      const dailyStats = validDates.map(date => {
-        // Formatação para logging
-        const formattedDate = date.toISOString().split('T')[0];
-        
-        // Normalizar data de referência para comparações
-        const refDateNormalized = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-        // Clientes criados no dia
+      // Calcular estatísticas para cada dia
+      const dailyStats = allDates.map(date => {
+        // Clientes criados no dia (usar isSameDay para comparação eficiente)
         const dayClients = clientsResult.data.filter(client => {
           if (!client.created_at) return false;
-          const clientDate = new Date(client.created_at);
-          const clientDateNormalized = new Date(clientDate.getFullYear(), clientDate.getMonth(), clientDate.getDate());
-          return refDateNormalized.getTime() === clientDateNormalized.getTime();
+          return isSameDay(new Date(client.created_at), date);
         });
 
         // Atividades criadas no dia
         const dayActivities = activitiesResult.data.filter(activity => {
           if (!activity.created_at) return false;
-          const activityDate = new Date(activity.created_at);
-          const activityDateNormalized = new Date(activityDate.getFullYear(), activityDate.getMonth(), activityDate.getDate());
-          return refDateNormalized.getTime() === activityDateNormalized.getTime();
+          return isSameDay(new Date(activity.created_at), date);
+        });
+        
+        // Visitas aguardadas para o dia
+        const dayAwaitingVisits = activitiesResult.data.filter(activity => {
+          if (!activity.scheduled_date || activity.tipo_atividade !== 'Agendamento') return false;
+          return isSameDay(new Date(activity.scheduled_date), date);
         });
 
+        // Calcular totais por tipo de atividade
+        const contactAttempts = dayActivities.filter(activity => 
+          ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
+        ).length;
+        
+        const effectiveContacts = dayActivities.filter(activity => 
+          ['Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
+        ).length;
+        
+        const scheduledVisits = dayActivities.filter(activity => 
+          activity.tipo_atividade === 'Agendamento'
+        ).length;
+        
+        const awaitingVisits = dayAwaitingVisits.length;
+        
+        const completedVisits = dayActivities.filter(activity => 
+          activity.tipo_atividade === 'Atendimento'
+        ).length;
+        
         const enrollments = dayActivities.filter(activity => 
           activity.tipo_atividade === 'Matrícula'
         ).length;
 
-        // Log detalhado para depuração das datas problemáticas
-        const isRecentDate = date.getDate() >= 15 && date.getMonth() === 3; // Abril é mês 3 (0-indexed)
-        if (isRecentDate) {
-          console.log(`COMERCIAL - VERIFICAÇÃO DE DATA [${formattedDate}]:`, {
-            totalDayActivities: dayActivities.length,
-            tiposAtividade: dayActivities.map(a => a.tipo_atividade),
-            refDateNormalized: refDateNormalized.toISOString()
+        // Log resumido apenas para dias com dados
+        if (dayActivities.length > 0 || dayClients.length > 0) {
+          console.log(`Estatísticas comerciais para ${format(date, 'dd/MM/yyyy')}:`, {
+            novosClientes: dayClients.length,
+            atividades: dayActivities.length,
+            matriculas: enrollments
           });
         }
-        
-        console.log(`Estatísticas comerciais para ${formattedDate}:`, {
-          totalAtividades: dayActivities.length,
-          matriculas: enrollments
-        });
 
         return {
           date,
           newClients: dayClients.length,
-          contactAttempts: dayActivities.filter(activity => 
-            ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
-          ).length,
-          effectiveContacts: dayActivities.filter(activity => 
-            ['Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
-          ).length,
-          scheduledVisits: dayActivities.filter(activity => 
-            activity.tipo_atividade === 'Agendamento'
-          ).length,
-          awaitingVisits: activitiesResult.data.filter(activity => {
-            if (!activity.scheduled_date) return false;
-            const scheduledDate = new Date(activity.scheduled_date);
-            const scheduledDateNormalized = new Date(scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate());
-            return refDateNormalized.getTime() === scheduledDateNormalized.getTime() && 
-                   activity.tipo_atividade === 'Agendamento';
-          }).length,
-          completedVisits: dayActivities.filter(activity => 
-            activity.tipo_atividade === 'Atendimento'
-          ).length,
+          contactAttempts,
+          effectiveContacts,
+          scheduledVisits,
+          awaitingVisits,
+          completedVisits,
           enrollments,
           ceConversionRate: 0,
           agConversionRate: 0,
@@ -146,6 +152,7 @@ export function useCommercialStats(
         };
       });
 
+      // Calcular taxas de conversão
       return dailyStats.map(day => ({
         ...day,
         ceConversionRate: day.contactAttempts > 0 ? (day.effectiveContacts / day.contactAttempts) * 100 : 0,

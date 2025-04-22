@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "lucide-react";
@@ -14,7 +15,10 @@ export function ActivityDashboard() {
   // Inicializar com o mês atual
   const currentDate = new Date();
   const [selectedSource, setSelectedSource] = useState<string>("todos");
-  const [selectedMonth, setSelectedMonth] = useState<string>((currentDate.getMonth() + 1).toString());
+  
+  // Garantir que o mês esteja no formato correto (1-12)
+  const currentMonth = currentDate.getMonth() + 1;
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth.toString());
   const [selectedYear, setSelectedYear] = useState<string>(currentDate.getFullYear().toString());
   const [selectedUnitId, setSelectedUnitId] = useState<string>("todas");
   const { data: userUnits } = useUserUnit();
@@ -23,14 +27,13 @@ export function ActivityDashboard() {
     mês: selectedMonth,
     ano: selectedYear,
     dataAtual: currentDate,
-    mêsJS: currentDate.getMonth(), // 0-11
-    mêsAjustado: currentDate.getMonth() + 1 // 1-12
+    mêsAtual: currentMonth
   });
 
   const { data: leadSources } = useQuery({
     queryKey: ['lead-sources'],
     queryFn: async () => {
-      console.log('Fetching lead sources')
+      console.log('Buscando fontes de leads');
       const { data, error } = await supabase.from('lead_sources').select('*').order('name');
       if (error) throw error;
       return data;

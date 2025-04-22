@@ -8,7 +8,13 @@ import { format } from "date-fns";
  * @returns Date object
  */
 export const createSafeDate = (year: number, month: number): Date => {
-  console.log(`[DATE UTILS] Criando data segura para ${year}-${month}`);
+  // Validar entrada
+  if (isNaN(year) || isNaN(month)) {
+    console.error(`[DATE UTILS] Valores inválidos para data: ano=${year}, mês=${month}`);
+    // Valores padrão
+    year = new Date().getFullYear();
+    month = new Date().getMonth() + 1;
+  }
   
   // Validar intervalo do mês (1-12)
   if (month < 1 || month > 12) {
@@ -17,7 +23,10 @@ export const createSafeDate = (year: number, month: number): Date => {
   }
   
   // Mês no Date é 0-based, então subtraímos 1
-  return new Date(year, month - 1);
+  const date = new Date(year, month - 1, 1);
+  
+  console.log(`[DATE UTILS] Data criada: ${format(date, 'dd/MM/yyyy')} para ano=${year}, mês=${month}`);
+  return date;
 };
 
 /**
@@ -26,7 +35,5 @@ export const createSafeDate = (year: number, month: number): Date => {
  * @returns String formatada
  */
 export const getDateString = (date: Date): string => {
-  console.log(`[DATE UTILS] Formatando data ${date.toISOString()}`);
   return format(date, 'yyyy-MM-dd');
 };
-

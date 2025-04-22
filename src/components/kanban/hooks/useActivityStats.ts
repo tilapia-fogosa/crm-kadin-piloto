@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
@@ -30,7 +31,7 @@ export function useActivityStats(
         userUnits: userUnits?.map(u => ({ id: u.unit_id, name: u.units.name }))
       });
 
-      // Conversão segura de strings para números - Mês já está no formato 1-12
+      // Conversão segura de strings para números
       const monthNum = parseInt(selectedMonth);
       const yearNum = parseInt(selectedYear);
       
@@ -39,26 +40,19 @@ export function useActivityStats(
         return [];
       }
       
-      // Log detalhado da data que será criada
-      console.log('[STATS QUERY] Criando data com:', {
-        ano: yearNum,
-        mes: monthNum,
-        mesOriginal: selectedMonth
-      });
-      
-      // Criação de datas de início e fim do mês usando a nova função
-      const startDate = createSafeDate(yearNum, monthNum);
+      // Criação de datas de início e fim do mês usando a função segura
+      const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
       const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
       
-      // Gerar strings ISO para query SQL direta
+      // Gerar strings ISO para query SQL
       const startISO = startDate.toISOString();
       const endISO = endDate.toISOString();
       
-      console.log('[STATS QUERY] Período calculado para SQL:', {
-        startDate: startISO,
-        endDate: endISO,
-        ano: yearNum,
-        mes: monthNum
+      console.log('[STATS QUERY] Período calculado para consulta:', {
+        início: format(startDate, 'dd/MM/yyyy'),
+        fim: format(endDate, 'dd/MM/yyyy'),
+        startISO,
+        endISO
       });
 
       // Determinar IDs das unidades para filtro
@@ -66,10 +60,8 @@ export function useActivityStats(
       
       if (selectedUnitId === 'todas') {
         unitIds = userUnits?.map(u => u.unit_id) || [];
-        console.log('[STATS QUERY] Buscando para todas as unidades:', unitIds);
       } else {
         unitIds = [selectedUnitId];
-        console.log('[STATS QUERY] Buscando para unidade específica:', selectedUnitId);
       }
       
       if (unitIds.length === 0) {
@@ -77,10 +69,10 @@ export function useActivityStats(
         return [];
       }
 
-      // 1. Buscar novos clientes usando BETWEEN para range preciso
+      // 1. Buscar novos clientes do período com filtro na query
       let newClientsQuery = supabase
         .from('clients')
-        .select('*')
+        .select('id, created_at')
         .eq('active', true)
         .in('unit_id', unitIds)
         .gte('created_at', startISO)
@@ -97,18 +89,24 @@ export function useActivityStats(
         throw newClientsError;
       }
 
-      // 2. Buscar atividades do período usando BETWEEN para range preciso
+      // 2. Buscar atividades do período com filtro na query
       let activitiesQuery = supabase
         .from('client_activities')
-        .select('*, clients!inner(*)')
+        .select('id, tipo_atividade, created_at, scheduled_date')
         .eq('active', true)
-        .eq('clients.active', true)
         .in('unit_id', unitIds)
         .gte('created_at', startISO)
         .lte('created_at', endISO);
 
       if (selectedSource !== 'todos') {
-        activitiesQuery = activitiesQuery.eq('clients.lead_source', selectedSource);
+        // Subconsulta para filtrar apenas atividades de clientes com a fonte desejada
+        activitiesQuery = activitiesQuery.in('client_id', 
+          supabase
+            .from('clients')
+            .select('id')
+            .eq('active', true)
+            .eq('lead_source', selectedSource)
+        );
       }
 
       const { data: activities, error: activitiesError } = await activitiesQuery;
@@ -118,56 +116,49 @@ export function useActivityStats(
         throw activitiesError;
       }
 
-      // 3. Buscar visitas aguardadas usando BETWEEN para range preciso
+      // 3. Buscar visitas aguardadas do período com filtro na query
       let scheduledVisitsQuery = supabase
-        .from('clients')
-        .select('*')
+        .from('client_activities')
+        .select('id, client_id, scheduled_date')
         .eq('active', true)
+        .eq('tipo_atividade', 'Agendamento')
         .in('unit_id', unitIds)
         .gte('scheduled_date', startISO)
         .lte('scheduled_date', endISO);
 
       if (selectedSource !== 'todos') {
-        scheduledVisitsQuery = scheduledVisitsQuery.eq('lead_source', selectedSource);
+        // Subconsulta para filtrar apenas agendamentos de clientes com a fonte desejada
+        scheduledVisitsQuery = scheduledVisitsQuery.in('client_id', 
+          supabase
+            .from('clients')
+            .select('id')
+            .eq('active', true)
+            .eq('lead_source', selectedSource)
+        );
       }
 
-      const { data: scheduledClients, error: scheduledError } = await scheduledVisitsQuery;
+      const { data: scheduledVisits, error: scheduledError } = await scheduledVisitsQuery;
 
       if (scheduledError) {
         console.error('[STATS QUERY] Erro ao buscar visitas agendadas:', scheduledError);
         throw scheduledError;
       }
 
-      // Log detalhado de diagnóstico
       console.log(`[STATS QUERY] Dados coletados do banco:
         Novos Clientes: ${newClients?.length || 0}
-        Atividades: ${activities?.length || 0} 
-        Tipos: ${activities?.map(a => a.tipo_atividade).join(', ')}
-        Visitas Aguardadas: ${scheduledClients?.length || 0}
-        Unidades: ${unitIds.join(', ')}
+        Atividades: ${activities?.length || 0}
+        Visitas Aguardadas: ${scheduledVisits?.length || 0}
       `);
       
-      // Log detalhado para atividades após 15/04
-      const activitiesAfter15 = activities?.filter(a => {
-        const aDate = new Date(a.created_at);
-        return aDate.getDate() >= 15 && aDate.getMonth() === 3; // Abril = 3
-      }) || [];
-      
-      console.log(`[STATS QUERY] Análise de atividades após 15/04: ${activitiesAfter15.length} atividades`);
-      activitiesAfter15.forEach(a => {
-        console.log(`Atividade ${a.id}: ${a.tipo_atividade} criada em ${a.created_at}`);
-      });
-
       // Gerar array com todas as datas do mês
       const allDates = eachDayOfInterval({ start: startDate, end: endDate });
       console.log(`[STATS QUERY] Processando ${allDates.length} dias do mês`);
       
       // Processar estatísticas para cada dia
       const dailyStats: DailyStats[] = allDates.map(date => {
-        return processDailyStats(date, activities || [], newClients || [], scheduledClients || []);
+        return processDailyStats(date, activities || [], newClients || [], scheduledVisits || []);
       });
 
-      console.log(`[STATS QUERY] Processamento concluído. Retornando estatísticas de ${dailyStats.length} dias`);
       return dailyStats;
     },
     enabled: !!userUnits && userUnits.length > 0,
