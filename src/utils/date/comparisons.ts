@@ -13,24 +13,21 @@ export const compareDates = (date1: Date, date2: Date): boolean => {
     return false;
   }
   
-  // Normalizar as datas para início do dia em UTC
-  const d1 = startOfDay(date1);
-  const d2 = startOfDay(date2);
+  // Normalizar as datas para início do dia
+  const d1 = startOfDay(new Date(date1));
+  const d2 = startOfDay(new Date(date2));
   
   const result = (
-    d1.getUTCFullYear() === d2.getUTCFullYear() &&
-    d1.getUTCMonth() === d2.getUTCMonth() &&
-    d1.getUTCDate() === d2.getUTCDate()
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
   );
   
   console.log(`[DATE UTILS] Comparação detalhada de datas:
-    Data 1: ${d1.toISOString()} (${format(d1, 'dd/MM/yyyy')})
-    Data 2: ${d2.toISOString()} (${format(d2, 'dd/MM/yyyy')})
-    Ano igual: ${d1.getUTCFullYear() === d2.getUTCFullYear()}
-    Mês igual: ${d1.getUTCMonth() === d2.getUTCMonth()}
-    Dia igual: ${d1.getUTCDate() === d2.getUTCDate()}
-    Resultado final: ${result ? 'MESMA DATA' : 'DATAS DIFERENTES'}`
-  );
+    Data 1: ${format(d1, 'dd/MM/yyyy HH:mm:ss')} (${d1.toISOString()})
+    Data 2: ${format(d2, 'dd/MM/yyyy HH:mm:ss')} (${d2.toISOString()})
+    Resultado: ${result ? 'MESMA DATA' : 'DATAS DIFERENTES'}
+  `);
   
   return result;
 };

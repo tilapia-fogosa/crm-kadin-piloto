@@ -28,7 +28,7 @@ export const processDailyStats = (
     try {
       const clientDate = new Date(client.created_at);
       const matches = compareDates(clientDate, date);
-      console.log(`[STATS PROCESSOR] Cliente ${client.id} criado em ${clientDate.toISOString()} - Match: ${matches}`);
+      console.log(`[STATS PROCESSOR] Cliente ${client.id} criado em ${format(clientDate, 'dd/MM/yyyy HH:mm:ss')} - Match: ${matches}`);
       return matches;
     } catch (error) {
       console.error(`[STATS PROCESSOR] Erro ao processar data do cliente:`, error);
@@ -48,8 +48,8 @@ export const processDailyStats = (
       console.log(`[STATS PROCESSOR] Verificação detalhada de atividade:
         ID: ${activity.id}
         Tipo: ${activity.tipo_atividade}
-        Data Criação: ${activityDate.toISOString()}
-        Data Ref: ${date.toISOString()}
+        Data Criação: ${format(activityDate, 'dd/MM/yyyy HH:mm:ss')}
+        Data Ref: ${format(date, 'dd/MM/yyyy')}
         Match: ${matches}
       `);
       
@@ -67,7 +67,7 @@ export const processDailyStats = (
     try {
       const scheduledDate = new Date(client.scheduled_date);
       const matches = compareDates(scheduledDate, date);
-      console.log(`[STATS PROCESSOR] Visita agendada ${client.id} para ${scheduledDate.toISOString()} - Match: ${matches}`);
+      console.log(`[STATS PROCESSOR] Visita agendada ${client.id} para ${format(scheduledDate, 'dd/MM/yyyy HH:mm:ss')} - Match: ${matches}`);
       return matches;
     } catch (error) {
       console.error(`[STATS PROCESSOR] Erro ao processar data agendada:`, error);
@@ -80,11 +80,11 @@ export const processDailyStats = (
     dayActivities.map(a => ({
       id: a.id,
       tipo: a.tipo_atividade,
-      created_at: a.created_at
+      created_at: format(new Date(a.created_at), 'dd/MM/yyyy HH:mm:ss')
     }))
   );
 
-  // Calcular estatísticas baseadas nas atividades
+  // Calcular totais por tipo de atividade
   const contactAttempts = dayActivities.filter(activity => 
     ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
   ).length;
@@ -124,20 +124,17 @@ export const processDailyStats = (
     ? (enrollments / completedVisits) * 100 
     : 0;
 
-  // Log detalhado das estatísticas calculadas
-  console.log(`[STATS PROCESSOR] Estatísticas finais para ${dateStr}:`, {
-    newClients: dayClients.length,
-    contactAttempts,
-    effectiveContacts,
-    scheduledVisits,
-    awaitingVisits,
-    completedVisits,
-    enrollments,
-    totalActivities: dayActivities.length,
-    activityTypes: dayActivities.map(a => a.tipo_atividade).join(', ')
+  // Log final com totais calculados
+  console.log(`[STATS PROCESSOR] Totais calculados para ${dateStr}:`, {
+    novosClientes: dayClients.length,
+    tentativasContato: contactAttempts,
+    contatosEfetivos: effectiveContacts,
+    visitasAgendadas: scheduledVisits,
+    visitasAguardando: awaitingVisits,
+    visitasRealizadas: completedVisits,
+    matriculas: enrollments
   });
 
-  // Retornar objeto com as estatísticas calculadas
   return {
     date,
     newClients: dayClients.length,
