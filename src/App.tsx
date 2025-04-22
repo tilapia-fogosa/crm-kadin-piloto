@@ -1,3 +1,4 @@
+
 import React from "react"; // Importação explícita do React
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -28,7 +29,6 @@ import UserManagementPage from "@/pages/admin/user-management";
 import UpdatesPage from "@/pages/updates/index";
 import UpdatesAdminPage from "@/pages/updates/admin";
 import ChangePassword from "@/pages/auth/ChangePassword";
-import PainelAD from "@/pages/PainelAD";
 
 // Componente App que contém o QueryClientProvider
 function App() {
@@ -94,7 +94,6 @@ function App() {
                     <Route path="/updates" element={<UpdatesPage />} />
                     <Route path="/updates/admin" element={<UpdatesAdminPage />} />
                     <Route path="/clients/sources" element={<LeadSourcesPage />} />
-                    <Route path="/painel-ad" element={<PainelAD />} />
                     <Route path="*" element={<NotFound />} />
                   </Route>
                 </Routes>

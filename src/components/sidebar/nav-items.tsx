@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,8 +12,7 @@ import {
   DollarSign,
   LineChart,
   Calendar,
-  Bell,
-  BarChart2
+  Bell
 } from "lucide-react";
 import { UpdatesButton } from "./updates-button";
 
@@ -33,11 +33,6 @@ export const navigation = [
   { name: "Indicadores Comerciais", href: "/commercial-stats", icon: LineChart },
   { name: "Usuários", href: "/users", icon: Users },
   { name: "API Docs", href: "/api-docs", icon: FileCode },
-  { 
-    name: "Painel AD", 
-    href: "/painel-ad", 
-    icon: BarChart2 
-  },
 ];
 
 interface NavItemsProps {
