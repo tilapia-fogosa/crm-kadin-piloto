@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { RefreshCw, FileSpreadsheet, Search } from "lucide-react"
+import { RefreshCw, Search } from "lucide-react"
 import { ActivityDashboard } from "./ActivityDashboard"
 import { CalendarDashboard } from "./CalendarDashboard"
 import { Input } from "@/components/ui/input"
 import { UnitSelector } from "@/components/UnitSelector"
-import { DailyActivityDialog } from "./DailyActivityDialog"
 
 interface BoardHeaderProps {
   showPendingOnly: boolean
@@ -32,8 +31,7 @@ export function BoardHeader({
   setSelectedUnitId,
   isMultiUnit,
 }: BoardHeaderProps) {
-  const [isDailyActivityDialogOpen, setIsDailyActivityDialogOpen] = useState(false);
-
+  // Log para rastrear mudanças no termo de pesquisa
   console.log('Termo de pesquisa atual:', searchTerm);
   console.log('Unidade selecionada:', selectedUnitId);
   console.log('Usuário multi-unidade:', isMultiUnit);
@@ -44,6 +42,7 @@ export function BoardHeader({
         <div className="col-span-1">
           <h1 className="text-2xl font-semibold tracking-tight text-white">Painel do Consultor</h1>
           
+          {/* Mostra o seletor de unidade apenas se o usuário tiver acesso a múltiplas unidades */}
           {isMultiUnit && (
             <div className="mt-2">
               <div className="flex items-center space-x-2">
@@ -78,15 +77,6 @@ export function BoardHeader({
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
-
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-white hover:bg-white/20"
-            onClick={() => setIsDailyActivityDialogOpen(true)}
-          >
-            <FileSpreadsheet className="h-4 w-4" />
-          </Button>
         </div>
 
         <div className="col-span-1">
@@ -94,6 +84,7 @@ export function BoardHeader({
         </div>
       </div>
       
+      {/* Campo de pesquisa abaixo do cabeçalho */}
       <div className="relative w-full max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <Input
@@ -104,11 +95,6 @@ export function BoardHeader({
           className="pl-10 bg-white/10 text-white placeholder:text-gray-400 border-gray-700 focus-visible:ring-primary/50"
         />
       </div>
-
-      <DailyActivityDialog 
-        open={isDailyActivityDialogOpen}
-        onClose={() => setIsDailyActivityDialogOpen(false)}
-      />
     </div>
   )
 }
