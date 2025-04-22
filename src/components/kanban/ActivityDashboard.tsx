@@ -22,12 +22,16 @@ export function ActivityDashboard() {
   const [selectedYear, setSelectedYear] = useState<string>(currentDate.getFullYear().toString());
   const [selectedUnitId, setSelectedUnitId] = useState<string>("todas");
   const { data: userUnits } = useUserUnit();
+  
+  // Estado para controlar se o diálogo está aberto
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   console.log('ActivityDashboard iniciado com:', {
     mês: selectedMonth,
     ano: selectedYear,
     dataAtual: currentDate,
-    mêsAtual: currentMonth
+    mêsAtual: currentMonth,
+    isOpen: isOpen
   });
 
   const { data: leadSources } = useQuery({
@@ -40,18 +44,14 @@ export function ActivityDashboard() {
     }
   });
 
-  const { data: stats, isLoading } = useActivityStats(
-    selectedSource, 
-    selectedMonth, 
-    selectedYear, 
-    userUnits,
-    selectedUnitId
-  );
-  
-  const totals = calculateTotals(stats);
+  // Função para manipular a abertura/fechamento do diálogo
+  const handleOpenChange = (open: boolean) => {
+    console.log(`Dialog ${open ? 'aberto' : 'fechado'}`);
+    setIsOpen(open);
+  };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-2">
           <LineChart className="h-4 w-4" />
@@ -78,9 +78,52 @@ export function ActivityDashboard() {
           />
         </DialogHeader>
         <div className="mt-4">
-          <ActivityTable stats={stats} totals={totals} isLoading={isLoading} />
+          {/* Componente para coletar e exibir as estatísticas (somente quando o diálogo estiver aberto) */}
+          <ActivityDataSection 
+            selectedSource={selectedSource}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            selectedUnitId={selectedUnitId}
+            userUnits={userUnits}
+            isOpen={isOpen}
+          />
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// Novo componente para gerenciar os dados de atividades
+function ActivityDataSection({ 
+  selectedSource, 
+  selectedMonth, 
+  selectedYear, 
+  selectedUnitId,
+  userUnits,
+  isOpen
+}: { 
+  selectedSource: string; 
+  selectedMonth: string; 
+  selectedYear: string; 
+  selectedUnitId: string;
+  userUnits: any[] | undefined;
+  isOpen: boolean;
+}) {
+  console.log('ActivityDataSection renderizado com isOpen =', isOpen);
+  
+  // Hook de estatísticas - só é executado quando o diálogo está aberto
+  const { data: stats, isLoading } = useActivityStats(
+    selectedSource, 
+    selectedMonth, 
+    selectedYear, 
+    userUnits,
+    selectedUnitId,
+    isOpen
+  );
+  
+  const totals = calculateTotals(stats);
+
+  return (
+    <ActivityTable stats={stats} totals={totals} isLoading={isLoading} />
   );
 }

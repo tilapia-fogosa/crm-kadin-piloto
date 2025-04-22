@@ -18,8 +18,11 @@ export function useActivityStats(
   selectedMonth: string,
   selectedYear: string,
   userUnits: any[] | undefined,
-  selectedUnitId: string
+  selectedUnitId: string,
+  isOpen: boolean = false
 ) {
+  console.time('[ACTIVITY STATS] Tempo total de execução');
+  
   return useQuery({
     queryKey: ['activity-dashboard', selectedSource, selectedMonth, selectedYear, selectedUnitId, userUnits?.map(u => u.unit_id)],
     queryFn: async () => {
@@ -62,6 +65,7 @@ export function useActivityStats(
       // ===================================================
       // CONSULTA 1: NOVOS CLIENTES (filtro por created_at)
       // ===================================================
+      console.time('[ACTIVITY STATS] Consulta 1 - Novos clientes');
       console.log(`[ACTIVITY STATS] Executando consulta 1: Novos clientes no período`);
       
       let newClientsQuery = supabase.from('clients')
@@ -77,6 +81,7 @@ export function useActivityStats(
       }
 
       const { data: newClients, error: newClientsError } = await newClientsQuery;
+      console.timeEnd('[ACTIVITY STATS] Consulta 1 - Novos clientes');
       
       if (newClientsError) {
         console.error('[ACTIVITY STATS] Erro ao buscar novos clientes:', newClientsError);
@@ -84,32 +89,29 @@ export function useActivityStats(
       }
       
       console.log(`[ACTIVITY STATS] Clientes encontrados: ${newClients?.length || 0}`);
-      
-      // Array de client_ids para filtrar atividades por cliente (se tiver filtro de origem)
-      let clientIds: string[] = [];
-      if (selectedSource !== 'todos' && newClients) {
-        clientIds = newClients.map((client: any) => client.id);
-        console.log(`[ACTIVITY STATS] IDs de clientes para filtro: ${clientIds.length}`);
-      }
 
       // ===================================================
       // CONSULTA 2: ATIVIDADES CRIADAS (filtro por created_at)
       // ===================================================
+      console.time('[ACTIVITY STATS] Consulta 2 - Atividades criadas');
       console.log(`[ACTIVITY STATS] Executando consulta 2: Atividades criadas no período`);
       
+      // CORREÇÃO: Removemos o filtro de clientIds e fazemos join com clients para filtrar por origem
       let createdActivitiesQuery = supabase.from('client_activities')
-        .select('id, tipo_atividade, created_at, client_id')
+        .select('id, tipo_atividade, created_at, client_id, clients!inner(lead_source)')
         .eq('active', true)
         .in('unit_id', unitIds)
         .gte('created_at', startISO)
         .lte('created_at', endISO);
 
-      if (selectedSource !== 'todos' && clientIds.length > 0) {
-        createdActivitiesQuery = createdActivitiesQuery.in('client_id', clientIds);
-        console.log(`[ACTIVITY STATS] Aplicando filtro de clientes para atividades criadas`);
+      // Aplicamos o filtro de origem diretamente na relação com clients
+      if (selectedSource !== 'todos') {
+        createdActivitiesQuery = createdActivitiesQuery.eq('clients.lead_source', selectedSource);
+        console.log(`[ACTIVITY STATS] Aplicando filtro de origem direto na relação clients`);
       }
       
       const { data: createdActivities, error: createdActivitiesError } = await createdActivitiesQuery;
+      console.timeEnd('[ACTIVITY STATS] Consulta 2 - Atividades criadas');
       
       if (createdActivitiesError) {
         console.error('[ACTIVITY STATS] Erro ao buscar atividades criadas:', createdActivitiesError);
@@ -117,26 +119,34 @@ export function useActivityStats(
       }
       
       console.log(`[ACTIVITY STATS] Atividades criadas encontradas: ${createdActivities?.length || 0}`);
+      
+      // Amostra de dados para depuração
+      if (createdActivities && createdActivities.length > 0) {
+        console.log('[ACTIVITY STATS] Amostra de atividade criada:', createdActivities[0]);
+      }
 
       // ===================================================
       // CONSULTA 3: ATIVIDADES AGENDADAS (filtro por scheduled_date)
       // ===================================================
+      console.time('[ACTIVITY STATS] Consulta 3 - Atividades agendadas');
       console.log(`[ACTIVITY STATS] Executando consulta 3: Atividades agendadas para o período`);
       
+      // CORREÇÃO: Mesma abordagem para atividades agendadas
       let scheduledActivitiesQuery = supabase.from('client_activities')
-        .select('id, tipo_atividade, scheduled_date, client_id')
+        .select('id, tipo_atividade, scheduled_date, client_id, clients!inner(lead_source)')
         .eq('active', true)
         .not('scheduled_date', 'is', null)
         .in('unit_id', unitIds)
         .gte('scheduled_date', startISO)
         .lte('scheduled_date', endISO);
 
-      if (selectedSource !== 'todos' && clientIds.length > 0) {
-        scheduledActivitiesQuery = scheduledActivitiesQuery.in('client_id', clientIds);
-        console.log(`[ACTIVITY STATS] Aplicando filtro de clientes para atividades agendadas`);
+      if (selectedSource !== 'todos') {
+        scheduledActivitiesQuery = scheduledActivitiesQuery.eq('clients.lead_source', selectedSource);
+        console.log(`[ACTIVITY STATS] Aplicando filtro de origem direto na relação clients para agendamentos`);
       }
       
       const { data: scheduledActivities, error: scheduledActivitiesError } = await scheduledActivitiesQuery;
+      console.timeEnd('[ACTIVITY STATS] Consulta 3 - Atividades agendadas');
       
       if (scheduledActivitiesError) {
         console.error('[ACTIVITY STATS] Erro ao buscar atividades agendadas:', scheduledActivitiesError);
@@ -144,12 +154,18 @@ export function useActivityStats(
       }
       
       console.log(`[ACTIVITY STATS] Atividades agendadas encontradas: ${scheduledActivities?.length || 0}`);
+      
+      // Amostra de dados para depuração
+      if (scheduledActivities && scheduledActivities.length > 0) {
+        console.log('[ACTIVITY STATS] Amostra de atividade agendada:', scheduledActivities[0]);
+      }
 
       // Array de todos os dias do mês para processamento
       const allDates = eachDayOfInterval({ start: startDate, end: endDate });
       console.log(`[ACTIVITY STATS] Processando ${allDates.length} dias no intervalo`);
 
       // Processamento diário com os três conjuntos de dados separados
+      console.time('[ACTIVITY STATS] Processamento de dias');
       const dailyStats: DailyStats[] = allDates.map(date => {
         console.log(`[ACTIVITY STATS] === Processando stats para ${format(date, 'dd/MM/yyyy')} ===`);
         
@@ -163,10 +179,12 @@ export function useActivityStats(
         console.log(`[ACTIVITY STATS] Stats calculados para dia ${format(date, 'dd/MM/yyyy')}:`, stats);
         return stats;
       });
+      console.timeEnd('[ACTIVITY STATS] Processamento de dias');
 
       console.log(`[ACTIVITY STATS] Processamento completo! ${dailyStats.length} dias processados.`);
+      console.timeEnd('[ACTIVITY STATS] Tempo total de execução');
       return dailyStats;
     },
-    enabled: !!userUnits && userUnits.length > 0,
+    enabled: isOpen && !!userUnits && userUnits.length > 0, // Só executa quando o diálogo está aberto e unidades estão disponíveis
   });
 }
