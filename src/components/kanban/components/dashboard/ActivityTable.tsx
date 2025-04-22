@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -11,14 +12,40 @@ interface ActivityTableProps {
 }
 
 export function ActivityTable({ stats, totals, isLoading }: ActivityTableProps) {
+  // Adicionado log detalhado dos dados recebidos para verificação
   React.useEffect(() => {
     if (stats) {
-      console.log("[ACTIVITY TABLE] Dias recebidos para renderização:", stats.map(d => format(d.date, 'dd/MM/yyyy')));
-      stats.forEach(day =>
-        console.log(`[ACTIVITY TABLE] Dia: ${format(day.date, 'dd/MM/yyyy')}, Novos: ${day.newClients}, Contatos: ${day.contactAttempts}, Efetivos: ${day.effectiveContacts}, Agendamentos: ${day.scheduledVisits}, Realizadas: ${day.completedVisits}, Matrículas: ${day.enrollments}`)
-      );
+      console.log("[ACTIVITY TABLE] Recebidos dados para renderização:");
+      console.log(`[ACTIVITY TABLE] Total de dias: ${stats.length}`);
+      console.log("[ACTIVITY TABLE] Dias:", stats.map(d => format(d.date, 'dd/MM/yyyy')));
+      
+      // Log detalhado dia a dia
+      stats.forEach(day => {
+        console.log(`[ACTIVITY TABLE] Dia ${format(day.date, 'dd/MM/yyyy')}:
+          - Novos clientes: ${day.newClients}
+          - Tentativas contato: ${day.contactAttempts}
+          - Efetivos: ${day.effectiveContacts} (${day.ceConversionRate.toFixed(1)}%)
+          - Agendamentos: ${day.scheduledVisits} (${day.agConversionRate.toFixed(1)}%)
+          - Aguardadas: ${day.awaitingVisits}
+          - Realizadas: ${day.completedVisits} (${day.atConversionRate.toFixed(1)}%)
+          - Matrículas: ${day.enrollments} (${day.maConversionRate.toFixed(1)}%)
+        `);
+      });
+      
+      // Log dos totais se disponíveis
+      if (totals) {
+        console.log(`[ACTIVITY TABLE] Totais calculados:
+          - Novos clientes: ${totals.newClients}
+          - Tentativas contato: ${totals.contactAttempts}
+          - Efetivos: ${totals.effectiveContacts} (${totals.ceConversionRate.toFixed(1)}%)
+          - Agendamentos: ${totals.scheduledVisits} (${totals.agConversionRate.toFixed(1)}%)
+          - Aguardadas: ${totals.awaitingVisits}
+          - Realizadas: ${totals.completedVisits} (${totals.atConversionRate.toFixed(1)}%)
+          - Matrículas: ${totals.enrollments} (${totals.maConversionRate.toFixed(1)}%)
+        `);
+      }
     }
-  }, [stats]);
+  }, [stats, totals]);
 
   return (
     <Table>
@@ -63,7 +90,6 @@ export function ActivityTable({ stats, totals, isLoading }: ActivityTableProps) 
               <TableRow key={day.date.toISOString()} className="hover:bg-muted/50 [&>td]:px-2.5">
                 <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
                   {format(day.date, 'dd/MM/yyyy', { locale: ptBR })}
-                  <span className="block text-[10px] text-gray-400">(ISO: {day.date.toISOString().split('T')[0]})</span>
                 </TableCell>
                 <TableCell className="text-center text-xs py-0">{day.newClients}</TableCell>
                 <TableCell className="text-center text-xs py-0">{day.contactAttempts}</TableCell>
