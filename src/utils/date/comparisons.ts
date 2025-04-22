@@ -1,5 +1,5 @@
 
-import { format } from "date-fns";
+import { format, startOfDay } from "date-fns";
 
 /**
  * Compara duas datas ignorando timezone e hora
@@ -13,16 +13,24 @@ export const compareDates = (date1: Date, date2: Date): boolean => {
     return false;
   }
   
+  // Normalizar as datas para início do dia em UTC
+  const d1 = startOfDay(date1);
+  const d2 = startOfDay(date2);
+  
   const result = (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
+    d1.getUTCFullYear() === d2.getUTCFullYear() &&
+    d1.getUTCMonth() === d2.getUTCMonth() &&
+    d1.getUTCDate() === d2.getUTCDate()
   );
   
-  console.log(`[DATE UTILS] Comparação de datas:
-    Data 1: ${date1.toISOString()} (${format(date1, 'dd/MM/yyyy')})
-    Data 2: ${date2.toISOString()} (${format(date2, 'dd/MM/yyyy')})
-    Resultado: ${result ? 'MESMA DATA' : 'DATAS DIFERENTES'}`);
+  console.log(`[DATE UTILS] Comparação detalhada de datas:
+    Data 1: ${d1.toISOString()} (${format(d1, 'dd/MM/yyyy')})
+    Data 2: ${d2.toISOString()} (${format(d2, 'dd/MM/yyyy')})
+    Ano igual: ${d1.getUTCFullYear() === d2.getUTCFullYear()}
+    Mês igual: ${d1.getUTCMonth() === d2.getUTCMonth()}
+    Dia igual: ${d1.getUTCDate() === d2.getUTCDate()}
+    Resultado final: ${result ? 'MESMA DATA' : 'DATAS DIFERENTES'}`
+  );
   
   return result;
 };

@@ -27,7 +27,9 @@ export const processDailyStats = (
     
     try {
       const clientDate = new Date(client.created_at);
-      return compareDates(clientDate, date);
+      const matches = compareDates(clientDate, date);
+      console.log(`[STATS PROCESSOR] Cliente ${client.id} criado em ${clientDate.toISOString()} - Match: ${matches}`);
+      return matches;
     } catch (error) {
       console.error(`[STATS PROCESSOR] Erro ao processar data do cliente:`, error);
       return false;
@@ -42,17 +44,14 @@ export const processDailyStats = (
       const activityDate = new Date(activity.created_at);
       const matches = compareDates(activityDate, date);
       
-      // Log detalhado para diagnóstico em datas críticas
-      if (date.getDate() >= 15) {
-        console.log(`[STATS PROCESSOR] Verificação detalhada de atividade:
-          ID: ${activity.id}
-          Tipo: ${activity.tipo_atividade}
-          Created: ${activity.created_at}
-          Activity Date: ${activityDate.toISOString()}
-          Data Ref: ${date.toISOString()}
-          Matches: ${matches}
-        `);
-      }
+      // Log detalhado para diagnóstico
+      console.log(`[STATS PROCESSOR] Verificação detalhada de atividade:
+        ID: ${activity.id}
+        Tipo: ${activity.tipo_atividade}
+        Data Criação: ${activityDate.toISOString()}
+        Data Ref: ${date.toISOString()}
+        Match: ${matches}
+      `);
       
       return matches;
     } catch (error) {
@@ -67,7 +66,9 @@ export const processDailyStats = (
     
     try {
       const scheduledDate = new Date(client.scheduled_date);
-      return compareDates(scheduledDate, date);
+      const matches = compareDates(scheduledDate, date);
+      console.log(`[STATS PROCESSOR] Visita agendada ${client.id} para ${scheduledDate.toISOString()} - Match: ${matches}`);
+      return matches;
     } catch (error) {
       console.error(`[STATS PROCESSOR] Erro ao processar data agendada:`, error);
       return false;
