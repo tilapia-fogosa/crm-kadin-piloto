@@ -9,6 +9,14 @@ import { format } from "date-fns";
  */
 export const createSafeDate = (year: number, month: number): Date => {
   console.log(`[DATE UTILS] Criando data segura para ${year}-${month}`);
+  
+  // Validar intervalo do mês (1-12)
+  if (month < 1 || month > 12) {
+    console.error(`[DATE UTILS] Mês inválido: ${month}. Usando mês 1.`);
+    month = 1;
+  }
+  
+  // Mês no Date é 0-based, então subtraímos 1
   return new Date(year, month - 1);
 };
 

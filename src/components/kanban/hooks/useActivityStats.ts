@@ -30,7 +30,7 @@ export function useActivityStats(
         userUnits: userUnits?.map(u => ({ id: u.unit_id, name: u.units.name }))
       });
 
-      // Conversão segura de strings para números
+      // Conversão segura de strings para números - Mês já está no formato 1-12
       const monthNum = parseInt(selectedMonth);
       const yearNum = parseInt(selectedYear);
       
@@ -39,8 +39,15 @@ export function useActivityStats(
         return [];
       }
       
+      // Log detalhado da data que será criada
+      console.log('[STATS QUERY] Criando data com:', {
+        ano: yearNum,
+        mes: monthNum,
+        mesOriginal: selectedMonth
+      });
+      
       // Criação de datas de início e fim do mês usando a nova função
-      const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
+      const startDate = createSafeDate(yearNum, monthNum);
       const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
       
       // Gerar strings ISO para query SQL direta
