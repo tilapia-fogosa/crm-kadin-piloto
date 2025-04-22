@@ -1,7 +1,6 @@
 
 import { DailyStats } from "../../types/activity-dashboard.types";
 import { format } from "date-fns";
-import { areSameDates } from "@/utils/dateUtils";
 
 /**
  * Agrupa atividades por dia e calcula estatísticas
@@ -21,13 +20,22 @@ export const processDailyStats = (
   const dateStr = format(date, 'yyyy-MM-dd');
   console.log(`[STATS PROCESSOR] Processando estatísticas para ${dateStr}`);
   
+  // Função auxiliar para comparar datas ignorando timezone
+  const compareDates = (date1: Date, date2: Date): boolean => {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  };
+  
   // 1. Processar novos clientes do dia (baseado no created_at do cliente)
   const dayClients = newClients.filter(client => {
     if (!client?.created_at) return false;
     
     try {
       const clientDate = new Date(client.created_at);
-      return areSameDates(clientDate, date);
+      return compareDates(clientDate, date);
     } catch (error) {
       console.error(`[STATS PROCESSOR] Erro ao processar data do cliente:`, error);
       return false;
@@ -40,14 +48,15 @@ export const processDailyStats = (
     
     try {
       const activityDate = new Date(activity.created_at);
-      const matches = areSameDates(activityDate, date);
+      const matches = compareDates(activityDate, date);
       
       // Log detalhado para diagnóstico em datas críticas
-      if (date.getDate() >= 15 && date.getMonth() === 3) { // Abril é mês 3 (0-indexed)
+      if (date.getDate() >= 15) {
         console.log(`[STATS PROCESSOR] Verificação detalhada de atividade:
           ID: ${activity.id}
           Tipo: ${activity.tipo_atividade}
           Created: ${activity.created_at}
+          Activity Date: ${activityDate.toISOString()}
           Data Ref: ${date.toISOString()}
           Matches: ${matches}
         `);
@@ -66,12 +75,21 @@ export const processDailyStats = (
     
     try {
       const scheduledDate = new Date(client.scheduled_date);
-      return areSameDates(scheduledDate, date);
+      return compareDates(scheduledDate, date);
     } catch (error) {
       console.error(`[STATS PROCESSOR] Erro ao processar data agendada:`, error);
       return false;
     }
   });
+
+  // Log detalhado das atividades encontradas
+  console.log(`[STATS PROCESSOR] Atividades encontradas para ${dateStr}:`, 
+    dayActivities.map(a => ({
+      id: a.id,
+      tipo: a.tipo_atividade,
+      created_at: a.created_at
+    }))
+  );
 
   // Calcular estatísticas baseadas nas atividades
   const contactAttempts = dayActivities.filter(activity => 
@@ -114,8 +132,7 @@ export const processDailyStats = (
     : 0;
 
   // Log detalhado das estatísticas calculadas
-  console.log(`[STATS PROCESSOR] Estatísticas para ${dateStr}:`, {
-    data: dateStr,
+  console.log(`[STATS PROCESSOR] Estatísticas finais para ${dateStr}:`, {
     newClients: dayClients.length,
     contactAttempts,
     effectiveContacts,
