@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "lucide-react";
@@ -15,7 +14,7 @@ export function ActivityDashboard() {
   // Inicializar com o mês atual
   const currentDate = new Date();
   const [selectedSource, setSelectedSource] = useState<string>("todos");
-  const [selectedMonth, setSelectedMonth] = useState<string>(currentDate.getMonth().toString());
+  const [selectedMonth, setSelectedMonth] = useState<string>((currentDate.getMonth() + 1).toString());
   const [selectedYear, setSelectedYear] = useState<string>(currentDate.getFullYear().toString());
   const [selectedUnitId, setSelectedUnitId] = useState<string>("todas");
   const { data: userUnits } = useUserUnit();
@@ -23,7 +22,9 @@ export function ActivityDashboard() {
   console.log('ActivityDashboard iniciado com:', {
     mês: selectedMonth,
     ano: selectedYear,
-    dataAtual: currentDate
+    dataAtual: currentDate,
+    mêsJS: currentDate.getMonth(), // 0-11
+    mêsAjustado: currentDate.getMonth() + 1 // 1-12
   });
 
   const { data: leadSources } = useQuery({
