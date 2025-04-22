@@ -12,11 +12,19 @@ import { useActivityStats } from "./hooks/useActivityStats";
 import { calculateTotals } from "./utils/stats.utils";
 
 export function ActivityDashboard() {
+  // Inicializar com o mês atual
+  const currentDate = new Date();
   const [selectedSource, setSelectedSource] = useState<string>("todos");
-  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().getMonth().toString());
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentDate.getMonth().toString());
+  const [selectedYear, setSelectedYear] = useState<string>(currentDate.getFullYear().toString());
   const [selectedUnitId, setSelectedUnitId] = useState<string>("todas");
   const { data: userUnits } = useUserUnit();
+
+  console.log('ActivityDashboard iniciado com:', {
+    mês: selectedMonth,
+    ano: selectedYear,
+    dataAtual: currentDate
+  });
 
   const { data: leadSources } = useQuery({
     queryKey: ['lead-sources'],
