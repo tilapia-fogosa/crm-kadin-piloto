@@ -1,6 +1,6 @@
-
 import { DailyStats } from "../../types/activity-dashboard.types";
 import { format } from "date-fns";
+import { compareDates } from "@/utils/date";
 
 /**
  * Agrupa atividades por dia e calcula estatísticas
