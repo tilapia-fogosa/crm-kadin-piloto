@@ -16,13 +16,11 @@ export function useActivityStats(
   return useQuery({
     queryKey: ['activity-dashboard', selectedSource, selectedMonth, selectedYear, selectedUnitId, userUnits?.map(u => u.unit_id)],
     queryFn: async () => {
-      // Validação de entrada
       if (!selectedMonth || !selectedYear) {
         console.error('[STATS QUERY] Mês ou ano não selecionados');
         return [];
       }
-      
-      // Log inicial para debug
+
       console.log('[STATS QUERY] Iniciando busca com parâmetros:', {
         selectedMonth,
         selectedYear,
@@ -31,23 +29,20 @@ export function useActivityStats(
         userUnits: userUnits?.map(u => ({ id: u.unit_id, name: u.units.name }))
       });
 
-      // Conversão segura de strings para números
       const monthNum = parseInt(selectedMonth);
       const yearNum = parseInt(selectedYear);
-      
+
       if (isNaN(monthNum) || isNaN(yearNum)) {
         console.error('[STATS QUERY] Valores inválidos para mês ou ano:', { selectedMonth, selectedYear });
         return [];
       }
-      
-      // Criação de datas de início e fim do mês usando a função segura
+
       const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
       const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
-      
-      // Gerar strings ISO para query SQL
+
       const startISO = startDate.toISOString();
       const endISO = endDate.toISOString();
-      
+
       console.log('[STATS QUERY] Período calculado para consulta:', {
         início: format(startDate, 'dd/MM/yyyy'),
         fim: format(endDate, 'dd/MM/yyyy'),
@@ -57,13 +52,13 @@ export function useActivityStats(
 
       // Determinar IDs das unidades para filtro
       let unitIds: string[] = [];
-      
+
       if (selectedUnitId === 'todas') {
         unitIds = userUnits?.map(u => u.unit_id) || [];
       } else {
         unitIds = [selectedUnitId];
       }
-      
+
       if (unitIds.length === 0) {
         console.error('[STATS QUERY] Nenhuma unidade disponível para filtro');
         return [];
@@ -92,21 +87,26 @@ export function useActivityStats(
       // 2. Buscar atividades do período com filtro na query
       let activitiesQuery = supabase
         .from('client_activities')
-        .select('id, tipo_atividade, created_at, scheduled_date')
+        .select('id, tipo_atividade, created_at, scheduled_date, client_id')
         .eq('active', true)
         .in('unit_id', unitIds)
         .gte('created_at', startISO)
         .lte('created_at', endISO);
 
-      if (selectedSource !== 'todos') {
-        // Subconsulta para filtrar apenas atividades de clientes com a fonte desejada
-        activitiesQuery = activitiesQuery.in('client_id', 
-          supabase
-            .from('clients')
-            .select('id')
-            .eq('active', true)
-            .eq('lead_source', selectedSource)
-        );
+      // >>>> CORREÇÃO AQUI <<<<
+      if (selectedSource !== 'todos' && newClients && Array.isArray(newClients)) {
+        // Extrai somente os IDs dos clientes filtrados
+        const allowedClientIds = newClients.map(client => client.id).filter(Boolean);
+        console.log("[STATS QUERY] Filtrando atividades dos clientes das origens selecionadas. Total de IDs:", allowedClientIds.length);
+
+        // Aplica filtro se houver clientes válidos, senão retorna vazio
+        if (allowedClientIds.length > 0) {
+          activitiesQuery = activitiesQuery.in('client_id', allowedClientIds);
+        } else {
+          // Não há clientes, portanto, não há atividades
+          console.warn("[STATS QUERY] Nenhum cliente da origem selecionada, retornando lista vazia de atividades.");
+          return [];
+        }
       }
 
       const { data: activities, error: activitiesError } = await activitiesQuery;
@@ -126,15 +126,18 @@ export function useActivityStats(
         .gte('scheduled_date', startISO)
         .lte('scheduled_date', endISO);
 
-      if (selectedSource !== 'todos') {
-        // Subconsulta para filtrar apenas agendamentos de clientes com a fonte desejada
-        scheduledVisitsQuery = scheduledVisitsQuery.in('client_id', 
-          supabase
-            .from('clients')
-            .select('id')
-            .eq('active', true)
-            .eq('lead_source', selectedSource)
-        );
+      // >>>> CORREÇÃO AQUI <<<<
+      if (selectedSource !== 'todos' && newClients && Array.isArray(newClients)) {
+        const allowedClientIds = newClients.map(client => client.id).filter(Boolean);
+        console.log("[STATS QUERY] Filtrando agendamentos dos clientes das origens selecionadas. Total de IDs:", allowedClientIds.length);
+
+        if (allowedClientIds.length > 0) {
+          scheduledVisitsQuery = scheduledVisitsQuery.in('client_id', allowedClientIds);
+        } else {
+          // Não há clientes, portanto, não há visitas agendadas
+          console.warn("[STATS QUERY] Nenhum cliente da origem selecionada, retornando lista vazia de agendamentos.");
+          return [];
+        }
       }
 
       const { data: scheduledVisits, error: scheduledError } = await scheduledVisitsQuery;
@@ -149,12 +152,10 @@ export function useActivityStats(
         Atividades: ${activities?.length || 0}
         Visitas Aguardadas: ${scheduledVisits?.length || 0}
       `);
-      
-      // Gerar array com todas as datas do mês
+
       const allDates = eachDayOfInterval({ start: startDate, end: endDate });
       console.log(`[STATS QUERY] Processando ${allDates.length} dias do mês`);
-      
-      // Processar estatísticas para cada dia
+
       const dailyStats: DailyStats[] = allDates.map(date => {
         return processDailyStats(date, activities || [], newClients || [], scheduledVisits || []);
       });
