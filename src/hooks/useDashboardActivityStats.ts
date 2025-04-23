@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, endOfMonth, subMonths, subYears } from "date-fns";
 import { useUnit } from "@/contexts/UnitContext";
 
+/**
+ * Estrutura dos dados de período para o funil de atividades
+ */
 export interface ActivityFunnelPeriod {
   totalContacts: number;
   effectiveContacts: number;
@@ -27,11 +30,42 @@ export interface ActivityFunnelPeriod {
   };
 }
 
+/**
+ * Estrutura dos dados de atividades por período para o Dashboard
+ */
 export interface DashboardActivityData {
   oneMonth: ActivityFunnelPeriod;
   threeMonths: ActivityFunnelPeriod;
   sixMonths: ActivityFunnelPeriod;
   twelveMonths: ActivityFunnelPeriod;
+}
+
+/**
+ * Formato da resposta da função RPC get_dashboard_activity_funnel_stats
+ */
+interface DashboardActivityResponse {
+  current: {
+    totalContacts: string;
+    effectiveContacts: string;
+    scheduledVisits: string;
+    completedVisits: string;
+    enrollments: string;
+    effectiveContactsRate: string;
+    scheduledVisitsRate: string;
+    completedVisitsRate: string;
+    enrollmentsRate: string;
+  };
+  comparison: {
+    totalContacts: string;
+    effectiveContacts: string;
+    scheduledVisits: string;
+    completedVisits: string;
+    enrollments: string;
+    effectiveContactsRate: string;
+    scheduledVisitsRate: string;
+    completedVisitsRate: string;
+    enrollmentsRate: string;
+  };
 }
 
 /**
@@ -92,13 +126,17 @@ export function useDashboardActivityStats(unitId: string | null) {
         });
 
         // Chama a função RPC no Supabase que faz os cálculos no servidor
-        const { data, error } = await supabase.rpc('get_dashboard_activity_funnel_stats', {
-          p_start_date: startDate.toISOString(),
-          p_end_date: endDate.toISOString(),
-          p_prev_start_date: previousStartDate.toISOString(),
-          p_prev_end_date: previousEndDate.toISOString(),
-          p_unit_ids: unitIds
-        });
+        // Com type assertion para garantir o tipo correto
+        const { data, error } = await supabase.rpc(
+          'get_dashboard_activity_funnel_stats' as any,
+          {
+            p_start_date: startDate.toISOString(),
+            p_end_date: endDate.toISOString(),
+            p_prev_start_date: previousStartDate.toISOString(),
+            p_prev_end_date: previousEndDate.toISOString(),
+            p_unit_ids: unitIds
+          }
+        );
 
         if (error) {
           console.error(`[DASHBOARD ACTIVITY STATS] Erro no cálculo para ${monthsAgo} meses:`, error);
@@ -108,26 +146,29 @@ export function useDashboardActivityStats(unitId: string | null) {
         console.log(`[DASHBOARD ACTIVITY STATS] Dados obtidos para ${monthsAgo} meses:`, data);
         
         // Extrai e tipifica os dados retornados
+        // Usando type assertion para garantir que o TypeScript reconheça o formato
+        const typedData = data as unknown as DashboardActivityResponse;
+        
         const result: ActivityFunnelPeriod = {
-          totalContacts: parseInt(data.current.totalContacts),
-          effectiveContacts: parseInt(data.current.effectiveContacts),
-          scheduledVisits: parseInt(data.current.scheduledVisits),
-          completedVisits: parseInt(data.current.completedVisits),
-          enrollments: parseInt(data.current.enrollments),
-          effectiveContactsRate: parseFloat(data.current.effectiveContactsRate),
-          scheduledVisitsRate: parseFloat(data.current.scheduledVisitsRate),
-          completedVisitsRate: parseFloat(data.current.completedVisitsRate),
-          enrollmentsRate: parseFloat(data.current.enrollmentsRate),
+          totalContacts: parseInt(typedData.current.totalContacts),
+          effectiveContacts: parseInt(typedData.current.effectiveContacts),
+          scheduledVisits: parseInt(typedData.current.scheduledVisits),
+          completedVisits: parseInt(typedData.current.completedVisits),
+          enrollments: parseInt(typedData.current.enrollments),
+          effectiveContactsRate: parseFloat(typedData.current.effectiveContactsRate),
+          scheduledVisitsRate: parseFloat(typedData.current.scheduledVisitsRate),
+          completedVisitsRate: parseFloat(typedData.current.completedVisitsRate),
+          enrollmentsRate: parseFloat(typedData.current.enrollmentsRate),
           comparison: {
-            totalContacts: parseInt(data.comparison.totalContacts),
-            effectiveContacts: parseInt(data.comparison.effectiveContacts),
-            scheduledVisits: parseInt(data.comparison.scheduledVisits),
-            completedVisits: parseInt(data.comparison.completedVisits),
-            enrollments: parseInt(data.comparison.enrollments),
-            effectiveContactsRate: parseFloat(data.comparison.effectiveContactsRate),
-            scheduledVisitsRate: parseFloat(data.comparison.scheduledVisitsRate),
-            completedVisitsRate: parseFloat(data.comparison.completedVisitsRate),
-            enrollmentsRate: parseFloat(data.comparison.enrollmentsRate)
+            totalContacts: parseInt(typedData.comparison.totalContacts),
+            effectiveContacts: parseInt(typedData.comparison.effectiveContacts),
+            scheduledVisits: parseInt(typedData.comparison.scheduledVisits),
+            completedVisits: parseInt(typedData.comparison.completedVisits),
+            enrollments: parseInt(typedData.comparison.enrollments),
+            effectiveContactsRate: parseFloat(typedData.comparison.effectiveContactsRate),
+            scheduledVisitsRate: parseFloat(typedData.comparison.scheduledVisitsRate),
+            completedVisitsRate: parseFloat(typedData.comparison.completedVisitsRate),
+            enrollmentsRate: parseFloat(typedData.comparison.enrollmentsRate)
           }
         };
         
@@ -164,6 +205,6 @@ export function useDashboardActivityStats(unitId: string | null) {
     },
     enabled: !!unitId && (!availableUnits || availableUnits.length > 0),
     staleTime: 5 * 60 * 1000, // 5 minutos de cache
-    cacheTime: 10 * 60 * 1000, // 10 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos (substituiu o cacheTime nas versões mais recentes)
   });
 }

@@ -2120,6 +2120,16 @@ export type Database = {
           count: number
         }[]
       }
+      get_dashboard_activity_funnel_stats: {
+        Args: {
+          p_start_date: string
+          p_end_date: string
+          p_prev_start_date: string
+          p_prev_end_date: string
+          p_unit_ids: string[]
+        }
+        Returns: Json
+      }
       get_user_access_info: {
         Args: { user_id: string }
         Returns: {
