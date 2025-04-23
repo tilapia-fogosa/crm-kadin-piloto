@@ -2182,6 +2182,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      rpc_funnel_conversion: {
+        Args: { data_inicio: string; data_fim: string; unit_ids: string[] }
+        Returns: {
+          leads: number
+          contatos_efetivos: number
+          agendamentos: number
+          atendimentos: number
+          matriculas: number
+        }[]
+      }
       unpublish_update: {
         Args: { p_update_id: string }
         Returns: boolean
