@@ -58,51 +58,66 @@ export const generateOrangeShade = (index: number, total: number): string => {
  * Prepara os dados básicos para o gráfico de funil com base nas estatísticas recebidas
  */
 export const prepareBasicFunnelData = (funnelStats: any): FunnelDataItem[] => {
-  if (!funnelStats) return [];
+  if (!funnelStats) {
+    console.log("Dados do funil não fornecidos, retornando array vazio");
+    return [];
+  }
   
   console.log("Preparando dados básicos para o funil:", funnelStats);
   
   const totalItems = 5; // Total de etapas no funil
   
+  // Garante que todos os valores numéricos existam para evitar erros
+  const safeStats = {
+    leads: funnelStats.leads || 0,
+    contatos_efetivos: funnelStats.contatos_efetivos || 0,
+    agendamentos: funnelStats.agendamentos || 0,
+    atendimentos: funnelStats.atendimentos || 0,
+    matriculas: funnelStats.matriculas || 0,
+    effectiveContactRate: funnelStats.effectiveContactRate || 0,
+    scheduledVisitsRate: funnelStats.scheduledVisitsRate || 0,
+    completedVisitsRate: funnelStats.completedVisitsRate || 0,
+    enrollmentsRate: funnelStats.enrollmentsRate || 0
+  };
+  
   // Criamos o array de dados para o funil com a escala de laranja
-  // Adicionamos valores padrão para evitar erros com undefined
   const data: FunnelDataItem[] = [
     {
       name: 'Leads',
-      valor: funnelStats.leads || 0,
-      taxa: 100,
+      valor: safeStats.leads,
+      taxa: 100, // Taxa base sempre 100%
       legenda: 'Leads Recebidos',
       color: generateOrangeShade(0, totalItems),
       stageConversionRate: undefined
     },
     {
       name: 'Contatos',
-      valor: funnelStats.contatos_efetivos || 0,
-      taxa: typeof funnelStats.effectiveContactRate === 'number' ? funnelStats.effectiveContactRate : 0,
+      valor: safeStats.contatos_efetivos,
+      taxa: safeStats.effectiveContactRate,
       legenda: 'Contatos Efetivos',
       color: generateOrangeShade(1, totalItems),
       stageConversionRate: undefined
     },
     {
       name: 'Agendamentos',
-      valor: funnelStats.agendamentos || 0,
-      taxa: typeof funnelStats.scheduledVisitsRate === 'number' ? funnelStats.scheduledVisitsRate : 0,
+      valor: safeStats.agendamentos,
+      taxa: safeStats.scheduledVisitsRate,
       legenda: 'Agendamentos',
       color: generateOrangeShade(2, totalItems),
       stageConversionRate: undefined
     },
     {
       name: 'Atendimentos',
-      valor: funnelStats.atendimentos || 0,
-      taxa: typeof funnelStats.completedVisitsRate === 'number' ? funnelStats.completedVisitsRate : 0,
+      valor: safeStats.atendimentos,
+      taxa: safeStats.completedVisitsRate,
       legenda: 'Atendimentos',
       color: generateOrangeShade(3, totalItems),
       stageConversionRate: undefined
     },
     {
       name: 'Matrículas',
-      valor: funnelStats.matriculas || 0,
-      taxa: typeof funnelStats.enrollmentsRate === 'number' ? funnelStats.enrollmentsRate : 0,
+      valor: safeStats.matriculas,
+      taxa: safeStats.enrollmentsRate,
       legenda: 'Matrículas',
       color: generateOrangeShade(4, totalItems),
       stageConversionRate: undefined
@@ -133,12 +148,24 @@ export const prepareBasicFunnelData = (funnelStats: any): FunnelDataItem[] => {
 export const transformDataForSymmetricalFunnel = (data: FunnelDataItem[]): SymmetricalFunnelDataItem[] => {
   console.log("Transformando dados para funil simétrico:", data);
   
+  if (!data || data.length === 0) {
+    console.log("Dados vazios para transformação do funil simétrico");
+    return [];
+  }
+  
   // Valor máximo para dimensionar o funil
-  const maxValue = Math.max(...data.map(item => item.valor || 0)) * 1.2 || 1; // Evitar divisão por zero
+  const valores = data.map(item => item.valor || 0);
+  console.log("Valores para cálculo do máximo:", valores);
+  
+  const maxValue = Math.max(...valores) * 1.2 || 1; // Evitar divisão por zero
+  console.log("Valor máximo calculado:", maxValue);
   
   return data.map((item, index) => {
     // Calculamos a largura relativa ao valor máximo (0-100)
-    const funnelWidth = ((item.valor || 0) / maxValue) * 100;
+    const valor = item.valor || 0;
+    const funnelWidth = (valor / maxValue) * 100;
+    
+    console.log(`Item ${index} (${item.name}): valor=${valor}, largura=${funnelWidth}%`);
     
     return {
       ...item,
@@ -157,11 +184,13 @@ export const transformDataForSymmetricalFunnel = (data: FunnelDataItem[]): Symme
 export const formatNumber = (value: any): string => {
   // Verificar se value é undefined, null ou não é um número
   if (value === undefined || value === null || isNaN(Number(value))) {
+    console.log(`Valor inválido para formatNumber: ${value}`);
     return '0';
   }
   
   // Converter para número se for string ou outro tipo
   const numValue = typeof value === 'number' ? value : Number(value);
+  console.log(`formatNumber: ${value} → ${numValue.toLocaleString('pt-BR')}`);
   return numValue.toLocaleString('pt-BR');
 };
 
@@ -172,10 +201,13 @@ export const formatNumber = (value: any): string => {
 export const formatPercent = (value: any): string => {
   // Verificar se value é undefined, null ou não é um número
   if (value === undefined || value === null || isNaN(Number(value))) {
-    return '0.0%';
+    console.log(`Valor inválido para formatPercent: ${value}`);
+    return '0,0%';
   }
   
   // Converter para número se for string ou outro tipo
   const numValue = typeof value === 'number' ? value : Number(value);
-  return `${numValue.toFixed(1)}%`;
+  const formattedValue = `${numValue.toFixed(1).replace('.', ',')}%`;
+  console.log(`formatPercent: ${value} → ${formattedValue}`);
+  return formattedValue;
 };

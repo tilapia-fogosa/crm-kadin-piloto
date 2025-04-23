@@ -45,9 +45,15 @@ export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
     }
   };
 
-  // Preparar os dados para o gráfico
+  // Log detalhado para depuração
+  console.log('Dados do funil recebidos:', funnelData);
+  
+  // Preparar os dados para o gráfico com tratamento seguro
   const basicChartData = prepareBasicFunnelData(funnelData);
+  console.log('Dados básicos do funil preparados:', basicChartData);
+  
   const symmetricalData = transformDataForSymmetricalFunnel(basicChartData);
+  console.log('Dados transformados para funil simétrico:', symmetricalData);
   
   if (isLoading) {
     return (
@@ -115,6 +121,29 @@ export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
     );
   }
 
+  // Verifica se os dados do funil estão vazios (sem leads)
+  if (basicChartData.length === 0 || basicChartData[0].valor === 0) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Funil de Conversão de Leads</CardTitle>
+          <DateRangePicker 
+            dateRange={dateRange} 
+            onDateRangeChange={handleDateRangeChange}
+            customRange={customRange}
+          />
+        </CardHeader>
+        <CardContent>
+          <div className="h-[450px] flex items-center justify-center">
+            <p className="text-muted-foreground">
+              Nenhum lead encontrado para o período selecionado
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="relative">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -143,4 +172,3 @@ export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
     </Card>
   );
 }
-

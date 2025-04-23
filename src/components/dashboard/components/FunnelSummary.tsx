@@ -30,6 +30,12 @@ export const FunnelSummary: React.FC<FunnelSummaryProps> = ({
 }) => {
   console.log("Renderizando FunnelSummary com dados:", data);
   
+  // Verificação de segurança: se os dados não existirem, retornamos null
+  if (!data || data.length === 0) {
+    console.log("Nenhum dado disponível para renderizar o resumo do funil");
+    return null;
+  }
+  
   return (
     <div className="flex items-center justify-between mt-16 p-2 bg-white rounded-md shadow-sm">
       {data.map((item, index) => (
