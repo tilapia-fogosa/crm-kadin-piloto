@@ -2085,6 +2085,16 @@ export type Database = {
         }
         Returns: string
       }
+      get_activity_funnel_stats: {
+        Args: {
+          p_unit_id: string
+          p_start_date: string
+          p_end_date: string
+          p_previous_start_date: string
+          p_previous_end_date: string
+        }
+        Returns: Json
+      }
       get_daily_activities_by_type: {
         Args: { p_start_date: string; p_end_date: string; p_unit_ids: string[] }
         Returns: {
