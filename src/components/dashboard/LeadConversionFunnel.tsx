@@ -1,23 +1,29 @@
 
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useLeadFunnelConversion } from '@/hooks/useLeadFunnelConversion';
-import Plotly from 'plotly.js-dist-min';
 import { DateRangePicker } from "./DateRangePicker";
 import { DateRangeType } from "@/hooks/useLeadFunnelStats";
 import { DateRange } from "react-day-picker";
+import { SymmetricalFunnelChart } from './components/SymmetricalFunnelChart';
+import { FunnelSummary } from './components/FunnelSummary';
+import { 
+  prepareBasicFunnelData, 
+  transformDataForSymmetricalFunnel 
+} from './utils/funnelChartUtils';
 
 interface LeadConversionFunnelProps {
   unitId: string | null;
 }
 
 export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
-  const [dateRange, setDateRange] = React.useState<DateRangeType>('current-month');
-  // Inicializamos com valores definidos para garantir a compatibilidade com DateRange
-  const [customRange, setCustomRange] = React.useState<DateRange>({
+  console.log('Renderizando LeadConversionFunnel para unidade:', unitId);
+  
+  const [dateRange, setDateRange] = useState<DateRangeType>('current-month');
+  const [customRange, setCustomRange] = useState<DateRange>({
     from: new Date(),
     to: new Date()
   });
@@ -29,115 +35,32 @@ export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
     dateRange === 'custom' ? customRange.to : undefined
   );
 
-  useEffect(() => {
-    if (!funnelData || !document.getElementById('funnelPlot')) return;
-
-    const labels = [
-      'Leads Recebidos',
-      'Contatos Efetivos',
-      'Agendamentos',
-      'Atendimentos',
-      'Matrículas'
-    ];
-
-    const values = [
-      funnelData.leads,
-      funnelData.contatos_efetivos,
-      funnelData.agendamentos,
-      funnelData.atendimentos,
-      funnelData.matriculas
-    ];
-
-    // Calcular porcentagens de conversão
-    const percentages = values.map((value, index) => {
-      if (index === 0) return '100%';
-      const previousValue = values[index - 1];
-      if (!previousValue) return '0%';
-      return `${((value / previousValue) * 100).toFixed(1)}%`;
-    });
-
-    // Configurar dados do funil
-    const data = [{
-      type: 'funnel',
-      y: labels,
-      x: values,
-      textposition: "inside",
-      textinfo: "value+percent previous",
-      opacity: 0.65,
-      marker: {
-        color: [
-          "#ff7043",
-          "#ff8a65",
-          "#ffab91",
-          "#ffccbc",
-          "#ffe0d6"
-        ]
-      },
-      connector: {
-        line: {
-          color: "rgb(200, 200, 200)",
-          width: 1
-        }
-      },
-      textfont: {
-        family: "sans-serif",
-        size: 14,
-        color: "black"
-      },
-      hoverinfo: "text",
-      text: labels.map((label, i) => 
-        `${label}<br>Total: ${values[i]}<br>Conversão: ${percentages[i]}`
-      )
-    }];
-
-    // Layout do gráfico
-    const layout = {
-      margin: { l: 150, r: 0, b: 0, t: 0, pad: 0 },
-      width: document.getElementById('funnelPlot')!.offsetWidth,
-      height: 400,
-      funnelmode: "stack",
-      showlegend: false,
-      font: { family: "sans-serif", size: 12 }
-    };
-
-    Plotly.newPlot('funnelPlot', data, layout, { responsive: true });
-
-    // Cleanup
-    return () => {
-      if (document.getElementById('funnelPlot')) {
-        Plotly.purge('funnelPlot');
-      }
-    };
-  }, [funnelData]);
-
   const handleDateRangeChange = (type: DateRangeType, range?: DateRange) => {
-    console.log('Alterando intervalo de datas:', type, range);
+    console.log('Alterando range de data:', { type, range });
     setDateRange(type);
-    
-    if (type === 'custom' && range && range.from) {
-      // Garantimos que o range é válido antes de atualizar o estado
-      const validRange: DateRange = {
-        from: range.from,
-        to: range.to || range.from
-      };
-      setCustomRange(validRange);
+    if (type === 'custom' && range) {
+      setCustomRange(range);
     }
   };
 
+  // Preparar os dados para o gráfico
+  const basicChartData = prepareBasicFunnelData(funnelData);
+  const symmetricalData = transformDataForSymmetricalFunnel(basicChartData);
+  
   if (isLoading) {
     return (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Funil de Conversão de Leads</CardTitle>
           <DateRangePicker 
-            dateRange={dateRange}
+            dateRange={dateRange} 
             onDateRangeChange={handleDateRangeChange}
             customRange={customRange}
           />
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] flex items-center justify-center">
-            <Skeleton className="h-[350px] w-full" />
+          <div className="h-[450px] flex items-center justify-center">
+            <Skeleton className="h-[400px] w-full" />
           </div>
         </CardContent>
       </Card>
@@ -150,7 +73,7 @@ export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Funil de Conversão de Leads</CardTitle>
           <DateRangePicker 
-            dateRange={dateRange}
+            dateRange={dateRange} 
             onDateRangeChange={handleDateRangeChange}
             customRange={customRange}
           />
@@ -174,13 +97,13 @@ export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Funil de Conversão de Leads</CardTitle>
           <DateRangePicker 
-            dateRange={dateRange}
+            dateRange={dateRange} 
             onDateRangeChange={handleDateRangeChange}
             customRange={customRange}
           />
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] flex items-center justify-center">
+          <div className="h-[450px] flex items-center justify-center">
             <p className="text-muted-foreground">
               {!unitId ? "Selecione uma unidade" : "Nenhum dado disponível para o período"}
             </p>
@@ -191,17 +114,25 @@ export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
   }
 
   return (
-    <Card>
+    <Card className="relative">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Funil de Conversão de Leads</CardTitle>
         <DateRangePicker 
-          dateRange={dateRange}
+          dateRange={dateRange} 
           onDateRangeChange={handleDateRangeChange}
           customRange={customRange}
         />
       </CardHeader>
       <CardContent>
-        <div id="funnelPlot" className="w-full" />
+        <div className="space-y-6">
+          {/* Gráfico de Funil usando Recharts */}
+          <div className="h-[450px]">
+            <SymmetricalFunnelChart data={symmetricalData} />
+          </div>
+          
+          {/* Resumo do Funil com Números e Taxas */}
+          <FunnelSummary data={basicChartData} />
+        </div>
       </CardContent>
     </Card>
   );
