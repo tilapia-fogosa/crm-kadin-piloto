@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, addDays } from "date-fns";
 import { DailyStats } from "../types/activity-dashboard.types";
 import { processDailyStats } from "../utils/activity/activityStatsProcessor";
 import { createSafeDate } from "@/utils/date";
@@ -34,13 +34,17 @@ export function useActivityStats(
       
       // Datas para filtro usando startOf/endOf month
       const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
-      const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
+      // Adicionamos um dia extra ao final do mês para garantir que capturemos todas as atividades
+      const endDate = addDays(endOfMonth(createSafeDate(yearNum, monthNum)), 1);
       
-      // Converter para ISO strings para query
+      // Converter para ISO strings para query com informação de timezone
       const startDateIso = startDate.toISOString();
       const endDateIso = endDate.toISOString();
       
+      // Log detalhado das datas e parâmetros de consulta
       console.log(`[ACTIVITY STATS] Período de consulta: ${format(startDate, 'yyyy-MM-dd')} até ${format(endDate, 'yyyy-MM-dd')}`);
+      console.log(`[ACTIVITY STATS] Período ISO: ${startDateIso} até ${endDateIso}`);
+      console.log(`[ACTIVITY STATS] Timezone offset local: ${new Date().getTimezoneOffset() / -60}h`);
 
       // Unidades para filtro
       let unitIds: string[] = [];
@@ -64,7 +68,7 @@ export function useActivityStats(
         .eq('active', true)
         .in('unit_id', unitIds)
         .gte('created_at', startDateIso)
-        .lte('created_at', endDateIso);
+        .lt('created_at', endDateIso);
 
       if (selectedSource !== 'todos') {
         newClientsQuery = newClientsQuery.eq('lead_source', selectedSource);
@@ -79,6 +83,13 @@ export function useActivityStats(
       }
       
       console.log(`[ACTIVITY STATS] Clientes encontrados: ${newClients?.length || 0}`);
+      
+      // Log de data mais recente e mais antiga para verificar o range
+      if (newClients && newClients.length > 0) {
+        const dates = newClients.map(c => new Date(c.created_at)).sort((a, b) => a.getTime() - b.getTime());
+        console.log(`[ACTIVITY STATS] Data mais antiga de cliente: ${dates[0].toISOString()}`);
+        console.log(`[ACTIVITY STATS] Data mais recente de cliente: ${dates[dates.length - 1].toISOString()}`);
+      }
 
       // CONSULTA 2: ATIVIDADES CRIADAS
       console.time('[ACTIVITY STATS] Consulta 2 - Atividades criadas');
@@ -87,7 +98,7 @@ export function useActivityStats(
         .eq('active', true)
         .in('unit_id', unitIds)
         .gte('created_at', startDateIso)
-        .lte('created_at', endDateIso);
+        .lt('created_at', endDateIso);
 
       if (selectedSource !== 'todos') {
         createdActivitiesQuery = createdActivitiesQuery.eq('clients.lead_source', selectedSource);
@@ -102,6 +113,13 @@ export function useActivityStats(
       }
       
       console.log(`[ACTIVITY STATS] Atividades criadas encontradas: ${createdActivities?.length || 0}`);
+      
+      // Log de data mais recente e mais antiga para verificar o range
+      if (createdActivities && createdActivities.length > 0) {
+        const dates = createdActivities.map(a => new Date(a.created_at)).sort((a, b) => a.getTime() - b.getTime());
+        console.log(`[ACTIVITY STATS] Data mais antiga de atividade criada: ${dates[0].toISOString()}`);
+        console.log(`[ACTIVITY STATS] Data mais recente de atividade criada: ${dates[dates.length - 1].toISOString()}`);
+      }
 
       // CONSULTA 3: ATIVIDADES AGENDADAS
       console.time('[ACTIVITY STATS] Consulta 3 - Atividades agendadas');
@@ -111,7 +129,7 @@ export function useActivityStats(
         .not('scheduled_date', 'is', null)
         .in('unit_id', unitIds)
         .gte('scheduled_date', startDateIso)
-        .lte('scheduled_date', endDateIso);
+        .lt('scheduled_date', endDateIso);
 
       if (selectedSource !== 'todos') {
         scheduledActivitiesQuery = scheduledActivitiesQuery.eq('clients.lead_source', selectedSource);
@@ -126,10 +144,17 @@ export function useActivityStats(
       }
       
       console.log(`[ACTIVITY STATS] Atividades agendadas encontradas: ${scheduledActivities?.length || 0}`);
+      
+      // Log de data mais recente e mais antiga para verificar o range
+      if (scheduledActivities && scheduledActivities.length > 0) {
+        const dates = scheduledActivities.map(a => new Date(a.scheduled_date)).sort((a, b) => a.getTime() - b.getTime());
+        console.log(`[ACTIVITY STATS] Data mais antiga de agendamento: ${dates[0].toISOString()}`);
+        console.log(`[ACTIVITY STATS] Data mais recente de agendamento: ${dates[dates.length - 1].toISOString()}`);
+      }
 
       // Processamento diário
       console.time('[ACTIVITY STATS] Processamento de dias');
-      const allDates = eachDayOfInterval({ start: startDate, end: endDate });
+      const allDates = eachDayOfInterval({ start: startDate, end: endOfMonth(startDate) });
       console.log(`[ACTIVITY STATS] Processando ${allDates.length} dias no intervalo`);
 
       const dailyStats: DailyStats[] = allDates.map(date => {
