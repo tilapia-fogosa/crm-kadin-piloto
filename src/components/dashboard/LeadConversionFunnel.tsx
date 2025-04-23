@@ -12,7 +12,9 @@ import { SymmetricalFunnelChart } from './components/SymmetricalFunnelChart';
 import { FunnelSummary } from './components/FunnelSummary';
 import { 
   prepareBasicFunnelData, 
-  transformDataForSymmetricalFunnel 
+  transformDataForSymmetricalFunnel,
+  formatNumber,
+  formatPercent
 } from './utils/funnelChartUtils';
 
 interface LeadConversionFunnelProps {
@@ -131,9 +133,14 @@ export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
           </div>
           
           {/* Resumo do Funil com Números e Taxas */}
-          <FunnelSummary data={basicChartData} />
+          <FunnelSummary 
+            data={basicChartData} 
+            formatNumber={formatNumber}
+            formatPercent={formatPercent}
+          />
         </div>
       </CardContent>
     </Card>
   );
 }
+
