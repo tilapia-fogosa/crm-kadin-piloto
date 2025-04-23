@@ -1,8 +1,37 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, subMonths } from "date-fns";
-import { ActivityFunnelData, FunnelStatsResponse } from "@/components/dashboard/types/activity-funnel.types";
+import { startOfMonth, endOfMonth, subMonths, subYears } from "date-fns";
+
+export interface ActivityFunnelPeriod {
+  totalContacts: number;
+  effectiveContacts: number;
+  scheduledVisits: number;
+  completedVisits: number;
+  enrollments: number;
+  effectiveContactsRate: number;
+  scheduledVisitsRate: number;
+  completedVisitsRate: number;
+  enrollmentsRate: number;
+  comparison: {
+    totalContacts: number;
+    effectiveContacts: number;
+    scheduledVisits: number;
+    completedVisits: number;
+    enrollments: number;
+    effectiveContactsRate: number;
+    scheduledVisitsRate: number;
+    completedVisitsRate: number;
+    enrollmentsRate: number;
+  };
+}
+
+export interface ActivityFunnelData {
+  oneMonth: ActivityFunnelPeriod;
+  threeMonths: ActivityFunnelPeriod;
+  sixMonths: ActivityFunnelPeriod;
+  twelveMonths: ActivityFunnelPeriod;
+}
 
 export function useActivityFunnelStats(unitId: string | null) {
   return useQuery({
@@ -17,41 +46,68 @@ export function useActivityFunnelStats(unitId: string | null) {
 
       const now = new Date();
       
-      // Função auxiliar para buscar estatísticas de um período
-      const getStatsForPeriod = async (monthsAgo: number): Promise<FunnelStatsResponse> => {
+      // Função para calcular estatísticas de um período
+      const getStatsForPeriod = async (
+        monthsAgo: number
+      ): Promise<ActivityFunnelPeriod> => {
         // Período atual
         const endDate = endOfMonth(now);
         const startDate = startOfMonth(subMonths(now, monthsAgo - 1));
-        
-        // Período anterior para comparação (mesmo período do ano passado)
-        const previousEndDate = endOfMonth(subMonths(endDate, 12));
-        const previousStartDate = startOfMonth(subMonths(startDate, 12));
 
-        console.log(`Buscando estatísticas para período de ${monthsAgo} meses:`, {
+        // Mesmo período do ano anterior
+        const previousEndDate = endOfMonth(subYears(endDate, 1));
+        const previousStartDate = startOfMonth(subYears(startDate, 1));
+
+        console.log(`Calculando estatísticas para período de ${monthsAgo} meses:`, {
           atual: `${startDate.toISOString()} até ${endDate.toISOString()}`,
           anterior: `${previousStartDate.toISOString()} até ${previousEndDate.toISOString()}`
         });
 
-        const { data, error } = await supabase
-          .rpc('get_activity_funnel_stats', {
-            p_unit_id: unitId,
-            p_start_date: startDate.toISOString(),
-            p_end_date: endDate.toISOString(),
-            p_previous_start_date: previousStartDate.toISOString(),
-            p_previous_end_date: previousEndDate.toISOString()
-          });
+        // Busca atividades do período atual
+        const { data: currentActivities, error: currentError } = await supabase
+          .from('client_activities')
+          .select('tipo_atividade, created_at')
+          .eq('active', true)
+          .eq('unit_id', unitId)
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString());
 
-        if (error) {
-          console.error('Erro ao buscar estatísticas:', error);
-          throw error;
+        if (currentError) {
+          console.error('Erro ao buscar atividades atuais:', currentError);
+          throw currentError;
         }
 
-        // Converter o tipo de dados para FunnelStatsResponse
-        return data as unknown as FunnelStatsResponse;
+        // Busca atividades do período anterior
+        const { data: previousActivities, error: previousError } = await supabase
+          .from('client_activities')
+          .select('tipo_atividade, created_at')
+          .eq('active', true)
+          .eq('unit_id', unitId)
+          .gte('created_at', previousStartDate.toISOString())
+          .lte('created_at', previousEndDate.toISOString());
+
+        if (previousError) {
+          console.error('Erro ao buscar atividades anteriores:', previousError);
+          throw previousError;
+        }
+
+        console.log(`Total de atividades encontradas - Atual: ${currentActivities.length}, Anterior: ${previousActivities.length}`);
+
+        // Cálculo para o período atual
+        const currentStats = calculateStats(currentActivities);
+        
+        // Cálculo para o período anterior
+        const previousStats = calculateStats(previousActivities);
+
+        // Montar objeto de retorno com os dados atuais e comparativos
+        return {
+          ...currentStats,
+          comparison: previousStats
+        };
       };
 
       try {
-        // Buscar estatísticas para cada período
+        // Calcular estatísticas para todos os períodos solicitados
         const [oneMonth, threeMonths, sixMonths, twelveMonths] = await Promise.all([
           getStatsForPeriod(1),
           getStatsForPeriod(3),
@@ -59,32 +115,94 @@ export function useActivityFunnelStats(unitId: string | null) {
           getStatsForPeriod(12)
         ]);
 
-        // Formatar resposta no formato esperado pelos componentes
+        console.log('Estatísticas de funil calculadas com sucesso');
+        
         return {
-          oneMonth: {
-            ...oneMonth.current,
-            comparison: oneMonth.comparison
-          },
-          threeMonths: {
-            ...threeMonths.current,
-            comparison: threeMonths.comparison
-          },
-          sixMonths: {
-            ...sixMonths.current,
-            comparison: sixMonths.comparison
-          },
-          twelveMonths: {
-            ...twelveMonths.current,
-            comparison: twelveMonths.comparison
-          }
+          oneMonth,
+          threeMonths,
+          sixMonths,
+          twelveMonths
         };
       } catch (error) {
         console.error('Erro ao calcular estatísticas de funil:', error);
         throw error;
       }
     },
-    enabled: !!unitId,
-    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
-    gcTime: 30 * 60 * 1000 // Manter no cache por 30 minutos (novo nome para cacheTime)
+    enabled: !!unitId
   });
+}
+
+// Função auxiliar para calcular estatísticas a partir de um conjunto de atividades
+function calculateStats(activities: any[]): Omit<ActivityFunnelPeriod, 'comparison'> {
+  console.log('Calculando estatísticas a partir de', activities.length, 'atividades');
+  
+  // A) Total Contatos: contagem do nº atividades "Tentativa de Contato" + "Contato Efetivo" + "Agendamento"
+  const totalContacts = activities.filter(a => 
+    ["Tentativa de Contato", "Contato Efetivo", "Agendamento"].includes(a.tipo_atividade)
+  ).length;
+  
+  // B) Contato Efetivo: contagem do Nº atividades "Contato Efeitvo" + "Agendamento"
+  const effectiveContacts = activities.filter(a => 
+    ["Contato Efetivo", "Agendamento"].includes(a.tipo_atividade)
+  ).length;
+  
+  // C) Agendamento: contagem do nº atividades "Agendamento"
+  const scheduledVisits = activities.filter(a => 
+    a.tipo_atividade === "Agendamento"
+  ).length;
+  
+  // D) Atendimento: contagem do nº de atividades do "Atendimento"
+  const completedVisits = activities.filter(a => 
+    a.tipo_atividade === "Atendimento"
+  ).length;
+  
+  // E) Matrícula: contagem do nº de atividades "Matrícula"
+  const enrollments = activities.filter(a => 
+    a.tipo_atividade === "Matrícula"
+  ).length;
+  
+  // Cálculos percentuais
+  // B) % do ("Contato Efetivo" + "Agendamento") dividido por ("Tentativa de Contato" + "Contato Efeitvo" + "Agendamento")
+  const effectiveContactsRate = totalContacts > 0 
+    ? (effectiveContacts / totalContacts) * 100 
+    : 0;
+  
+  // C) % do "Agendamento" dividido por ("Contato Efetivo" + Agendamento")
+  const scheduledVisitsRate = effectiveContacts > 0 
+    ? (scheduledVisits / effectiveContacts) * 100 
+    : 0;
+  
+  // D) % do "Atendimento" dividido por "Agendamento"
+  const completedVisitsRate = scheduledVisits > 0 
+    ? (completedVisits / scheduledVisits) * 100 
+    : 0;
+  
+  // E) % do Matrícula dividido por "Atendimento"
+  const enrollmentsRate = completedVisits > 0 
+    ? (enrollments / completedVisits) * 100 
+    : 0;
+
+  console.log('Estatísticas calculadas:', {
+    totalContacts,
+    effectiveContacts,
+    scheduledVisits,
+    completedVisits,
+    enrollments,
+    effectiveContactsRate,
+    scheduledVisitsRate,
+    completedVisitsRate,
+    enrollmentsRate
+  });
+
+  return {
+    totalContacts,
+    effectiveContacts,
+    scheduledVisits,
+    completedVisits,
+    enrollments,
+    effectiveContactsRate,
+    scheduledVisitsRate,
+    completedVisitsRate,
+    enrollmentsRate
+  };
 }
