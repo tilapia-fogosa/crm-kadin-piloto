@@ -2085,6 +2085,31 @@ export type Database = {
         }
         Returns: string
       }
+      get_daily_activities_by_type: {
+        Args: { p_start_date: string; p_end_date: string; p_unit_ids: string[] }
+        Returns: {
+          date: string
+          tipo_atividade: string
+          source: string
+          count: number
+        }[]
+      }
+      get_daily_new_clients: {
+        Args: { p_start_date: string; p_end_date: string; p_unit_ids: string[] }
+        Returns: {
+          date: string
+          lead_source: string
+          count: number
+        }[]
+      }
+      get_daily_scheduled_activities: {
+        Args: { p_start_date: string; p_end_date: string; p_unit_ids: string[] }
+        Returns: {
+          date: string
+          source: string
+          count: number
+        }[]
+      }
       get_user_access_info: {
         Args: { user_id: string }
         Returns: {

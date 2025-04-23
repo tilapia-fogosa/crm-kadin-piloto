@@ -5,6 +5,26 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { createSafeDate } from "@/utils/date";
 import { DailyStats } from "../types/activity-dashboard.types";
 
+// Interfaces para tipar os dados retornados das funções RPC
+interface NewClientData {
+  date: string;
+  lead_source: string;
+  count: number;
+}
+
+interface ActivityTypeData {
+  date: string;
+  tipo_atividade: string;
+  source: string;
+  count: number;
+}
+
+interface ScheduledActivityData {
+  date: string;
+  source: string;
+  count: number;
+}
+
 /**
  * Hook para buscar estatísticas de atividades agregadas diretamente no banco de dados
  * 
@@ -68,36 +88,41 @@ export function useAggregatedActivityStats(
       
       // 1. BUSCAR NOVOS CLIENTES POR DIA
       console.time('[AGGREGATED ACTIVITY STATS] Consulta de novos clientes');
-      let clientsQuery = supabase.rpc('get_daily_new_clients', {
-        p_start_date: startDateIso,
-        p_end_date: endDateIso,
-        p_unit_ids: unitIds
-      });
+      
+      // Usar a função com .from() e select() ao invés de rpc para evitar erros de tipo
+      let clientsQuery = supabase
+        .from('clients')
+        .select('created_at, lead_source')
+        .gte('created_at', startDateIso)
+        .lte('created_at', endDateIso)
+        .in('unit_id', unitIds)
+        .eq('active', true);
       
       if (selectedSource !== 'todos') {
         clientsQuery = clientsQuery.eq('lead_source', selectedSource);
       }
       
-      const { data: newClientsData, error: newClientsError } = await clientsQuery;
+      const { data: clientsData, error: clientsError } = await clientsQuery;
       console.timeEnd('[AGGREGATED ACTIVITY STATS] Consulta de novos clientes');
       
-      if (newClientsError) {
-        console.error('[AGGREGATED ACTIVITY STATS] Erro ao buscar novos clientes:', newClientsError);
-        throw newClientsError;
+      if (clientsError) {
+        console.error('[AGGREGATED ACTIVITY STATS] Erro ao buscar novos clientes:', clientsError);
+        throw clientsError;
       }
-      
-      console.log(`[AGGREGATED ACTIVITY STATS] Dados de novos clientes recebidos:`, newClientsData);
       
       // 2. BUSCAR ATIVIDADES CRIADAS POR DIA E TIPO
       console.time('[AGGREGATED ACTIVITY STATS] Consulta de atividades por dia e tipo');
-      let activitiesQuery = supabase.rpc('get_daily_activities_by_type', {
-        p_start_date: startDateIso,
-        p_end_date: endDateIso,
-        p_unit_ids: unitIds
-      });
+      
+      let activitiesQuery = supabase
+        .from('client_activities')
+        .select('created_at, tipo_atividade, clients!inner(lead_source)')
+        .gte('created_at', startDateIso)
+        .lte('created_at', endDateIso)
+        .in('unit_id', unitIds)
+        .eq('active', true);
       
       if (selectedSource !== 'todos') {
-        activitiesQuery = activitiesQuery.eq('source', selectedSource);
+        activitiesQuery = activitiesQuery.eq('clients.lead_source', selectedSource);
       }
       
       const { data: activitiesData, error: activitiesError } = await activitiesQuery;
@@ -108,18 +133,20 @@ export function useAggregatedActivityStats(
         throw activitiesError;
       }
       
-      console.log(`[AGGREGATED ACTIVITY STATS] Dados de atividades recebidos:`, activitiesData);
-      
       // 3. BUSCAR ATIVIDADES AGENDADAS POR DIA
       console.time('[AGGREGATED ACTIVITY STATS] Consulta de atividades agendadas');
-      let scheduledQuery = supabase.rpc('get_daily_scheduled_activities', {
-        p_start_date: startDateIso,
-        p_end_date: endDateIso,
-        p_unit_ids: unitIds
-      });
+      
+      let scheduledQuery = supabase
+        .from('client_activities')
+        .select('scheduled_date, clients!inner(lead_source)')
+        .gte('scheduled_date', startDateIso)
+        .lte('scheduled_date', endDateIso)
+        .in('unit_id', unitIds)
+        .eq('active', true)
+        .eq('tipo_atividade', 'Agendamento');
       
       if (selectedSource !== 'todos') {
-        scheduledQuery = scheduledQuery.eq('source', selectedSource);
+        scheduledQuery = scheduledQuery.eq('clients.lead_source', selectedSource);
       }
       
       const { data: scheduledData, error: scheduledError } = await scheduledQuery;
@@ -129,8 +156,6 @@ export function useAggregatedActivityStats(
         console.error('[AGGREGATED ACTIVITY STATS] Erro ao buscar atividades agendadas:', scheduledError);
         throw scheduledError;
       }
-      
-      console.log(`[AGGREGATED ACTIVITY STATS] Dados de atividades agendadas recebidos:`, scheduledData);
       
       // Processo de agregação diária dos dados
       console.time('[AGGREGATED ACTIVITY STATS] Processamento dos dados');
@@ -157,42 +182,53 @@ export function useAggregatedActivityStats(
       }
       
       // Processar dados de novos clientes
-      if (newClientsData) {
-        newClientsData.forEach(item => {
-          const dateStr = item.date;
+      if (clientsData) {
+        // Agrupar os dados manualmente por dia
+        const clientsByDay: Record<string, number> = {};
+        
+        clientsData.forEach(client => {
+          const dateStr = format(new Date(client.created_at), 'yyyy-MM-dd');
+          if (!clientsByDay[dateStr]) {
+            clientsByDay[dateStr] = 0;
+          }
+          clientsByDay[dateStr]++;
+        });
+        
+        // Atualizar estatísticas diárias
+        Object.entries(clientsByDay).forEach(([dateStr, count]) => {
           if (dailyStatsMap[dateStr]) {
-            dailyStatsMap[dateStr].newClients = item.count || 0;
+            dailyStatsMap[dateStr].newClients = count;
           }
         });
       }
       
       // Processar dados de atividades por tipo
       if (activitiesData) {
-        activitiesData.forEach(item => {
-          const dateStr = item.date;
+        activitiesData.forEach(activity => {
+          const dateStr = format(new Date(activity.created_at), 'yyyy-MM-dd');
           if (!dailyStatsMap[dateStr]) return;
           
           const stats = dailyStatsMap[dateStr];
           
           // Contagens baseadas no tipo de atividade
-          if (['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(item.tipo_atividade)) {
-            stats.contactAttempts += item.count || 0;
+          if (['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)) {
+            stats.contactAttempts += 1;
           }
           
-          if (['Contato Efetivo', 'Agendamento'].includes(item.tipo_atividade)) {
-            stats.effectiveContacts += item.count || 0;
+          if (['Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)) {
+            stats.effectiveContacts += 1;
           }
           
-          if (item.tipo_atividade === 'Agendamento') {
-            stats.scheduledVisits += item.count || 0;
+          if (activity.tipo_atividade === 'Agendamento') {
+            stats.scheduledVisits += 1;
           }
           
-          if (item.tipo_atividade === 'Atendimento') {
-            stats.completedVisits += item.count || 0;
+          if (activity.tipo_atividade === 'Atendimento') {
+            stats.completedVisits += 1;
           }
           
-          if (item.tipo_atividade === 'Matrícula') {
-            stats.enrollments += item.count || 0;
+          if (activity.tipo_atividade === 'Matrícula') {
+            stats.enrollments += 1;
           }
         });
       }
@@ -200,9 +236,9 @@ export function useAggregatedActivityStats(
       // Processar dados de atividades agendadas
       if (scheduledData) {
         scheduledData.forEach(item => {
-          const dateStr = item.date;
+          const dateStr = format(new Date(item.scheduled_date), 'yyyy-MM-dd');
           if (dailyStatsMap[dateStr]) {
-            dailyStatsMap[dateStr].awaitingVisits += item.count || 0;
+            dailyStatsMap[dateStr].awaitingVisits += 1;
           }
         });
       }
