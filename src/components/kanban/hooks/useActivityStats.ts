@@ -32,15 +32,15 @@ export function useActivityStats(
         return [];
       }
       
-      // Datas para filtro usando DATE()
+      // Datas para filtro usando startOf/endOf month
       const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
       const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
       
-      // Converte para formato yyyy-MM-dd para query
-      const startDateStr = format(startDate, 'yyyy-MM-dd');
-      const endDateStr = format(endDate, 'yyyy-MM-dd');
+      // Converter para ISO strings para query
+      const startDateIso = startDate.toISOString();
+      const endDateIso = endDate.toISOString();
       
-      console.log(`[ACTIVITY STATS] Período de consulta: ${startDateStr} até ${endDateStr}`);
+      console.log(`[ACTIVITY STATS] Período de consulta: ${format(startDate, 'yyyy-MM-dd')} até ${format(endDate, 'yyyy-MM-dd')}`);
 
       // Unidades para filtro
       let unitIds: string[] = [];
@@ -57,14 +57,14 @@ export function useActivityStats(
       
       console.log(`[ACTIVITY STATS] Unidades para filtro: ${unitIds.join(', ')}`);
 
-      // CONSULTA 1: NOVOS CLIENTES - usando DATE(created_at)
+      // CONSULTA 1: NOVOS CLIENTES
       console.time('[ACTIVITY STATS] Consulta 1 - Novos clientes');
       let newClientsQuery = supabase.from('clients')
         .select('id, created_at')
         .eq('active', true)
         .in('unit_id', unitIds)
-        .gte('DATE(created_at)', startDateStr)
-        .lte('DATE(created_at)', endDateStr);
+        .gte('created_at', startDateIso)
+        .lte('created_at', endDateIso);
 
       if (selectedSource !== 'todos') {
         newClientsQuery = newClientsQuery.eq('lead_source', selectedSource);
@@ -80,14 +80,14 @@ export function useActivityStats(
       
       console.log(`[ACTIVITY STATS] Clientes encontrados: ${newClients?.length || 0}`);
 
-      // CONSULTA 2: ATIVIDADES CRIADAS - usando DATE(created_at)
+      // CONSULTA 2: ATIVIDADES CRIADAS
       console.time('[ACTIVITY STATS] Consulta 2 - Atividades criadas');
       let createdActivitiesQuery = supabase.from('client_activities')
         .select('id, tipo_atividade, created_at, client_id, clients!inner(lead_source)')
         .eq('active', true)
         .in('unit_id', unitIds)
-        .gte('DATE(created_at)', startDateStr)
-        .lte('DATE(created_at)', endDateStr);
+        .gte('created_at', startDateIso)
+        .lte('created_at', endDateIso);
 
       if (selectedSource !== 'todos') {
         createdActivitiesQuery = createdActivitiesQuery.eq('clients.lead_source', selectedSource);
@@ -103,15 +103,15 @@ export function useActivityStats(
       
       console.log(`[ACTIVITY STATS] Atividades criadas encontradas: ${createdActivities?.length || 0}`);
 
-      // CONSULTA 3: ATIVIDADES AGENDADAS - usando DATE(scheduled_date)
+      // CONSULTA 3: ATIVIDADES AGENDADAS
       console.time('[ACTIVITY STATS] Consulta 3 - Atividades agendadas');
       let scheduledActivitiesQuery = supabase.from('client_activities')
         .select('id, tipo_atividade, scheduled_date, client_id, clients!inner(lead_source)')
         .eq('active', true)
         .not('scheduled_date', 'is', null)
         .in('unit_id', unitIds)
-        .gte('DATE(scheduled_date)', startDateStr)
-        .lte('DATE(scheduled_date)', endDateStr);
+        .gte('scheduled_date', startDateIso)
+        .lte('scheduled_date', endDateIso);
 
       if (selectedSource !== 'todos') {
         scheduledActivitiesQuery = scheduledActivitiesQuery.eq('clients.lead_source', selectedSource);
@@ -127,7 +127,7 @@ export function useActivityStats(
       
       console.log(`[ACTIVITY STATS] Atividades agendadas encontradas: ${scheduledActivities?.length || 0}`);
 
-      // Processamento diário com os três conjuntos de dados
+      // Processamento diário
       console.time('[ACTIVITY STATS] Processamento de dias');
       const allDates = eachDayOfInterval({ start: startDate, end: endDate });
       console.log(`[ACTIVITY STATS] Processando ${allDates.length} dias no intervalo`);

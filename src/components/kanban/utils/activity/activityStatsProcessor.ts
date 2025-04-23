@@ -1,8 +1,8 @@
 import { DailyStats } from "../../types/activity-dashboard.types";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 /**
- * Converte uma data para o formato yyyy-MM-dd
+ * Converte uma data para o formato yyyy-MM-dd para comparações consistentes
  */
 function getDateString(value: any): string | null {
   if (!value) {
@@ -10,13 +10,36 @@ function getDateString(value: any): string | null {
     return null;
   }
   
-  const date = value instanceof Date ? value : new Date(value);
+  let date: Date;
+  
+  // Se já for um objeto Date
+  if (value instanceof Date) {
+    date = value;
+  } 
+  // Se for uma string ISO
+  else if (typeof value === 'string' && value.includes('T')) {
+    try {
+      date = parseISO(value);
+    } catch (e) {
+      console.warn('[STATS PROCESSOR] Erro ao converter string ISO:', value);
+      return null;
+    }
+  }
+  // Outros formatos de string
+  else {
+    try {
+      date = new Date(value);
+    } catch (e) {
+      console.warn('[STATS PROCESSOR] Erro ao converter data:', value);
+      return null;
+    }
+  }
+
   if (isNaN(date.getTime())) {
-    console.warn('[STATS PROCESSOR] Data inválida:', value);
+    console.warn('[STATS PROCESSOR] Data inválida após conversão:', value);
     return null;
   }
   
-  // Formato yyyy-MM-dd
   return format(date, 'yyyy-MM-dd');
 }
 
