@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
@@ -39,7 +38,7 @@ export function useActivityStats(
         return [];
       }
       
-      // Datas para filtro
+      // Datas para filtro usando DATE()
       const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
       const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
       const startISO = startDate.toISOString();
@@ -62,22 +61,17 @@ export function useActivityStats(
       
       console.log(`[ACTIVITY STATS] Unidades para filtro: ${unitIds.join(', ')}`);
 
-      // ===================================================
-      // CONSULTA 1: NOVOS CLIENTES (filtro por created_at)
-      // ===================================================
+      // CONSULTA 1: NOVOS CLIENTES
       console.time('[ACTIVITY STATS] Consulta 1 - Novos clientes');
-      console.log(`[ACTIVITY STATS] Executando consulta 1: Novos clientes no período`);
-      
       let newClientsQuery = supabase.from('clients')
         .select('id, created_at')
         .eq('active', true)
         .in('unit_id', unitIds)
-        .gte('created_at', startISO)
-        .lte('created_at', endISO);
+        .gte('DATE(created_at)', startISO.split('T')[0])
+        .lte('DATE(created_at)', endISO.split('T')[0]);
 
       if (selectedSource !== 'todos') {
         newClientsQuery = newClientsQuery.eq('lead_source', selectedSource);
-        console.log(`[ACTIVITY STATS] Aplicando filtro de origem: ${selectedSource}`);
       }
 
       const { data: newClients, error: newClientsError } = await newClientsQuery;
@@ -90,24 +84,17 @@ export function useActivityStats(
       
       console.log(`[ACTIVITY STATS] Clientes encontrados: ${newClients?.length || 0}`);
 
-      // ===================================================
-      // CONSULTA 2: ATIVIDADES CRIADAS (filtro por created_at)
-      // ===================================================
+      // CONSULTA 2: ATIVIDADES CRIADAS
       console.time('[ACTIVITY STATS] Consulta 2 - Atividades criadas');
-      console.log(`[ACTIVITY STATS] Executando consulta 2: Atividades criadas no período`);
-      
-      // CORREÇÃO: Removemos o filtro de clientIds e fazemos join com clients para filtrar por origem
       let createdActivitiesQuery = supabase.from('client_activities')
         .select('id, tipo_atividade, created_at, client_id, clients!inner(lead_source)')
         .eq('active', true)
         .in('unit_id', unitIds)
-        .gte('created_at', startISO)
-        .lte('created_at', endISO);
+        .gte('DATE(created_at)', startISO.split('T')[0])
+        .lte('DATE(created_at)', endISO.split('T')[0]);
 
-      // Aplicamos o filtro de origem diretamente na relação com clients
       if (selectedSource !== 'todos') {
         createdActivitiesQuery = createdActivitiesQuery.eq('clients.lead_source', selectedSource);
-        console.log(`[ACTIVITY STATS] Aplicando filtro de origem direto na relação clients`);
       }
       
       const { data: createdActivities, error: createdActivitiesError } = await createdActivitiesQuery;
@@ -125,24 +112,18 @@ export function useActivityStats(
         console.log('[ACTIVITY STATS] Amostra de atividade criada:', createdActivities[0]);
       }
 
-      // ===================================================
-      // CONSULTA 3: ATIVIDADES AGENDADAS (filtro por scheduled_date)
-      // ===================================================
+      // CONSULTA 3: ATIVIDADES AGENDADAS
       console.time('[ACTIVITY STATS] Consulta 3 - Atividades agendadas');
-      console.log(`[ACTIVITY STATS] Executando consulta 3: Atividades agendadas para o período`);
-      
-      // CORREÇÃO: Mesma abordagem para atividades agendadas
       let scheduledActivitiesQuery = supabase.from('client_activities')
         .select('id, tipo_atividade, scheduled_date, client_id, clients!inner(lead_source)')
         .eq('active', true)
         .not('scheduled_date', 'is', null)
         .in('unit_id', unitIds)
-        .gte('scheduled_date', startISO)
-        .lte('scheduled_date', endISO);
+        .gte('DATE(scheduled_date)', startISO.split('T')[0])
+        .lte('DATE(scheduled_date)', endISO.split('T')[0]);
 
       if (selectedSource !== 'todos') {
         scheduledActivitiesQuery = scheduledActivitiesQuery.eq('clients.lead_source', selectedSource);
-        console.log(`[ACTIVITY STATS] Aplicando filtro de origem direto na relação clients para agendamentos`);
       }
       
       const { data: scheduledActivities, error: scheduledActivitiesError } = await scheduledActivitiesQuery;
@@ -185,6 +166,6 @@ export function useActivityStats(
       console.timeEnd('[ACTIVITY STATS] Tempo total de execução');
       return dailyStats;
     },
-    enabled: isOpen && !!userUnits && userUnits.length > 0, // Só executa quando o diálogo está aberto e unidades estão disponíveis
+    enabled: isOpen && !!userUnits && userUnits.length > 0,
   });
 }

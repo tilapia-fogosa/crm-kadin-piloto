@@ -1,18 +1,20 @@
-
 import { DailyStats } from "../../types/activity-dashboard.types";
 import { format } from "date-fns";
-import { isSameLocalDay } from "@/utils/date";
 
 /**
- * Recebe uma string ou objeto Date e retorna Date válido.
+ * Recebe uma string ou objeto Date e retorna uma string de data UTC no formato yyyy-MM-dd
  */
-function safeToDate(value: any): Date | null {
+function getUTCDateString(value: any): string | null {
   if (!value) return null;
-  if (value instanceof Date) return value;
-  // Considera ISO string
-  const date = new Date(value);
-  if (isNaN(date.getTime())) return null;
-  return date;
+  
+  const date = value instanceof Date ? value : new Date(value);
+  if (isNaN(date.getTime())) {
+    console.warn('[STATS PROCESSOR] Data inválida:', value);
+    return null;
+  }
+  
+  // Formato yyyy-MM-dd em UTC
+  return date.toISOString().split('T')[0];
 }
 
 /**
@@ -28,41 +30,59 @@ export const processDailyStats = (
   scheduledActivities: any[]
 ): DailyStats => {
   const dateStr = format(date, 'yyyy-MM-dd');
-  console.log(`[STATS PROCESSOR] Processando dia ${dateStr}`);
+  const targetDateUTC = getUTCDateString(date);
+  
+  console.log(`[STATS PROCESSOR] Processando dia ${dateStr} (UTC: ${targetDateUTC})`);
 
-  // Garantir análise com datas antes de tentar filtrar
+  if (!targetDateUTC) {
+    console.error('[STATS PROCESSOR] Data alvo inválida');
+    return {
+      date,
+      newClients: 0,
+      contactAttempts: 0,
+      effectiveContacts: 0,
+      scheduledVisits: 0,
+      awaitingVisits: 0,
+      completedVisits: 0,
+      enrollments: 0,
+      ceConversionRate: 0,
+      agConversionRate: 0,
+      atConversionRate: 0,
+      maConversionRate: 0
+    };
+  }
+
   // 1. Novos clientes (filtrados por created_at)
   const dayClients = newClients.filter(client => {
-    const createdAt = safeToDate(client?.created_at);
-    if (!createdAt) {
+    const clientDateUTC = getUTCDateString(client?.created_at);
+    if (!clientDateUTC) {
       console.warn(`[STATS PROCESSOR] Cliente com created_at inválido:`, client);
       return false;
     }
-    return isSameLocalDay(createdAt, date);
+    return clientDateUTC === targetDateUTC;
   });
 
   console.log(`[STATS PROCESSOR] ${dateStr}: Novos clientes: ${dayClients.length}`);
 
   // 2. Atividades criadas no dia (filtradas por created_at)
   const dayActivities = createdActivities.filter(activity => {
-    const createdAt = safeToDate(activity?.created_at);
-    if (!createdAt) {
+    const activityDateUTC = getUTCDateString(activity?.created_at);
+    if (!activityDateUTC) {
       console.warn(`[STATS PROCESSOR] Atividade criada com created_at inválido:`, activity);
       return false;
     }
-    return isSameLocalDay(createdAt, date);
+    return activityDateUTC === targetDateUTC;
   });
 
   console.log(`[STATS PROCESSOR] ${dateStr}: Atividades criadas: ${dayActivities.length}`);
   
   // 3. Atividades agendadas para o dia (filtradas por scheduled_date)
   const dayScheduledActivities = scheduledActivities.filter(activity => {
-    const scheduledDate = safeToDate(activity?.scheduled_date);
-    if (!scheduledDate) {
-      // Não loga warning aqui pois agendado pode ser null
+    const scheduledDateUTC = getUTCDateString(activity?.scheduled_date);
+    if (!scheduledDateUTC) {
       return false;
     }
-    return isSameLocalDay(scheduledDate, date);
+    return scheduledDateUTC === targetDateUTC;
   });
 
   console.log(`[STATS PROCESSOR] ${dateStr}: Atividades agendadas para o dia: ${dayScheduledActivities.length}`);
