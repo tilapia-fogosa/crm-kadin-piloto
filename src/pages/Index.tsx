@@ -9,6 +9,7 @@ import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { LeadConversionFunnel } from '@/components/dashboard/LeadConversionFunnel';
+import { ActivityFunnelStats } from '@/components/dashboard/ActivityFunnelStats';
 
 function Index() {
   console.log("Renderizando Dashboard/Index page");
@@ -35,6 +36,9 @@ function Index() {
         <div className="space-y-6">
           {/* Primeira linha: Estatísticas de leads */}
           <DashboardStats leadsStats={leadsStats} />
+          
+          {/* Estatísticas de atividades do funil */}
+          <ActivityFunnelStats unitId={selectedUnitId} />
           
           {/* Disclaimer sobre atividades */}
           <Alert variant="destructive" className="border-red-500 bg-red-50">

@@ -47,9 +47,7 @@ export function ActivityFunnelStats({ unitId }: ActivityFunnelStatsProps) {
           period={funnelStats.threeMonths}
           description="Comparado ao mesmo período do ano anterior"
         />
-      </div>
-      
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-4">
+        
         <ActivityFunnelCard 
           title="Atividades dos Últimos 6 Meses"
           period={funnelStats.sixMonths}
