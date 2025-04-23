@@ -5,32 +5,20 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { createSafeDate } from "@/utils/date";
 import { DailyStats } from "../types/activity-dashboard.types";
 
-// Interfaces para tipar os dados retornados das funções RPC
-interface NewClientData {
+interface DatabaseStat {
   date: string;
-  lead_source: string;
-  count: number;
-}
-
-interface ActivityTypeData {
-  date: string;
-  tipo_atividade: string;
-  source: string;
-  count: number;
-}
-
-interface ScheduledActivityData {
-  date: string;
-  source: string;
+  tipo_atividade?: string;
+  source?: string;
+  lead_source?: string;
   count: number;
 }
 
 /**
- * Hook para buscar estatísticas de atividades agregadas diretamente no banco de dados
+ * Hook para buscar estatísticas de atividades agregadas usando funções do banco
  * 
  * Este hook substitui a abordagem anterior que buscava todos os registros e fazia
  * a agregação no frontend. A nova abordagem é mais eficiente e evita problemas
- * de limitação de dados (1000 registros) do Supabase.
+ * de limitação de dados.
  */
 export function useAggregatedActivityStats(
   selectedSource: string,
@@ -82,85 +70,56 @@ export function useAggregatedActivityStats(
         console.error('[AGGREGATED ACTIVITY STATS] Nenhuma unidade para filtro');
         return [];
       }
-      
-      // Estrutura para armazenar os resultados agregados
+
+      // Estrutura para armazenar dados agregados por dia
       const dailyStatsMap: Record<string, DailyStats> = {};
       
-      // 1. BUSCAR NOVOS CLIENTES POR DIA
-      console.time('[AGGREGATED ACTIVITY STATS] Consulta de novos clientes');
-      
-      // Usar a função com .from() e select() ao invés de rpc para evitar erros de tipo
-      let clientsQuery = supabase
-        .from('clients')
-        .select('created_at, lead_source')
-        .gte('created_at', startDateIso)
-        .lte('created_at', endDateIso)
-        .in('unit_id', unitIds)
-        .eq('active', true);
-      
-      if (selectedSource !== 'todos') {
-        clientsQuery = clientsQuery.eq('lead_source', selectedSource);
+      // 1. BUSCAR NOVOS CLIENTES
+      console.time('[AGGREGATED ACTIVITY STATS] Busca de novos clientes');
+      const { data: newClientsData, error: newClientsError } = await supabase
+        .rpc('get_daily_new_clients', {
+          p_start_date: startDateIso,
+          p_end_date: endDateIso,
+          p_unit_ids: unitIds
+        });
+      console.timeEnd('[AGGREGATED ACTIVITY STATS] Busca de novos clientes');
+
+      if (newClientsError) {
+        console.error('[AGGREGATED ACTIVITY STATS] Erro ao buscar novos clientes:', newClientsError);
+        throw newClientsError;
       }
-      
-      const { data: clientsData, error: clientsError } = await clientsQuery;
-      console.timeEnd('[AGGREGATED ACTIVITY STATS] Consulta de novos clientes');
-      
-      if (clientsError) {
-        console.error('[AGGREGATED ACTIVITY STATS] Erro ao buscar novos clientes:', clientsError);
-        throw clientsError;
-      }
-      
-      // 2. BUSCAR ATIVIDADES CRIADAS POR DIA E TIPO
-      console.time('[AGGREGATED ACTIVITY STATS] Consulta de atividades por dia e tipo');
-      
-      let activitiesQuery = supabase
-        .from('client_activities')
-        .select('created_at, tipo_atividade, clients!inner(lead_source)')
-        .gte('created_at', startDateIso)
-        .lte('created_at', endDateIso)
-        .in('unit_id', unitIds)
-        .eq('active', true);
-      
-      if (selectedSource !== 'todos') {
-        activitiesQuery = activitiesQuery.eq('clients.lead_source', selectedSource);
-      }
-      
-      const { data: activitiesData, error: activitiesError } = await activitiesQuery;
-      console.timeEnd('[AGGREGATED ACTIVITY STATS] Consulta de atividades por dia e tipo');
-      
+
+      // 2. BUSCAR ATIVIDADES POR TIPO
+      console.time('[AGGREGATED ACTIVITY STATS] Busca de atividades por tipo');
+      const { data: activitiesData, error: activitiesError } = await supabase
+        .rpc('get_daily_activities_by_type', {
+          p_start_date: startDateIso,
+          p_end_date: endDateIso,
+          p_unit_ids: unitIds
+        });
+      console.timeEnd('[AGGREGATED ACTIVITY STATS] Busca de atividades por tipo');
+
       if (activitiesError) {
         console.error('[AGGREGATED ACTIVITY STATS] Erro ao buscar atividades:', activitiesError);
         throw activitiesError;
       }
-      
-      // 3. BUSCAR ATIVIDADES AGENDADAS POR DIA
-      console.time('[AGGREGATED ACTIVITY STATS] Consulta de atividades agendadas');
-      
-      let scheduledQuery = supabase
-        .from('client_activities')
-        .select('scheduled_date, clients!inner(lead_source)')
-        .gte('scheduled_date', startDateIso)
-        .lte('scheduled_date', endDateIso)
-        .in('unit_id', unitIds)
-        .eq('active', true)
-        .eq('tipo_atividade', 'Agendamento');
-      
-      if (selectedSource !== 'todos') {
-        scheduledQuery = scheduledQuery.eq('clients.lead_source', selectedSource);
-      }
-      
-      const { data: scheduledData, error: scheduledError } = await scheduledQuery;
-      console.timeEnd('[AGGREGATED ACTIVITY STATS] Consulta de atividades agendadas');
-      
+
+      // 3. BUSCAR ATIVIDADES AGENDADAS
+      console.time('[AGGREGATED ACTIVITY STATS] Busca de atividades agendadas');
+      const { data: scheduledData, error: scheduledError } = await supabase
+        .rpc('get_daily_scheduled_activities', {
+          p_start_date: startDateIso,
+          p_end_date: endDateIso,
+          p_unit_ids: unitIds
+        });
+      console.timeEnd('[AGGREGATED ACTIVITY STATS] Busca de atividades agendadas');
+
       if (scheduledError) {
         console.error('[AGGREGATED ACTIVITY STATS] Erro ao buscar atividades agendadas:', scheduledError);
         throw scheduledError;
       }
-      
-      // Processo de agregação diária dos dados
-      console.time('[AGGREGATED ACTIVITY STATS] Processamento dos dados');
-      
-      // Inicializar estrutura com todas as datas do mês
+
+      // Inicializar estrutura para todos os dias do mês
       let currentDate = new Date(startDate);
       while (currentDate <= endDate) {
         const dateStr = format(currentDate, 'yyyy-MM-dd');
@@ -180,69 +139,60 @@ export function useAggregatedActivityStats(
         };
         currentDate.setDate(currentDate.getDate() + 1);
       }
-      
+
       // Processar dados de novos clientes
-      if (clientsData) {
-        // Agrupar os dados manualmente por dia
-        const clientsByDay: Record<string, number> = {};
-        
-        clientsData.forEach(client => {
-          const dateStr = format(new Date(client.created_at), 'yyyy-MM-dd');
-          if (!clientsByDay[dateStr]) {
-            clientsByDay[dateStr] = 0;
-          }
-          clientsByDay[dateStr]++;
-        });
-        
-        // Atualizar estatísticas diárias
-        Object.entries(clientsByDay).forEach(([dateStr, count]) => {
-          if (dailyStatsMap[dateStr]) {
-            dailyStatsMap[dateStr].newClients = count;
+      if (newClientsData) {
+        newClientsData.forEach((stat: DatabaseStat) => {
+          if (selectedSource === 'todos' || stat.lead_source === selectedSource) {
+            if (dailyStatsMap[stat.date]) {
+              dailyStatsMap[stat.date].newClients += stat.count;
+            }
           }
         });
       }
-      
+
       // Processar dados de atividades por tipo
       if (activitiesData) {
-        activitiesData.forEach(activity => {
-          const dateStr = format(new Date(activity.created_at), 'yyyy-MM-dd');
-          if (!dailyStatsMap[dateStr]) return;
-          
-          const stats = dailyStatsMap[dateStr];
-          
-          // Contagens baseadas no tipo de atividade
-          if (['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)) {
-            stats.contactAttempts += 1;
-          }
-          
-          if (['Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)) {
-            stats.effectiveContacts += 1;
-          }
-          
-          if (activity.tipo_atividade === 'Agendamento') {
-            stats.scheduledVisits += 1;
-          }
-          
-          if (activity.tipo_atividade === 'Atendimento') {
-            stats.completedVisits += 1;
-          }
-          
-          if (activity.tipo_atividade === 'Matrícula') {
-            stats.enrollments += 1;
+        activitiesData.forEach((stat: DatabaseStat) => {
+          if (!stat.source || selectedSource === 'todos' || stat.source === selectedSource) {
+            if (dailyStatsMap[stat.date]) {
+              const dayStats = dailyStatsMap[stat.date];
+
+              if (['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(stat.tipo_atividade || '')) {
+                dayStats.contactAttempts += stat.count;
+              }
+              
+              if (['Contato Efetivo', 'Agendamento'].includes(stat.tipo_atividade || '')) {
+                dayStats.effectiveContacts += stat.count;
+              }
+              
+              if (stat.tipo_atividade === 'Agendamento') {
+                dayStats.scheduledVisits += stat.count;
+              }
+              
+              if (stat.tipo_atividade === 'Atendimento') {
+                dayStats.completedVisits += stat.count;
+              }
+              
+              if (stat.tipo_atividade === 'Matrícula') {
+                dayStats.enrollments += stat.count;
+              }
+            }
           }
         });
       }
-      
+
       // Processar dados de atividades agendadas
       if (scheduledData) {
-        scheduledData.forEach(item => {
-          const dateStr = format(new Date(item.scheduled_date), 'yyyy-MM-dd');
-          if (dailyStatsMap[dateStr]) {
-            dailyStatsMap[dateStr].awaitingVisits += 1;
+        scheduledData.forEach((stat: DatabaseStat) => {
+          if (!stat.source || selectedSource === 'todos' || stat.source === selectedSource) {
+            if (dailyStatsMap[stat.date]) {
+              dailyStatsMap[stat.date].awaitingVisits += stat.count;
+            }
           }
         });
       }
-      
+
       // Calcular taxas de conversão
       Object.values(dailyStatsMap).forEach(stats => {
         // Taxa de conversão de tentativas para contatos efetivos
@@ -265,9 +215,7 @@ export function useAggregatedActivityStats(
           ? (stats.enrollments / stats.completedVisits) * 100
           : 0;
       });
-      
-      console.timeEnd('[AGGREGATED ACTIVITY STATS] Processamento dos dados');
-      
+
       // Converter para array e ordenar por data
       const result = Object.values(dailyStatsMap).sort((a, b) => 
         a.date.getTime() - b.date.getTime()
