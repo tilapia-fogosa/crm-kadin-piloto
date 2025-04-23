@@ -2,10 +2,13 @@ import { DailyStats } from "../../types/activity-dashboard.types";
 import { format } from "date-fns";
 
 /**
- * Recebe uma string ou objeto Date e retorna uma string de data UTC no formato yyyy-MM-dd
+ * Converte uma data para o formato yyyy-MM-dd
  */
-function getUTCDateString(value: any): string | null {
-  if (!value) return null;
+function getDateString(value: any): string | null {
+  if (!value) {
+    console.warn('[STATS PROCESSOR] Data inválida (nula)');
+    return null;
+  }
   
   const date = value instanceof Date ? value : new Date(value);
   if (isNaN(date.getTime())) {
@@ -13,15 +16,12 @@ function getUTCDateString(value: any): string | null {
     return null;
   }
   
-  // Formato yyyy-MM-dd em UTC
-  return date.toISOString().split('T')[0];
+  // Formato yyyy-MM-dd
+  return format(date, 'yyyy-MM-dd');
 }
 
 /**
- * Processa estatísticas diárias a partir de três origens de dados separadas:
- * 1. Atividades criadas no período (createdActivities)
- * 2. Novos clientes no período (newClients)
- * 3. Atividades agendadas para o período (scheduledActivities)
+ * Processa estatísticas diárias a partir de três origens de dados separadas
  */
 export const processDailyStats = (
   date: Date,
@@ -29,12 +29,10 @@ export const processDailyStats = (
   newClients: any[],
   scheduledActivities: any[]
 ): DailyStats => {
-  const dateStr = format(date, 'yyyy-MM-dd');
-  const targetDateUTC = getUTCDateString(date);
-  
-  console.log(`[STATS PROCESSOR] Processando dia ${dateStr} (UTC: ${targetDateUTC})`);
+  const targetDate = getDateString(date);
+  console.log(`[STATS PROCESSOR] Processando dia ${targetDate}`);
 
-  if (!targetDateUTC) {
+  if (!targetDate) {
     console.error('[STATS PROCESSOR] Data alvo inválida');
     return {
       date,
@@ -52,41 +50,53 @@ export const processDailyStats = (
     };
   }
 
-  // 1. Novos clientes (filtrados por created_at)
+  // Novos clientes (filtrados por created_at)
   const dayClients = newClients.filter(client => {
-    const clientDateUTC = getUTCDateString(client?.created_at);
-    if (!clientDateUTC) {
+    const clientDate = getDateString(client?.created_at);
+    if (!clientDate) {
       console.warn(`[STATS PROCESSOR] Cliente com created_at inválido:`, client);
       return false;
     }
-    return clientDateUTC === targetDateUTC;
+    const matches = clientDate === targetDate;
+    if (matches) {
+      console.log(`[STATS PROCESSOR] Cliente ${client.id} corresponde à data ${targetDate}`);
+    }
+    return matches;
   });
 
-  console.log(`[STATS PROCESSOR] ${dateStr}: Novos clientes: ${dayClients.length}`);
+  console.log(`[STATS PROCESSOR] ${targetDate}: Novos clientes encontrados: ${dayClients.length}`);
 
-  // 2. Atividades criadas no dia (filtradas por created_at)
+  // Atividades criadas no dia (filtradas por created_at)
   const dayActivities = createdActivities.filter(activity => {
-    const activityDateUTC = getUTCDateString(activity?.created_at);
-    if (!activityDateUTC) {
-      console.warn(`[STATS PROCESSOR] Atividade criada com created_at inválido:`, activity);
+    const activityDate = getDateString(activity?.created_at);
+    if (!activityDate) {
+      console.warn(`[STATS PROCESSOR] Atividade com created_at inválido:`, activity);
       return false;
     }
-    return activityDateUTC === targetDateUTC;
+    const matches = activityDate === targetDate;
+    if (matches) {
+      console.log(`[STATS PROCESSOR] Atividade ${activity.id} corresponde à data ${targetDate}`);
+    }
+    return matches;
   });
 
-  console.log(`[STATS PROCESSOR] ${dateStr}: Atividades criadas: ${dayActivities.length}`);
+  console.log(`[STATS PROCESSOR] ${targetDate}: Atividades criadas encontradas: ${dayActivities.length}`);
   
-  // 3. Atividades agendadas para o dia (filtradas por scheduled_date)
+  // Atividades agendadas para o dia (filtradas por scheduled_date)
   const dayScheduledActivities = scheduledActivities.filter(activity => {
-    const scheduledDateUTC = getUTCDateString(activity?.scheduled_date);
-    if (!scheduledDateUTC) {
+    const scheduledDate = getDateString(activity?.scheduled_date);
+    if (!scheduledDate) {
       return false;
     }
-    return scheduledDateUTC === targetDateUTC;
+    const matches = scheduledDate === targetDate;
+    if (matches) {
+      console.log(`[STATS PROCESSOR] Agendamento ${activity.id} corresponde à data ${targetDate}`);
+    }
+    return matches;
   });
 
-  console.log(`[STATS PROCESSOR] ${dateStr}: Atividades agendadas para o dia: ${dayScheduledActivities.length}`);
-  
+  console.log(`[STATS PROCESSOR] ${targetDate}: Atividades agendadas encontradas: ${dayScheduledActivities.length}`);
+
   // Listagens detalhadas por tipo para análise e logs
   const createdContactAttempts = dayActivities.filter(activity =>
     ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento'].includes(activity.tipo_atividade)
@@ -119,7 +129,7 @@ export const processDailyStats = (
   const enrollments = asNumber(createdEnrollments.length);
 
   // Logs detalhados de contagem
-  console.log(`[STATS PROCESSOR] ${dateStr} - Detalhamento:
+  console.log(`[STATS PROCESSOR] ${targetDate} - Detalhamento:
     - Novos clientes: ${dayClients.length}
     - Tentativas de contato: ${contactAttempts}
     - Contatos efetivos: ${effectiveContacts}
@@ -144,7 +154,7 @@ export const processDailyStats = (
     : 0;
 
   // Log de porcentagens para acompanhamento
-  console.log(`[STATS PROCESSOR] ${dateStr} - Taxas:
+  console.log(`[STATS PROCESSOR] ${targetDate} - Taxas:
     - Taxa CE: ${ceConversionRate.toFixed(1)}%
     - Taxa AG: ${agConversionRate.toFixed(1)}%
     - Taxa AT: ${atConversionRate.toFixed(1)}%
