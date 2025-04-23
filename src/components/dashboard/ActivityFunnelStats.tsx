@@ -1,6 +1,8 @@
 
-import { useActivityFunnelStats } from '@/hooks/useActivityFunnelStats';
+import { useDashboardActivityStats } from '@/hooks/useDashboardActivityStats';
 import { ActivityFunnelCard } from './ActivityFunnelCard';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 interface ActivityFunnelStatsProps {
   unitId: string | null;
@@ -9,10 +11,22 @@ interface ActivityFunnelStatsProps {
 export function ActivityFunnelStats({ unitId }: ActivityFunnelStatsProps) {
   console.log('Renderizando ActivityFunnelStats para unidade:', unitId);
   
-  const { data: funnelStats, isLoading } = useActivityFunnelStats(unitId);
+  const { data: funnelStats, isLoading, error } = useDashboardActivityStats(unitId);
   
   if (isLoading) {
-    return <div>Carregando estatísticas de conversão...</div>;
+    return <div className="p-4 text-center">Carregando estatísticas de conversão...</div>;
+  }
+  
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Erro</AlertTitle>
+        <AlertDescription>
+          Não foi possível carregar as estatísticas de conversão. Por favor, tente novamente mais tarde.
+        </AlertDescription>
+      </Alert>
+    );
   }
   
   if (!funnelStats) {
