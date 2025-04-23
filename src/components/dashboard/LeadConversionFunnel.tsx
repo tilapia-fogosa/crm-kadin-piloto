@@ -8,6 +8,7 @@ import { useLeadFunnelConversion } from '@/hooks/useLeadFunnelConversion';
 import Plotly from 'plotly.js-dist-min';
 import { DateRangePicker } from "./DateRangePicker";
 import { DateRangeType } from "@/hooks/useLeadFunnelStats";
+import { DateRange } from "react-day-picker";
 
 interface LeadConversionFunnelProps {
   unitId: string | null;
@@ -15,16 +16,17 @@ interface LeadConversionFunnelProps {
 
 export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
   const [dateRange, setDateRange] = React.useState<DateRangeType>('current-month');
-  const [customRange, setCustomRange] = React.useState<{from?: Date; to?: Date;}>({
-    from: undefined,
-    to: undefined
+  // Inicializamos com valores definidos para garantir a compatibilidade com DateRange
+  const [customRange, setCustomRange] = React.useState<DateRange>({
+    from: new Date(),
+    to: new Date()
   });
 
   const { data: funnelData, isLoading, error } = useLeadFunnelConversion(
     unitId,
     dateRange,
-    customRange.from,
-    customRange.to
+    dateRange === 'custom' ? customRange.from : undefined,
+    dateRange === 'custom' ? customRange.to : undefined
   );
 
   useEffect(() => {
@@ -108,10 +110,17 @@ export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
     };
   }, [funnelData]);
 
-  const handleDateRangeChange = (type: DateRangeType, range?: { from: Date; to: Date }) => {
+  const handleDateRangeChange = (type: DateRangeType, range?: DateRange) => {
+    console.log('Alterando intervalo de datas:', type, range);
     setDateRange(type);
-    if (type === 'custom' && range) {
-      setCustomRange(range);
+    
+    if (type === 'custom' && range && range.from) {
+      // Garantimos que o range é válido antes de atualizar o estado
+      const validRange: DateRange = {
+        from: range.from,
+        to: range.to || range.from
+      };
+      setCustomRange(validRange);
     }
   };
 

@@ -11,8 +11,8 @@ import { DateRangeType } from "@/hooks/useLeadFunnelStats";
 
 interface DateRangePickerProps {
   dateRange: DateRangeType;
-  onDateRangeChange: (type: DateRangeType, range?: DateRange | undefined) => void;
-  customRange: DateRange | undefined;
+  onDateRangeChange: (type: DateRangeType, range?: DateRange) => void;
+  customRange: DateRange;
 }
 
 export function DateRangePicker({ 
@@ -26,7 +26,7 @@ export function DateRangePicker({
   
   // Efeito para garantir que o customRange esteja sempre definido quando necessário
   useEffect(() => {
-    if (dateRange === 'custom' && (!customRange || !customRange.from)) {
+    if (dateRange === 'custom' && (!customRange.from)) {
       // Definir intervalo padrão para o último mês se customRange não estiver definido
       onDateRangeChange('custom', {
         from: subMonths(new Date(), 1),
@@ -37,7 +37,7 @@ export function DateRangePicker({
   
   // Preparar labels para exibição
   const getDateRangeLabel = () => {
-    if (dateRange === 'custom' && customRange?.from) {
+    if (dateRange === 'custom' && customRange.from) {
       const fromDate = format(customRange.from, 'dd/MM/yyyy', { locale: ptBR });
       const toDate = customRange.to 
         ? format(customRange.to, 'dd/MM/yyyy', { locale: ptBR })
@@ -91,7 +91,7 @@ export function DateRangePicker({
             <CalendarComponent
               initialFocus
               mode="range"
-              defaultMonth={customRange?.from || subMonths(new Date(), 1)}
+              defaultMonth={customRange.from || subMonths(new Date(), 1)}
               selected={customRange}
               onSelect={(range) => {
                 if (range) {

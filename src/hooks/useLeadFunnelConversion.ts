@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { startOfMonth, endOfMonth, subMonths, startOfDay, endOfDay } from "date-fns";
 import { DateRangeType } from "./useLeadFunnelStats";
 
 export interface LeadFunnelStats {
