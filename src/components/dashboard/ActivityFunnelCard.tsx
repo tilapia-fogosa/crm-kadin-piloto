@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ActivityFunnelPeriod } from '@/hooks/useActivityFunnelStats';
+import { ActivityFunnelPeriod } from '@/components/dashboard/types/activity-funnel.types';
 import { TrendingUp, TrendingDown, Percent } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';

@@ -46,7 +46,8 @@ export function useActivityFunnelStats(unitId: string | null) {
           throw error;
         }
 
-        return data as FunnelStatsResponse;
+        // Converter o tipo de dados para FunnelStatsResponse
+        return data as unknown as FunnelStatsResponse;
       };
 
       try {
@@ -84,6 +85,6 @@ export function useActivityFunnelStats(unitId: string | null) {
     },
     enabled: !!unitId,
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
-    cacheTime: 30 * 60 * 1000 // Manter no cache por 30 minutos
+    gcTime: 30 * 60 * 1000 // Manter no cache por 30 minutos (novo nome para cacheTime)
   });
 }
