@@ -1,3 +1,4 @@
+
 /**
  * Utilitários para processamento e transformação de dados para o gráfico de funil
  */
@@ -64,10 +65,11 @@ export const prepareBasicFunnelData = (funnelStats: any): FunnelDataItem[] => {
   const totalItems = 5; // Total de etapas no funil
   
   // Criamos o array de dados para o funil com a escala de laranja
+  // Adicionamos valores padrão para evitar erros com undefined
   const data: FunnelDataItem[] = [
     {
       name: 'Leads',
-      valor: funnelStats.totalLeads,
+      valor: funnelStats.leads || 0,
       taxa: 100,
       legenda: 'Leads Recebidos',
       color: generateOrangeShade(0, totalItems),
@@ -75,32 +77,32 @@ export const prepareBasicFunnelData = (funnelStats: any): FunnelDataItem[] => {
     },
     {
       name: 'Contatos',
-      valor: funnelStats.effectiveContacts,
-      taxa: funnelStats.effectiveContactRate,
+      valor: funnelStats.contatos_efetivos || 0,
+      taxa: typeof funnelStats.effectiveContactRate === 'number' ? funnelStats.effectiveContactRate : 0,
       legenda: 'Contatos Efetivos',
       color: generateOrangeShade(1, totalItems),
       stageConversionRate: undefined
     },
     {
       name: 'Agendamentos',
-      valor: funnelStats.scheduledVisits,
-      taxa: funnelStats.scheduledVisitsRate,
+      valor: funnelStats.agendamentos || 0,
+      taxa: typeof funnelStats.scheduledVisitsRate === 'number' ? funnelStats.scheduledVisitsRate : 0,
       legenda: 'Agendamentos',
       color: generateOrangeShade(2, totalItems),
       stageConversionRate: undefined
     },
     {
       name: 'Atendimentos',
-      valor: funnelStats.completedVisits,
-      taxa: funnelStats.completedVisitsRate,
+      valor: funnelStats.atendimentos || 0,
+      taxa: typeof funnelStats.completedVisitsRate === 'number' ? funnelStats.completedVisitsRate : 0,
       legenda: 'Atendimentos',
       color: generateOrangeShade(3, totalItems),
       stageConversionRate: undefined
     },
     {
       name: 'Matrículas',
-      valor: funnelStats.enrollments,
-      taxa: funnelStats.enrollmentsRate,
+      valor: funnelStats.matriculas || 0,
+      taxa: typeof funnelStats.enrollmentsRate === 'number' ? funnelStats.enrollmentsRate : 0,
       legenda: 'Matrículas',
       color: generateOrangeShade(4, totalItems),
       stageConversionRate: undefined
@@ -132,11 +134,11 @@ export const transformDataForSymmetricalFunnel = (data: FunnelDataItem[]): Symme
   console.log("Transformando dados para funil simétrico:", data);
   
   // Valor máximo para dimensionar o funil
-  const maxValue = Math.max(...data.map(item => item.valor)) * 1.2;
+  const maxValue = Math.max(...data.map(item => item.valor || 0)) * 1.2 || 1; // Evitar divisão por zero
   
   return data.map((item, index) => {
     // Calculamos a largura relativa ao valor máximo (0-100)
-    const funnelWidth = (item.valor / maxValue) * 100;
+    const funnelWidth = ((item.valor || 0) / maxValue) * 100;
     
     return {
       ...item,
@@ -150,14 +152,30 @@ export const transformDataForSymmetricalFunnel = (data: FunnelDataItem[]): Symme
 
 /**
  * Formata um número para exibição localizada
+ * Adicionamos verificação de tipo para prevenir erros
  */
-export const formatNumber = (value: number): string => {
-  return value.toLocaleString('pt-BR');
+export const formatNumber = (value: any): string => {
+  // Verificar se value é undefined, null ou não é um número
+  if (value === undefined || value === null || isNaN(Number(value))) {
+    return '0';
+  }
+  
+  // Converter para número se for string ou outro tipo
+  const numValue = typeof value === 'number' ? value : Number(value);
+  return numValue.toLocaleString('pt-BR');
 };
 
 /**
  * Formata uma porcentagem para exibição
+ * Adicionamos verificação de tipo para prevenir erros
  */
-export const formatPercent = (value: number): string => {
-  return `${value.toFixed(1)}%`;
+export const formatPercent = (value: any): string => {
+  // Verificar se value é undefined, null ou não é um número
+  if (value === undefined || value === null || isNaN(Number(value))) {
+    return '0.0%';
+  }
+  
+  // Converter para número se for string ou outro tipo
+  const numValue = typeof value === 'number' ? value : Number(value);
+  return `${numValue.toFixed(1)}%`;
 };
