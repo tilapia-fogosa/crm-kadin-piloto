@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useUserUnit } from "./hooks/useUserUnit";
 import { ActivityFilters } from "./components/dashboard/ActivityFilters";
 import { ActivityTable } from "./components/dashboard/ActivityTable";
-import { useActivityStats } from "./hooks/useActivityStats";
+import { useCombinedActivityStats } from "./hooks/useCombinedActivityStats";
 import { calculateTotals } from "./utils/stats.utils";
 
 export function ActivityDashboard() {
@@ -93,7 +93,7 @@ export function ActivityDashboard() {
   );
 }
 
-// Novo componente para gerenciar os dados de atividades
+// Componente para gerenciar os dados de atividades
 function ActivityDataSection({ 
   selectedSource, 
   selectedMonth, 
@@ -111,8 +111,8 @@ function ActivityDataSection({
 }) {
   console.log('ActivityDataSection renderizado com isOpen =', isOpen);
   
-  // Hook de estatísticas - só é executado quando o diálogo está aberto
-  const { data: stats, isLoading } = useActivityStats(
+  // Usar o novo hook combinado
+  const { data: stats, isLoading } = useCombinedActivityStats(
     selectedSource, 
     selectedMonth, 
     selectedYear, 
