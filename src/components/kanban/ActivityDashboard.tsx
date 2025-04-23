@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useUserUnit } from "./hooks/useUserUnit";
 import { ActivityFilters } from "./components/dashboard/ActivityFilters";
 import { ActivityTable } from "./components/dashboard/ActivityTable";
-import { useCombinedActivityStats } from "./hooks/useCombinedActivityStats";
+import { useAggregatedActivityStats } from "./hooks/useAggregatedActivityStats";
 import { calculateTotals } from "./utils/stats.utils";
 
 export function ActivityDashboard() {
@@ -111,8 +111,8 @@ function ActivityDataSection({
 }) {
   console.log('ActivityDataSection renderizado com isOpen =', isOpen);
   
-  // Usar o novo hook combinado
-  const { data: stats, isLoading } = useCombinedActivityStats(
+  // Usar o novo hook com agregação no banco
+  const { data: stats, isLoading } = useAggregatedActivityStats(
     selectedSource, 
     selectedMonth, 
     selectedYear, 

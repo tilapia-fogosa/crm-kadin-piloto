@@ -1,9 +1,9 @@
 
-import { useCombinedActivityStats } from "./useCombinedActivityStats";
+import { useAggregatedActivityStats } from "./useAggregatedActivityStats";
 
 /**
- * DEPRECATED: Este hook foi substituído por versões mais especializadas.
- * Use useCombinedActivityStats no lugar deste.
+ * DEPRECATED: Este hook foi atualizado para utilizar a abordagem de agregação no banco.
+ * Use useAggregatedActivityStats no lugar deste.
  * 
  * Este arquivo é mantido para compatibilidade com código existente.
  */
@@ -15,10 +15,10 @@ export function useActivityStats(
   selectedUnitId: string,
   isOpen: boolean = false
 ) {
-  console.log("[ACTIVITY STATS] DEPRECATED: Este hook foi substituído. Use useCombinedActivityStats.");
+  console.log("[ACTIVITY STATS] Usando versão otimizada com agregação no banco de dados");
   
-  // Redireciona para o novo hook combinado
-  return useCombinedActivityStats(
+  // Redireciona para o novo hook de agregação
+  return useAggregatedActivityStats(
     selectedSource,
     selectedMonth,
     selectedYear,
