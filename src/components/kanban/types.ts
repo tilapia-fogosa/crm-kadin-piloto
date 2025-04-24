@@ -12,6 +12,7 @@ export type KanbanCard = {
   email?: string
   createdAt: string
   nextContactDate?: string
+  scheduledDate?: string
   activities?: string[]
   labels?: string[]
   original_ad?: string

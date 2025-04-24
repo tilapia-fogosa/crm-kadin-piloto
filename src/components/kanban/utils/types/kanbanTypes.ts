@@ -1,3 +1,4 @@
+
 import { KanbanColumn, KanbanCard } from "../../types"
 
 export interface ClientData {
@@ -8,6 +9,7 @@ export interface ClientData {
   email?: string
   created_at: string
   next_contact_date?: string
+  scheduled_date?: string // Added scheduled_date
   client_activities?: string[]
   original_ad?: string
   original_adset?: string

@@ -32,11 +32,13 @@ const getNextContactColor = (nextContactDate: Date | null): string => {
 export function KanbanCard({
   card,
   onClick,
-  onWhatsAppClick
+  onWhatsAppClick,
+  onOpenSchedulingForm
 }: {
   card: KanbanCardType;
   onClick: () => void;
   onWhatsAppClick: (e: React.MouseEvent) => void;
+  onOpenSchedulingForm?: () => void;
 }) {
   const contactsCount = card.activities.filter(
     activity => 
@@ -133,11 +135,13 @@ export function KanbanCard({
 
           <ValorizationButtons 
             clientId={card.id}
-            scheduledDate={card.nextContactDate}
+            clientName={card.clientName}
+            scheduledDate={card.scheduledDate}
             valorizationConfirmed={card.valorizationConfirmed || false}
             onValorizationChange={(confirmed) => {
               card.valorizationConfirmed = confirmed;
             }}
+            onOpenSchedulingForm={onOpenSchedulingForm}
           />
         </div>
       </CardContent>
