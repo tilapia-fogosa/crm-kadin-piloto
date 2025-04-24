@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
@@ -87,6 +86,8 @@ export function useClientData(selectedUnitId: string | null = null) {
           created_at,
           original_ad,
           original_adset,
+          scheduled_date,
+          valorization_confirmed,
           client_activities (
             id,
             tipo_contato,
