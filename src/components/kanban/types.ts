@@ -1,4 +1,3 @@
-
 export type KanbanColumn = {
   id: string
   title: string
@@ -18,6 +17,7 @@ export type KanbanCard = {
   original_ad?: string
   original_adset?: string
   observations?: string
+  valorizationConfirmed?: boolean
 }
 
 export type ContactAttempt = {

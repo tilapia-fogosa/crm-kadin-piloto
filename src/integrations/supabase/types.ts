@@ -423,6 +423,7 @@ export type Database = {
           status: string
           unit_id: string | null
           updated_at: string
+          valorization_confirmed: boolean | null
         }
         Insert: {
           active?: boolean
@@ -447,6 +448,7 @@ export type Database = {
           status?: string
           unit_id?: string | null
           updated_at?: string
+          valorization_confirmed?: boolean | null
         }
         Update: {
           active?: boolean
@@ -471,6 +473,7 @@ export type Database = {
           status?: string
           unit_id?: string | null
           updated_at?: string
+          valorization_confirmed?: boolean | null
         }
         Relationships: [
           {
@@ -1695,6 +1698,24 @@ export type Database = {
           title?: string
           type?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      temp_produtividade_abaco: {
+        Row: {
+          fez_desafio: boolean | null
+          id: string
+          presente: boolean | null
+        }
+        Insert: {
+          fez_desafio?: boolean | null
+          id: string
+          presente?: boolean | null
+        }
+        Update: {
+          fez_desafio?: boolean | null
+          id?: string
+          presente?: boolean | null
         }
         Relationships: []
       }

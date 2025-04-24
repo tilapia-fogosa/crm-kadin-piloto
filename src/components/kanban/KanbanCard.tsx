@@ -1,17 +1,12 @@
-
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Phone, Clock, Calendar } from "lucide-react";
 import { KanbanCard as KanbanCardType } from "./types";
 import { format, parseISO, isBefore, isAfter, startOfDay, isToday } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { WhatsAppIcon } from "./components/icons/WhatsAppIcon";
-
-interface KanbanCardProps {
-  card: KanbanCardType;
-  onClick: () => void;
-  onWhatsAppClick: (e: React.MouseEvent) => void;
-}
+import { ValorizationButtons } from './components/ValorizationButtons';
+import { Badge } from "@/components/ui/badge";
 
 // Sistema de cores para status do próximo contato:
 // Verde (#00CC00): Data futura (amanhã ou posterior)
@@ -47,9 +42,22 @@ export function KanbanCard({
   card,
   onClick,
   onWhatsAppClick
-}: KanbanCardProps) {
-  console.log('KanbanCard - Renderizando card para:', card.clientName);
-  
+}: {
+  card: KanbanCardType;
+  onClick: () => void;
+  onWhatsAppClick: (e: React.MouseEvent) => void;
+}) {
+  // Lógica para contadores de atividades
+  const contactsCount = card.activities.filter(
+    activity => 
+      ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento']
+        .includes(activity.split('|')[1])
+  ).length;
+
+  const schedulingCount = card.activities.filter(
+    activity => activity.split('|')[1] === 'Agendamento'
+  ).length;
+
   const createdAtDate = parseISO(card.createdAt);
   const isValidDate = !isNaN(createdAtDate.getTime());
   const nextContactDate = card.nextContactDate ? parseISO(card.nextContactDate) : null;
@@ -57,7 +65,7 @@ export function KanbanCard({
   
   return (
     <Card 
-      className="cursor-pointer bg-[#F5F5F5] hover:bg-[#F8E4CC]/10 transition-colors duration-200"
+      className="cursor-pointer bg-[#F5F5F5] hover:bg-[#F8E4CC]/10 transition-colors duration-200 relative"
       onClick={onClick}
     >
       <CardHeader className="p-2 pb-0">
@@ -69,9 +77,7 @@ export function KanbanCard({
                 <TooltipTrigger>
                   <div className="flex items-center gap-1 text-xs text-[#666666]">
                     <Calendar className="h-3 w-3" />
-                    <span>
-                      {isValidDate ? format(createdAtDate, 'dd-MM-yy HH:mm') : 'Data inválida'}
-                    </span>
+                    <span>{isValidDate ? format(createdAtDate, 'dd-MM-yy HH:mm') : 'Data inválida'}</span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -80,6 +86,7 @@ export function KanbanCard({
               </Tooltip>
             </TooltipProvider>
           </div>
+          
           {nextContactDate && (
             <div className={`flex items-center gap-1 text-xs ${nextContactColor} px-0 py-0 rounded-none font-medium`}>
               <Clock className="h-3 w-3" />
@@ -88,27 +95,59 @@ export function KanbanCard({
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-2">
+      
+      <CardContent className="p-2 relative">
         <div className="space-y-1">
           <p className="text-sm text-[#666666]">
             Origem: {card.leadSource}
           </p>
+          
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="p-0 hover:bg-transparent" onClick={onWhatsAppClick}>
-              <WhatsAppIcon className="h-4 w-4 text-green-500" />
-            </Button>
+            <WhatsAppIcon 
+              className="h-4 w-4 text-green-500 cursor-pointer" 
+              onClick={onWhatsAppClick} 
+            />
             <Phone className="h-4 w-4 text-[#333333]" />
             <span className="text-sm text-[#333333]">{card.phoneNumber}</span>
           </div>
+          
           {card.labels && (
             <div className="mt-1 flex flex-wrap gap-1">
               {card.labels.map(label => (
-                <span key={label} className="rounded-full bg-[#2725C]/10 px-2 py-0.5 text-xs font-medium text-[#333333]">
+                <span 
+                  key={label} 
+                  className="rounded-full bg-[#2725C]/10 px-2 py-0.5 text-xs font-medium text-[#333333]"
+                >
                   {label}
                 </span>
               ))}
             </div>
           )}
+        </div>
+
+        {/* Área de Valorização e Contadores */}
+        <div className="absolute bottom-2 right-2 flex items-center space-x-2">
+          {contactsCount > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              Contatos: {contactsCount}
+            </Badge>
+          )}
+          
+          {schedulingCount > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              Agenda: {schedulingCount}
+            </Badge>
+          )}
+
+          <ValorizationButtons 
+            clientId={card.id}
+            scheduledDate={card.nextContactDate}
+            valorizationConfirmed={card.valorizationConfirmed || false}
+            onValorizationChange={(confirmed) => {
+              // Atualizar localmente para refletir mudança
+              card.valorizationConfirmed = confirmed;
+            }}
+          />
         </div>
       </CardContent>
     </Card>
