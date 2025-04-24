@@ -39,13 +39,13 @@ export function useScheduling() {
 
       if (activityError) throw activityError
 
-      // Atualiza apenas a data do agendamento no cliente, mantendo a unidade original
+      // Atualiza dados do cliente, incluindo valorization_confirmed como false
       const { error: updateClientError } = await supabase
         .from('clients')
         .update({ 
           scheduled_date: scheduling.scheduledDate.toISOString(),
-          next_contact_date: scheduling.nextContactDate?.toISOString()
-          // Não atualizamos mais a unit_id do cliente
+          next_contact_date: scheduling.nextContactDate?.toISOString(),
+          valorization_confirmed: false // Adicionando reset do status de valorização
         })
         .eq('id', scheduling.cardId)
 
