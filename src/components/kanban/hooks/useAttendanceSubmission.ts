@@ -131,12 +131,14 @@ export function useAttendanceSubmission() {
           }
         }
 
-        // Atualiza o status do cliente
+        // Atualiza o status do cliente e limpa o scheduled_date
+        console.log(`[${submissionId}] Atualizando cliente - Limpando scheduled_date e atualizando status`)
         const updateData: any = {
           status: result,
           lead_quality_score: qualityScore ? parseInt(qualityScore) : null,
           next_contact_date: nextContactDate ? format(nextContactDate, 'yyyy-MM-dd') : null,
           observations: observations || null,
+          scheduled_date: null, // Limpando o scheduled_date após o atendimento
           updated_at: new Date().toISOString()
         }
 
