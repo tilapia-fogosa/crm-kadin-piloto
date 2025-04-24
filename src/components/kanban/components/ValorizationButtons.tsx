@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -26,13 +26,11 @@ export function ValorizationButtons({
   onOpenSchedulingForm
 }: ValorizationButtonsProps) {
   const { toast } = useToast();
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = React.useState(false);
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = React.useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
 
-  // Adicionando log para depuração
   console.log(`ValorizationButtons - Cliente ${clientId} - scheduledDate: ${scheduledDate}, confirmado: ${valorizationConfirmed}`);
   
-  // Não exibir botões se não houver data de agendamento
   if (!scheduledDate) {
     console.log(`ValorizationButtons - Cliente ${clientId} - scheduledDate é null ou undefined, não exibindo botões`);
     return null;
@@ -121,43 +119,46 @@ export function ValorizationButtons({
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <span className="text-xs text-muted-foreground">Valorização?</span>
-      <span className="text-xs text-muted-foreground">{formattedDate}</span>
-      <div className="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsConfirmDialogOpen(true);
-          }}
-        >
-          <Check className="h-4 w-4" />
-        </Button>
-        
-        <Button
-          variant="destructive"
-          size="icon"
-          className="h-8 w-8"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsCancelDialogOpen(true);
-          }}
-        >
-          <X className="h-4 w-4" />
-        </Button>
+    <>
+      <div className="flex flex-col items-end gap-1">
+        <span className="text-xs text-muted-foreground">Valorização?</span>
+        <span className="text-xs text-muted-foreground">{formattedDate}</span>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsConfirmDialogOpen(true);
+            }}
+          >
+            <Check className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="destructive"
+            size="icon"
+            className="h-8 w-8"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsCancelDialogOpen(true);
+            }}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      <Dialog open={isConfirmDialogOpen} onOpenChange={(open) => {
-        // Evita a propagação de eventos ao fechar o diálogo
-        if (!open) {
-          setTimeout(() => setIsConfirmDialogOpen(false), 0);
-        } else {
-          setIsConfirmDialogOpen(open);
-        }
-      }}>
+      <Dialog 
+        open={isConfirmDialogOpen} 
+        onOpenChange={(open) => {
+          if (!open) {
+            console.log('Fechando diálogo de confirmação');
+            setIsConfirmDialogOpen(false);
+          }
+        }}
+      >
         <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>Confirmar Agendamento</DialogTitle>
@@ -169,33 +170,24 @@ export function ValorizationButtons({
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <Button 
-                variant="outline" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}>
-                Cancelar
-              </Button>
+              <Button variant="outline">Cancelar</Button>
             </DialogClose>
-            <Button 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleConfirmAppointment();
-              }}>
+            <Button onClick={() => handleConfirmAppointment()}>
               Sim, Confirmar
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isCancelDialogOpen} onOpenChange={(open) => {
-        // Evita a propagação de eventos ao fechar o diálogo
-        if (!open) {
-          setTimeout(() => setIsCancelDialogOpen(false), 0);
-        } else {
-          setIsCancelDialogOpen(open);
-        }
-      }}>
+      <Dialog 
+        open={isCancelDialogOpen} 
+        onOpenChange={(open) => {
+          if (!open) {
+            console.log('Fechando diálogo de cancelamento');
+            setIsCancelDialogOpen(false);
+          }
+        }}
+      >
         <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>Cancelar Agendamento</DialogTitle>
@@ -208,24 +200,18 @@ export function ValorizationButtons({
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCancelAppointment(false);
-              }}
+              onClick={() => handleCancelAppointment(false)}
             >
               Não, Cancelar
             </Button>
             <Button 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCancelAppointment(true);
-              }}
+              onClick={() => handleCancelAppointment(true)}
             >
               Sim, Remarcar
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

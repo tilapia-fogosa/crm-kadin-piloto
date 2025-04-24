@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Phone, Clock, Calendar } from "lucide-react";
@@ -56,32 +55,17 @@ export function KanbanCard({
   const nextContactDate = card.nextContactDate ? parseISO(card.nextContactDate) : null;
   const nextContactColor = getNextContactColor(nextContactDate);
   
-  // Log para depuração
   console.log(`KanbanCard - Cliente ${card.id} - scheduledDate: ${card.scheduledDate}, valorizationConfirmed: ${card.valorizationConfirmed}`);
   
-  // Controlador para evitar que cliques nos botões de valorização propaguem para o card
-  const [isInteractingWithValorization, setIsInteractingWithValorization] = React.useState(false);
-  
-  // Função para atualizar o estado de valorização sem abrir o card
   const handleValorizationChange = useCallback((confirmed: boolean) => {
     console.log(`Valorização mudou para: ${confirmed}`);
     card.valorizationConfirmed = confirmed;
   }, [card]);
 
-  // Quando o usuário clica no card, verificamos se está interagindo com a valorização
-  const handleCardClick = useCallback((e: React.MouseEvent) => {
-    // Se estiver interagindo com valorização, não propagamos o evento
-    if (isInteractingWithValorization) {
-      e.stopPropagation();
-      return;
-    }
-    onClick();
-  }, [isInteractingWithValorization, onClick]);
-
   return (
     <Card 
-      className="cursor-pointer bg-[#F5F5F5] hover:bg-[#F8E4CC]/10 transition-colors duration-200 relative"
-      onClick={handleCardClick}
+      className="group cursor-pointer bg-[#F5F5F5] hover:bg-[#F8E4CC]/10 transition-colors duration-200 relative"
+      onClick={onClick}
     >
       <CardHeader className="p-2 pb-0">
         <div className="flex justify-between items-start">
@@ -143,12 +127,7 @@ export function KanbanCard({
           )}
         </div>
 
-        <div 
-          className="absolute bottom-2 right-2 flex items-center space-x-2"
-          onMouseEnter={() => setIsInteractingWithValorization(true)}
-          onMouseLeave={() => setIsInteractingWithValorization(false)}
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className="absolute bottom-2 right-2 flex items-center space-x-2">
           {contactsCount > 0 && (
             <Badge variant="secondary" className="text-xs">
               Contatos: {contactsCount}
@@ -161,14 +140,21 @@ export function KanbanCard({
             </Badge>
           )}
 
-          <ValorizationButtons 
-            clientId={card.id}
-            clientName={card.clientName}
-            scheduledDate={card.scheduledDate}
-            valorizationConfirmed={card.valorizationConfirmed || false}
-            onValorizationChange={handleValorizationChange}
-            onOpenSchedulingForm={onOpenSchedulingForm}
-          />
+          <div 
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log('Clique nos botões de valorização interceptado');
+            }}
+          >
+            <ValorizationButtons 
+              clientId={card.id}
+              clientName={card.clientName}
+              scheduledDate={card.scheduledDate}
+              valorizationConfirmed={card.valorizationConfirmed || false}
+              onValorizationChange={handleValorizationChange}
+              onOpenSchedulingForm={onOpenSchedulingForm}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
