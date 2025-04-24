@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, X } from 'lucide-react';
@@ -7,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ReschedulingDialog } from './scheduling/ReschedulingDialog';
 
 interface ValorizationButtonsProps {
   clientId: string;
@@ -28,6 +28,7 @@ export function ValorizationButtons({
   const { toast } = useToast();
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isReschedulingDialogOpen, setIsReschedulingDialogOpen] = useState(false);
 
   console.log(`ValorizationButtons - Cliente ${clientId} - scheduledDate: ${scheduledDate}, confirmado: ${valorizationConfirmed}`);
   
@@ -70,41 +71,39 @@ export function ValorizationButtons({
   };
 
   const handleCancelAppointment = async (reschedule: boolean) => {
-    try {
-      console.log(`Cancelando agendamento para cliente ${clientId}, remarcar: ${reschedule}`);
-      
-      // Definindo a data do próximo contato como agora
-      const now = new Date().toISOString();
-      
-      const { error } = await supabase
-        .from('clients')
-        .update({ 
-          scheduled_date: null,
-          valorization_confirmed: false,
-          next_contact_date: now // Definindo next_contact_date para agora quando o agendamento é cancelado
-        })
-        .eq('id', clientId);
-
-      if (error) throw error;
-
-      onValorizationChange(false);
+    console.log(`Cancelando/Reagendando para cliente ${clientId}, remarcar: ${reschedule}`);
+    
+    if (reschedule) {
       setIsCancelDialogOpen(false);
-      
-      if (reschedule && onOpenSchedulingForm) {
-        onOpenSchedulingForm();
-      } else {
+      setIsReschedulingDialogOpen(true);
+    } else {
+      try {
+        const { error } = await supabase
+          .from('clients')
+          .update({ 
+            scheduled_date: null,
+            valorization_confirmed: false,
+            next_contact_date: new Date().toISOString()
+          })
+          .eq('id', clientId);
+
+        if (error) throw error;
+
+        onValorizationChange(false);
+        setIsCancelDialogOpen(false);
+        
         toast({
           title: "Agendamento Cancelado",
           description: "O agendamento foi cancelado.",
         });
+      } catch (error) {
+        console.error('Erro ao cancelar agendamento:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível cancelar o agendamento.",
+          variant: "destructive"
+        });
       }
-    } catch (error) {
-      console.error('Erro ao cancelar agendamento:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível cancelar o agendamento.",
-        variant: "destructive"
-      });
     }
   };
 
@@ -127,7 +126,7 @@ export function ValorizationButtons({
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700"
             onClick={(e) => {
               e.stopPropagation();
               setIsConfirmDialogOpen(true);
@@ -152,12 +151,7 @@ export function ValorizationButtons({
 
       <Dialog 
         open={isConfirmDialogOpen} 
-        onOpenChange={(open) => {
-          if (!open) {
-            console.log('Fechando diálogo de confirmação');
-            setIsConfirmDialogOpen(false);
-          }
-        }}
+        onOpenChange={setIsConfirmDialogOpen}
       >
         <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
@@ -181,12 +175,7 @@ export function ValorizationButtons({
 
       <Dialog 
         open={isCancelDialogOpen} 
-        onOpenChange={(open) => {
-          if (!open) {
-            console.log('Fechando diálogo de cancelamento');
-            setIsCancelDialogOpen(false);
-          }
-        }}
+        onOpenChange={setIsCancelDialogOpen}
       >
         <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
@@ -194,7 +183,7 @@ export function ValorizationButtons({
             <DialogDescription>
               Cancelar agendamento de {clientName}?
               <br />
-              Deseja remarcar?
+              Deseja reagendar?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -206,12 +195,25 @@ export function ValorizationButtons({
             </Button>
             <Button 
               onClick={() => handleCancelAppointment(true)}
+              className="bg-orange-500 hover:bg-orange-600"
             >
-              Sim, Remarcar
+              Sim, Reagendar
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ReschedulingDialog
+        open={isReschedulingDialogOpen}
+        onOpenChange={setIsReschedulingDialogOpen}
+        clientId={clientId}
+        clientName={clientName}
+        onSubmit={(scheduling) => {
+          console.log('Novo agendamento criado:', scheduling);
+          onValorizationChange(false);
+          setIsReschedulingDialogOpen(false);
+        }}
+      />
     </>
   );
 }
