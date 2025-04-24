@@ -1,12 +1,11 @@
-
 import { KanbanColumn, KanbanCard } from "../../types"
 
 export interface ClientData {
   id: string
-  name: string // snake_case como no banco
+  name: string
   lead_source: string
   phone_number: string
-  email?: string // Adicionando campo de email
+  email?: string
   created_at: string
   next_contact_date?: string
   client_activities?: string[]
@@ -14,6 +13,7 @@ export interface ClientData {
   original_adset?: string
   observations?: string
   status: string
+  valorization_confirmed?: boolean
   kit_versions?: {
     id: string
     kit_type: {

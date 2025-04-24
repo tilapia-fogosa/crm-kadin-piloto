@@ -8,10 +8,6 @@ import { WhatsAppIcon } from "./components/icons/WhatsAppIcon";
 import { ValorizationButtons } from './components/ValorizationButtons';
 import { Badge } from "@/components/ui/badge";
 
-// Sistema de cores para status do próximo contato:
-// Verde (#00CC00): Data futura (amanhã ou posterior)
-// Amarelo (#CCA405): Hoje, antes do horário marcado
-// Vermelho (#FF3333): Atrasado (data anterior ou após horário marcado hoje)
 const getNextContactColor = (nextContactDate: Date | null): string => {
   if (!nextContactDate) return "text-muted-foreground";
   
@@ -19,23 +15,18 @@ const getNextContactColor = (nextContactDate: Date | null): string => {
   const today = startOfDay(new Date());
   const contactDay = startOfDay(nextContactDate);
 
-  // Verde: Data é amanhã ou posterior
   if (isAfter(contactDay, today)) {
-    return "text-[#00CC00]"; // Verde suave
+    return "text-[#00CC00]";
   }
 
-  // Se for hoje, verifica o horário
   if (isToday(nextContactDate)) {
-    // Vermelho: Já passou do horário
     if (isBefore(nextContactDate, now)) {
-      return "text-[#FF3333]"; // Vermelho suave
+      return "text-[#FF3333]";
     }
-    // Amarelo: É hoje mas ainda não chegou o horário
-    return "text-[#CCA405]"; // Amarelo mais escuro
+    return "text-[#CCA405]";
   }
 
-  // Vermelho: Data anterior
-  return "text-[#FF3333]"; // Vermelho suave
+  return "text-[#FF3333]";
 }
 
 export function KanbanCard({
@@ -47,7 +38,6 @@ export function KanbanCard({
   onClick: () => void;
   onWhatsAppClick: (e: React.MouseEvent) => void;
 }) {
-  // Lógica para contadores de atividades
   const contactsCount = card.activities.filter(
     activity => 
       ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento']
@@ -105,7 +95,10 @@ export function KanbanCard({
           <div className="flex items-center gap-2">
             <WhatsAppIcon 
               className="h-4 w-4 text-green-500 cursor-pointer" 
-              onClick={onWhatsAppClick} 
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                onWhatsAppClick(e);
+              }} 
             />
             <Phone className="h-4 w-4 text-[#333333]" />
             <span className="text-sm text-[#333333]">{card.phoneNumber}</span>
@@ -125,7 +118,6 @@ export function KanbanCard({
           )}
         </div>
 
-        {/* Área de Valorização e Contadores */}
         <div className="absolute bottom-2 right-2 flex items-center space-x-2">
           {contactsCount > 0 && (
             <Badge variant="secondary" className="text-xs">
@@ -144,7 +136,6 @@ export function KanbanCard({
             scheduledDate={card.nextContactDate}
             valorizationConfirmed={card.valorizationConfirmed || false}
             onValorizationChange={(confirmed) => {
-              // Atualizar localmente para refletir mudança
               card.valorizationConfirmed = confirmed;
             }}
           />

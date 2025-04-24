@@ -1,3 +1,4 @@
+
 import { ClientData } from "../types/kanbanTypes"
 import { KanbanCard } from "../../types"
 
@@ -16,6 +17,6 @@ export const transformClientToCard = (client: ClientData) => {
     original_ad: client.original_ad,
     original_adset: client.original_adset,
     observations: client.observations,
-    valorizationConfirmed: client.valorization_confirmed
+    valorizationConfirmed: client.valorization_confirmed || false
   }
 }
