@@ -5,6 +5,7 @@ import { format } from "date-fns"
 
 export const transformClientToCard = (client: ClientData) => {
   console.log(`Transformando cliente ${client.name} para card`)
+  console.log(`Cliente ${client.id} - scheduled_date: ${client.scheduled_date}, valorização confirmada: ${client.valorization_confirmed}`)
   
   return {
     id: client.id,
@@ -14,7 +15,7 @@ export const transformClientToCard = (client: ClientData) => {
     email: client.email,
     createdAt: client.created_at,
     nextContactDate: client.next_contact_date,
-    scheduledDate: client.scheduled_date, // Added scheduled_date
+    scheduledDate: client.scheduled_date, // Garantindo que scheduled_date seja mapeado corretamente
     activities: client.client_activities || [],
     original_ad: client.original_ad,
     original_adset: client.original_adset,

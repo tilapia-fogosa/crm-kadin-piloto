@@ -29,8 +29,14 @@ export function ValorizationButtons({
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = React.useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = React.useState(false);
 
+  // Adicionando log para depuração
+  console.log(`ValorizationButtons - Cliente ${clientId} - scheduledDate: ${scheduledDate}, confirmado: ${valorizationConfirmed}`);
+  
   // Não exibir botões se não houver data de agendamento
-  if (!scheduledDate) return null;
+  if (!scheduledDate) {
+    console.log(`ValorizationButtons - Cliente ${clientId} - scheduledDate é null ou undefined, não exibindo botões`);
+    return null;
+  }
 
   const formattedDate = scheduledDate ? 
     format(parseISO(scheduledDate), "dd/MM/yy 'às' HH:mm", { locale: ptBR }) 
@@ -38,6 +44,7 @@ export function ValorizationButtons({
 
   const handleConfirmAppointment = async () => {
     try {
+      console.log(`Confirmando agendamento para cliente ${clientId}`);
       const { error } = await supabase
         .from('clients')
         .update({ 
@@ -65,6 +72,7 @@ export function ValorizationButtons({
 
   const handleCancelAppointment = async (reschedule: boolean) => {
     try {
+      console.log(`Cancelando agendamento para cliente ${clientId}, remarcar: ${reschedule}`);
       const { error } = await supabase
         .from('clients')
         .update({ 

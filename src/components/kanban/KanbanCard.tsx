@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Phone, Clock, Calendar } from "lucide-react";
@@ -40,20 +41,23 @@ export function KanbanCard({
   onWhatsAppClick: (e: React.MouseEvent) => void;
   onOpenSchedulingForm?: () => void;
 }) {
-  const contactsCount = card.activities.filter(
+  const contactsCount = card.activities?.filter(
     activity => 
       ['Tentativa de Contato', 'Contato Efetivo', 'Agendamento']
         .includes(activity.split('|')[1])
-  ).length;
+  ).length || 0;
 
-  const schedulingCount = card.activities.filter(
+  const schedulingCount = card.activities?.filter(
     activity => activity.split('|')[1] === 'Agendamento'
-  ).length;
+  ).length || 0;
 
   const createdAtDate = parseISO(card.createdAt);
   const isValidDate = !isNaN(createdAtDate.getTime());
   const nextContactDate = card.nextContactDate ? parseISO(card.nextContactDate) : null;
   const nextContactColor = getNextContactColor(nextContactDate);
+  
+  // Log para depuração
+  console.log(`KanbanCard - Cliente ${card.id} - scheduledDate: ${card.scheduledDate}, valorizationConfirmed: ${card.valorizationConfirmed}`);
   
   return (
     <Card 
@@ -139,6 +143,7 @@ export function KanbanCard({
             scheduledDate={card.scheduledDate}
             valorizationConfirmed={card.valorizationConfirmed || false}
             onValorizationChange={(confirmed) => {
+              console.log(`Valorização mudou para: ${confirmed}`);
               card.valorizationConfirmed = confirmed;
             }}
             onOpenSchedulingForm={onOpenSchedulingForm}
