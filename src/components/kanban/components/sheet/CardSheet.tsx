@@ -4,7 +4,7 @@ import { KanbanCard as KanbanCardComponent } from "../../KanbanCard"
 import { SheetHeaderContent } from "./SheetHeader"
 import { ActivityGrid } from "./ActivityGrid"
 import { KanbanCard } from "../../types"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { ContactAttempt, EffectiveContact, Scheduling, Attendance } from "../../types"
 
 interface CardSheetProps {
@@ -31,16 +31,46 @@ export function CardSheet({
   onRegisterAttendance
 }: CardSheetProps) {
   
+  // Flag para determinar se um dialog de valorização está aberto
+  const [valorizationDialogOpen, setValorizationDialogOpen] = useState(false);
+  
   useEffect(() => {
     console.log('CardSheet - Estado do sheet:', isOpen ? 'aberto' : 'fechado')
-  }, [isOpen])
+    
+    // Monitorar eventos do diálogo de valorização
+    const handleDialogEvents = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (target?.closest('[role="dialog"]')) {
+        // Se um diálogo estiver aberto, marcamos para não abrir o sheet
+        setValorizationDialogOpen(true);
+        
+        // Reset após um tempo
+        setTimeout(() => {
+          setValorizationDialogOpen(false);
+        }, 300);
+      }
+    };
 
-  const handleSheetOpenChange = (open: boolean) => {
+    document.addEventListener('mousedown', handleDialogEvents);
+    return () => {
+      document.removeEventListener('mousedown', handleDialogEvents);
+    };
+  }, [isOpen]);
+
+  const handleCardClick = useCallback(() => {
+    console.log('Clique no card detectado, dialog aberto?', valorizationDialogOpen);
+    // Só abrimos o sheet se não houver um dialog de valorização aberto
+    if (!valorizationDialogOpen) {
+      onOpenChange(true);
+    }
+  }, [onOpenChange, valorizationDialogOpen]);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
     console.log('CardSheet - Mudança de estado do sheet:', open ? 'abrindo' : 'fechando')
     onOpenChange(open)
-  }
+  }, [onOpenChange]);
 
-  const handleLossSubmit = async (reasons: string[], observations?: string) => {
+  const handleLossSubmit = useCallback(async (reasons: string[], observations?: string) => {
     console.log('CardSheet - Registrando perda:', { reasons, observations })
     
     try {
@@ -56,7 +86,13 @@ export function CardSheet({
     } catch (error) {
       console.error('Erro ao registrar perda:', error)
     }
-  }
+  }, [card.id, onOpenChange, onRegisterAttendance]);
+
+  // Componente para agendamento na valorização
+  const handleOpenSchedulingForm = useCallback(() => {
+    console.log('Abrindo formulário de agendamento a partir dos botões de valorização');
+    // Implementação que será feita no componente de valorização
+  }, []);
 
   return (
     <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
@@ -64,13 +100,21 @@ export function CardSheet({
         <div>
           <KanbanCardComponent
             card={card}
-            onClick={() => handleSheetOpenChange(true)}
+            onClick={handleCardClick}
             onWhatsAppClick={onWhatsAppClick}
+            onOpenSchedulingForm={handleOpenSchedulingForm}
           />
         </div>
       </SheetTrigger>
       <SheetContent 
         className="w-[900px] sm:max-w-[900px] overflow-y-auto"
+        onInteractOutside={(e) => {
+          // Verificar se o clique foi em um diálogo de valorização
+          const target = e.target as HTMLElement;
+          if (target?.closest('[role="dialog"]')) {
+            e.preventDefault();
+          }
+        }}
       >
         <SheetHeader>
           <SheetHeaderContent 

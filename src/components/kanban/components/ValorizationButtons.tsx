@@ -48,7 +48,8 @@ export function ValorizationButtons({
       const { error } = await supabase
         .from('clients')
         .update({ 
-          valorization_confirmed: true 
+          valorization_confirmed: true,
+          next_contact_date: scheduledDate // Definindo a próxima data de contato como a data do agendamento
         })
         .eq('id', clientId);
 
@@ -73,11 +74,16 @@ export function ValorizationButtons({
   const handleCancelAppointment = async (reschedule: boolean) => {
     try {
       console.log(`Cancelando agendamento para cliente ${clientId}, remarcar: ${reschedule}`);
+      
+      // Definindo a data do próximo contato como agora
+      const now = new Date().toISOString();
+      
       const { error } = await supabase
         .from('clients')
         .update({ 
           scheduled_date: null,
-          valorization_confirmed: false 
+          valorization_confirmed: false,
+          next_contact_date: now // Definindo next_contact_date para agora quando o agendamento é cancelado
         })
         .eq('id', clientId);
 
@@ -109,6 +115,7 @@ export function ValorizationButtons({
       <div className="flex flex-col items-end gap-1">
         <span className="text-xs text-muted-foreground">Valorização</span>
         <span className="text-xs text-green-500 font-medium">Confirmado</span>
+        <span className="text-xs text-green-500 font-medium">{formattedDate}</span>
       </div>
     );
   }
@@ -143,8 +150,15 @@ export function ValorizationButtons({
         </Button>
       </div>
 
-      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
-        <DialogContent>
+      <Dialog open={isConfirmDialogOpen} onOpenChange={(open) => {
+        // Evita a propagação de eventos ao fechar o diálogo
+        if (!open) {
+          setTimeout(() => setIsConfirmDialogOpen(false), 0);
+        } else {
+          setIsConfirmDialogOpen(open);
+        }
+      }}>
+        <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>Confirmar Agendamento</DialogTitle>
             <DialogDescription>
@@ -155,15 +169,34 @@ export function ValorizationButtons({
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Cancelar</Button>
+              <Button 
+                variant="outline" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}>
+                Cancelar
+              </Button>
             </DialogClose>
-            <Button onClick={handleConfirmAppointment}>Sim, Confirmar</Button>
+            <Button 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleConfirmAppointment();
+              }}>
+              Sim, Confirmar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-        <DialogContent>
+      <Dialog open={isCancelDialogOpen} onOpenChange={(open) => {
+        // Evita a propagação de eventos ao fechar o diálogo
+        if (!open) {
+          setTimeout(() => setIsCancelDialogOpen(false), 0);
+        } else {
+          setIsCancelDialogOpen(open);
+        }
+      }}>
+        <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>Cancelar Agendamento</DialogTitle>
             <DialogDescription>
@@ -175,12 +208,18 @@ export function ValorizationButtons({
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={() => handleCancelAppointment(false)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCancelAppointment(false);
+              }}
             >
               Não, Cancelar
             </Button>
             <Button 
-              onClick={() => handleCancelAppointment(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCancelAppointment(true);
+              }}
             >
               Sim, Remarcar
             </Button>

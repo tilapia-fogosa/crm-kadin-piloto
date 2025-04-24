@@ -1,3 +1,4 @@
+
 import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType, ContactAttempt, EffectiveContact } from "./types"
 import { useState } from "react"
 import { DeleteActivityDialog } from "./DeleteActivityDialog"
@@ -57,9 +58,12 @@ export function KanbanColumn({
             card={card}
             isOpen={selectedCard?.id === card.id}
             onOpenChange={(open) => {
+              // Permitir que o componente CardSheet controle quando abrir/fechar
               if (open) {
+                console.log('Abrindo card sheet para:', card.clientName);
                 setSelectedCard(card)
               } else {
+                console.log('Fechando card sheet para:', selectedCard?.clientName);
                 setSelectedCard(null)
               }
             }}

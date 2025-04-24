@@ -9,13 +9,13 @@ export interface ClientData {
   email?: string
   created_at: string
   next_contact_date?: string
-  scheduled_date?: string // Garantindo que está definido
+  scheduled_date?: string 
   client_activities?: string[]
   original_ad?: string
   original_adset?: string
   observations?: string
   status: string
-  valorization_confirmed?: boolean // Garantindo que está definido
+  valorization_confirmed?: boolean
   kit_versions?: {
     id: string
     kit_type: {
