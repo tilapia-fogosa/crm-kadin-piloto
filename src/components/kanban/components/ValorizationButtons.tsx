@@ -177,11 +177,11 @@ export function ValorizationButtons({
         open={isCancelDialogOpen} 
         onOpenChange={setIsCancelDialogOpen}
       >
-        <DialogContent onClick={(e) => e.stopPropagation()}>
+        <DialogContent onClick={(e) => e.stopPropagation()} className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Cancelar Agendamento</DialogTitle>
+            <DialogTitle>Cancelar Atendimento</DialogTitle>
             <DialogDescription>
-              Cancelar agendamento de {clientName}?
+              Cancelar atendimento de {clientName}?
               <br />
               Deseja reagendar?
             </DialogDescription>

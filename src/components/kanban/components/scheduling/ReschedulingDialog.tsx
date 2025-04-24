@@ -22,16 +22,19 @@ export function ReschedulingDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Reagendar Valorização - {clientName}</DialogTitle>
+          <DialogTitle>Reagendar Atendimento - {clientName}</DialogTitle>
         </DialogHeader>
         
-        <SchedulingForm 
-          onSubmit={onSubmit}
-          cardId={clientId}
-        />
+        <div className="space-y-4">
+          <SchedulingForm 
+            onSubmit={onSubmit}
+            cardId={clientId}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   )
 }
+
