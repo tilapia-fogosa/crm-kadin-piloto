@@ -1,4 +1,3 @@
-
 import { useClientData } from "./hooks/useClientData"
 import { useActivityOperations } from "./hooks/useActivityOperations"
 import { useWhatsApp } from "./hooks/useWhatsApp"
@@ -11,16 +10,12 @@ import { KanbanColumn } from "./KanbanColumn"
 import { useUserUnit } from "./hooks/useUserUnit"
 
 export function KanbanBoard() {
-  // Estado para controlar a unidade selecionada
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
   
-  // Obter os dados do usuário e suas unidades
   const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit();
   
-  // Verificar se o usuário tem acesso a múltiplas unidades
   const isMultiUnit = userUnits && userUnits.length > 1;
   
-  // Buscar dados de clientes com a unidade selecionada
   const { data: clients, isLoading, refetch } = useClientData(selectedUnitId);
   
   const { registerAttempt, registerEffectiveContact, deleteActivity } = useActivityOperations();
@@ -29,18 +24,15 @@ export function KanbanBoard() {
   const [searchTerm, setSearchTerm] = useState('');
   const location = useLocation();
 
-  // Inicializar com "Todas as unidades" caso o usuário tenha múltiplas unidades
   useEffect(() => {
     console.log("Inicializando seleção de unidade");
     if (userUnits && userUnits.length > 0) {
       console.log("Usuário tem acesso a", userUnits.length, "unidades");
       
-      // Se tiver mais de uma unidade, começamos com null (todas as unidades)
-      // Se tiver apenas uma, usamos essa unidade diretamente
       if (userUnits.length === 1) {
         setSelectedUnitId(userUnits[0].unit_id);
       } else {
-        setSelectedUnitId(null); // null significa "todas as unidades"
+        setSelectedUnitId(null);
       }
     }
   }, [userUnits]);
@@ -54,7 +46,6 @@ export function KanbanBoard() {
     return <div className="flex items-center justify-center p-8">Carregando...</div>
   }
 
-  // Função para filtrar clientes por termo de pesquisa
   const filterBySearchTerm = (clients: any[] | null) => {
     if (!clients) return null
     
@@ -70,7 +61,6 @@ export function KanbanBoard() {
       const matchesName = client.name?.toLowerCase().includes(normalizedSearchTerm)
       const matchesPhone = client.phone_number?.toLowerCase().includes(normalizedSearchTerm)
       
-      // Log detalhado para ajudar na depuração
       if (matchesName || matchesPhone) {
         console.log(`Cliente '${client.name}' corresponde ao termo de pesquisa: ${searchTerm}`)
       }
@@ -82,10 +72,8 @@ export function KanbanBoard() {
   const filterClients = (clients: any[] | null) => {
     if (!clients) return null
     
-    // Primeiro filtra por termo de pesquisa
     let filteredResults = filterBySearchTerm(clients)
     
-    // Depois aplica o filtro de pendentes se necessário
     if (!showPendingOnly) {
       console.log('Filtro de pendentes desativado, mostrando todos os clientes após pesquisa')
       return filteredResults
@@ -116,7 +104,7 @@ export function KanbanBoard() {
   const columns = transformClientsToColumnData(filteredClients)
 
   return (
-    <div className="flex flex-col w-full h-full">
+    <div className="flex flex-col h-full">
       <BoardHeader 
         showPendingOnly={showPendingOnly}
         setShowPendingOnly={setShowPendingOnly}
@@ -129,28 +117,26 @@ export function KanbanBoard() {
         isMultiUnit={isMultiUnit || false}
       />
 
-      <div className="relative flex-1 overflow-x-auto">
-        <div className="flex gap-4 p-4 min-w-max">
-          {columns.map((column, index) => (
-            <div 
-              key={column.id}
-              className="flex-shrink-0"
-              style={{ width: '320px' }} // Fixed width for columns
-            >
-              <KanbanColumn
-                column={column}
-                index={index}
-                onWhatsAppClick={handleWhatsAppClick}
-                onRegisterAttempt={registerAttempt}
-                onRegisterEffectiveContact={registerEffectiveContact}
-                onDeleteActivity={deleteActivity}
-              />
-            </div>
-          ))}
-        </div>
+      <div className="flex gap-4 mt-4">
+        {columns.map((column, index) => (
+          <div 
+            key={column.id}
+            className="flex-shrink-0"
+            style={{ width: '320px' }}
+          >
+            <KanbanColumn
+              column={column}
+              index={index}
+              onWhatsAppClick={handleWhatsAppClick}
+              onRegisterAttempt={registerAttempt}
+              onRegisterEffectiveContact={registerEffectiveContact}
+              onDeleteActivity={deleteActivity}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-export default KanbanBoard
+export default KanbanBoard;
