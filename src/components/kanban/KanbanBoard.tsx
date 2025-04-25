@@ -117,23 +117,24 @@ export function KanbanBoard() {
         isMultiUnit={isMultiUnit || false}
       />
 
-      <div className="flex gap-4 mt-4">
-        {columns.map((column, index) => (
-          <div 
-            key={column.id}
-            className="flex-shrink-0"
-            style={{ width: '320px' }}
-          >
-            <KanbanColumn
-              column={column}
-              index={index}
-              onWhatsAppClick={handleWhatsAppClick}
-              onRegisterAttempt={registerAttempt}
-              onRegisterEffectiveContact={registerEffectiveContact}
-              onDeleteActivity={deleteActivity}
-            />
-          </div>
-        ))}
+      <div className="overflow-x-auto mt-4">
+        <div className="flex gap-4" style={{ minWidth: `${columns.length * 336}px` }}>
+          {columns.map((column, index) => (
+            <div 
+              key={column.id}
+              className="flex-shrink-0 w-[320px]"
+            >
+              <KanbanColumn
+                column={column}
+                index={index}
+                onWhatsAppClick={handleWhatsAppClick}
+                onRegisterAttempt={registerAttempt}
+                onRegisterEffectiveContact={registerEffectiveContact}
+                onDeleteActivity={deleteActivity}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
