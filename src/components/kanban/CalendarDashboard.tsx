@@ -86,6 +86,23 @@ export function CalendarDashboard() {
   const firstDayOfMonth = startOfMonth(currentDate)
   const startingDayIndex = getDay(firstDayOfMonth)
 
+  const generateCalendarDays = () => {
+    console.log('Gerando dias do calendário para', format(currentDate, 'MMMM yyyy'))
+    console.log('Primeiro dia do mês cai em:', startingDayIndex)
+    console.log('Total de dias no mês:', daysInMonth)
+    
+    const days = []
+    for (let i = 0; i < startingDayIndex; i++) {
+      days.push(null)
+    }
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(day)
+    }
+    return days
+  }
+
+  const calendarDays = generateCalendarDays()
+
   const handlePreviousMonth = () => {
     setCurrentDate(prevDate => subMonths(prevDate, 1))
   }
