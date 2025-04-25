@@ -208,7 +208,7 @@ export function ValorizationButtons({
         onOpenChange={setIsReschedulingDialogOpen}
         clientId={clientId}
         clientName={clientName}
-        onSubmit={(scheduling) => {
+        onSubmit={async (scheduling) => {
           console.log('Novo agendamento criado:', scheduling);
           onValorizationChange(false);
           setIsReschedulingDialogOpen(false);

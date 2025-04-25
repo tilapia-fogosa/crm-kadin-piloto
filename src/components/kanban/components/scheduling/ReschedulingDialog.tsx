@@ -2,6 +2,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { SchedulingForm } from "../../SchedulingForm"
 import { Scheduling } from "../../types"
+import { useScheduling } from "../../hooks/useScheduling"
 
 interface ReschedulingDialogProps {
   open: boolean
@@ -19,6 +20,27 @@ export function ReschedulingDialog({
   onSubmit
 }: ReschedulingDialogProps) {
   console.log('ReschedulingDialog - Renderizando para cliente:', clientName)
+  
+  const { registerScheduling } = useScheduling();
+
+  const handleSubmit = async (scheduling: Scheduling) => {
+    try {
+      console.log('ReschedulingDialog - Registrando novo agendamento:', scheduling);
+      
+      // Register the scheduling using the hook
+      await registerScheduling({
+        ...scheduling,
+        cardId: clientId,
+      });
+
+      // Notify parent component
+      onSubmit(scheduling);
+
+    } catch (error) {
+      console.error('Erro ao registrar reagendamento:', error);
+      throw error;
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -29,7 +51,7 @@ export function ReschedulingDialog({
         
         <div className="space-y-4">
           <SchedulingForm 
-            onSubmit={onSubmit}
+            onSubmit={handleSubmit}
             cardId={clientId}
           />
         </div>
@@ -37,4 +59,3 @@ export function ReschedulingDialog({
     </Dialog>
   )
 }
-
