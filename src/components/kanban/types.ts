@@ -89,3 +89,10 @@ export interface Sale {
   updated_at: string
   active: boolean
 }
+
+export interface ScheduledAppointment {
+  id: string
+  client_name: string
+  scheduled_date: string
+  status: string
+}
