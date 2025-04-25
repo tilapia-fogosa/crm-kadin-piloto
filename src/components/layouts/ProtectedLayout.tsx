@@ -13,7 +13,7 @@ export default function ProtectedLayout() {
   return (
     <UnitProvider>
       <div className="min-h-screen flex">
-        {/* Sidebar */}
+        {/* Sidebar with fixed position */}
         <div className="fixed left-0 top-0 h-screen border-r border-gray-200">
           <AppSidebar />
         </div>
