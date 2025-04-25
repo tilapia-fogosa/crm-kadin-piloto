@@ -68,6 +68,7 @@ export type Database = {
           id: string
           idade: number | null
           indice: string | null
+          is_funcionario: boolean | null
           matricula: string | null
           niveldesafio: number | null
           nome: string
@@ -91,6 +92,7 @@ export type Database = {
           id?: string
           idade?: number | null
           indice?: string | null
+          is_funcionario?: boolean | null
           matricula?: string | null
           niveldesafio?: number | null
           nome: string
@@ -114,6 +116,7 @@ export type Database = {
           id?: string
           idade?: number | null
           indice?: string | null
+          is_funcionario?: boolean | null
           matricula?: string | null
           niveldesafio?: number | null
           nome?: string
@@ -735,6 +738,47 @@ export type Database = {
           },
         ]
       }
+      funcionarios: {
+        Row: {
+          active: boolean
+          cargo: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          telefone: string | null
+          turma_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          cargo?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          telefone?: string | null
+          turma_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          cargo?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+          turma_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcionarios_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kit_types: {
         Row: {
           active: boolean
@@ -1129,20 +1173,26 @@ export type Database = {
       professores: {
         Row: {
           created_at: string
+          email: string | null
           id: string
           nome: string
+          telefone: string | null
           unit_id: string
         }
         Insert: {
           created_at?: string
+          email?: string | null
           id?: string
           nome: string
+          telefone?: string | null
           unit_id: string
         }
         Update: {
           created_at?: string
+          email?: string | null
           id?: string
           nome?: string
+          telefone?: string | null
           unit_id?: string
         }
         Relationships: [
@@ -1704,6 +1754,7 @@ export type Database = {
           id: string
           nome: string
           professor_id: string
+          sala: string | null
         }
         Insert: {
           created_at?: string
@@ -1712,6 +1763,7 @@ export type Database = {
           id?: string
           nome: string
           professor_id: string
+          sala?: string | null
         }
         Update: {
           created_at?: string
@@ -1720,6 +1772,7 @@ export type Database = {
           id?: string
           nome?: string
           professor_id?: string
+          sala?: string | null
         }
         Relationships: [
           {
