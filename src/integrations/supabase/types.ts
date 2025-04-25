@@ -9,6 +9,53 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      alerta_evasao: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data_alerta: string
+          data_retencao: string | null
+          descritivo: string | null
+          id: string
+          origem_alerta: Database["public"]["Enums"]["origem_alerta"]
+          responsavel: string | null
+          status: Database["public"]["Enums"]["status_alerta"]
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data_alerta?: string
+          data_retencao?: string | null
+          descritivo?: string | null
+          id?: string
+          origem_alerta: Database["public"]["Enums"]["origem_alerta"]
+          responsavel?: string | null
+          status?: Database["public"]["Enums"]["status_alerta"]
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data_alerta?: string
+          data_retencao?: string | null
+          descritivo?: string | null
+          id?: string
+          origem_alerta?: Database["public"]["Enums"]["origem_alerta"]
+          responsavel?: string | null
+          status?: Database["public"]["Enums"]["status_alerta"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerta_evasao_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alunos: {
         Row: {
           active: boolean
@@ -2172,6 +2219,13 @@ export type Database = {
       due_day: "5" | "10" | "15" | "20" | "25"
       gender: "masculino" | "feminino"
       marital_status: "solteiro" | "casado" | "divorciado" | "viuvo" | "outro"
+      origem_alerta:
+        | "conversa_indireta"
+        | "aviso_recepcao"
+        | "aviso_professor_coordenador"
+        | "aviso_whatsapp"
+        | "inadimplencia"
+        | "outro"
       payment_method:
         | "dinheiro"
         | "pix"
@@ -2180,6 +2234,7 @@ export type Database = {
         | "boleto"
         | "recorrencia"
       sale_type: "matricula" | "outros"
+      status_alerta: "pendente" | "em_andamento" | "resolvido" | "cancelado"
       student_status: "pre_matricula" | "matricula_completa"
       user_role:
         | "consultor"
@@ -2315,6 +2370,14 @@ export const Constants = {
       due_day: ["5", "10", "15", "20", "25"],
       gender: ["masculino", "feminino"],
       marital_status: ["solteiro", "casado", "divorciado", "viuvo", "outro"],
+      origem_alerta: [
+        "conversa_indireta",
+        "aviso_recepcao",
+        "aviso_professor_coordenador",
+        "aviso_whatsapp",
+        "inadimplencia",
+        "outro",
+      ],
       payment_method: [
         "dinheiro",
         "pix",
@@ -2324,6 +2387,7 @@ export const Constants = {
         "recorrencia",
       ],
       sale_type: ["matricula", "outros"],
+      status_alerta: ["pendente", "em_andamento", "resolvido", "cancelado"],
       student_status: ["pre_matricula", "matricula_completa"],
       user_role: [
         "consultor",

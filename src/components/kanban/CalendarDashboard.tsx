@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react"
@@ -15,8 +16,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ReschedulingDialog } from "./components/scheduling/ReschedulingDialog"
 
-interface ScheduledActivity {
+interface ScheduledAppointment {
   id: string
   client_name: string
   scheduled_date: string
@@ -27,12 +29,15 @@ export function CalendarDashboard() {
   console.log('Renderizando CalendarDashboard')
   
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [isReschedulingDialogOpen, setIsReschedulingDialogOpen] = useState(false)
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
+  const [selectedClientName, setSelectedClientName] = useState<string>('')
   const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit()
 
-  const { data: scheduledActivities, isLoading: isLoadingActivities } = useQuery({
-    queryKey: ['scheduled-activities', format(currentDate, 'yyyy-MM'), userUnits?.map(u => u.unit_id)],
+  const { data: scheduledAppointments, isLoading: isLoadingAppointments } = useQuery({
+    queryKey: ['scheduled-appointments', format(currentDate, 'yyyy-MM'), userUnits?.map(u => u.unit_id)],
     queryFn: async () => {
-      console.log('Buscando atividades agendadas para o mês:', format(currentDate, 'yyyy-MM'))
+      console.log('Buscando agendamentos para o mês:', format(currentDate, 'yyyy-MM'))
       
       const startOfMonthDate = startOfMonth(currentDate)
       const endOfMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
@@ -44,39 +49,35 @@ export function CalendarDashboard() {
       })
       
       const { data, error } = await supabase
-        .from('client_activities')
+        .from('clients')
         .select(`
           id,
+          name,
           scheduled_date,
-          clients!inner (
-            id,
-            name,
-            status
-          )
+          status
         `)
-        .eq('tipo_atividade', 'Agendamento')
         .eq('active', true)
+        .not('scheduled_date', 'is', null)
         .in('unit_id', unitIds)
         .gte('scheduled_date', startOfMonthDate.toISOString())
         .lte('scheduled_date', endOfMonthDate.toISOString())
-        .eq('clients.active', true)
 
       if (error) {
-        console.error('Erro ao buscar atividades:', error)
+        console.error('Erro ao buscar agendamentos:', error)
         throw error
       }
 
-      console.log(`Total de atividades encontradas: ${data?.length || 0}`)
+      console.log(`Total de agendamentos encontrados: ${data?.length || 0}`)
       
-      const activities = data?.map(activity => ({
-        id: activity.id,
-        client_name: activity.clients.name,
-        scheduled_date: activity.scheduled_date,
-        status: activity.clients.status
+      const appointments = data?.map(client => ({
+        id: client.id,
+        client_name: client.name,
+        scheduled_date: client.scheduled_date,
+        status: client.status
       })) || []
 
-      console.log('Atividades processadas:', activities)
-      return activities
+      console.log('Agendamentos processados:', appointments)
+      return appointments
     },
     refetchInterval: 5000,
     refetchOnMount: true,
@@ -114,18 +115,24 @@ export function CalendarDashboard() {
     setCurrentDate(prevDate => addMonths(prevDate, 1))
   }
 
-  const getDayActivities = (dayNumber: number) => {
+  const getDayAppointments = (dayNumber: number) => {
     if (dayNumber <= 0 || dayNumber > daysInMonth) return []
     
-    return scheduledActivities?.filter(activity => {
-      const activityDate = new Date(activity.scheduled_date)
-      return activityDate.getDate() === dayNumber &&
-             activityDate.getMonth() === currentDate.getMonth() &&
-             activityDate.getFullYear() === currentDate.getFullYear()
+    return scheduledAppointments?.filter(appointment => {
+      const appointmentDate = new Date(appointment.scheduled_date)
+      return appointmentDate.getDate() === dayNumber &&
+             appointmentDate.getMonth() === currentDate.getMonth() &&
+             appointmentDate.getFullYear() === currentDate.getFullYear()
     }).sort((a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime())
   }
 
-  const ActivityActions = ({ activity }: { activity: ScheduledActivity }) => (
+  const handleReschedule = (clientId: string, clientName: string) => {
+    setSelectedClientId(clientId)
+    setSelectedClientName(clientName)
+    setIsReschedulingDialogOpen(true)
+  }
+
+  const AppointmentActions = ({ appointment }: { appointment: ScheduledAppointment }) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-4 w-4 p-0">
@@ -133,7 +140,9 @@ export function CalendarDashboard() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem>Remarcar</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleReschedule(appointment.id, appointment.client_name)}>
+          Remarcar
+        </DropdownMenuItem>
         <DropdownMenuItem>Confirmar Presença</DropdownMenuItem>
         <DropdownMenuItem>Cancelar Agendamento</DropdownMenuItem>
       </DropdownMenuContent>
@@ -209,7 +218,7 @@ export function CalendarDashboard() {
           <div className="text-center font-semibold p-2">SÁB</div>
 
           {days.map((day, index) => {
-            const activities = day ? getDayActivities(day) : []
+            const appointments = day ? getDayAppointments(day) : []
             const isCurrentDay = day === new Date().getDate() && 
                                currentDate.getMonth() === new Date().getMonth() &&
                                currentDate.getFullYear() === new Date().getFullYear()
@@ -222,7 +231,7 @@ export function CalendarDashboard() {
                   isCurrentDay ? 'bg-emerald-50' : 'bg-white'
                 }`}
               >
-                {isLoadingActivities ? (
+                {isLoadingAppointments ? (
                   <Skeleton className="h-full w-full" />
                 ) : (
                   day && (
@@ -233,16 +242,16 @@ export function CalendarDashboard() {
                         {day}
                       </div>
                       <div className="space-y-1">
-                        {activities?.map(activity => (
+                        {appointments?.map(appointment => (
                           <div 
-                            key={activity.id}
+                            key={appointment.id}
                             className="text-xs p-1 bg-gray-100 rounded flex items-center justify-between group"
                           >
                             <span>
-                              {format(new Date(activity.scheduled_date), 'HH:mm')} - {activity.client_name}
+                              {format(new Date(appointment.scheduled_date), 'HH:mm')} - {appointment.client_name}
                             </span>
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                              <ActivityActions activity={activity} />
+                              <AppointmentActions appointment={appointment} />
                             </div>
                           </div>
                         ))}
@@ -255,6 +264,19 @@ export function CalendarDashboard() {
           })}
         </div>
       </DialogContent>
+
+      {selectedClientId && (
+        <ReschedulingDialog
+          open={isReschedulingDialogOpen}
+          onOpenChange={setIsReschedulingDialogOpen}
+          clientId={selectedClientId}
+          clientName={selectedClientName}
+          onSubmit={(scheduling) => {
+            console.log('Agendamento remarcado:', scheduling);
+            setIsReschedulingDialogOpen(false);
+          }}
+        />
+      )}
     </Dialog>
   )
 }
