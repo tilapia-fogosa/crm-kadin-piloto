@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "lucide-react"
@@ -11,13 +12,6 @@ import { ReschedulingDialog } from "./components/scheduling/ReschedulingDialog"
 import { CalendarHeader } from "./components/calendar/CalendarHeader"
 import { CalendarGrid } from "./components/calendar/CalendarGrid"
 
-interface ScheduledAppointment {
-  id: string
-  client_name: string
-  scheduled_date: string
-  status: string
-}
-
 export function CalendarDashboard() {
   console.log('Renderizando CalendarDashboard')
   
@@ -26,6 +20,26 @@ export function CalendarDashboard() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
   const [selectedClientName, setSelectedClientName] = useState<string>('')
   const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit()
+
+  // Função para navegar para o mês anterior
+  const handlePreviousMonth = () => {
+    console.log('Navegando para o mês anterior')
+    setCurrentDate(prev => subMonths(prev, 1))
+  }
+
+  // Função para navegar para o próximo mês
+  const handleNextMonth = () => {
+    console.log('Navegando para o próximo mês')
+    setCurrentDate(prev => addMonths(prev, 1))
+  }
+
+  // Função para lidar com o reagendamento
+  const handleReschedule = (clientId: string, clientName: string) => {
+    console.log('Iniciando reagendamento para:', clientName)
+    setSelectedClientId(clientId)
+    setSelectedClientName(clientName)
+    setIsReschedulingDialogOpen(true)
+  }
 
   const { data: scheduledAppointments, isLoading: isLoadingAppointments } = useQuery({
     queryKey: ['scheduled-appointments', format(currentDate, 'yyyy-MM'), userUnits?.map(u => u.unit_id)],
@@ -127,8 +141,8 @@ export function CalendarDashboard() {
           clientId={selectedClientId}
           clientName={selectedClientName}
           onSubmit={(scheduling) => {
-            console.log('Agendamento remarcado:', scheduling);
-            setIsReschedulingDialogOpen(false);
+            console.log('Agendamento remarcado:', scheduling)
+            setIsReschedulingDialogOpen(false)
           }}
         />
       )}
