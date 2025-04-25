@@ -608,38 +608,6 @@ export type Database = {
         }
         Relationships: []
       }
-      faltas_alunos: {
-        Row: {
-          aluno_id: string
-          created_at: string
-          data_falta: string
-          id: string
-          motivo: string | null
-        }
-        Insert: {
-          aluno_id: string
-          created_at?: string
-          data_falta: string
-          id?: string
-          motivo?: string | null
-        }
-        Update: {
-          aluno_id?: string
-          created_at?: string
-          data_falta?: string
-          id?: string
-          motivo?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "faltas_alunos_aluno_id_fkey"
-            columns: ["aluno_id"]
-            isOneToOne: false
-            referencedRelation: "alunos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       financial_responsibles: {
         Row: {
           birth_date: string
@@ -1007,44 +975,6 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      presencas: {
-        Row: {
-          aluno_id: string
-          created_at: string
-          data_aula: string
-          id: string
-          is_reposicao: boolean
-          observacao: string | null
-          presente: boolean
-        }
-        Insert: {
-          aluno_id: string
-          created_at?: string
-          data_aula: string
-          id?: string
-          is_reposicao?: boolean
-          observacao?: string | null
-          presente?: boolean
-        }
-        Update: {
-          aluno_id?: string
-          created_at?: string
-          data_aula?: string
-          id?: string
-          is_reposicao?: boolean
-          observacao?: string | null
-          presente?: boolean
-        }
-        Relationships: [
-          {
-            foreignKeyName: "presencas_aluno_id_fkey"
-            columns: ["aluno_id"]
-            isOneToOne: false
-            referencedRelation: "alunos"
             referencedColumns: ["id"]
           },
         ]

@@ -1,4 +1,3 @@
-
 import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType, ContactAttempt, EffectiveContact } from "./types"
 import { useState } from "react"
 import { DeleteActivityDialog } from "./DeleteActivityDialog"
@@ -48,17 +47,16 @@ export function KanbanColumn({
   const isEven = index % 2 === 0
 
   return (
-    <div className={`flex w-80 flex-none flex-col gap-4 rounded-lg p-4 shadow-sm ${isEven ? 'bg-white' : 'bg-[#F1F0FB]'}`}>
+    <div className={`h-full flex flex-col gap-4 rounded-lg p-4 shadow-sm ${isEven ? 'bg-white' : 'bg-[#F1F0FB]'}`}>
       <ColumnHeader title={column.title} cardCount={column.cards.length} />
       
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 min-h-0 overflow-y-auto">
         {column.cards.map((card) => (
           <CardSheet
             key={card.id}
             card={card}
             isOpen={selectedCard?.id === card.id}
             onOpenChange={(open) => {
-              // Permitir que o componente CardSheet controle quando abrir/fechar
               if (open) {
                 console.log('Abrindo card sheet para:', card.clientName);
                 setSelectedCard(card)
