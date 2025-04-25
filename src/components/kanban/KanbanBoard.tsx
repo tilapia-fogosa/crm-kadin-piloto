@@ -1,3 +1,4 @@
+
 import { useClientData } from "./hooks/useClientData"
 import { useActivityOperations } from "./hooks/useActivityOperations"
 import { useWhatsApp } from "./hooks/useWhatsApp"
@@ -117,8 +118,9 @@ export function KanbanBoard() {
         isMultiUnit={isMultiUnit || false}
       />
 
-      <div className="overflow-x-auto mt-4">
-        <div className="flex gap-4" style={{ minWidth: `${columns.length * 336}px` }}>
+      {/* Scrollable container for kanban columns */}
+      <div className="flex-1 overflow-x-auto mt-4 pb-4">
+        <div className="flex gap-4 min-w-fit">
           {columns.map((column, index) => (
             <div 
               key={column.id}
