@@ -1,4 +1,3 @@
-
 import { useClientData } from "./hooks/useClientData"
 import { useActivityOperations } from "./hooks/useActivityOperations"
 import { useWhatsApp } from "./hooks/useWhatsApp"
@@ -119,23 +118,28 @@ export function KanbanBoard() {
       />
 
       {/* Scrollable container for kanban columns */}
-      <div className="flex-1 overflow-x-auto mt-4 pb-4">
-        <div className="flex gap-4 min-w-fit">
-          {columns.map((column, index) => (
-            <div 
-              key={column.id}
-              className="flex-shrink-0 w-[320px]"
-            >
-              <KanbanColumn
-                column={column}
-                index={index}
-                onWhatsAppClick={handleWhatsAppClick}
-                onRegisterAttempt={registerAttempt}
-                onRegisterEffectiveContact={registerEffectiveContact}
-                onDeleteActivity={deleteActivity}
-              />
-            </div>
-          ))}
+      <div className="flex-1 overflow-hidden mt-4">
+        <div className="h-full overflow-x-auto pb-4">
+          <div 
+            className="flex gap-4 min-w-fit"
+            style={{ minWidth: `${columns.length * 336}px` }}
+          >
+            {columns.map((column, index) => (
+              <div 
+                key={column.id}
+                className="flex-shrink-0 w-[320px]"
+              >
+                <KanbanColumn
+                  column={column}
+                  index={index}
+                  onWhatsAppClick={handleWhatsAppClick}
+                  onRegisterAttempt={registerAttempt}
+                  onRegisterEffectiveContact={registerEffectiveContact}
+                  onDeleteActivity={deleteActivity}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

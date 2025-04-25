@@ -10,16 +10,16 @@ export default function ProtectedLayout() {
   
   return (
     <UnitProvider>
-      <div className="min-h-screen flex bg-background">
+      <div className="flex min-h-screen bg-background">
         {/* Fixed sidebar */}
-        <div className="fixed inset-y-0 left-0 w-60 z-50 bg-[#311D64] shadow-lg">
+        <div className="fixed inset-y-0 left-0 w-60 z-50 bg-[#311D64] shadow-lg border-r border-[#452680]">
           <AppSidebar />
         </div>
         
-        {/* Main content area */}
-        <div className="flex-1 pl-60 min-h-screen">
+        {/* Main content area with padding for sidebar */}
+        <div className="flex-1 pl-60">
           <main className="h-full relative">
-            <div className={`h-full ${isKanbanPage ? '' : 'max-w-[1400px] mx-auto'}`}>
+            <div className={`h-full ${isKanbanPage ? 'overflow-hidden' : 'max-w-[1400px] mx-auto'}`}>
               <div className="p-6 h-full">
                 <Outlet />
               </div>
