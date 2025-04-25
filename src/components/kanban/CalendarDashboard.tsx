@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface ScheduledActivity {
   id: string
@@ -23,10 +24,12 @@ interface ScheduledActivity {
 }
 
 export function CalendarDashboard() {
+  console.log('Renderizando CalendarDashboard')
+  
   const [currentDate, setCurrentDate] = useState(new Date())
-  const { data: userUnits } = useUserUnit()
+  const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit()
 
-  const { data: scheduledActivities } = useQuery({
+  const { data: scheduledActivities, isLoading: isLoadingActivities } = useQuery({
     queryKey: ['scheduled-activities', format(currentDate, 'yyyy-MM'), userUnits?.map(u => u.unit_id)],
     queryFn: async () => {
       console.log('Buscando atividades agendadas para o mês:', format(currentDate, 'yyyy-MM'))
@@ -101,7 +104,7 @@ export function CalendarDashboard() {
     return days
   }
 
-  const calendarDays = generateCalendarDays()
+  const days = generateCalendarDays()
 
   const handlePreviousMonth = () => {
     setCurrentDate(prevDate => subMonths(prevDate, 1))
@@ -136,6 +139,25 @@ export function CalendarDashboard() {
       </DropdownMenuContent>
     </DropdownMenu>
   )
+
+  if (isLoadingUnits) {
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-2">
+            <Calendar className="h-4 w-4" />
+            <span className="text-xs">Agenda</span>
+            <span className="text-xs">de Leads</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <div className="flex items-center justify-center p-8">
+            <Skeleton className="h-[400px] w-full" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
 
   return (
     <Dialog>
@@ -186,7 +208,7 @@ export function CalendarDashboard() {
           <div className="text-center font-semibold p-2">SEX</div>
           <div className="text-center font-semibold p-2">SÁB</div>
 
-          {calendarDays.map((day, index) => {
+          {days.map((day, index) => {
             const activities = day ? getDayActivities(day) : []
             const isCurrentDay = day === new Date().getDate() && 
                                currentDate.getMonth() === new Date().getMonth() &&
@@ -200,29 +222,33 @@ export function CalendarDashboard() {
                   isCurrentDay ? 'bg-emerald-50' : 'bg-white'
                 }`}
               >
-                {day && (
-                  <>
-                    <div className={`text-right mb-1 ${
-                      isCurrentDay ? 'text-emerald-600 font-bold' : ''
-                    }`}>
-                      {day}
-                    </div>
-                    <div className="space-y-1">
-                      {activities?.map(activity => (
-                        <div 
-                          key={activity.id}
-                          className="text-xs p-1 bg-gray-100 rounded flex items-center justify-between group"
-                        >
-                          <span>
-                            {format(new Date(activity.scheduled_date), 'HH:mm')} - {activity.client_name}
-                          </span>
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <ActivityActions activity={activity} />
+                {isLoadingActivities ? (
+                  <Skeleton className="h-full w-full" />
+                ) : (
+                  day && (
+                    <>
+                      <div className={`text-right mb-1 ${
+                        isCurrentDay ? 'text-emerald-600 font-bold' : ''
+                      }`}>
+                        {day}
+                      </div>
+                      <div className="space-y-1">
+                        {activities?.map(activity => (
+                          <div 
+                            key={activity.id}
+                            className="text-xs p-1 bg-gray-100 rounded flex items-center justify-between group"
+                          >
+                            <span>
+                              {format(new Date(activity.scheduled_date), 'HH:mm')} - {activity.client_name}
+                            </span>
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <ActivityActions activity={activity} />
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
+                        ))}
+                      </div>
+                    </>
+                  )
                 )}
               </div>
             )
