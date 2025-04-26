@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useUnit } from "@/contexts/UnitContext";
 import { CommercialFilters } from "./components/CommercialFilters";
@@ -75,7 +74,7 @@ export function CommercialDashboard() {
           </div>
           
           <div>
-            <h2 className="text-lg font-semibold mb-4">Tabela 3</h2>
+            <h2 className="text-lg font-semibold mb-4">Resumo por Unidade</h2>
             <CommercialTableThree 
               stats={unitStats} 
               totals={unitTotals} 
