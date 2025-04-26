@@ -3,8 +3,9 @@ import { useUnit } from "@/contexts/UnitContext";
 import { CommercialFilters } from "./components/CommercialFilters";
 import { CommercialTableOne } from "./components/CommercialTableOne";
 import { CommercialUserTable } from "./components/CommercialUserTable";
-import { CommercialTableThree } from "./components/CommercialTableThree";
+import { CommercialTableByRegistration } from "./components/CommercialTableByRegistration";
 import { useCommercialStats } from "./hooks/useCommercialStats";
+import { useRegistrationStats } from "./hooks/useRegistrationStats";
 import { calculateTotals } from "./utils/stats.utils";
 
 export function CommercialDashboard() {
@@ -20,13 +21,24 @@ export function CommercialDashboard() {
   const { availableUnits } = useUnit();
   const availableUnitIds = availableUnits.map(unit => unit.unit_id);
   
-  // Buscar dados usando o novo hook otimizado
+  // Buscar dados usando os hooks otimizados
   const { 
     unitStats, 
     userStats, 
     isLoadingUnitStats, 
     isLoadingUserStats 
   } = useCommercialStats({
+    selectedSource,
+    selectedMonth,
+    selectedYear,
+    selectedUnitId,
+    availableUnitIds
+  });
+
+  const {
+    registrationGroups,
+    isLoading: isLoadingRegistrationStats
+  } = useRegistrationStats({
     selectedSource,
     selectedMonth,
     selectedYear,
@@ -74,11 +86,10 @@ export function CommercialDashboard() {
           </div>
           
           <div>
-            <h2 className="text-lg font-semibold mb-4">Resumo por Unidade</h2>
-            <CommercialTableThree 
-              stats={unitStats} 
-              totals={unitTotals} 
-              isLoading={isLoadingUnitStats}
+            <h2 className="text-lg font-semibold mb-4">Totais por Registration Name</h2>
+            <CommercialTableByRegistration 
+              stats={registrationGroups}
+              isLoading={isLoadingRegistrationStats}
             />
           </div>
         </div>

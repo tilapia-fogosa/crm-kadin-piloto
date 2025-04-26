@@ -2277,6 +2277,29 @@ export type Database = {
         }
         Returns: Json
       }
+      get_registration_stats: {
+        Args: {
+          p_start_date: string
+          p_end_date: string
+          p_unit_ids: string[]
+          p_source_id: string
+        }
+        Returns: {
+          registration_name: string
+          lead_source: string
+          new_clients: number
+          contact_attempts: number
+          effective_contacts: number
+          scheduled_visits: number
+          awaiting_visits: number
+          completed_visits: number
+          enrollments: number
+          ce_conversion_rate: number
+          ag_conversion_rate: number
+          at_conversion_rate: number
+          ma_conversion_rate: number
+        }[]
+      }
       get_user_access_info: {
         Args: { user_id: string }
         Returns: {
