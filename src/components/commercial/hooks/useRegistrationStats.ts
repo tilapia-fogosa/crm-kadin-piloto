@@ -18,14 +18,6 @@ export function useRegistrationStats({
   selectedUnitId: string | null;
   availableUnitIds: string[];
 }) {
-  console.log("Fetching registration stats with params:", {
-    selectedSource,
-    selectedMonth,
-    selectedYear,
-    selectedUnitId,
-    availableUnitIds
-  });
-
   const startDate = new Date(parseInt(selectedYear), parseInt(selectedMonth), 1);
   const endDate = new Date(parseInt(selectedYear), parseInt(selectedMonth) + 1, 0);
 
@@ -34,18 +26,22 @@ export function useRegistrationStats({
     queryFn: async () => {
       const unitIds = selectedUnitId ? [selectedUnitId] : availableUnitIds;
       
-      console.log("Fetching registration stats for date range:", startDate, "to", endDate);
+      console.log('Fetching registration stats', {
+        startDate,
+        endDate,
+        unitIds,
+        sourceId: selectedSource
+      });
       
-      const { data, error } = await supabase
-        .rpc('get_registration_stats', {
-          p_start_date: startDate.toISOString(),
-          p_end_date: endDate.toISOString(),
-          p_unit_ids: unitIds,
-          p_source_id: selectedSource
-        });
+      const { data, error } = await supabase.rpc('get_registration_stats', {
+        p_start_date: startDate.toISOString(),
+        p_end_date: endDate.toISOString(),
+        p_unit_ids: unitIds,
+        p_source_id: selectedSource
+      });
 
       if (error) {
-        console.error("Error fetching registration stats:", error);
+        console.error('Error fetching registration stats:', error);
         throw error;
       }
 
@@ -82,7 +78,7 @@ export function useRegistrationStats({
         })
       );
 
-      console.log("Processed registration groups:", registrationGroups);
+      console.log('Processed registration groups:', registrationGroups);
       return registrationGroups;
     }
   });
