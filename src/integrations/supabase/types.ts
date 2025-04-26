@@ -17,6 +17,7 @@ export type Database = {
           data_retencao: string | null
           descritivo: string | null
           id: string
+          kanban_status: string
           origem_alerta: Database["public"]["Enums"]["origem_alerta"]
           responsavel: string | null
           status: Database["public"]["Enums"]["status_alerta"]
@@ -29,6 +30,7 @@ export type Database = {
           data_retencao?: string | null
           descritivo?: string | null
           id?: string
+          kanban_status?: string
           origem_alerta: Database["public"]["Enums"]["origem_alerta"]
           responsavel?: string | null
           status?: Database["public"]["Enums"]["status_alerta"]
@@ -41,6 +43,7 @@ export type Database = {
           data_retencao?: string | null
           descritivo?: string | null
           id?: string
+          kanban_status?: string
           origem_alerta?: Database["public"]["Enums"]["origem_alerta"]
           responsavel?: string | null
           status?: Database["public"]["Enums"]["status_alerta"]
@@ -775,6 +778,53 @@ export type Database = {
             columns: ["turma_id"]
             isOneToOne: false
             referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kanban_cards: {
+        Row: {
+          alerta_evasao_id: string
+          aluno_nome: string | null
+          column_id: string
+          created_at: string
+          description: string | null
+          id: string
+          origem: string | null
+          responsavel: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          alerta_evasao_id: string
+          aluno_nome?: string | null
+          column_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          origem?: string | null
+          responsavel?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          alerta_evasao_id?: string
+          aluno_nome?: string | null
+          column_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          origem?: string | null
+          responsavel?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kanban_cards_alerta_evasao_id_fkey"
+            columns: ["alerta_evasao_id"]
+            isOneToOne: false
+            referencedRelation: "alerta_evasao"
             referencedColumns: ["id"]
           },
         ]
