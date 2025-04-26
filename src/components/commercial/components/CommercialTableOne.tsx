@@ -1,36 +1,15 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TotalStats } from "../../kanban/types/activity-dashboard.types";
-import { useCommercialUnitStats } from "../hooks/useCommercialUnitStats";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUnit } from "@/contexts/UnitContext";
+import { UnitStats } from "../types/stats.types";
 
-interface CommercialTableProps {
-  selectedSource: string;
-  selectedMonth: string;
-  selectedYear: string;
-  selectedUnitId: string | null;
+interface CommercialTableOneProps {
+  stats: UnitStats[] | undefined;
   totals: TotalStats | null;
+  isLoading: boolean;
 }
 
-export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear, selectedUnitId, totals }: CommercialTableProps) {
-  const { isLoading: isLoadingUnits } = useUnit();
-  const { data: unitStats, isLoading: isLoadingStats } = useCommercialUnitStats(
-    selectedSource, 
-    selectedMonth, 
-    selectedYear,
-    selectedUnitId
-  );
-  
-  const isLoading = isLoadingUnits || isLoadingStats;
-  
-  console.log('Renderizando Tabela 1:', { 
-    isLoadingUnits,
-    isLoadingStats,
-    selectedUnitId,
-    unitStats
-  });
-
+export function CommercialTableOne({ stats, totals, isLoading }: CommercialTableOneProps) {
   return (
     <Table>
       <TableHeader>
@@ -76,8 +55,8 @@ export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear
           </>
         ) : (
           <>
-            {unitStats && unitStats.length > 0 ? (
-              unitStats.map((unit) => (
+            {stats && stats.length > 0 ? (
+              stats.map((unit) => (
                 <TableRow key={unit.unit_id} className="hover:bg-muted/50 [&>td]:px-2.5">
                   <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
                     {unit.unit_name}
@@ -103,8 +82,7 @@ export function CommercialTableOne({ selectedSource, selectedMonth, selectedYear
               </TableRow>
             )}
             
-            {/* Adicionar linha de totais se disponível */}
-            {totals && unitStats && unitStats.length > 0 && (
+            {totals && stats && stats.length > 0 && (
               <TableRow className="hover:bg-muted/50 [&>td]:px-2.5 font-semibold">
                 <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">
                   TOTAL

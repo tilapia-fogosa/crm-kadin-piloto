@@ -13,6 +13,56 @@ interface UseCommercialStatsProps {
   availableUnitIds: string[];
 }
 
+interface RawStats {
+  unit_id?: string;
+  unit_name?: string;
+  user_id?: string;
+  user_name?: string;
+  new_clients: number;
+  contact_attempts: number;
+  effective_contacts: number;
+  scheduled_visits: number;
+  awaiting_visits: number;
+  completed_visits: number;
+  enrollments: number;
+  ce_conversion_rate: number;
+  ag_conversion_rate: number;
+  at_conversion_rate: number;
+  ma_conversion_rate: number;
+}
+
+const transformToUnitStats = (raw: RawStats): UnitStats => ({
+  unit_id: raw.unit_id || '',
+  unit_name: raw.unit_name || '',
+  newClients: raw.new_clients,
+  contactAttempts: raw.contact_attempts,
+  effectiveContacts: raw.effective_contacts,
+  scheduledVisits: raw.scheduled_visits,
+  awaitingVisits: raw.awaiting_visits,
+  completedVisits: raw.completed_visits,
+  enrollments: raw.enrollments,
+  ceConversionRate: raw.ce_conversion_rate,
+  agConversionRate: raw.ag_conversion_rate,
+  atConversionRate: raw.at_conversion_rate,
+  maConversionRate: raw.ma_conversion_rate
+});
+
+const transformToUserStats = (raw: RawStats): UserStats => ({
+  user_id: raw.user_id || '',
+  user_name: raw.user_name || '',
+  newClients: raw.new_clients,
+  contactAttempts: raw.contact_attempts,
+  effectiveContacts: raw.effective_contacts,
+  scheduledVisits: raw.scheduled_visits,
+  awaitingVisits: raw.awaiting_visits,
+  completedVisits: raw.completed_visits,
+  enrollments: raw.enrollments,
+  ceConversionRate: raw.ce_conversion_rate,
+  agConversionRate: raw.ag_conversion_rate,
+  atConversionRate: raw.at_conversion_rate,
+  maConversionRate: raw.ma_conversion_rate
+});
+
 export function useCommercialStats({
   selectedSource,
   selectedMonth,
@@ -56,7 +106,7 @@ export function useCommercialStats({
       });
 
       if (error) throw error;
-      return data as UnitStats[];
+      return (data as RawStats[]).map(transformToUnitStats);
     }
   });
 
@@ -79,7 +129,7 @@ export function useCommercialStats({
       });
 
       if (error) throw error;
-      return data as UserStats[];
+      return (data as RawStats[]).map(transformToUserStats);
     }
   });
 
