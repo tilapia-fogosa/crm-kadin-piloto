@@ -2196,6 +2196,52 @@ export type Database = {
         }
         Returns: Json
       }
+      get_commercial_unit_stats: {
+        Args: {
+          p_start_date: string
+          p_end_date: string
+          p_unit_ids: string[]
+          p_source_id: string
+        }
+        Returns: {
+          unit_id: string
+          unit_name: string
+          new_clients: number
+          contact_attempts: number
+          effective_contacts: number
+          scheduled_visits: number
+          awaiting_visits: number
+          completed_visits: number
+          enrollments: number
+          ce_conversion_rate: number
+          ag_conversion_rate: number
+          at_conversion_rate: number
+          ma_conversion_rate: number
+        }[]
+      }
+      get_commercial_user_stats: {
+        Args: {
+          p_start_date: string
+          p_end_date: string
+          p_unit_ids: string[]
+          p_source_id: string
+        }
+        Returns: {
+          user_id: string
+          user_name: string
+          new_clients: number
+          contact_attempts: number
+          effective_contacts: number
+          scheduled_visits: number
+          awaiting_visits: number
+          completed_visits: number
+          enrollments: number
+          ce_conversion_rate: number
+          ag_conversion_rate: number
+          at_conversion_rate: number
+          ma_conversion_rate: number
+        }[]
+      }
       get_daily_activities_by_type: {
         Args: { p_start_date: string; p_end_date: string; p_unit_ids: string[] }
         Returns: {

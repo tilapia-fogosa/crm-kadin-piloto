@@ -1,51 +1,43 @@
 
-import { CommercialFilters } from "./components/CommercialFilters";
 import { useState } from "react";
-import { useCommercialStats } from "./hooks/useCommercialStats";
-import { calculateTotals, calculateUserTotals } from "./utils/stats.utils";
+import { useUnit } from "@/contexts/UnitContext";
+import { CommercialFilters } from "./components/CommercialFilters";
 import { CommercialTableOne } from "./components/CommercialTableOne";
 import { CommercialUserTable } from "./components/CommercialUserTable";
 import { CommercialTableThree } from "./components/CommercialTableThree";
-import { useCommercialUserStats } from "./hooks/useCommercialUserStats";
+import { useCommercialStats } from "./hooks/useCommercialStats";
+import { calculateTotals } from "./utils/stats.utils";
 
 export function CommercialDashboard() {
   console.log("Rendering CommercialDashboard");
   
+  // Estado dos filtros
   const [selectedSource, setSelectedSource] = useState<string>("todos");
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().getMonth().toString());
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 
-  const { data: stats, isLoading } = useCommercialStats(
-    selectedSource, 
-    selectedMonth, 
+  // Contexto de unidades
+  const { availableUnits } = useUnit();
+  const availableUnitIds = availableUnits.map(unit => unit.unit_id);
+  
+  // Buscar dados usando o novo hook otimizado
+  const { 
+    unitStats, 
+    userStats, 
+    isLoadingUnitStats, 
+    isLoadingUserStats 
+  } = useCommercialStats({
+    selectedSource,
+    selectedMonth,
     selectedYear,
-    selectedUnitId
-  );
-  
-  const { data: userStats, isLoading: isLoadingUserStats } = useCommercialUserStats(
-    selectedSource, 
-    selectedMonth, 
-    selectedYear,
-    selectedUnitId
-  );
-  
-  // Log para rastrear os dados recebidos
-  console.log("Dados recebidos:", { 
-    statsLength: stats?.length || 0,
-    userStatsLength: userStats?.length || 0,
-    selectedUnitId 
+    selectedUnitId,
+    availableUnitIds
   });
-  
-  // Calculando totais para diários e usuários separadamente
-  const totals = calculateTotals(stats);
-  const userTotals = calculateUserTotals(userStats);
-  
-  console.log("Totais calculados para ambas as visualizações:", { 
-    diariosTotals: totals, 
-    userTotals: userTotals,
-    selectedUnitId
-  });
+
+  // Calcular totais
+  const unitTotals = calculateTotals(unitStats || []);
+  const userTotals = calculateTotals(userStats || []);
 
   return (
     <div className="space-y-6">
@@ -67,22 +59,28 @@ export function CommercialDashboard() {
           <div>
             <h2 className="text-lg font-semibold mb-4">Totais por Unidade</h2>
             <CommercialTableOne 
-              selectedSource={selectedSource}
-              selectedMonth={selectedMonth}
-              selectedYear={selectedYear}
-              selectedUnitId={selectedUnitId}
-              totals={totals}
+              stats={unitStats}
+              totals={unitTotals}
+              isLoading={isLoadingUnitStats}
             />
           </div>
           
           <div>
             <h2 className="text-lg font-semibold mb-4">Totais por Usuário</h2>
-            <CommercialUserTable stats={userStats} totals={userTotals} isLoading={isLoadingUserStats} />
+            <CommercialUserTable 
+              stats={userStats}
+              totals={userTotals}
+              isLoading={isLoadingUserStats}
+            />
           </div>
           
           <div>
             <h2 className="text-lg font-semibold mb-4">Tabela 3</h2>
-            <CommercialTableThree stats={stats} totals={totals} isLoading={isLoading} />
+            <CommercialTableThree 
+              stats={unitStats} 
+              totals={unitTotals} 
+              isLoading={isLoadingUnitStats}
+            />
           </div>
         </div>
       </div>
