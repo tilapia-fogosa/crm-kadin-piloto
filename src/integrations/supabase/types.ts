@@ -140,6 +140,7 @@ export type Database = {
           ultima_falta: string | null
           ultima_pagina: number | null
           ultimo_nivel: string | null
+          unit_id: string
           vencimento_contrato: string | null
         }
         Insert: {
@@ -171,6 +172,7 @@ export type Database = {
           ultima_falta?: string | null
           ultima_pagina?: number | null
           ultimo_nivel?: string | null
+          unit_id: string
           vencimento_contrato?: string | null
         }
         Update: {
@@ -202,9 +204,18 @@ export type Database = {
           ultima_falta?: string | null
           ultima_pagina?: number | null
           ultimo_nivel?: string | null
+          unit_id?: string
           vencimento_contrato?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_alunos_unit_id"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       apostilas: {
         Row: {

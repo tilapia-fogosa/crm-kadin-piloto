@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { format, startOfMonth, addMonths, subMonths } from "date-fns"
+import { format, startOfMonth, addMonths, subMonths, endOfMonth } from "date-fns"
 import { useState } from "react"
 import { useUserUnit } from "./hooks/useUserUnit"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -46,14 +46,35 @@ export function CalendarDashboard() {
     queryFn: async () => {
       console.log('Buscando agendamentos para o mês:', format(currentDate, 'yyyy-MM'))
       
+      // Usamos startOfMonth e endOfMonth da biblioteca date-fns para melhor precisão
       const startOfMonthDate = startOfMonth(currentDate)
-      const endOfMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+      
+      // ALTERAÇÃO: Usar endOfMonth em vez do método manual para garantir que inclua o último dia
+      const endOfMonthDate = endOfMonth(currentDate)
+      
+      // Logs detalhados para debugging
+      console.log('Período de busca:', {
+        inicio: format(startOfMonthDate, 'yyyy-MM-dd'),
+        fim: format(endOfMonthDate, 'yyyy-MM-dd')
+      })
+      
+      // Convertemos para string sem considerar fuso horário (apenas data)
+      const startDateStr = format(startOfMonthDate, 'yyyy-MM-dd')
+      const endDateStr = format(endOfMonthDate, 'yyyy-MM-dd') + 'T23:59:59'
+      
+      console.log('Strings de data usadas na consulta:', {
+        inicio: startDateStr,
+        fim: endDateStr
+      })
+      
       const unitIds = userUnits?.map(u => u.unit_id) || []
       
-      console.log('Período de busca:', {
-        inicio: startOfMonthDate.toISOString(),
-        fim: endOfMonthDate.toISOString()
-      })
+      if (unitIds.length === 0) {
+        console.log('Nenhuma unidade disponível para o usuário')
+        return []
+      }
+      
+      console.log('Filtrando por unidades:', unitIds)
       
       const { data, error } = await supabase
         .from('clients')
@@ -66,8 +87,8 @@ export function CalendarDashboard() {
         .eq('active', true)
         .not('scheduled_date', 'is', null)
         .in('unit_id', unitIds)
-        .gte('scheduled_date', startOfMonthDate.toISOString())
-        .lte('scheduled_date', endOfMonthDate.toISOString())
+        .gte('scheduled_date', startDateStr)
+        .lte('scheduled_date', endDateStr)
 
       if (error) {
         console.error('Erro ao buscar agendamentos:', error)
@@ -75,6 +96,17 @@ export function CalendarDashboard() {
       }
 
       console.log(`Total de agendamentos encontrados: ${data?.length || 0}`)
+      
+      // Verificar especificamente se há agendamentos para o dia 30
+      const dia30 = data?.filter(item => {
+        const dataAgendamento = new Date(item.scheduled_date)
+        return dataAgendamento.getDate() === 30
+      })
+      
+      console.log(`Agendamentos para o dia 30: ${dia30?.length || 0}`)
+      if (dia30?.length) {
+        console.log('Detalhes dos agendamentos do dia 30:', dia30)
+      }
       
       const appointments = data?.map(client => ({
         id: client.id,

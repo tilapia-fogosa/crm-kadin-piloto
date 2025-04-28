@@ -3,6 +3,7 @@ import { format, getDaysInMonth, startOfMonth, getDay } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CalendarDayCell } from "./CalendarDayCell"
 import { ScheduledAppointment } from "../../types"
+import { normalizeDate } from "@/utils/date"
 
 interface CalendarGridProps {
   currentDate: Date
@@ -41,11 +42,33 @@ export function CalendarGrid({
   const getDayAppointments = (dayNumber: number) => {
     if (dayNumber <= 0 || dayNumber > daysInMonth) return []
     
+    // Criamos uma data normalizada para o dia atual no mês corrente
+    const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNumber)
+    
+    console.log(`Verificando agendamentos para o dia ${dayNumber}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`)
+    
     return scheduledAppointments?.filter(appointment => {
-      const appointmentDate = new Date(appointment.scheduled_date)
-      return appointmentDate.getDate() === dayNumber &&
-             appointmentDate.getMonth() === currentDate.getMonth() &&
-             appointmentDate.getFullYear() === currentDate.getFullYear()
+      // Usamos a função normalizeDate para evitar problemas de fuso horário
+      const appointmentDate = normalizeDate(new Date(appointment.scheduled_date)) as Date
+      const normalizedTargetDate = normalizeDate(targetDate) as Date
+      
+      // Comparamos apenas ano, mês e dia
+      const isSameDay = appointmentDate.getDate() === normalizedTargetDate.getDate() &&
+                         appointmentDate.getMonth() === normalizedTargetDate.getMonth() &&
+                         appointmentDate.getFullYear() === normalizedTargetDate.getFullYear()
+      
+      // Para debug - APENAS logar quando encontramos agendamentos para o dia 30
+      if (dayNumber === 30 && isSameDay) {
+        console.log(`Agendamento encontrado para dia 30:`, {
+          id: appointment.id,
+          client_name: appointment.client_name,
+          scheduled_date: appointment.scheduled_date,
+          appointmentDate: format(appointmentDate, 'yyyy-MM-dd HH:mm:ss'),
+          normalizedTargetDate: format(normalizedTargetDate, 'yyyy-MM-dd')
+        })
+      }
+      
+      return isSameDay
     }).sort((a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime())
   }
 

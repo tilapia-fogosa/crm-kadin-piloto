@@ -19,6 +19,14 @@ export function CalendarDayCell({
   appointments,
   onReschedule
 }: CalendarDayCellProps) {
+  // Adicionar log específico para o dia 30
+  if (day === 30) {
+    console.log(`CalendarDayCell - Dia 30: Recebeu ${appointments.length} agendamentos`)
+    if (appointments.length > 0) {
+      console.log('Detalhes dos agendamentos do dia 30:', appointments)
+    }
+  }
+  
   const isCurrentDay = day === new Date().getDate() && 
                       currentDate.getMonth() === new Date().getMonth() &&
                       currentDate.getFullYear() === new Date().getFullYear()
