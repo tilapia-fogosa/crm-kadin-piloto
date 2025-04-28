@@ -36,8 +36,17 @@ export function CalendarDayCell({
 
   // Função para obter o índice da unidade para usar com cores
   const getUnitIndex = (unitId: string): number => {
-    if (!userUnits) return 0;
+    if (!userUnits || userUnits.length === 0) {
+      console.log('CalendarDayCell - userUnits indefinido ou vazio ao buscar índice para', unitId);
+      return 0;
+    }
+    
     const index = userUnits.findIndex(unit => unit.unit_id === unitId);
+    
+    if (index === -1) {
+      console.log(`CalendarDayCell - Unidade não encontrada: ${unitId}`);
+    }
+    
     return index >= 0 ? index : 0;
   };
 

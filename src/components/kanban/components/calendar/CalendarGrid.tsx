@@ -17,11 +17,11 @@ interface CalendarGridProps {
 export function CalendarGrid({
   currentDate,
   isLoadingAppointments,
-  scheduledAppointments,
+  scheduledAppointments = [],
   onReschedule,
   userUnits
 }: CalendarGridProps) {
-  console.log('Renderizando CalendarGrid')
+  console.log('Renderizando CalendarGrid com unidades:', userUnits?.length);
 
   const daysInMonth = getDaysInMonth(currentDate)
   const firstDayOfMonth = startOfMonth(currentDate)
@@ -43,14 +43,12 @@ export function CalendarGrid({
   }
 
   const getDayAppointments = (dayNumber: number) => {
-    if (dayNumber <= 0 || dayNumber > daysInMonth) return []
+    if (dayNumber <= 0 || dayNumber > daysInMonth || !scheduledAppointments) return []
     
     // Criamos uma data normalizada para o dia atual no mês corrente
     const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNumber)
     
-    console.log(`Verificando agendamentos para o dia ${dayNumber}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`)
-    
-    return scheduledAppointments?.filter(appointment => {
+    return scheduledAppointments.filter(appointment => {
       // Usamos a função normalizeDate para evitar problemas de fuso horário
       const appointmentDate = normalizeDate(new Date(appointment.scheduled_date)) as Date
       const normalizedTargetDate = normalizeDate(targetDate) as Date

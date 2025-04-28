@@ -5,14 +5,14 @@ import { Calendar } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { format, startOfMonth, addMonths, subMonths, endOfMonth } from "date-fns"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useUserUnit } from "./hooks/useUserUnit"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ReschedulingDialog } from "./components/scheduling/ReschedulingDialog"
 import { CalendarHeader } from "./components/calendar/CalendarHeader"
 import { CalendarGrid } from "./components/calendar/CalendarGrid"
-import { UnitSelector } from "@/components/UnitSelector"
 import { UnitLegend } from "./components/calendar/UnitLegend"
+import { MultiUnitSelector } from "./components/calendar/MultiUnitSelector"
 
 export function CalendarDashboard() {
   console.log('Renderizando CalendarDashboard')
@@ -23,8 +23,8 @@ export function CalendarDashboard() {
   const [selectedClientName, setSelectedClientName] = useState<string>('')
   const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit()
   
-  // Novo estado para controlar a unidade selecionada no filtro da agenda
-  const [selectedCalendarUnitId, setSelectedCalendarUnitId] = useState<string>("todas")
+  // Modificado para usar array de IDs das unidades selecionadas
+  const [selectedCalendarUnitIds, setSelectedCalendarUnitIds] = useState<string[]>([])
 
   // Função para navegar para o mês anterior
   const handlePreviousMonth = () => {
@@ -47,10 +47,10 @@ export function CalendarDashboard() {
   }
 
   const { data: scheduledAppointments, isLoading: isLoadingAppointments } = useQuery({
-    queryKey: ['scheduled-appointments', format(currentDate, 'yyyy-MM'), selectedCalendarUnitId, userUnits?.map(u => u.unit_id)],
+    queryKey: ['scheduled-appointments', format(currentDate, 'yyyy-MM'), selectedCalendarUnitIds, userUnits?.map(u => u.unit_id)],
     queryFn: async () => {
       console.log('Buscando agendamentos para o mês:', format(currentDate, 'yyyy-MM'))
-      console.log('Filtro de unidade selecionado:', selectedCalendarUnitId)
+      console.log('Filtro de unidades selecionadas:', selectedCalendarUnitIds)
       
       // Usamos startOfMonth e endOfMonth da biblioteca date-fns para melhor precisão
       const startOfMonthDate = startOfMonth(currentDate)
@@ -71,19 +71,20 @@ export function CalendarDashboard() {
         fim: endDateStr
       })
       
-      const unitIds = userUnits?.map(u => u.unit_id) || []
-      
-      if (unitIds.length === 0) {
-        console.log('Nenhuma unidade disponível para o usuário')
-        return []
+      // Verificação de segurança para unidades indefinidas
+      if (!userUnits || userUnits.length === 0) {
+        console.log('Nenhuma unidade disponível para o usuário');
+        return [];
       }
-
-      // Filtrar por todas as unidades ou apenas pela unidade selecionada
-      const unitFilter = selectedCalendarUnitId === 'todas' 
-        ? unitIds 
-        : [selectedCalendarUnitId]
       
-      console.log('Filtrando por unidades:', unitFilter)
+      const unitIds = userUnits.map(u => u.unit_id) || [];
+      
+      // Filtrar pelas unidades selecionadas ou por todas se nenhuma for selecionada
+      const unitFilter = selectedCalendarUnitIds.length > 0
+        ? selectedCalendarUnitIds
+        : unitIds;
+      
+      console.log('Filtrando por unidades:', unitFilter);
       
       const { data, error } = await supabase
         .from('clients')
@@ -99,24 +100,24 @@ export function CalendarDashboard() {
         .not('scheduled_date', 'is', null)
         .in('unit_id', unitFilter)
         .gte('scheduled_date', startDateStr)
-        .lte('scheduled_date', endDateStr)
+        .lte('scheduled_date', endDateStr);
 
       if (error) {
-        console.error('Erro ao buscar agendamentos:', error)
-        throw error
+        console.error('Erro ao buscar agendamentos:', error);
+        throw error;
       }
 
-      console.log(`Total de agendamentos encontrados: ${data?.length || 0}`)
+      console.log(`Total de agendamentos encontrados: ${data?.length || 0}`);
       
       // Verificar especificamente se há agendamentos para o dia 30
       const dia30 = data?.filter(item => {
-        const dataAgendamento = new Date(item.scheduled_date)
-        return dataAgendamento.getDate() === 30
-      })
+        const dataAgendamento = new Date(item.scheduled_date);
+        return dataAgendamento.getDate() === 30;
+      });
       
-      console.log(`Agendamentos para o dia 30: ${dia30?.length || 0}`)
+      console.log(`Agendamentos para o dia 30: ${dia30?.length || 0}`);
       if (dia30?.length) {
-        console.log('Detalhes dos agendamentos do dia 30:', dia30)
+        console.log('Detalhes dos agendamentos do dia 30:', dia30);
       }
       
       const appointments = data?.map(client => ({
@@ -126,15 +127,24 @@ export function CalendarDashboard() {
         status: client.status,
         unit_id: client.unit_id,
         unit_name: client.units?.name
-      })) || []
+      })) || [];
 
-      console.log('Agendamentos processados:', appointments)
-      return appointments
+      console.log('Agendamentos processados:', appointments);
+      return appointments;
     },
     refetchInterval: 5000,
     refetchOnMount: true,
     enabled: userUnits !== undefined && userUnits.length > 0
-  })
+  });
+
+  // Inicializar seleção de unidades quando as unidades são carregadas
+  useEffect(() => {
+    if (userUnits && userUnits.length > 0 && selectedCalendarUnitIds.length === 0) {
+      console.log('Inicializando seleção de unidades com todas as unidades disponíveis');
+      // Por padrão, seleciona todas as unidades
+      setSelectedCalendarUnitIds(userUnits.map(unit => unit.unit_id));
+    }
+  }, [userUnits, selectedCalendarUnitIds]);
 
   if (isLoadingUnits) {
     return (
@@ -168,14 +178,18 @@ export function CalendarDashboard() {
         <div className="flex justify-between items-start mb-6">
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium">Unidade:</span>
-              <UnitSelector
-                value={selectedCalendarUnitId}
-                onChange={setSelectedCalendarUnitId}
-                placeholder="Todas unidades"
+              <span className="text-sm font-medium">Unidades:</span>
+              <MultiUnitSelector
+                units={userUnits}
+                selectedUnitIds={selectedCalendarUnitIds}
+                onChange={setSelectedCalendarUnitIds}
+                isLoading={isLoadingUnits}
               />
             </div>
-            <UnitLegend availableUnits={userUnits} />
+            <UnitLegend 
+              availableUnits={userUnits} 
+              selectedUnitIds={selectedCalendarUnitIds}
+            />
           </div>
           
           <CalendarHeader

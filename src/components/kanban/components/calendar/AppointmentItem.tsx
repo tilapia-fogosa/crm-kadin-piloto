@@ -18,9 +18,14 @@ interface AppointmentItemProps {
 }
 
 export function AppointmentItem({ appointment, onReschedule, unitIndex }: AppointmentItemProps) {
+  // Verificação de segurança para índice negativo
+  const safeUnitIndex = unitIndex >= 0 ? unitIndex : 0;
+  
   // Obter a cor para a unidade baseada no índice
-  const unitColor = getUnitColor(unitIndex);
+  const unitColor = getUnitColor(safeUnitIndex);
   const textColorClass = shouldUseWhiteText(unitColor) ? 'text-white' : 'text-gray-800';
+  
+  console.log(`AppointmentItem - Renderizando ${appointment.client_name} com cor da unidade ${safeUnitIndex}:`, unitColor);
   
   return (
     <div 
