@@ -9,22 +9,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ScheduledAppointment } from "../../types"
+import { getUnitColor, shouldUseWhiteText } from "../../utils/unitColors"
 
 interface AppointmentItemProps {
   appointment: ScheduledAppointment
   onReschedule: (clientId: string, clientName: string) => void
+  unitIndex: number
 }
 
-export function AppointmentItem({ appointment, onReschedule }: AppointmentItemProps) {
+export function AppointmentItem({ appointment, onReschedule, unitIndex }: AppointmentItemProps) {
+  // Obter a cor para a unidade baseada no índice
+  const unitColor = getUnitColor(unitIndex);
+  const textColorClass = shouldUseWhiteText(unitColor) ? 'text-white' : 'text-gray-800';
+  
   return (
-    <div className="text-xs p-1 bg-gray-100 rounded flex items-center justify-between group">
+    <div 
+      className={`text-xs p-1 rounded flex items-center justify-between group ${textColorClass}`}
+      style={{ backgroundColor: unitColor }}
+    >
       <span>
         {format(new Date(appointment.scheduled_date), 'HH:mm')} - {appointment.client_name}
       </span>
       <div className="opacity-0 group-hover:opacity-100 transition-opacity">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-4 w-4 p-0">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={`h-4 w-4 p-0 ${textColorClass} hover:bg-opacity-20`}
+            >
               <MoreHorizontal className="h-3 w-3" />
             </Button>
           </DropdownMenuTrigger>

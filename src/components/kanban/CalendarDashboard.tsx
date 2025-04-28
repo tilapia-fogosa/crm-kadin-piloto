@@ -11,6 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ReschedulingDialog } from "./components/scheduling/ReschedulingDialog"
 import { CalendarHeader } from "./components/calendar/CalendarHeader"
 import { CalendarGrid } from "./components/calendar/CalendarGrid"
+import { UnitSelector } from "@/components/UnitSelector"
+import { UnitLegend } from "./components/calendar/UnitLegend"
 
 export function CalendarDashboard() {
   console.log('Renderizando CalendarDashboard')
@@ -20,6 +22,9 @@ export function CalendarDashboard() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
   const [selectedClientName, setSelectedClientName] = useState<string>('')
   const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit()
+  
+  // Novo estado para controlar a unidade selecionada no filtro da agenda
+  const [selectedCalendarUnitId, setSelectedCalendarUnitId] = useState<string>("todas")
 
   // Função para navegar para o mês anterior
   const handlePreviousMonth = () => {
@@ -42,14 +47,13 @@ export function CalendarDashboard() {
   }
 
   const { data: scheduledAppointments, isLoading: isLoadingAppointments } = useQuery({
-    queryKey: ['scheduled-appointments', format(currentDate, 'yyyy-MM'), userUnits?.map(u => u.unit_id)],
+    queryKey: ['scheduled-appointments', format(currentDate, 'yyyy-MM'), selectedCalendarUnitId, userUnits?.map(u => u.unit_id)],
     queryFn: async () => {
       console.log('Buscando agendamentos para o mês:', format(currentDate, 'yyyy-MM'))
+      console.log('Filtro de unidade selecionado:', selectedCalendarUnitId)
       
       // Usamos startOfMonth e endOfMonth da biblioteca date-fns para melhor precisão
       const startOfMonthDate = startOfMonth(currentDate)
-      
-      // ALTERAÇÃO: Usar endOfMonth em vez do método manual para garantir que inclua o último dia
       const endOfMonthDate = endOfMonth(currentDate)
       
       // Logs detalhados para debugging
@@ -73,8 +77,13 @@ export function CalendarDashboard() {
         console.log('Nenhuma unidade disponível para o usuário')
         return []
       }
+
+      // Filtrar por todas as unidades ou apenas pela unidade selecionada
+      const unitFilter = selectedCalendarUnitId === 'todas' 
+        ? unitIds 
+        : [selectedCalendarUnitId]
       
-      console.log('Filtrando por unidades:', unitIds)
+      console.log('Filtrando por unidades:', unitFilter)
       
       const { data, error } = await supabase
         .from('clients')
@@ -82,11 +91,13 @@ export function CalendarDashboard() {
           id,
           name,
           scheduled_date,
-          status
+          status,
+          unit_id,
+          units (id, name)
         `)
         .eq('active', true)
         .not('scheduled_date', 'is', null)
-        .in('unit_id', unitIds)
+        .in('unit_id', unitFilter)
         .gte('scheduled_date', startDateStr)
         .lte('scheduled_date', endDateStr)
 
@@ -112,7 +123,9 @@ export function CalendarDashboard() {
         id: client.id,
         client_name: client.name,
         scheduled_date: client.scheduled_date,
-        status: client.status
+        status: client.status,
+        unit_id: client.unit_id,
+        unit_name: client.units?.name
       })) || []
 
       console.log('Agendamentos processados:', appointments)
@@ -152,17 +165,32 @@ export function CalendarDashboard() {
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
-        <CalendarHeader
-          currentDate={currentDate}
-          onPreviousMonth={handlePreviousMonth}
-          onNextMonth={handleNextMonth}
-        />
+        <div className="flex justify-between items-start mb-6">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-medium">Unidade:</span>
+              <UnitSelector
+                value={selectedCalendarUnitId}
+                onChange={setSelectedCalendarUnitId}
+                placeholder="Todas unidades"
+              />
+            </div>
+            <UnitLegend availableUnits={userUnits} />
+          </div>
+          
+          <CalendarHeader
+            currentDate={currentDate}
+            onPreviousMonth={handlePreviousMonth}
+            onNextMonth={handleNextMonth}
+          />
+        </div>
 
         <CalendarGrid
           currentDate={currentDate}
           isLoadingAppointments={isLoadingAppointments}
           scheduledAppointments={scheduledAppointments}
           onReschedule={handleReschedule}
+          userUnits={userUnits}
         />
       </DialogContent>
 

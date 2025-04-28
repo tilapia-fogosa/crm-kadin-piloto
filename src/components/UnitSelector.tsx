@@ -48,10 +48,12 @@ export function UnitSelector({ onChange, value, placeholder, required }: UnitSel
         console.log('UnitSelector - Seleção alterada para:', value);
         // Só atualiza o contexto global quando não tem valor controlado externamente
         if (value !== undefined) {
-          setSelectedUnitId(value);
-        }
-        if (onChange) {
-          onChange(value);
+          // Não atualiza o contexto global se o componente tem controle externo (value prop)
+          if (onChange) {
+            onChange(value);
+          } else {
+            setSelectedUnitId(value);
+          }
         }
       }}
       required={required}
@@ -60,6 +62,10 @@ export function UnitSelector({ onChange, value, placeholder, required }: UnitSel
         <SelectValue placeholder={placeholder || "Selecione uma unidade"} />
       </SelectTrigger>
       <SelectContent>
+        {/* Opção para todas as unidades apenas quando não é requerido uma unidade específica */}
+        {!required && (
+          <SelectItem value="todas">Todas as unidades</SelectItem>
+        )}
         {availableUnits.map((unitUser) => (
           <SelectItem key={unitUser.unit_id} value={unitUser.unit_id}>
             {unitUser.units.name}

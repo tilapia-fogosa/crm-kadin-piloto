@@ -4,19 +4,22 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { CalendarDayCell } from "./CalendarDayCell"
 import { ScheduledAppointment } from "../../types"
 import { normalizeDate } from "@/utils/date"
+import { UserUnit } from "../../hooks/useUserUnit"
 
 interface CalendarGridProps {
   currentDate: Date
   isLoadingAppointments: boolean
   scheduledAppointments?: ScheduledAppointment[]
   onReschedule: (clientId: string, clientName: string) => void
+  userUnits?: UserUnit[]
 }
 
 export function CalendarGrid({
   currentDate,
   isLoadingAppointments,
   scheduledAppointments,
-  onReschedule
+  onReschedule,
+  userUnits
 }: CalendarGridProps) {
   console.log('Renderizando CalendarGrid')
 
@@ -92,6 +95,7 @@ export function CalendarGrid({
           isLoading={isLoadingAppointments}
           appointments={day ? getDayAppointments(day) : []}
           onReschedule={onReschedule}
+          userUnits={userUnits}
         />
       ))}
     </div>

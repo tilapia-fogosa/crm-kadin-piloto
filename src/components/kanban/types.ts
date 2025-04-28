@@ -95,4 +95,6 @@ export interface ScheduledAppointment {
   client_name: string
   scheduled_date: string
   status: string
+  unit_id: string
+  unit_name?: string
 }
