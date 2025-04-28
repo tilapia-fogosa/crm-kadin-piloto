@@ -1925,6 +1925,7 @@ export type Database = {
           nome: string
           professor_id: string
           sala: string | null
+          unit_id: string
         }
         Insert: {
           created_at?: string
@@ -1934,6 +1935,7 @@ export type Database = {
           nome: string
           professor_id: string
           sala?: string | null
+          unit_id: string
         }
         Update: {
           created_at?: string
@@ -1943,6 +1945,7 @@ export type Database = {
           nome?: string
           professor_id?: string
           sala?: string | null
+          unit_id?: string
         }
         Relationships: [
           {
@@ -1950,6 +1953,13 @@ export type Database = {
             columns: ["professor_id"]
             isOneToOne: false
             referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "turmas_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]

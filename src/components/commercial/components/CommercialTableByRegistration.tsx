@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -59,20 +60,20 @@ export function CommercialTableByRegistration({ stats, isLoading }: CommercialTa
   // Render a row for stats
   const renderStatsRow = (stats: BaseStats, isSubRow = false, leadSource = '') => (
     <>
-      <TableCell className={`text-center text-xs py-0 ${isSubRow ? 'pl-8' : ''}`}>
+      <TableCell className={`text-[11px] py-2 ${isSubRow ? 'pl-8' : ''}`}>
         {leadSource || ''}
       </TableCell>
-      <TableCell className="text-center text-xs py-0">{stats.newClients}</TableCell>
-      <TableCell className="text-center text-xs py-0">{stats.contactAttempts}</TableCell>
-      <TableCell className="text-center text-xs py-0">{stats.effectiveContacts}</TableCell>
-      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{stats.ceConversionRate.toFixed(1)}%</TableCell>
-      <TableCell className="text-center text-xs py-0">{stats.scheduledVisits}</TableCell>
-      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{stats.agConversionRate.toFixed(1)}%</TableCell>
-      <TableCell className="text-center text-xs py-0">{stats.awaitingVisits}</TableCell>
-      <TableCell className="text-center text-xs py-0">{stats.completedVisits}</TableCell>
-      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{stats.atConversionRate.toFixed(1)}%</TableCell>
-      <TableCell className="text-center text-xs py-0">{stats.enrollments}</TableCell>
-      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0">{stats.maConversionRate.toFixed(1)}%</TableCell>
+      <TableCell className="text-center text-[11px] py-2">{stats.newClients}</TableCell>
+      <TableCell className="text-center text-[11px] py-2">{stats.contactAttempts}</TableCell>
+      <TableCell className="text-center text-[11px] py-2">{stats.effectiveContacts}</TableCell>
+      <TableCell className="text-center bg-[#FEC6A1] text-[11px] py-2">{stats.ceConversionRate.toFixed(1)}%</TableCell>
+      <TableCell className="text-center text-[11px] py-2">{stats.scheduledVisits}</TableCell>
+      <TableCell className="text-center bg-[#FEC6A1] text-[11px] py-2">{stats.agConversionRate.toFixed(1)}%</TableCell>
+      <TableCell className="text-center text-[11px] py-2">{stats.awaitingVisits}</TableCell>
+      <TableCell className="text-center text-[11px] py-2">{stats.completedVisits}</TableCell>
+      <TableCell className="text-center bg-[#FEC6A1] text-[11px] py-2">{stats.atConversionRate.toFixed(1)}%</TableCell>
+      <TableCell className="text-center text-[11px] py-2">{stats.enrollments}</TableCell>
+      <TableCell className="text-center bg-[#FEC6A1] text-[11px] py-2">{stats.maConversionRate.toFixed(1)}%</TableCell>
     </>
   );
 
@@ -81,20 +82,20 @@ export function CommercialTableByRegistration({ stats, isLoading }: CommercialTa
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="cursor-pointer bg-[#FEC6A1] text-xs font-semibold min-w-[200px]">
-              Registration Name / Lead Source
+            <TableHead className="cursor-pointer bg-[#FEC6A1] text-[11px] font-semibold">
+              Cadastrante / Origem
             </TableHead>
-            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Novos Clientes</TableHead>
-            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Total de Contatos</TableHead>
-            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Contatos Efetivos</TableHead>
-            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold min-w-[60px]">% CE</TableHead>
-            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Visitas Agendadas</TableHead>
-            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold min-w-[60px]">% AG</TableHead>
-            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Visitas Aguardadas</TableHead>
-            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Visitas Realizadas</TableHead>
-            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold min-w-[60px]">% AT</TableHead>
-            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Matrículas</TableHead>
-            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold min-w-[60px]">% MA</TableHead>
+            <TableHead className="text-center text-[11px] font-semibold">Novos Clientes</TableHead>
+            <TableHead className="text-center text-[11px] font-semibold">Total de Contatos</TableHead>
+            <TableHead className="text-center text-[11px] font-semibold">Contatos Efetivos</TableHead>
+            <TableHead className="text-center bg-[#FEC6A1] text-[11px] font-semibold">% CE</TableHead>
+            <TableHead className="text-center text-[11px] font-semibold">Visitas Agendadas</TableHead>
+            <TableHead className="text-center bg-[#FEC6A1] text-[11px] font-semibold">% AG</TableHead>
+            <TableHead className="text-center text-[11px] font-semibold">Visitas Aguardadas</TableHead>
+            <TableHead className="text-center text-[11px] font-semibold">Visitas Realizadas</TableHead>
+            <TableHead className="text-center bg-[#FEC6A1] text-[11px] font-semibold">% AT</TableHead>
+            <TableHead className="text-center text-[11px] font-semibold">Matrículas</TableHead>
+            <TableHead className="text-center bg-[#FEC6A1] text-[11px] font-semibold">% MA</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -108,10 +109,17 @@ export function CommercialTableByRegistration({ stats, isLoading }: CommercialTa
             paginatedStats.map(group => (
               <>
                 <TableRow key={group.registrationName} className="hover:bg-muted/50">
-                  <TableCell className="bg-[#FEC6A1] cursor-pointer py-2">
+                  <TableCell 
+                    className="bg-[#FEC6A1] cursor-pointer py-2"
+                    onClick={() => toggleGroup(group.registrationName)}
+                  >
                     <div className="flex items-center gap-2">
-                      {expandedGroups.has(group.registrationName) ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                      <span className="font-semibold">{group.registrationName}</span>
+                      {expandedGroups.has(group.registrationName) ? (
+                        <ChevronDown size={16} />
+                      ) : (
+                        <ChevronRight size={16} />
+                      )}
+                      <span className="font-semibold text-[11px]">{group.registrationName}</span>
                     </div>
                   </TableCell>
                   {renderStatsRow(group.totals)}
