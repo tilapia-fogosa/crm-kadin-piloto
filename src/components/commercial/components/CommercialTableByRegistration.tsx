@@ -80,38 +80,21 @@ export function CommercialTableByRegistration({ stats, isLoading }: CommercialTa
     <div className="space-y-4">
       <Table>
         <TableHeader>
-          <TableRow className="hover:bg-transparent [&>th]:px-2.5">
-            <TableHead 
-              className="cursor-pointer bg-[#FEC6A1] text-xs font-semibold"
-              onClick={() => handleSort('registrationName')}
-            >
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="cursor-pointer bg-[#FEC6A1] text-xs font-semibold min-w-[200px]">
               Registration Name / Lead Source
             </TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
-              {"Novos\nClientes"}
-            </TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[14.4px]">
-              {"Total de\nContatos"}
-            </TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
-              {"Contatos\nEfetivos"}
-            </TableHead>
-            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[10.8px]">% CE</TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
-              {"Visitas\nAgendadas"}
-            </TableHead>
-            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[10.8px]">% AG</TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
-              {"Visitas\nAguardadas"}
-            </TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
-              {"Visitas\nRealizadas"}
-            </TableHead>
-            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[10.8px]">% AT</TableHead>
-            <TableHead className="text-center whitespace-pre-line text-xs font-semibold w-[12.6px]">
-              {"Matrí-\nculas"}
-            </TableHead>
-            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold w-[10.8px]">% MA</TableHead>
+            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Novos Clientes</TableHead>
+            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Total de Contatos</TableHead>
+            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Contatos Efetivos</TableHead>
+            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold min-w-[60px]">% CE</TableHead>
+            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Visitas Agendadas</TableHead>
+            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold min-w-[60px]">% AG</TableHead>
+            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Visitas Aguardadas</TableHead>
+            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Visitas Realizadas</TableHead>
+            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold min-w-[60px]">% AT</TableHead>
+            <TableHead className="text-center text-xs font-semibold min-w-[80px]">Matrículas</TableHead>
+            <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold min-w-[60px]">% MA</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -124,8 +107,8 @@ export function CommercialTableByRegistration({ stats, isLoading }: CommercialTa
           ) : (
             paginatedStats.map(group => (
               <>
-                <TableRow key={group.registrationName} className="hover:bg-muted/50 [&>td]:px-2.5">
-                  <TableCell className="bg-[#FEC6A1] cursor-pointer" onClick={() => toggleGroup(group.registrationName)}>
+                <TableRow key={group.registrationName} className="hover:bg-muted/50">
+                  <TableCell className="bg-[#FEC6A1] cursor-pointer py-2">
                     <div className="flex items-center gap-2">
                       {expandedGroups.has(group.registrationName) ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                       <span className="font-semibold">{group.registrationName}</span>
@@ -134,7 +117,7 @@ export function CommercialTableByRegistration({ stats, isLoading }: CommercialTa
                   {renderStatsRow(group.totals)}
                 </TableRow>
                 {expandedGroups.has(group.registrationName) && group.sources.map(source => (
-                  <TableRow key={`${group.registrationName}-${source.leadSource}`} className="hover:bg-muted/50 [&>td]:px-2.5">
+                  <TableRow key={`${group.registrationName}-${source.leadSource}`} className="hover:bg-muted/50">
                     {renderStatsRow(source, true, source.leadSource)}
                   </TableRow>
                 ))}

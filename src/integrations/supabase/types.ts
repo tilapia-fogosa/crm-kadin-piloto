@@ -59,12 +59,67 @@ export type Database = {
           },
         ]
       }
+      alertas_lancamento: {
+        Row: {
+          arquivado_em: string | null
+          arquivado_por: string | null
+          created_at: string
+          data_aula: string
+          id: string
+          professor_id: string
+          status: string
+          turma_id: string
+          webhook_enviado: boolean | null
+        }
+        Insert: {
+          arquivado_em?: string | null
+          arquivado_por?: string | null
+          created_at?: string
+          data_aula: string
+          id?: string
+          professor_id: string
+          status?: string
+          turma_id: string
+          webhook_enviado?: boolean | null
+        }
+        Update: {
+          arquivado_em?: string | null
+          arquivado_por?: string | null
+          created_at?: string
+          data_aula?: string
+          id?: string
+          professor_id?: string
+          status?: string
+          turma_id?: string
+          webhook_enviado?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alertas_lancamento_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertas_lancamento_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alunos: {
         Row: {
           active: boolean
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
           codigo: string | null
+          coordenador_responsavel: string | null
           created_at: string
           curso: string | null
+          data_onboarding: string | null
           dias_apostila: number | null
           dias_supera: number | null
           email: string | null
@@ -73,8 +128,11 @@ export type Database = {
           indice: string | null
           is_funcionario: boolean | null
           matricula: string | null
+          motivo_procura: string | null
           niveldesafio: number | null
           nome: string
+          percepcao_coordenador: string | null
+          pontos_atencao: string | null
           telefone: string | null
           texto_devolutiva: string | null
           turma_id: string
@@ -86,9 +144,13 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           codigo?: string | null
+          coordenador_responsavel?: string | null
           created_at?: string
           curso?: string | null
+          data_onboarding?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
@@ -97,8 +159,11 @@ export type Database = {
           indice?: string | null
           is_funcionario?: boolean | null
           matricula?: string | null
+          motivo_procura?: string | null
           niveldesafio?: number | null
           nome: string
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id: string
@@ -110,9 +175,13 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           codigo?: string | null
+          coordenador_responsavel?: string | null
           created_at?: string
           curso?: string | null
+          data_onboarding?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
@@ -121,8 +190,11 @@ export type Database = {
           indice?: string | null
           is_funcionario?: boolean | null
           matricula?: string | null
+          motivo_procura?: string | null
           niveldesafio?: number | null
           nome?: string
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string
@@ -745,32 +817,74 @@ export type Database = {
         Row: {
           active: boolean
           cargo: string | null
+          codigo: string | null
           created_at: string
+          curso: string | null
+          dias_apostila: number | null
+          dias_supera: number | null
           email: string | null
           id: string
+          idade: number | null
+          indice: string | null
+          matricula: string | null
+          niveldesafio: number | null
           nome: string
           telefone: string | null
+          texto_devolutiva: string | null
           turma_id: string | null
+          ultima_correcao_ah: string | null
+          ultima_falta: string | null
+          ultima_pagina: number | null
+          ultimo_nivel: string | null
+          vencimento_contrato: string | null
         }
         Insert: {
           active?: boolean
           cargo?: string | null
+          codigo?: string | null
           created_at?: string
+          curso?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
           email?: string | null
           id?: string
+          idade?: number | null
+          indice?: string | null
+          matricula?: string | null
+          niveldesafio?: number | null
           nome: string
           telefone?: string | null
+          texto_devolutiva?: string | null
           turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultimo_nivel?: string | null
+          vencimento_contrato?: string | null
         }
         Update: {
           active?: boolean
           cargo?: string | null
+          codigo?: string | null
           created_at?: string
+          curso?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
           email?: string | null
           id?: string
+          idade?: number | null
+          indice?: string | null
+          matricula?: string | null
+          niveldesafio?: number | null
           nome?: string
           telefone?: string | null
+          texto_devolutiva?: string | null
           turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultimo_nivel?: string | null
+          vencimento_contrato?: string | null
         }
         Relationships: [
           {
@@ -789,9 +903,11 @@ export type Database = {
           column_id: string
           created_at: string
           description: string | null
+          historico: string | null
           id: string
           origem: string | null
           responsavel: string | null
+          retention_date: string | null
           title: string
           updated_at: string
         }
@@ -801,9 +917,11 @@ export type Database = {
           column_id?: string
           created_at?: string
           description?: string | null
+          historico?: string | null
           id?: string
           origem?: string | null
           responsavel?: string | null
+          retention_date?: string | null
           title: string
           updated_at?: string
         }
@@ -813,9 +931,11 @@ export type Database = {
           column_id?: string
           created_at?: string
           description?: string | null
+          historico?: string | null
           id?: string
           origem?: string | null
           responsavel?: string | null
+          retention_date?: string | null
           title?: string
           updated_at?: string
         }
@@ -2154,6 +2274,10 @@ export type Database = {
       change_initial_password: {
         Args: { user_id: string; new_password: string }
         Returns: boolean
+      }
+      check_lancamentos_pendentes: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       count_draft_updates: {
         Args: Record<PropertyKey, never>

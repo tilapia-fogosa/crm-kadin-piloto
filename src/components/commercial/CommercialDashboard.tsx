@@ -86,7 +86,7 @@ export function CommercialDashboard() {
           </div>
           
           <div>
-            <h2 className="text-lg font-semibold mb-4">Totais por Registration Name</h2>
+            <h2 className="text-lg font-semibold mb-4">Totais por Origem e Registro</h2>
             <CommercialTableByRegistration 
               stats={registrationGroups}
               isLoading={isLoadingRegistrationStats}
