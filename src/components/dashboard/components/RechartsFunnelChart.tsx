@@ -71,8 +71,8 @@ interface RechartsFunnelChartProps {
 }
 
 /**
- * Componente que renderiza um gráfico de funil com o Recharts
- * Projetado especificamente para visualização de funis de conversão
+ * Componente que renderiza um gráfico de funil horizontal com o Recharts
+ * Seguindo a documentação oficial do Recharts para FunnelChart
  */
 export const RechartsFunnelChart: React.FC<RechartsFunnelChartProps> = ({
   data,
@@ -91,10 +91,23 @@ export const RechartsFunnelChart: React.FC<RechartsFunnelChartProps> = ({
     );
   }
   
+  // Preparamos os dados para o formato aceito pelo Recharts FunnelChart
+  const formattedData = data.map(item => ({
+    name: item.name,
+    value: item.valor,
+    fill: item.color,
+    legenda: item.legenda,
+    taxa: item.taxa,
+    stageConversionRate: item.stageConversionRate
+  }));
+  
+  console.log('Dados formatados para o funil:', formattedData);
+  
   return (
     <div className="h-[350px]">
       <ResponsiveContainer width="100%" height="100%">
-        <FunnelChart margin={{ top: 20, right: 50, left: 50, bottom: 20 }}>
+        {/* Configurando o FunnelChart com layout horizontal */}
+        <FunnelChart layout="horizontal" margin={{ top: 20, right: 80, left: 20, bottom: 20 }}>
           {/* Tooltip personalizado */}
           <Tooltip 
             content={<FunnelCustomTooltip 
@@ -103,44 +116,34 @@ export const RechartsFunnelChart: React.FC<RechartsFunnelChartProps> = ({
             />} 
           />
           
-          {/* Componente Funnel principal - Com configuração para evitar sobreposição */}
+          {/* Componente Funnel principal com orientação horizontal */}
           <Funnel
-            dataKey="valor"
-            data={data}
+            dataKey="value"
+            data={formattedData}
             isAnimationActive={true}
-            width={500}
-            height={300}
+            orientation="horizontal"
             nameKey="legenda"
-            // Removemos a propriedade trapezoids={true} que estava causando o erro
+            width="80%"
+            height="80%"
+            lastShapeType="rectangle"  // Último elemento como retângulo
           >
-            {/* Lista de rótulos à esquerda (etapa do funil) */}
+            {/* Lista de rótulos à direita (valores) */}
             <LabelList
-              position="left"
-              dataKey="legenda"
+              position="right"
+              dataKey="value"
               fill="#333"
-              fontSize={12}
-              fontWeight="500"
-              stroke="none"
-              className="text-sm font-medium"
-              offset={40} // Aumentamos o offset para afastar ainda mais os rótulos do funil
-            />
-            
-            {/* Lista de rótulos dentro das barras (valores) */}
-            <LabelList
-              position="center"
-              dataKey="valor"
-              fill="#fff"
               fontSize={12}
               fontWeight="bold"
               formatter={formatNumber}
-              className="text-sm font-bold text-white"
+              className="text-sm font-bold"
+              offset={10}
             />
             
             {/* Células individuais com cores personalizadas */}
-            {data.map((entry, index) => (
+            {formattedData.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
-                fill={entry.color}
+                fill={entry.fill}
               />
             ))}
           </Funnel>
