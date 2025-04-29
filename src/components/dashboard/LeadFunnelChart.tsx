@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { DateRangePicker } from "./DateRangePicker";
@@ -33,7 +32,8 @@ import {
 export function LeadFunnelChart() {
   console.log('Renderizando LeadFunnelChart');
   
-  const { selectedUnitId } = useUnit();
+  // Alteração principal: usar selectedUnitIds ao invés de selectedUnitId
+  const { selectedUnitIds } = useUnit();
   const [dateRange, setDateRange] = useState<DateRangeType>('current-month');
   const [customRange, setCustomRange] = useState<DateRange | undefined>({
     from: subMonths(new Date(), 1),
@@ -41,8 +41,8 @@ export function LeadFunnelChart() {
   });
   
   useEffect(() => {
-    console.log('LeadFunnelChart - Unidade selecionada:', selectedUnitId);
-  }, [selectedUnitId]);
+    console.log('LeadFunnelChart - Unidades selecionadas:', selectedUnitIds);
+  }, [selectedUnitIds]);
   
   const handleDateRangeChange = (type: DateRangeType, range?: DateRange) => {
     console.log('Alterando range de data:', { type, range });
@@ -52,8 +52,9 @@ export function LeadFunnelChart() {
     }
   };
   
+  // Modificando para usar o array de IDs de unidades
   const { data: funnelStats, isLoading, error } = useLeadFunnelStats(
-    selectedUnitId,
+    selectedUnitIds,
     dateRange,
     customRange?.from,
     customRange?.to
@@ -112,6 +113,7 @@ export function LeadFunnelChart() {
     );
   }
   
+  // Modificamos esta condição para verificar o array de unidades
   if (!funnelStats) {
     return (
       <Card>
@@ -125,7 +127,7 @@ export function LeadFunnelChart() {
         </CardHeader>
         <CardContent>
           <div className="h-[350px] flex items-center justify-center">
-            {selectedUnitId ? 
+            {selectedUnitIds && selectedUnitIds.length > 0 ? 
               "Nenhum dado disponível para o período selecionado" : 
               "Nenhuma unidade selecionada"}
           </div>
