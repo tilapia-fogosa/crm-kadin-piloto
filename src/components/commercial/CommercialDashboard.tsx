@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useUnit } from "@/contexts/UnitContext";
 import { CommercialFilters } from "./components/CommercialFilters";
 import { CommercialTableOne } from "./components/CommercialTableOne";
@@ -11,15 +12,22 @@ import { calculateTotals } from "./utils/stats.utils";
 export function CommercialDashboard() {
   console.log("Rendering CommercialDashboard");
   
-  // Estado dos filtros
-  const [selectedSource, setSelectedSource] = useState<string>("todos");
-  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().getMonth().toString());
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
-  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+  // Estado dos filtros com seleção múltipla
+  const [selectedSources, setSelectedSources] = useState<string[]>(['todos']);
+  const [selectedMonths, setSelectedMonths] = useState<string[]>([new Date().getMonth().toString()]);
+  const [selectedYears, setSelectedYears] = useState<string[]>([new Date().getFullYear().toString()]);
+  const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>(['todos']);
 
   // Contexto de unidades
   const { availableUnits } = useUnit();
   const availableUnitIds = availableUnits.map(unit => unit.unit_id);
+  
+  // Inicializar valores padrão quando availableUnits estiver disponível
+  useEffect(() => {
+    if (availableUnits && availableUnits.length > 0 && selectedUnitIds.length === 0) {
+      setSelectedUnitIds(['todos']);
+    }
+  }, [availableUnits, selectedUnitIds]);
   
   // Buscar dados usando os hooks otimizados
   const { 
@@ -28,10 +36,10 @@ export function CommercialDashboard() {
     isLoadingUnitStats, 
     isLoadingUserStats 
   } = useCommercialStats({
-    selectedSource,
-    selectedMonth,
-    selectedYear,
-    selectedUnitId,
+    selectedSources,
+    selectedMonths,
+    selectedYears,
+    selectedUnitIds,
     availableUnitIds
   });
 
@@ -39,10 +47,10 @@ export function CommercialDashboard() {
     registrationGroups,
     isLoading: isLoadingRegistrationStats
   } = useRegistrationStats({
-    selectedSource,
-    selectedMonth,
-    selectedYear,
-    selectedUnitId,
+    selectedSources,
+    selectedMonths,
+    selectedYears,
+    selectedUnitIds,
     availableUnitIds
   });
 
@@ -56,14 +64,14 @@ export function CommercialDashboard() {
       
       <div className="space-y-8">
         <CommercialFilters
-          selectedSource={selectedSource}
-          setSelectedSource={setSelectedSource}
-          selectedMonth={selectedMonth}
-          setSelectedMonth={setSelectedMonth}
-          selectedYear={selectedYear}
-          setSelectedYear={setSelectedYear}
-          selectedUnitId={selectedUnitId}
-          setSelectedUnitId={setSelectedUnitId}
+          selectedSources={selectedSources}
+          setSelectedSources={setSelectedSources}
+          selectedMonths={selectedMonths}
+          setSelectedMonths={setSelectedMonths}
+          selectedYears={selectedYears}
+          setSelectedYears={setSelectedYears}
+          selectedUnitIds={selectedUnitIds}
+          setSelectedUnitIds={setSelectedUnitIds}
         />
         
         <div className="space-y-8">

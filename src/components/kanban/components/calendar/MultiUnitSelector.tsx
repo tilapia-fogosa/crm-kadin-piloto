@@ -54,32 +54,54 @@ export function MultiUnitSelector({
   }
   
   // Verifica se todas as unidades estão selecionadas
-  const allSelected = tempSelectedIds.length === units.length;
+  const allSelected = selectedUnitIds.includes('todos') || 
+                     (selectedUnitIds.length === units.length && !selectedUnitIds.includes('todos'));
   
   // Verifica se algumas unidades estão selecionadas
-  const someSelected = tempSelectedIds.length > 0 && tempSelectedIds.length < units.length;
+  const someSelected = selectedUnitIds.length > 0 && !selectedUnitIds.includes('todos') && selectedUnitIds.length < units.length;
   
   // Gerencia a seleção de todas as unidades
   const handleSelectAll = () => {
     if (allSelected) {
       setTempSelectedIds([]);
     } else {
-      setTempSelectedIds(units.map(unit => unit.unit_id));
+      setTempSelectedIds(['todos']);
     }
   };
   
   // Gerencia a seleção individual de unidades
   const handleSelectUnit = (unitId: string) => {
-    if (tempSelectedIds.includes(unitId)) {
-      setTempSelectedIds(prev => prev.filter(id => id !== unitId));
-    } else {
-      setTempSelectedIds(prev => [...prev, unitId]);
+    // Se estamos selecionando uma unidade individual e 'todos' está selecionado, remova 'todos'
+    let newSelected = [...tempSelectedIds];
+    if (unitId !== 'todos' && newSelected.includes('todos')) {
+      newSelected = newSelected.filter(id => id !== 'todos');
     }
+    
+    // Alternar a seleção da unidade
+    if (newSelected.includes(unitId)) {
+      newSelected = newSelected.filter(id => id !== unitId);
+    } else {
+      newSelected.push(unitId);
+    }
+    
+    // Se todas as unidades individuais estão selecionadas, selecione 'todos' em vez disso
+    if (unitId !== 'todos' && 
+        units.every(unit => newSelected.includes(unit.unit_id)) && 
+        !newSelected.includes('todos')) {
+      newSelected = ['todos'];
+    }
+    
+    setTempSelectedIds(newSelected);
   };
   
   // Função para aplicar as seleções e fechar o popover
   const handleConfirm = () => {
-    onChange(tempSelectedIds);
+    // Se nenhuma seleção, padrão para 'todos'
+    if (tempSelectedIds.length === 0) {
+      onChange(['todos']);
+    } else {
+      onChange(tempSelectedIds);
+    }
     setOpen(false);
   };
   
@@ -91,11 +113,11 @@ export function MultiUnitSelector({
   
   // Texto que mostra no botão principal
   const getButtonText = () => {
-    if (selectedUnitIds.length === 0 || selectedUnitIds.length === units.length) {
+    if (selectedUnitIds.includes('todos') || selectedUnitIds.length === 0) {
       return "Todas unidades";
     }
     
-    if (selectedUnitIds.length === 1) {
+    if (selectedUnitIds.length === 1 && !selectedUnitIds.includes('todos')) {
       const selectedUnit = units.find(unit => unit.unit_id === selectedUnitIds[0]);
       return selectedUnit?.units.name || "Uma unidade";
     }
@@ -120,8 +142,8 @@ export function MultiUnitSelector({
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="select-all" 
-                  checked={allSelected} 
-                  onClick={handleSelectAll}
+                  checked={allSelected}
+                  onCheckedChange={handleSelectAll}
                 />
                 <label
                   htmlFor="select-all"
@@ -141,8 +163,8 @@ export function MultiUnitSelector({
                   <div key={unit.unit_id} className="flex items-center space-x-2">
                     <Checkbox 
                       id={`unit-${unit.unit_id}`} 
-                      checked={tempSelectedIds.includes(unit.unit_id)}
-                      onClick={() => handleSelectUnit(unit.unit_id)}
+                      checked={tempSelectedIds.includes(unit.unit_id) || tempSelectedIds.includes('todos')}
+                      onCheckedChange={() => handleSelectUnit(unit.unit_id)}
                     />
                     <div className="flex items-center space-x-2">
                       <div 

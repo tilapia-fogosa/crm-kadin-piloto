@@ -4,40 +4,70 @@ import { supabase } from "@/integrations/supabase/client";
 import { RegistrationGroup, RegistrationSourceStats } from "../types/registration-stats.types";
 import { calculateTotals } from "../utils/stats.utils";
 import { BaseStats } from "../types/stats.types";
+import { startOfMonth, endOfMonth } from "date-fns";
+import { createSafeDate } from "@/utils/date";
 
 export function useRegistrationStats({
-  selectedSource,
-  selectedMonth,
-  selectedYear,
-  selectedUnitId,
+  selectedSources,
+  selectedMonths,
+  selectedYears,
+  selectedUnitIds,
   availableUnitIds
 }: {
-  selectedSource: string;
-  selectedMonth: string;
-  selectedYear: string;
-  selectedUnitId: string | null;
+  selectedSources: string[];
+  selectedMonths: string[];
+  selectedYears: string[];
+  selectedUnitIds: string[];
   availableUnitIds: string[];
 }) {
-  const startDate = new Date(parseInt(selectedYear), parseInt(selectedMonth), 1);
-  const endDate = new Date(parseInt(selectedYear), parseInt(selectedMonth) + 1, 0);
+  // Coletar todas as combinações de mês/ano solicitadas
+  const dateRanges = [];
+  for (const yearStr of selectedYears.includes('todos') ? [new Date().getFullYear().toString()] : selectedYears) {
+    const year = parseInt(yearStr);
+    for (const monthStr of selectedMonths.includes('todos') ? Array.from({ length: 12 }, (_, i) => i.toString()) : selectedMonths) {
+      const month = parseInt(monthStr);
+      const startDate = startOfMonth(createSafeDate(year, month));
+      const endDate = endOfMonth(createSafeDate(year, month));
+      dateRanges.push({ startDate, endDate });
+    }
+  }
+
+  // Se não houver combinações, usar o mês atual como fallback
+  if (dateRanges.length === 0) {
+    const currentDate = new Date();
+    const startDate = startOfMonth(currentDate);
+    const endDate = endOfMonth(currentDate);
+    dateRanges.push({ startDate, endDate });
+  }
+
+  // Calcular intervalos de datas geral
+  const startDate = dateRanges.reduce((min, current) => 
+    current.startDate < min ? current.startDate : min, dateRanges[0].startDate);
+  
+  const endDate = dateRanges.reduce((max, current) => 
+    current.endDate > max ? current.endDate : max, dateRanges[0].endDate);
+
+  // Determinar as unidades para filtro
+  const unitIds = selectedUnitIds.includes('todos') ? availableUnitIds : selectedUnitIds;
+  
+  // Determinar a fonte para filtro (usar 'todos' se incluído ou array vazio)
+  const sourceId = selectedSources.includes('todos') ? 'todos' : selectedSources.join(',');
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['registration-stats', selectedSource, selectedMonth, selectedYear, selectedUnitId],
+    queryKey: ['registration-stats', sourceId, selectedMonths.join(','), selectedYears.join(','), selectedUnitIds.join(',')],
     queryFn: async () => {
-      const unitIds = selectedUnitId ? [selectedUnitId] : availableUnitIds;
-      
       console.log('Fetching registration stats', {
         startDate,
         endDate,
         unitIds,
-        sourceId: selectedSource
+        sourceId
       });
       
       const { data, error } = await supabase.rpc('get_registration_stats', {
         p_start_date: startDate.toISOString(),
         p_end_date: endDate.toISOString(),
         p_unit_ids: unitIds,
-        p_source_id: selectedSource
+        p_source_id: sourceId
       });
 
       if (error) {

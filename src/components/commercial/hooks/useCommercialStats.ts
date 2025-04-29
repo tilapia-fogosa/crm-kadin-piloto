@@ -6,10 +6,10 @@ import { createSafeDate } from "@/utils/date";
 import type { UnitStats, UserStats } from "../types/stats.types";
 
 interface UseCommercialStatsProps {
-  selectedSource: string;
-  selectedMonth: string;
-  selectedYear: string;
-  selectedUnitId: string | null;
+  selectedSources: string[];
+  selectedMonths: string[];
+  selectedYears: string[];
+  selectedUnitIds: string[];
   availableUnitIds: string[];
 }
 
@@ -64,45 +64,69 @@ const transformToUserStats = (raw: RawStats): UserStats => ({
 });
 
 export function useCommercialStats({
-  selectedSource,
-  selectedMonth,
-  selectedYear,
-  selectedUnitId,
+  selectedSources,
+  selectedMonths,
+  selectedYears,
+  selectedUnitIds,
   availableUnitIds
 }: UseCommercialStatsProps) {
   console.log('useCommercialStats hook iniciado com params:', {
-    selectedSource,
-    selectedMonth,
-    selectedYear,
-    selectedUnitId,
+    selectedSources,
+    selectedMonths,
+    selectedYears,
+    selectedUnitIds,
     availableUnitIds
   });
 
-  // Converter datas
-  const monthNum = parseInt(selectedMonth);
-  const yearNum = parseInt(selectedYear);
-  const startDate = startOfMonth(createSafeDate(yearNum, monthNum));
-  const endDate = endOfMonth(createSafeDate(yearNum, monthNum));
+  // Coletar todas as combinações de mês/ano solicitadas
+  const dateRanges = [];
+  for (const yearStr of selectedYears.includes('todos') ? [new Date().getFullYear().toString()] : selectedYears) {
+    const year = parseInt(yearStr);
+    for (const monthStr of selectedMonths.includes('todos') ? Array.from({ length: 12 }, (_, i) => i.toString()) : selectedMonths) {
+      const month = parseInt(monthStr);
+      const startDate = startOfMonth(createSafeDate(year, month));
+      const endDate = endOfMonth(createSafeDate(year, month));
+      dateRanges.push({ startDate, endDate });
+    }
+  }
 
-  // Preparar array de unidades para filtro
-  const unitIds = selectedUnitId ? [selectedUnitId] : availableUnitIds;
+  // Se não houver combinações, usar o mês atual como fallback
+  if (dateRanges.length === 0) {
+    const currentDate = new Date();
+    const startDate = startOfMonth(currentDate);
+    const endDate = endOfMonth(currentDate);
+    dateRanges.push({ startDate, endDate });
+  }
+
+  // Determinar as unidades para filtro
+  const unitIds = selectedUnitIds.includes('todos') ? availableUnitIds : selectedUnitIds;
+  
+  // Determinar a fonte para filtro (usar 'todos' se incluído ou array vazio)
+  const sourceId = selectedSources.includes('todos') ? 'todos' : selectedSources.join(',');
+
+  // Calcular intervalos de datas geral
+  const minDate = dateRanges.reduce((min, current) => 
+    current.startDate < min ? current.startDate : min, dateRanges[0].startDate);
+  
+  const maxDate = dateRanges.reduce((max, current) => 
+    current.endDate > max ? current.endDate : max, dateRanges[0].endDate);
 
   // Query para estatísticas por unidade
   const unitStatsQuery = useQuery({
-    queryKey: ['commercial-unit-stats', selectedSource, selectedMonth, selectedYear, selectedUnitId],
+    queryKey: ['commercial-unit-stats', sourceId, selectedMonths.join(','), selectedYears.join(','), selectedUnitIds.join(',')],
     queryFn: async () => {
       console.log('Buscando estatísticas por unidade:', {
-        startDate,
-        endDate,
+        minDate,
+        maxDate,
         unitIds,
-        selectedSource
+        sourceId
       });
 
       const { data, error } = await supabase.rpc('get_commercial_unit_stats', {
-        p_start_date: startDate.toISOString(),
-        p_end_date: endDate.toISOString(),
+        p_start_date: minDate.toISOString(),
+        p_end_date: maxDate.toISOString(),
         p_unit_ids: unitIds,
-        p_source_id: selectedSource
+        p_source_id: sourceId
       });
 
       if (error) throw error;
@@ -112,20 +136,20 @@ export function useCommercialStats({
 
   // Query para estatísticas por usuário
   const userStatsQuery = useQuery({
-    queryKey: ['commercial-user-stats', selectedSource, selectedMonth, selectedYear, selectedUnitId],
+    queryKey: ['commercial-user-stats', sourceId, selectedMonths.join(','), selectedYears.join(','), selectedUnitIds.join(',')],
     queryFn: async () => {
       console.log('Buscando estatísticas por usuário:', {
-        startDate,
-        endDate,
+        minDate,
+        maxDate,
         unitIds,
-        selectedSource
+        sourceId
       });
 
       const { data, error } = await supabase.rpc('get_commercial_user_stats', {
-        p_start_date: startDate.toISOString(),
-        p_end_date: endDate.toISOString(),
+        p_start_date: minDate.toISOString(),
+        p_end_date: maxDate.toISOString(),
         p_unit_ids: unitIds,
-        p_source_id: selectedSource
+        p_source_id: sourceId
       });
 
       if (error) throw error;
