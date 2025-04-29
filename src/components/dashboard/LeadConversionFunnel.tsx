@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -153,8 +152,8 @@ export function LeadConversionFunnel({ unitIds }: LeadConversionFunnelProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {/* Usando o novo componente RechartsFunnelChart */}
-          <div className="h-[450px]">
+          {/* Ajustamos a altura do container para dar mais espaço para o gráfico */}
+          <div className="h-[500px]">
             <RechartsFunnelChart 
               data={basicChartData} 
               formatNumber={formatNumber}

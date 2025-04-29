@@ -94,7 +94,7 @@ export const RechartsFunnelChart: React.FC<RechartsFunnelChartProps> = ({
   return (
     <div className="h-[350px]">
       <ResponsiveContainer width="100%" height="100%">
-        <FunnelChart>
+        <FunnelChart margin={{ top: 20, right: 30, left: 30, bottom: 0 }}>
           {/* Tooltip personalizado */}
           <Tooltip 
             content={<FunnelCustomTooltip 
@@ -103,15 +103,14 @@ export const RechartsFunnelChart: React.FC<RechartsFunnelChartProps> = ({
             />} 
           />
           
-          {/* Componente Funnel principal - Aqui corrigimos os valores para números */}
+          {/* Componente Funnel principal - Aumentamos width e height significativamente */}
           <Funnel
             dataKey="valor"
             data={data}
             isAnimationActive={true}
-            width={80} 
-            height={90}
+            width={600} 
+            height={300}
             nameKey="legenda"
-            // Removemos a propriedade paddingAngle que não é suportada
           >
             {/* Lista de rótulos à esquerda (etapa do funil) */}
             <LabelList
@@ -122,6 +121,7 @@ export const RechartsFunnelChart: React.FC<RechartsFunnelChartProps> = ({
               fontWeight="500"
               stroke="none"
               className="text-sm font-medium"
+              offset={30} /* Adicionamos um offset para afastar os rótulos do funil */
             />
             
             {/* Lista de rótulos dentro das barras (valores) */}
