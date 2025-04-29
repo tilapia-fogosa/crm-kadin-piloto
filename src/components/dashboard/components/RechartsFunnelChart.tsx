@@ -123,8 +123,8 @@ export const RechartsFunnelChart: React.FC<RechartsFunnelChartProps> = ({
             isAnimationActive={true}
             orientation="horizontal"
             nameKey="legenda"
-            width="80%"
-            height="80%"
+            // Removemos as propriedades width e height com strings (80% e 80%)
+            // A biblioteca espera números, não strings com porcentagem
             lastShapeType="rectangle"  // Último elemento como retângulo
           >
             {/* Lista de rótulos à direita (valores) */}
