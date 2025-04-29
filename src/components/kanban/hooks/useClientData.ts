@@ -91,6 +91,11 @@ export function useClientData(selectedUnitIds: string[] = []) {
           original_adset,
           scheduled_date,
           valorization_confirmed,
+          unit_id,
+          units (
+            id,
+            name
+          ),
           client_activities (
             id,
             tipo_contato,
@@ -121,6 +126,8 @@ export function useClientData(selectedUnitIds: string[] = []) {
           original_ad: client.original_ad,
           original_adset: client.original_adset,
           status: client.status,
+          unit_id: client.unit_id,
+          unit_name: client.units?.name,
           activities_count: client.client_activities?.length || 0
         })
       })
