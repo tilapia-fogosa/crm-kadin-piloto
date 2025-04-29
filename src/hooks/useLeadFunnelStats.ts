@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -79,17 +78,17 @@ const getClientMaxProgression = (activities: any[] = []) => {
 };
 
 export function useLeadFunnelStats(
-  unitId: string | null,
+  unitIds: string[] | null,
   dateRange: DateRangeType,
   startDate?: Date,
   endDate?: Date
 ) {
-  console.log('Iniciando hook useLeadFunnelStats:', { unitId, dateRange, startDate, endDate });
+  console.log('Iniciando hook useLeadFunnelStats:', { unitIds, dateRange, startDate, endDate });
   
   return useQuery({
-    queryKey: ['lead-funnel-stats', unitId, dateRange, startDate, endDate],
+    queryKey: ['lead-funnel-stats', unitIds, dateRange, startDate, endDate],
     queryFn: async (): Promise<LeadFunnelStats | null> => {
-      if (!unitId) {
+      if (!unitIds || unitIds.length === 0) {
         console.log('Nenhuma unidade selecionada, retornando null');
         return null;
       }
@@ -118,7 +117,7 @@ export function useLeadFunnelStats(
       console.log('Intervalo de datas para consulta:', {
         inicio: queryStartDate.toISOString(),
         fim: queryEndDate.toISOString(),
-        unidade: unitId
+        unidades: unitIds
       });
 
       try {
@@ -126,7 +125,7 @@ export function useLeadFunnelStats(
         const { data: leads, error: leadsError } = await supabase
           .from('clients')
           .select('id, created_at, status, client_activities(id, tipo_atividade, created_at, active)')
-          .eq('unit_id', unitId)
+          .in('unit_id', unitIds)
           .eq('active', true) // Filtrar apenas clientes ativos
           .gte('created_at', queryStartDate.toISOString())
           .lte('created_at', queryEndDate.toISOString());
@@ -151,7 +150,7 @@ export function useLeadFunnelStats(
           };
         }
         
-        console.log(`Encontrados ${leads.length} leads ativos no período para unidade ${unitId}`);
+        console.log(`Encontrados ${leads.length} leads ativos no período para unidades: ${unitIds.join(', ')}`);
         
         // Processar cada lead para determinar sua progressão máxima
         let effectiveContacts = 0;
@@ -199,7 +198,7 @@ export function useLeadFunnelStats(
         throw error;
       }
     },
-    enabled: !!unitId,
+    enabled: !!unitIds && unitIds.length > 0,
     refetchOnWindowFocus: false,
     staleTime: 60 * 60 * 1000 // 1 hora
   });

@@ -20,14 +20,14 @@ const getColorForSource = (source: string, index: number) => {
 };
 
 export function LeadsChart() {
-  const { selectedUnitId } = useUnit();
+  const { selectedUnitIds } = useUnit();
   
   const { data, isLoading } = useQuery({
-    queryKey: ['leads-by-month-and-source', selectedUnitId],
+    queryKey: ['leads-by-month-and-source', selectedUnitIds],
     queryFn: async () => {
-      console.log('Buscando leads do gráfico para unidade:', selectedUnitId);
+      console.log('Buscando leads do gráfico para unidades:', selectedUnitIds);
       
-      if (!selectedUnitId) {
+      if (!selectedUnitIds || selectedUnitIds.length === 0) {
         console.log('Nenhuma unidade selecionada para o gráfico');
         return { data: [], sources: [] };
       }
@@ -39,7 +39,7 @@ export function LeadsChart() {
         .from('clients')
         .select('created_at, lead_source')
         .eq('active', true)
-        .eq('unit_id', selectedUnitId)
+        .in('unit_id', selectedUnitIds)
         .gte('created_at', sixMonthsAgo.toISOString())
         .order('created_at', { ascending: true });
 
@@ -80,7 +80,7 @@ export function LeadsChart() {
     },
     staleTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
-    enabled: !!selectedUnitId
+    enabled: !!selectedUnitIds && selectedUnitIds.length > 0
   });
 
   if (isLoading) {

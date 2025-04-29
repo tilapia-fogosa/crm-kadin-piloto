@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, endOfMonth, subMonths, subYears } from "date-fns";
@@ -74,32 +73,32 @@ interface DashboardActivityResponse {
  * Esta versão usa uma função no banco de dados para agregar dados e evitar limitações
  * de paginação do Supabase. Melhora significativamente a performance e precisão dos dados.
  * 
- * @param unitId ID da unidade selecionada ou null para todas as unidades
+ * @param unitIds IDs das unidades selecionadas ou null para todas as unidades
  */
-export function useDashboardActivityStats(unitId: string | null) {
-  console.log('Iniciando useDashboardActivityStats para unidade:', unitId);
+export function useDashboardActivityStats(unitIds: string[] | null) {
+  console.log('Iniciando useDashboardActivityStats para unidades:', unitIds);
   const { availableUnits } = useUnit();
   
   return useQuery({
-    queryKey: ['dashboard-activity-stats', unitId, availableUnits?.map(u => u.unit_id)],
+    queryKey: ['dashboard-activity-stats', unitIds, availableUnits?.map(u => u.unit_id)],
     queryFn: async (): Promise<DashboardActivityData | null> => {
       console.time('[DASHBOARD ACTIVITY STATS] Tempo total de execução');
-      console.log('Buscando estatísticas de funil de atividades para unidade:', unitId);
+      console.log('Buscando estatísticas de funil de atividades para unidades:', unitIds);
       
-      if (!unitId) {
+      if (!unitIds || unitIds.length === 0) {
         console.log('Nenhuma unidade selecionada, retornando null');
         return null;
       }
 
       // Determina as unidades para filtro
-      let unitIds: string[] = [];
-      if (unitId === 'todas') {
-        unitIds = availableUnits?.map(u => u.unit_id) || [];
-      } else {
-        unitIds = [unitId];
+      let finalUnitIds: string[] = unitIds;
+      
+      // Se nenhuma unidade específica foi fornecida, usa todas as disponíveis
+      if (unitIds.length === 0 || unitIds[0] === 'todas') {
+        finalUnitIds = availableUnits?.map(u => u.unit_id) || [];
       }
       
-      if (unitIds.length === 0) {
+      if (finalUnitIds.length === 0) {
         console.error('[DASHBOARD ACTIVITY STATS] Nenhuma unidade para filtro');
         return null;
       }
@@ -126,7 +125,6 @@ export function useDashboardActivityStats(unitId: string | null) {
         });
 
         // Chama a função RPC no Supabase que faz os cálculos no servidor
-        // Com type assertion para garantir o tipo correto
         const { data, error } = await supabase.rpc(
           'get_dashboard_activity_funnel_stats' as any,
           {
@@ -134,7 +132,7 @@ export function useDashboardActivityStats(unitId: string | null) {
             p_end_date: endDate.toISOString(),
             p_prev_start_date: previousStartDate.toISOString(),
             p_prev_end_date: previousEndDate.toISOString(),
-            p_unit_ids: unitIds
+            p_unit_ids: finalUnitIds
           }
         );
 
@@ -203,7 +201,7 @@ export function useDashboardActivityStats(unitId: string | null) {
         throw error;
       }
     },
-    enabled: !!unitId && (!availableUnits || availableUnits.length > 0),
+    enabled: !!unitIds && unitIds.length > 0 && (!availableUnits || availableUnits.length > 0),
     staleTime: 5 * 60 * 1000, // 5 minutos de cache
     gcTime: 10 * 60 * 1000, // 10 minutos (substituiu o cacheTime nas versões mais recentes)
   });

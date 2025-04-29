@@ -1,66 +1,50 @@
 
 /**
- * Utilitário para gerenciar as cores das unidades
- * 
- * As cores são atribuídas seguindo uma ordem de prioridade:
- * 1. Cores laranja (identidade principal)
- * 2. Cores roxas (identidade secundária)
- * 3. Outras cores para diversificação
+ * Função para gerar uma cor para uma unidade com base no índice
+ * Cores são selecionadas para ter bom contraste e serem visualmente agradáveis
  */
-
-// Paleta de cores com prioridade para laranja/roxo (expansão para 10 cores sem repetição)
-const unitColorPalette = [
-  '#ff7b00', // laranja principal
-  '#9b87f5', // roxo principal
-  '#ff9a3c', // laranja claro
-  '#7E69AB', // roxo secundário
-  '#d15d27', // laranja escuro
-  '#8B5CF6', // roxo vivido
-  '#0EA5E9', // azul oceano
-  '#10B981', // verde esmeralda
-  '#F97316', // laranja vivo
-  '#6366F1'  // índigo
-];
-
-/**
- * Obtém a cor para uma unidade com base em seu índice na lista de unidades
- * @param index Índice da unidade na lista
- * @returns Código de cor hexadecimal
- */
-export function getUnitColor(index: number): string {
-  // Verificação de segurança para índice negativo
-  if (index < 0) {
-    console.log('Índice negativo fornecido para getUnitColor:', index);
-    index = 0;
-  }
+export const getUnitColor = (index: number): string => {
+  // Paleta de cores para unidades (16 cores)
+  const colors = [
+    '#4361ee', // Azul principal
+    '#ef476f', // Rosa
+    '#06d6a0', // Verde turquesa
+    '#ffd166', // Amarelo
+    '#118ab2', // Azul escuro
+    '#ff9f1c', // Laranja
+    '#7209b7', // Roxo
+    '#2b9348', // Verde
+    '#e07a5f', // Terracota
+    '#3a86ff', // Azul claro
+    '#bc4749', // Vermelho escuro
+    '#0077b6', // Azul marinho
+    '#fb8500', // Laranja escuro
+    '#7b2cbf', // Violeta
+    '#3f8efc', // Azul médio
+    '#55a630'  // Verde limão
+  ];
   
-  console.log('Atribuindo cor para índice:', index);
-  return unitColorPalette[index % unitColorPalette.length];
-}
+  // Para garantir que sempre tenhamos uma cor, mesmo com mais de 16 unidades
+  return colors[index % colors.length];
+};
 
 /**
- * Verifica se a cor de fundo é escura para determinar a cor do texto
- * @param backgroundColor Código de cor hexadecimal do fundo
- * @returns Verdadeiro se deve usar texto claro (branco)
+ * Determina se o texto deve ser branco ou preto com base na cor de fundo
+ * para garantir contraste adequado
  */
-export function shouldUseWhiteText(backgroundColor: string): boolean {
-  // Remove o caractere # se estiver presente
-  const hex = backgroundColor.replace('#', '');
+export const shouldUseWhiteText = (bgColor: string): boolean => {
+  // Remove o # se presente
+  const color = bgColor.startsWith('#') ? bgColor.slice(1) : bgColor;
   
-  // Verificação de segurança para hex inválido
-  if (!/^[0-9A-Fa-f]{6}$/.test(hex)) {
-    console.log('Código de cor hexadecimal inválido:', backgroundColor);
-    return false;
-  }
+  // Converte para RGB
+  const r = parseInt(color.slice(0, 2), 16) || 0;
+  const g = parseInt(color.slice(2, 4), 16) || 0;
+  const b = parseInt(color.slice(4, 6), 16) || 0;
   
-  // Converte de hexadecimal para RGB
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
+  // Cálculo de luminância (simplificado)
+  // Fonte: https://www.w3.org/TR/WCAG20-TECHS/G17.html
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   
-  // Calcula a luminosidade (fórmula YIQ)
-  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-  
-  // Se YIQ < 128, a cor é escura e deve usar texto branco
-  return yiq < 128;
-}
+  // Retorna true (texto branco) para cores escuras, false (texto preto) para cores claras
+  return luminance < 0.5;
+};

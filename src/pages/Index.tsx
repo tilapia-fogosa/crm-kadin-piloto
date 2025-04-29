@@ -4,33 +4,35 @@ import { LeadsChart } from '@/components/dashboard/LeadsChart';
 import { RecentClientsList } from '@/components/dashboard/RecentClientsList';
 import { useLeadsStats } from '@/hooks/useLeadsStats';
 import { useUnit } from '@/contexts/UnitContext';
-import { UnitSelector } from '@/components/UnitSelector';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { LeadConversionFunnel } from '@/components/dashboard/LeadConversionFunnel';
 import { ActivityFunnelStats } from '@/components/dashboard/ActivityFunnelStats';
+import { MultiUnitSelector } from '@/components/dashboard/MultiUnitSelector';
 
 function Index() {
   console.log("Renderizando Dashboard/Index page");
   
-  const { selectedUnitId, isLoading: isLoadingUnit } = useUnit();
-  const { data: leadsStats } = useLeadsStats(selectedUnitId);
+  const { selectedUnitIds, isLoading: isLoadingUnit } = useUnit();
+  const { data: leadsStats } = useLeadsStats(selectedUnitIds);
   
   useEffect(() => {
-    console.log('Dashboard - Unidade selecionada:', selectedUnitId);
-  }, [selectedUnitId]);
+    console.log('Dashboard - Unidades selecionadas:', selectedUnitIds);
+  }, [selectedUnitIds]);
   
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <UnitSelector />
+        
+        {/* Substituído UnitSelector pelo MultiUnitSelector */}
+        <MultiUnitSelector />
       </div>
       
       {isLoadingUnit ? (
         <div>Carregando...</div>
-      ) : !selectedUnitId ? (
+      ) : !selectedUnitIds || selectedUnitIds.length === 0 ? (
         <div>Selecione uma unidade para ver os dados</div>
       ) : (
         <div className="space-y-6">
@@ -38,7 +40,7 @@ function Index() {
           <DashboardStats leadsStats={leadsStats} />
           
           {/* Estatísticas de atividades do funil */}
-          <ActivityFunnelStats unitId={selectedUnitId} />
+          <ActivityFunnelStats unitIds={selectedUnitIds} />
           
           {/* Disclaimer sobre atividades */}
           <Alert variant="destructive" className="border-red-500 bg-red-50">
@@ -57,7 +59,7 @@ function Index() {
           </Alert>
           
           {/* Funil de Conversão */}
-          <LeadConversionFunnel unitId={selectedUnitId} />
+          <LeadConversionFunnel unitIds={selectedUnitIds} />
           
           {/* Gráfico de leads por fonte */}
           <div className="w-full">

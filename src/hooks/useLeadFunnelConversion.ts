@@ -13,20 +13,20 @@ export interface LeadFunnelStats {
 }
 
 export function useLeadFunnelConversion(
-  unitId: string | null,
+  unitIds: string[] | null,
   dateRange: DateRangeType,
   startDate?: Date,
   endDate?: Date
 ) {
-  console.log('Using lead funnel conversion hook with:', { unitId, dateRange, startDate, endDate });
+  console.log('Using lead funnel conversion hook with:', { unitIds, dateRange, startDate, endDate });
 
   return useQuery({
-    queryKey: ['lead-funnel-conversion', unitId, dateRange, startDate, endDate],
+    queryKey: ['lead-funnel-conversion', unitIds, dateRange, startDate, endDate],
     queryFn: async (): Promise<LeadFunnelStats | null> => {
       console.log('Fetching funnel conversion data');
       
-      if (!unitId) {
-        console.log('No unit selected, returning null');
+      if (!unitIds || unitIds.length === 0) {
+        console.log('No units selected, returning null');
         return null;
       }
 
@@ -51,13 +51,13 @@ export function useLeadFunnelConversion(
       console.log('Querying funnel data for period:', {
         start: queryStartDate,
         end: queryEndDate,
-        unitId
+        unitIds
       });
 
       const { data, error } = await supabase.rpc('rpc_funnel_conversion', {
         data_inicio: queryStartDate.toISOString(),
         data_fim: queryEndDate.toISOString(),
-        unit_ids: [unitId]
+        unit_ids: unitIds
       });
 
       if (error) {
@@ -73,7 +73,7 @@ export function useLeadFunnelConversion(
       console.log('Funnel data received:', data[0]);
       return data[0] as LeadFunnelStats;
     },
-    enabled: !!unitId,
+    enabled: !!unitIds && unitIds.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos
   });

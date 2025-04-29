@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { subMonths, startOfMonth, endOfMonth } from "date-fns"
@@ -27,26 +28,34 @@ export interface LeadsStatsData {
   };
 }
 
-export function useLeadsStats(unitId: string | null) {
+export function useLeadsStats(unitIds: string[] | null) {
   return useQuery({
-    queryKey: ['leads-stats', unitId],
+    queryKey: ['leads-stats', unitIds],
     queryFn: async () => {
-      if (!unitId) return null;
+      if (!unitIds || unitIds.length === 0) return null;
       
       const now = new Date()
       
       // Função para buscar leads em um intervalo de datas
       const getLeadsInPeriod = async (startDate: Date, endDate: Date) => {
+        console.log(`Buscando leads no período: ${startDate.toISOString()} até ${endDate.toISOString()}`);
+        console.log(`Para unidades: ${unitIds.join(', ')}`);
+        
         const { data, error } = await supabase
           .from('clients')
           .select('created_at')
           .eq('active', true)
-          .eq('unit_id', unitId)
+          .in('unit_id', unitIds)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
 
-        if (error) throw error
-        return data?.length || 0
+        if (error) {
+          console.error('Erro ao buscar leads:', error);
+          throw error;
+        }
+        
+        console.log(`Total de leads encontrados: ${data?.length || 0}`);
+        return data?.length || 0;
       }
 
       // Função para calcular estatísticas de um período
@@ -86,6 +95,6 @@ export function useLeadsStats(unitId: string | null) {
         twelveMonths
       }
     },
-    enabled: !!unitId
+    enabled: !!unitIds && unitIds.length > 0
   })
 }

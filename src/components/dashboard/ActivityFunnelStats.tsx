@@ -5,13 +5,13 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
 interface ActivityFunnelStatsProps {
-  unitId: string | null;
+  unitIds: string[] | null;
 }
 
-export function ActivityFunnelStats({ unitId }: ActivityFunnelStatsProps) {
-  console.log('Renderizando ActivityFunnelStats para unidade:', unitId);
+export function ActivityFunnelStats({ unitIds }: ActivityFunnelStatsProps) {
+  console.log('Renderizando ActivityFunnelStats para unidades:', unitIds);
   
-  const { data: funnelStats, isLoading, error } = useDashboardActivityStats(unitId);
+  const { data: funnelStats, isLoading, error } = useDashboardActivityStats(unitIds);
   
   if (isLoading) {
     return <div className="p-4 text-center">Carregando estatísticas de conversão...</div>;

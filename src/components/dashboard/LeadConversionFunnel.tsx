@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,11 +17,11 @@ import {
 } from './utils/funnelChartUtils';
 
 interface LeadConversionFunnelProps {
-  unitId: string | null;
+  unitIds: string[] | null;
 }
 
-export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
-  console.log('Renderizando LeadConversionFunnel para unidade:', unitId);
+export function LeadConversionFunnel({ unitIds }: LeadConversionFunnelProps) {
+  console.log('Renderizando LeadConversionFunnel para unidades:', unitIds);
   
   const [dateRange, setDateRange] = useState<DateRangeType>('current-month');
   const [customRange, setCustomRange] = useState<DateRange>({
@@ -31,7 +30,7 @@ export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
   });
 
   const { data: funnelData, isLoading, error } = useLeadFunnelConversion(
-    unitId,
+    unitIds,
     dateRange,
     dateRange === 'custom' ? customRange.from : undefined,
     dateRange === 'custom' ? customRange.to : undefined
@@ -113,7 +112,7 @@ export function LeadConversionFunnel({ unitId }: LeadConversionFunnelProps) {
         <CardContent>
           <div className="h-[450px] flex items-center justify-center">
             <p className="text-muted-foreground">
-              {!unitId ? "Selecione uma unidade" : "Nenhum dado disponível para o período"}
+              {!unitIds || unitIds.length === 0 ? "Selecione uma unidade" : "Nenhum dado disponível para o período"}
             </p>
           </div>
         </CardContent>
