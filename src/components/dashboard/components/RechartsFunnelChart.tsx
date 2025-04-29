@@ -108,11 +108,10 @@ export const RechartsFunnelChart: React.FC<RechartsFunnelChartProps> = ({
             dataKey="valor"
             data={data}
             isAnimationActive={true}
-            // Propriedades corrigidas para números em vez de strings percentuais
             width={80} 
             height={90}
             nameKey="legenda"
-            paddingAngle={2}
+            // Removemos a propriedade paddingAngle que não é suportada
           >
             {/* Lista de rótulos à esquerda (etapa do funil) */}
             <LabelList
