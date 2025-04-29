@@ -19,7 +19,10 @@ function Index() {
   
   useEffect(() => {
     console.log('Dashboard - Unidades selecionadas:', selectedUnitIds);
-  }, [selectedUnitIds]);
+    if (leadsStats) {
+      console.log('Dashboard - Estatísticas de leads carregadas:', leadsStats);
+    }
+  }, [selectedUnitIds, leadsStats]);
   
   return (
     <div className="space-y-6">

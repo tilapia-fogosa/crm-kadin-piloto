@@ -2422,6 +2422,10 @@ export type Database = {
         }
         Returns: Json
       }
+      get_leads_stats: {
+        Args: { p_unit_ids: string[] }
+        Returns: Json
+      }
       get_registration_stats: {
         Args: {
           p_start_date: string

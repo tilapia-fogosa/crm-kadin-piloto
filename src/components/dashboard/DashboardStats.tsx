@@ -9,7 +9,7 @@ interface DashboardStatsProps {
 }
 
 export function DashboardStats({ leadsStats }: DashboardStatsProps) {
-  console.log("Rendering DashboardStats component");
+  console.log("Rendering DashboardStats component with data:", leadsStats);
   
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

@@ -1,12 +1,10 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { subMonths, startOfMonth, endOfMonth } from "date-fns"
 
-interface PeriodStats {
+export interface PeriodStats {
   total: number
   comparison: number
-  period: '1M' | '3M' | '6M' | '12M'
 }
 
 export interface LeadsStatsData {
@@ -29,72 +27,39 @@ export interface LeadsStatsData {
 }
 
 export function useLeadsStats(unitIds: string[] | null) {
+  console.log('useLeadsStats chamado com unitIds:', unitIds);
+  
   return useQuery({
     queryKey: ['leads-stats', unitIds],
-    queryFn: async () => {
-      if (!unitIds || unitIds.length === 0) return null;
+    queryFn: async (): Promise<LeadsStatsData | null> => {
+      // Verificar se há unidades selecionadas
+      if (!unitIds || unitIds.length === 0) {
+        console.log('Nenhuma unidade selecionada, retornando null');
+        return null;
+      }
       
-      const now = new Date()
+      // Chamar a função RPC que já calcula as estatísticas no banco
+      console.log('Chamando RPC get_leads_stats com unitIds:', unitIds);
+      const { data, error } = await supabase
+        .rpc('get_leads_stats', { p_unit_ids: unitIds });
       
-      // Função para buscar leads em um intervalo de datas
-      const getLeadsInPeriod = async (startDate: Date, endDate: Date) => {
-        console.log(`Buscando leads no período: ${startDate.toISOString()} até ${endDate.toISOString()}`);
-        console.log(`Para unidades: ${unitIds.join(', ')}`);
-        
-        const { data, error } = await supabase
-          .from('clients')
-          .select('created_at')
-          .eq('active', true)
-          .in('unit_id', unitIds)
-          .gte('created_at', startDate.toISOString())
-          .lte('created_at', endDate.toISOString())
-
-        if (error) {
-          console.error('Erro ao buscar leads:', error);
-          throw error;
-        }
-        
-        console.log(`Total de leads encontrados: ${data?.length || 0}`);
-        return data?.length || 0;
+      if (error) {
+        console.error('Erro ao buscar estatísticas de leads:', error);
+        throw error;
       }
-
-      // Função para calcular estatísticas de um período
-      const calculatePeriodStats = async (monthsAgo: number): Promise<PeriodStats> => {
-        // Período atual
-        const periodEnd = endOfMonth(now)
-        const periodStart = startOfMonth(subMonths(now, monthsAgo - 1))
-        
-        // Mesmo período do ano anterior
-        const lastYearEnd = endOfMonth(subMonths(now, 12))
-        const lastYearStart = startOfMonth(subMonths(now, monthsAgo + 11))
-
-        const [currentTotal, lastYearTotal] = await Promise.all([
-          getLeadsInPeriod(periodStart, periodEnd),
-          getLeadsInPeriod(lastYearStart, lastYearEnd)
-        ])
-
-        return {
-          total: currentTotal,
-          comparison: currentTotal - lastYearTotal,
-          period: `${monthsAgo}M` as PeriodStats['period']
-        }
+      
+      console.log('Dados recebidos da função RPC:', data);
+      
+      // Se não houver dados, retornar null
+      if (!data) {
+        return null;
       }
-
-      // Calcular estatísticas para todos os períodos
-      const [oneMonth, threeMonths, sixMonths, twelveMonths] = await Promise.all([
-        calculatePeriodStats(1),
-        calculatePeriodStats(3),
-        calculatePeriodStats(6),
-        calculatePeriodStats(12)
-      ])
-
-      return {
-        oneMonth,
-        threeMonths,
-        sixMonths,
-        twelveMonths
-      }
+      
+      // Retornar os dados já formatados conforme a interface esperada
+      return data as LeadsStatsData;
     },
-    enabled: !!unitIds && unitIds.length > 0
-  })
+    enabled: !!unitIds && unitIds.length > 0,
+    // Definir staleTime para evitar recarregamentos frequentes
+    staleTime: 5 * 60 * 1000 // 5 minutos
+  });
 }
