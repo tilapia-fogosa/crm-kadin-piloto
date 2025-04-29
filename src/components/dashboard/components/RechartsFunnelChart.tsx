@@ -103,7 +103,7 @@ export const RechartsFunnelChart: React.FC<RechartsFunnelChartProps> = ({
             />} 
           />
           
-          {/* Componente Funnel principal - Com configuração de trapézios */}
+          {/* Componente Funnel principal - Com configuração para evitar sobreposição */}
           <Funnel
             dataKey="valor"
             data={data}
@@ -111,7 +111,7 @@ export const RechartsFunnelChart: React.FC<RechartsFunnelChartProps> = ({
             width={500}
             height={300}
             nameKey="legenda"
-            trapezoids={true} // Ativando o modo trapézio para evitar sobreposição
+            // Removemos a propriedade trapezoids={true} que estava causando o erro
           >
             {/* Lista de rótulos à esquerda (etapa do funil) */}
             <LabelList
