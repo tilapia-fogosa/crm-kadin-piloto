@@ -103,14 +103,14 @@ export const RechartsFunnelChart: React.FC<RechartsFunnelChartProps> = ({
             />} 
           />
           
-          {/* Componente Funnel principal */}
+          {/* Componente Funnel principal - Aqui corrigimos os valores para números */}
           <Funnel
             dataKey="valor"
             data={data}
             isAnimationActive={true}
-            // Propriedades para ajustar a aparência do funil
-            width="80%" 
-            height="90%"
+            // Propriedades corrigidas para números em vez de strings percentuais
+            width={80} 
+            height={90}
             nameKey="legenda"
             paddingAngle={2}
           >
