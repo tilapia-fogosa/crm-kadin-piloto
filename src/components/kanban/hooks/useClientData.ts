@@ -1,9 +1,10 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 import { useUserUnit } from "./useUserUnit"
 
-export function useClientData(selectedUnitId: string | null = null) {
+export function useClientData(selectedUnitIds: string[] = []) {
   const queryClient = useQueryClient()
   const { data: userUnits } = useUserUnit()
 
@@ -52,20 +53,22 @@ export function useClientData(selectedUnitId: string | null = null) {
   }, [queryClient])
 
   return useQuery({
-    queryKey: ['clients', userUnits?.map(u => u.unit_id), selectedUnitId],
+    queryKey: ['clients', userUnits?.map(u => u.unit_id), selectedUnitIds],
     queryFn: async () => {
+      console.log('Iniciando busca de clientes com filtro de unidades:', selectedUnitIds);
+      
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
 
       // Determinar as unidades para filtrar
       let unitIds: string[] = []
       
-      if (selectedUnitId) {
-        // Se uma unidade específica foi selecionada
-        console.log('Filtrando por unidade específica:', selectedUnitId)
-        unitIds = [selectedUnitId]
+      if (selectedUnitIds && selectedUnitIds.length > 0) {
+        // Se unidades específicas foram selecionadas
+        console.log('Filtrando por unidades específicas:', selectedUnitIds)
+        unitIds = selectedUnitIds
       } else {
-        // Se "Todas as unidades" foi selecionado ou não há seleção
+        // Se nenhuma unidade foi selecionada, usa todas as unidades do usuário
         unitIds = userUnits?.map(u => u.unit_id) || []
         console.log('Buscando dados de todas as unidades do usuário:', unitIds)
       }

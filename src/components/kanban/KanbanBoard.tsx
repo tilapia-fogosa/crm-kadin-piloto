@@ -1,3 +1,4 @@
+
 import { useClientData } from "./hooks/useClientData"
 import { useActivityOperations } from "./hooks/useActivityOperations"
 import { useWhatsApp } from "./hooks/useWhatsApp"
@@ -10,13 +11,15 @@ import { KanbanColumn } from "./KanbanColumn"
 import { useUserUnit } from "./hooks/useUserUnit"
 
 export function KanbanBoard() {
-  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+  // Alterado de selectedUnitId (string | null) para selectedUnitIds (string[])
+  const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
   
   const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit();
   
   const isMultiUnit = userUnits && userUnits.length > 1;
   
-  const { data: clients, isLoading, refetch } = useClientData(selectedUnitId);
+  // Modificado para passar array de IDs de unidades
+  const { data: clients, isLoading, refetch } = useClientData(selectedUnitIds);
   
   const { registerAttempt, registerEffectiveContact, deleteActivity } = useActivityOperations();
   const { handleWhatsAppClick } = useWhatsApp();
@@ -24,15 +27,18 @@ export function KanbanBoard() {
   const [searchTerm, setSearchTerm] = useState('');
   const location = useLocation();
 
+  // Inicializa a seleção de unidades quando as unidades são carregadas
   useEffect(() => {
     console.log("Inicializando seleção de unidade");
     if (userUnits && userUnits.length > 0) {
       console.log("Usuário tem acesso a", userUnits.length, "unidades");
       
       if (userUnits.length === 1) {
-        setSelectedUnitId(userUnits[0].unit_id);
+        // Se o usuário tem acesso a apenas uma unidade, seleciona essa unidade
+        setSelectedUnitIds([userUnits[0].unit_id]);
       } else {
-        setSelectedUnitId(null);
+        // Para usuários com múltiplas unidades, inicializa com todas as unidades selecionadas
+        setSelectedUnitIds(userUnits.map(unit => unit.unit_id));
       }
     }
   }, [userUnits]);
@@ -46,6 +52,7 @@ export function KanbanBoard() {
     return <div className="flex items-center justify-center p-8">Carregando...</div>
   }
 
+  // Funções de filtragem mantidas sem alterações
   const filterBySearchTerm = (clients: any[] | null) => {
     if (!clients) return null
     
@@ -112,8 +119,8 @@ export function KanbanBoard() {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         availableUnits={userUnits || []}
-        selectedUnitId={selectedUnitId}
-        setSelectedUnitId={setSelectedUnitId}
+        selectedUnitIds={selectedUnitIds}
+        setSelectedUnitIds={setSelectedUnitIds}
         isMultiUnit={isMultiUnit || false}
       />
 

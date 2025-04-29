@@ -6,7 +6,7 @@ import { RefreshCw, Search } from "lucide-react"
 import { ActivityDashboard } from "./ActivityDashboard"
 import { CalendarDashboard } from "./CalendarDashboard"
 import { Input } from "@/components/ui/input"
-import { UnitSelector } from "@/components/UnitSelector"
+import { MultiUnitSelector } from "./components/calendar/MultiUnitSelector"
 
 interface BoardHeaderProps {
   showPendingOnly: boolean
@@ -15,8 +15,8 @@ interface BoardHeaderProps {
   searchTerm: string
   setSearchTerm: (value: string) => void
   availableUnits: { unit_id: string; units: { id: string; name: string } }[]
-  selectedUnitId: string | null
-  setSelectedUnitId: (unitId: string | null) => void
+  selectedUnitIds: string[]
+  setSelectedUnitIds: (unitIds: string[]) => void
   isMultiUnit: boolean
 }
 
@@ -27,13 +27,13 @@ export function BoardHeader({
   searchTerm,
   setSearchTerm,
   availableUnits,
-  selectedUnitId,
-  setSelectedUnitId,
+  selectedUnitIds,
+  setSelectedUnitIds,
   isMultiUnit,
 }: BoardHeaderProps) {
-  // Log para rastrear mudanças no termo de pesquisa
+  // Logs para rastrear mudanças
   console.log('Termo de pesquisa atual:', searchTerm);
-  console.log('Unidade selecionada:', selectedUnitId);
+  console.log('Unidades selecionadas:', selectedUnitIds);
   console.log('Usuário multi-unidade:', isMultiUnit);
   
   return (
@@ -46,13 +46,11 @@ export function BoardHeader({
           {isMultiUnit && (
             <div className="mt-2">
               <div className="flex items-center space-x-2">
-                <span className="text-white text-sm">Unidade:</span>
-                <UnitSelector 
-                  onChange={(unitId) => {
-                    console.log('Alterando unidade para:', unitId);
-                    setSelectedUnitId(unitId);
-                  }}
-                  value={selectedUnitId || undefined}
+                <span className="text-white text-sm">Unidades:</span>
+                <MultiUnitSelector 
+                  units={availableUnits}
+                  selectedUnitIds={selectedUnitIds}
+                  onChange={setSelectedUnitIds}
                 />
               </div>
             </div>
