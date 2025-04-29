@@ -14,8 +14,8 @@ import {
   formatNumber,
   formatPercent
 } from './utils/funnelChartUtils';
-// Importando o componente de gráfico de barras horizontais
-import { HorizontalBarFunnelChart } from './components/HorizontalBarFunnelChart';
+// Importando o novo componente de funil do Recharts
+import { RechartsFunnelChart } from './components/RechartsFunnelChart';
 
 interface LeadConversionFunnelProps {
   unitIds: string[] | null;
@@ -153,11 +153,12 @@ export function LeadConversionFunnel({ unitIds }: LeadConversionFunnelProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {/* Usando o componente HorizontalBarFunnelChart atualizado */}
+          {/* Usando o novo componente RechartsFunnelChart */}
           <div className="h-[450px]">
-            <HorizontalBarFunnelChart 
+            <RechartsFunnelChart 
               data={basicChartData} 
               formatNumber={formatNumber}
+              formatPercent={formatPercent}
             />
           </div>
           
