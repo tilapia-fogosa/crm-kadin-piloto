@@ -14,7 +14,7 @@ import {
   formatNumber,
   formatPercent
 } from './utils/funnelChartUtils';
-// Importando o novo componente de gráfico de barras horizontais
+// Importando o componente de gráfico de barras horizontais
 import { HorizontalBarFunnelChart } from './components/HorizontalBarFunnelChart';
 
 interface LeadConversionFunnelProps {
@@ -153,7 +153,7 @@ export function LeadConversionFunnel({ unitIds }: LeadConversionFunnelProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {/* Substituindo o SymmetricalFunnelChart pelo HorizontalBarFunnelChart */}
+          {/* Usando o componente HorizontalBarFunnelChart atualizado */}
           <div className="h-[450px]">
             <HorizontalBarFunnelChart 
               data={basicChartData} 
