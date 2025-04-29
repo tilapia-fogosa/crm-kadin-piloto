@@ -36,7 +36,9 @@ const FunnelCustomTooltip = ({
   console.log('FunnelTooltip - payload:', payload);
   
   if (active && payload && payload.length) {
+    // Acessamos o primeiro item do payload, que contém os dados do segmento do funil
     const data = payload[0].payload as FunnelDataItem;
+    console.log('Dados do tooltip:', data);
     
     return (
       <div className="bg-white p-3 rounded-md border shadow-md text-sm">
@@ -98,7 +100,9 @@ export const RechartsFunnelChart: React.FC<RechartsFunnelChartProps> = ({
     fill: item.color,
     legenda: item.legenda,
     taxa: item.taxa,
-    stageConversionRate: item.stageConversionRate
+    stageConversionRate: item.stageConversionRate,
+    // Garantimos que todos os valores sejam mantidos e acessíveis
+    valor: item.valor // Garantimos que este campo esteja presente para o tooltip
   }));
   
   console.log('Dados formatados para o funil:', formattedData);
@@ -127,16 +131,18 @@ export const RechartsFunnelChart: React.FC<RechartsFunnelChartProps> = ({
             // A biblioteca espera números, não strings com porcentagem
             lastShapeType="rectangle"  // Último elemento como retângulo
           >
-            {/* Lista de rótulos à direita (valores) */}
+            {/* Lista de rótulos CENTRALIZADOS no funil com melhor visibilidade */}
             <LabelList
-              position="right"
+              position="center"  // Alterado de "right" para "center"
               dataKey="value"
-              fill="#333"
-              fontSize={12}
+              fill="#FFFFFF"  // Cor branca para contrastar com o fundo do funil
+              fontSize={14}   // Aumentado de 12 para 14px
               fontWeight="bold"
               formatter={formatNumber}
-              className="text-sm font-bold"
-              offset={10}
+              stroke="#000000"  // Adicionando contorno preto
+              strokeWidth={0.5} // Espessura do contorno
+              className="text-base font-bold"
+              offset={0}
             />
             
             {/* Células individuais com cores personalizadas */}
