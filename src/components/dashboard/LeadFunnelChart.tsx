@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { DateRangePicker } from "./DateRangePicker";
@@ -14,13 +15,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Importando os novos componentes
-import { SymmetricalFunnelChart } from './components/SymmetricalFunnelChart';
-import { FunnelLabels } from './components/FunnelLabels';
+// Importando o novo componente de gráfico de barras horizontais
+import { HorizontalBarFunnelChart } from './components/HorizontalBarFunnelChart';
 import { FunnelSummary } from './components/FunnelSummary';
 import { 
   prepareBasicFunnelData, 
-  transformDataForSymmetricalFunnel,
   formatNumber,
   formatPercent
 } from './utils/funnelChartUtils';
@@ -69,7 +68,6 @@ export function LeadFunnelChart() {
   
   // Preparar os dados para o gráfico
   const basicChartData = prepareBasicFunnelData(funnelStats);
-  const symmetricalData = transformDataForSymmetricalFunnel(basicChartData);
   
   // Renderização para os diferentes estados
   if (isLoading) {
@@ -161,17 +159,13 @@ export function LeadFunnelChart() {
         />
       </CardHeader>
       <CardContent>
-        {/* Componente do gráfico de funil simétrico */}
-        <SymmetricalFunnelChart data={symmetricalData} />
-        
-        {/* Componente de rótulos do funil */}
-        <FunnelLabels 
+        {/* Substituindo o componente de funil simétrico pelo gráfico de barras horizontais */}
+        <HorizontalBarFunnelChart 
           data={basicChartData} 
           formatNumber={formatNumber}
-          formatPercent={formatPercent}
         />
         
-        {/* Componente de resumo das estatísticas */}
+        {/* Mantendo o componente de resumo das estatísticas */}
         <FunnelSummary 
           data={basicChartData}
           formatNumber={formatNumber}
