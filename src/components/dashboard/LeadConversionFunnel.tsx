@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -7,14 +8,14 @@ import { useLeadFunnelConversion } from '@/hooks/useLeadFunnelConversion';
 import { DateRangePicker } from "./DateRangePicker";
 import { DateRangeType } from "@/hooks/useLeadFunnelStats";
 import { DateRange } from "react-day-picker";
-import { SymmetricalFunnelChart } from './components/SymmetricalFunnelChart';
 import { FunnelSummary } from './components/FunnelSummary';
 import { 
   prepareBasicFunnelData, 
-  transformDataForSymmetricalFunnel,
   formatNumber,
   formatPercent
 } from './utils/funnelChartUtils';
+// Importando o novo componente de gráfico de barras horizontais
+import { HorizontalBarFunnelChart } from './components/HorizontalBarFunnelChart';
 
 interface LeadConversionFunnelProps {
   unitIds: string[] | null;
@@ -50,9 +51,6 @@ export function LeadConversionFunnel({ unitIds }: LeadConversionFunnelProps) {
   // Preparar os dados para o gráfico com tratamento seguro
   const basicChartData = prepareBasicFunnelData(funnelData);
   console.log('Dados básicos do funil preparados:', basicChartData);
-  
-  const symmetricalData = transformDataForSymmetricalFunnel(basicChartData);
-  console.log('Dados transformados para funil simétrico:', symmetricalData);
   
   if (isLoading) {
     return (
@@ -155,12 +153,15 @@ export function LeadConversionFunnel({ unitIds }: LeadConversionFunnelProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {/* Gráfico de Funil usando Recharts */}
+          {/* Substituindo o SymmetricalFunnelChart pelo HorizontalBarFunnelChart */}
           <div className="h-[450px]">
-            <SymmetricalFunnelChart data={symmetricalData} />
+            <HorizontalBarFunnelChart 
+              data={basicChartData} 
+              formatNumber={formatNumber}
+            />
           </div>
           
-          {/* Resumo do Funil com Números e Taxas */}
+          {/* Mantendo o resumo do funil com números e taxas */}
           <FunnelSummary 
             data={basicChartData} 
             formatNumber={formatNumber}
