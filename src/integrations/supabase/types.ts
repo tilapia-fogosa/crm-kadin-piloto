@@ -129,7 +129,7 @@ export type Database = {
           is_funcionario: boolean | null
           matricula: string | null
           motivo_procura: string | null
-          niveldesafio: number | null
+          niveldesafio: string | null
           nome: string
           percepcao_coordenador: string | null
           pontos_atencao: string | null
@@ -161,7 +161,7 @@ export type Database = {
           is_funcionario?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
-          niveldesafio?: number | null
+          niveldesafio?: string | null
           nome: string
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
@@ -193,7 +193,7 @@ export type Database = {
           is_funcionario?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
-          niveldesafio?: number | null
+          niveldesafio?: string | null
           nome?: string
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
@@ -744,6 +744,36 @@ export type Database = {
         }
         Relationships: []
       }
+      estoque: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          quantidade: number
+          tipo_item: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          quantidade?: number
+          tipo_item: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          quantidade?: number
+          tipo_item?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       financial_responsibles: {
         Row: {
           birth_date: string
@@ -827,19 +857,27 @@ export type Database = {
       funcionarios: {
         Row: {
           active: boolean
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
           cargo: string | null
           codigo: string | null
+          coordenador_responsavel: string | null
           created_at: string
           curso: string | null
+          data_onboarding: string | null
           dias_apostila: number | null
           dias_supera: number | null
           email: string | null
           id: string
           idade: number | null
           indice: string | null
+          is_funcionario: boolean | null
           matricula: string | null
-          niveldesafio: number | null
+          motivo_procura: string | null
+          niveldesafio: string | null
           nome: string
+          percepcao_coordenador: string | null
+          pontos_atencao: string | null
           telefone: string | null
           texto_devolutiva: string | null
           turma_id: string | null
@@ -847,23 +885,32 @@ export type Database = {
           ultima_falta: string | null
           ultima_pagina: number | null
           ultimo_nivel: string | null
+          unit_id: string
           vencimento_contrato: string | null
         }
         Insert: {
           active?: boolean
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           cargo?: string | null
           codigo?: string | null
+          coordenador_responsavel?: string | null
           created_at?: string
           curso?: string | null
+          data_onboarding?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
           id?: string
           idade?: number | null
           indice?: string | null
+          is_funcionario?: boolean | null
           matricula?: string | null
-          niveldesafio?: number | null
+          motivo_procura?: string | null
+          niveldesafio?: string | null
           nome: string
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -871,23 +918,32 @@ export type Database = {
           ultima_falta?: string | null
           ultima_pagina?: number | null
           ultimo_nivel?: string | null
+          unit_id: string
           vencimento_contrato?: string | null
         }
         Update: {
           active?: boolean
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           cargo?: string | null
           codigo?: string | null
+          coordenador_responsavel?: string | null
           created_at?: string
           curso?: string | null
+          data_onboarding?: string | null
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
           id?: string
           idade?: number | null
           indice?: string | null
+          is_funcionario?: boolean | null
           matricula?: string | null
-          niveldesafio?: number | null
+          motivo_procura?: string | null
+          niveldesafio?: string | null
           nome?: string
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
           turma_id?: string | null
@@ -895,6 +951,7 @@ export type Database = {
           ultima_falta?: string | null
           ultima_pagina?: number | null
           ultimo_nivel?: string | null
+          unit_id?: string
           vencimento_contrato?: string | null
         }
         Relationships: [
@@ -2341,6 +2398,14 @@ export type Database = {
         }
         Returns: Json
       }
+      get_aluno_desempenho: {
+        Args: {
+          p_aluno_id: string
+          p_data_inicial: string
+          p_data_final?: string
+        }
+        Returns: Json
+      }
       get_commercial_unit_stats: {
         Args: {
           p_start_date: string
@@ -2425,6 +2490,10 @@ export type Database = {
       get_leads_stats: {
         Args: { p_unit_ids: string[] }
         Returns: Json
+      }
+      get_periodo_data: {
+        Args: { p_periodo: string }
+        Returns: string
       }
       get_registration_stats: {
         Args: {

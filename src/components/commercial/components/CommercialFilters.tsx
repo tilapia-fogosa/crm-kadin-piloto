@@ -1,7 +1,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUnit } from "@/contexts/UnitContext";
-import { MultiUnitSelector } from "@/components/dashboard/MultiUnitSelector";
+import { MultiUnitSelector } from "@/components/kanban/components/calendar/MultiUnitSelector";
 import { MultiSourceSelector } from "./MultiSourceSelector";
 import { MultiMonthSelector } from "./MultiMonthSelector";
 import { MultiYearSelector } from "./MultiYearSelector";
