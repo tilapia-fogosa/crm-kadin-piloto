@@ -1,7 +1,9 @@
 
+import { useState } from "react"
 import { ContactTypeSelector } from "./components/contact-attempt/ContactTypeSelector"
 import { NextContactDateTime } from "./components/contact-attempt/NextContactDateTime"
 import { ContactAttemptActions } from "./components/contact-attempt/ContactAttemptActions"
+import { NotesField } from "./components/contact-attempt/NotesField"
 import { LossModal } from "./components/loss/LossModal"
 import { useContactAttemptForm } from "./hooks/useContactAttemptForm"
 import { ContactAttempt } from "./types"
@@ -18,12 +20,14 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
     contactType, 
     date, 
     time, 
+    notes, // Extraindo o campo de notas
     isLossModalOpen, 
     showContactTypeAlert,
     setDate, 
     setTime, 
     setIsLossModalOpen, 
-    handleContactTypeChange, 
+    handleContactTypeChange,
+    handleNotesChange, // Extraindo o handler para notas
     handleSubmit, 
     handleLossButtonClick 
   } = useContactAttemptForm({ onSubmit, cardId })
@@ -66,6 +70,12 @@ export function ContactAttemptForm({ onSubmit, cardId, onLossSubmit }: ContactAt
         time={time} 
         onDateChange={setDate} 
         onTimeChange={setTime} 
+      />
+
+      {/* Adicionando o campo de notas */}
+      <NotesField 
+        notes={notes}
+        onNotesChange={handleNotesChange}
       />
 
       <ContactAttemptActions 

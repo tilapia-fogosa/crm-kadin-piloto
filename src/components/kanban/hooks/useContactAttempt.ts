@@ -35,7 +35,8 @@ export function useContactAttempt() {
           created_by: session.session.user.id,
           next_contact_date: attempt.nextContactDate.toISOString(),
           unit_id: clientData.unit_id,
-          active: true
+          active: true,
+          notes: attempt.notes // Salvando as notas no banco de dados
         })
 
       if (activityError) throw activityError

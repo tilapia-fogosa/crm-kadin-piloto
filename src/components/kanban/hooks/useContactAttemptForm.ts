@@ -15,6 +15,7 @@ export function useContactAttemptForm({ onSubmit, cardId }: UseContactAttemptFor
   const [contactType, setContactType] = useState<ContactType>(undefined)
   const [date, setDate] = useState("")
   const [time, setTime] = useState("")
+  const [notes, setNotes] = useState("") // Novo estado para o campo de notas
   const [isLossModalOpen, setIsLossModalOpen] = useState(false)
   const [showContactTypeAlert, setShowContactTypeAlert] = useState(false)
   const { toast } = useToast()
@@ -39,6 +40,12 @@ export function useContactAttemptForm({ onSubmit, cardId }: UseContactAttemptFor
     console.log('useContactAttemptForm - Tipo de contato alterado para:', value)
     setContactType(value)
     setShowContactTypeAlert(false)
+  }
+
+  // Novo método para gerenciar as alterações nas notas
+  const handleNotesChange = (value: string) => {
+    console.log('useContactAttemptForm - Notas alteradas:', value.substring(0, 20) + (value.length > 20 ? '...' : ''))
+    setNotes(value)
   }
 
   const handleSubmit = () => {
@@ -88,11 +95,12 @@ export function useContactAttemptForm({ onSubmit, cardId }: UseContactAttemptFor
         return
       }
 
-      console.log('Submetendo tentativa de contato')
+      console.log('Submetendo tentativa de contato com notas:', notes?.substring(0, 20) + (notes?.length > 20 ? '...' : ''))
       onSubmit({
         type: contactType,
         nextContactDate,
-        cardId
+        cardId,
+        notes // Incluindo as notas na submissão
       })
     } catch (error) {
       console.error('Erro ao processar data/hora:', error)
@@ -108,12 +116,14 @@ export function useContactAttemptForm({ onSubmit, cardId }: UseContactAttemptFor
     contactType,
     date,
     time,
+    notes, // Adicionando notas ao objeto retornado
     isLossModalOpen,
     showContactTypeAlert,
     setDate,
     setTime,
     setIsLossModalOpen,
     handleContactTypeChange,
+    handleNotesChange, // Adicionando o handler para as notas
     handleSubmit,
     handleLossButtonClick
   }
