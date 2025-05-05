@@ -1,3 +1,4 @@
+
 export type KanbanColumn = {
   id: string
   title: string
@@ -56,6 +57,7 @@ export type Attendance = {
   selectedReasons?: string[]
   observations?: string
   nextContactDate?: Date
+  notes?: string // Novo campo para o descritivo
 }
 
 export type PaymentMethod = 'dinheiro' | 'pix' | 'cartao_credito' | 'cartao_debito' | 'boleto' | 'recorrencia';

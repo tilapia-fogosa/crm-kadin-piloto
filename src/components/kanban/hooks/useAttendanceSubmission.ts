@@ -17,7 +17,8 @@ export function useAttendanceSubmission() {
     qualityScore,
     selectedReasons,
     observations,
-    nextContactDate
+    nextContactDate,
+    notes
   }: {
     cardId: string
     result: 'matriculado' | 'negociacao' | 'perdido'
@@ -25,6 +26,7 @@ export function useAttendanceSubmission() {
     selectedReasons?: string[]
     observations?: string
     nextContactDate?: Date
+    notes?: string
   }) => {
     return wrapSubmission(async () => {
       const submissionId = Math.random().toString(36).substring(7)
@@ -34,7 +36,8 @@ export function useAttendanceSubmission() {
         qualityScore,
         selectedReasons,
         observations,
-        nextContactDate
+        nextContactDate,
+        notes
       })
 
       try {
@@ -72,7 +75,7 @@ export function useAttendanceSubmission() {
             client_id: cardId,
             tipo_atividade: 'Atendimento',
             tipo_contato: 'presencial',
-            notes: observations || null,
+            notes: notes || null, // Incluindo o campo de notas
             unit_id: clientData.unit_id,
             created_by: session.user.id,
             active: true
@@ -97,6 +100,7 @@ export function useAttendanceSubmission() {
               tipo_contato: 'presencial',
               created_by: session.user.id,
               unit_id: clientData.unit_id,
+              notes: notes || null, // Incluindo o campo de notas na atividade de matrícula
               active: true
             })
 

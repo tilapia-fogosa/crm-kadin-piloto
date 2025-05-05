@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { ResultButton } from "./components/attendance/ResultButton"
 import { QualityScore } from "./components/attendance/QualityScore"
 import { MatriculationMessage } from "./components/attendance/MatriculationMessage"
+import { MatriculationSection } from "./components/attendance/MatriculationSection"
 import { NegotiationSection } from "./components/attendance/NegotiationSection"
 import { LossReasonSection } from "./components/attendance/LossReasonSection"
 import { LossConfirmationDialog } from "./components/attendance/LossConfirmationDialog"
@@ -26,6 +27,8 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
   const [nextContactDate, setNextContactDate] = useState<Date>()
   const [showLossConfirmation, setShowLossConfirmation] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [notes, setNotes] = useState("") // Novo estado para o campo de notas
+  const [notesValidationError, setNotesValidationError] = useState(false) // Estado para validação
   const { registerSale, isLoading: isSaleLoading } = useSale()
   const { toast } = useToast()
 
@@ -42,6 +45,7 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
           title: "Data de próximo contato é obrigatória",
           description: "Por favor, selecione uma data para o próximo contato."
         })
+        setIsProcessing(false)
         return
       }
 
@@ -51,8 +55,24 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
           title: "Motivo da perda é obrigatório",
           description: "Por favor, selecione pelo menos um motivo da perda."
         })
+        setIsProcessing(false)
         return
       }
+
+      // Validação para o campo de notas quando o resultado for matriculado
+      if (selectedResult === 'matriculado' && !notes.trim()) {
+        setNotesValidationError(true)
+        toast({
+          variant: "destructive",
+          title: "Campo Descritivo é obrigatório",
+          description: "Por favor, preencha o campo Descritivo para registrar a matrícula."
+        })
+        setIsProcessing(false)
+        return
+      }
+
+      // Resetar erros de validação se tudo estiver ok
+      setNotesValidationError(false)
 
       await onSubmit({
         result: selectedResult,
@@ -60,7 +80,8 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
         qualityScore,
         selectedReasons,
         observations,
-        nextContactDate
+        nextContactDate,
+        notes // Incluindo as notas no payload
       })
     } catch (error) {
       console.error('Erro ao registrar atendimento:', error)
@@ -75,12 +96,23 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
       setShowLossConfirmation(true)
     } else {
       setSelectedResult(result)
+      // Resetar o erro de validação quando mudar o resultado
+      setNotesValidationError(false)
     }
   }
 
   const handleLossConfirm = () => {
     setShowLossConfirmation(false)
     setSelectedResult('perdido')
+  }
+
+  // Handler para o campo de notas
+  const handleNotesChange = (value: string) => {
+    setNotes(value)
+    // Resetar erro de validação quando o usuário digitar algo
+    if (value.trim() && notesValidationError) {
+      setNotesValidationError(false)
+    }
   }
 
   if (showSaleForm) {
@@ -123,7 +155,15 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
           />
 
           {selectedResult === 'matriculado' && (
-            <MatriculationMessage clientName={clientName} />
+            <>
+              <MatriculationMessage clientName={clientName} />
+              <MatriculationSection
+                notes={notes}
+                onNotesChange={handleNotesChange}
+                isValidationError={notesValidationError}
+                disabled={isProcessing}
+              />
+            </>
           )}
 
           {selectedResult === 'negociacao' && (
@@ -159,7 +199,8 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
         className="w-full"
         disabled={isProcessing || !selectedResult || 
           (selectedResult === 'perdido' && selectedReasons.length === 0) ||
-          (selectedResult === 'negociacao' && !nextContactDate)}
+          (selectedResult === 'negociacao' && !nextContactDate) ||
+          (selectedResult === 'matriculado' && !notes.trim())}
       >
         {isProcessing ? (
           <span className="flex items-center gap-2">
