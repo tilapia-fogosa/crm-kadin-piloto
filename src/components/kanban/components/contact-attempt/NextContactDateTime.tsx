@@ -97,6 +97,26 @@ export function NextContactDateTime({
     })
   }
 
+  // Função para definir horários específicos
+  const handleTimeClick = (hours: number, minutes: number) => {
+    console.log(`Botão de horário ${hours}:${minutes} clicado`)
+    
+    // Formatando o horário no formato HH:mm
+    const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+    
+    // Se não houver data selecionada, usar a data atual
+    if (!date) {
+      console.log("Data não selecionada, usando data atual")
+      const now = new Date()
+      onDateChange(formatDateForInput(now))
+    }
+    
+    // Atualizando o horário
+    onTimeChange(formattedTime)
+    
+    console.log(`Horário definido para ${formattedTime}`)
+  }
+
   return (
     <>
       <div className="space-y-2">
@@ -145,12 +165,54 @@ export function NextContactDateTime({
 
       <div className="space-y-2">
         <Label>Hora do Próximo Contato</Label>
-        <Input
-          type="time"
-          value={time}
-          onChange={(e) => onTimeChange(e.target.value)}
-          className="w-full"
-        />
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex-grow">
+            <Input
+              type="time"
+              value={time}
+              onChange={(e) => onTimeChange(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <div className="flex gap-1">
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleTimeClick(9, 0)}
+              className="text-xs"
+            >
+              09:00
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleTimeClick(13, 0)}
+              className="text-xs"
+            >
+              13:00
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleTimeClick(17, 0)}
+              className="text-xs"
+            >
+              17:00
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleTimeClick(18, 0)}
+              className="text-xs"
+            >
+              18:00
+            </Button>
+          </div>
+        </div>
       </div>
     </>
   )

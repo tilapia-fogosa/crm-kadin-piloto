@@ -109,6 +109,36 @@ export function NextContactDateTime({
     })
   }
 
+  // Funções para definir horários específicos
+  const handleTimeClick = (hours: number, minutes: number) => {
+    console.log(`Botão de horário ${hours}:${minutes} clicado`)
+    
+    if (!dateValue) {
+      console.log("Data não selecionada, usando data atual")
+      const now = new Date()
+      setDateValue(formatDateForInput(now))
+      
+      const newDate = new Date(now)
+      newDate.setHours(hours, minutes, 0, 0)
+      
+      // Atualizando data e hora
+      updateDateAndTime(newDate)
+    } else {
+      try {
+        const [year, month, day] = dateValue.split('-').map(Number)
+        const newDate = new Date(year, month - 1, day, hours, minutes, 0, 0)
+        
+        // Atualizando apenas a hora
+        setTimeValue(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`)
+        onDateChange(newDate)
+        
+        console.log(`Horário definido para ${hours}:${minutes}`, newDate)
+      } catch (error) {
+        console.error('Erro ao processar data/hora:', error)
+      }
+    }
+  }
+
   // Atualizar a data e hora e propagar para o componente pai
   const updateDateAndTime = (newDate: Date) => {
     setDateValue(formatDateForInput(newDate))
@@ -190,16 +220,62 @@ export function NextContactDateTime({
       </div>
       <div className="space-y-2">
         <Label>Hora do próximo contato</Label>
-        <Input
-          type="time"
-          value={timeValue}
-          onChange={(e) => {
-            setTimeValue(e.target.value)
-            handleDateTimeChange(dateValue, e.target.value)
-          }}
-          disabled={disabled}
-          className="w-full"
-        />
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex-grow">
+            <Input
+              type="time"
+              value={timeValue}
+              onChange={(e) => {
+                setTimeValue(e.target.value)
+                handleDateTimeChange(dateValue, e.target.value)
+              }}
+              disabled={disabled}
+              className="w-full"
+            />
+          </div>
+          <div className="flex gap-1">
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleTimeClick(9, 0)}
+              disabled={disabled}
+              className="text-xs"
+            >
+              09:00
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleTimeClick(13, 0)}
+              disabled={disabled}
+              className="text-xs"
+            >
+              13:00
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleTimeClick(17, 0)}
+              disabled={disabled}
+              className="text-xs"
+            >
+              17:00
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleTimeClick(18, 0)}
+              disabled={disabled}
+              className="text-xs"
+            >
+              18:00
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   )
