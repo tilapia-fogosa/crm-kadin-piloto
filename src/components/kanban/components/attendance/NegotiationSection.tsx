@@ -1,5 +1,5 @@
 
-import { NextContactDate } from "./NextContactDate"
+import { NextContactDateTime } from "./NextContactDateTime"
 import { Observations } from "./Observations"
 
 interface NegotiationSectionProps {
@@ -21,7 +21,7 @@ export function NegotiationSection({
   
   return (
     <div className="space-y-4">
-      <NextContactDate
+      <NextContactDateTime
         date={nextContactDate}
         onDateChange={onDateChange}
         disabled={disabled}
