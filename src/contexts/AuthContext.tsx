@@ -153,13 +153,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Finaliza carregamento
       setIsLoading(false);
       
-      // Handle eventos específicos
+      // Handle eventos específicos - removido o toast de login bem-sucedido
       if (event === 'SIGNED_IN') {
         console.log('AuthProvider: Usuário fez login');
-        toast({
-          title: "Login realizado com sucesso!",
-          description: "Redirecionando...",
-        });
+        // Toast de login removido aqui
       } else if (event === 'SIGNED_OUT') {
         console.log('AuthProvider: Usuário fez logout');
       }

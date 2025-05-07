@@ -36,13 +36,12 @@ export function useAuthState() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log("Evento de autenticação:", event);
       
-      // Tratamento específico para login bem-sucedido
+      // Tratamento específico para login bem-sucedido - removido toast de login
       if (event === 'SIGNED_IN' && currentSession) {
         console.log("Login realizado com sucesso");
-        // Removendo a toast de login aqui para evitar duplicação com a do AuthContext
         navigate("/dashboard", { replace: true });
       } 
-      // Tratamento de logout ou expiração de sessão
+      // Tratamento de logout ou expiração de sessão - mantido por ser crítico
       else if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !currentSession)) {
         console.log("Logout ou sessão expirada");
         if (location.pathname !== '/auth') {

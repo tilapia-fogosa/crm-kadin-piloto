@@ -68,10 +68,7 @@ export default function LoginPage() {
         console.log("LoginPage: Login bem-sucedido:", data.session ? "Sessão válida" : "Sem sessão");
         
         // A redireção será feita pelo AuthContext via onAuthStateChange
-        toast({
-          title: "Login realizado com sucesso!",
-          description: "Redirecionando...",
-        });
+        // Toast de login removido daqui
         
         // Mantenha o loading ativo brevemente para dar tempo ao redirecionamento
         setTimeout(() => {
