@@ -59,6 +59,89 @@ export type Database = {
           },
         ]
       }
+      alertas_falta: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data_alerta: string
+          data_falta: string
+          detalhes: Json | null
+          id: string
+          professor_id: string
+          resolvido_em: string | null
+          resolvido_por: string | null
+          slack_mensagem_id: string | null
+          status: string
+          tipo_criterio: string
+          turma_id: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data_alerta?: string
+          data_falta: string
+          detalhes?: Json | null
+          id?: string
+          professor_id: string
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          slack_mensagem_id?: string | null
+          status?: string
+          tipo_criterio: string
+          turma_id: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data_alerta?: string
+          data_falta?: string
+          detalhes?: Json | null
+          id?: string
+          professor_id?: string
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          slack_mensagem_id?: string | null
+          status?: string
+          tipo_criterio?: string
+          turma_id?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alertas_falta_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertas_falta_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertas_falta_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertas_falta_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alertas_lancamento: {
         Row: {
           arquivado_em: string | null
@@ -1414,6 +1497,7 @@ export type Database = {
           email: string | null
           id: string
           nome: string
+          slack_username: string | null
           telefone: string | null
           unit_id: string
         }
@@ -1422,6 +1506,7 @@ export type Database = {
           email?: string | null
           id?: string
           nome: string
+          slack_username?: string | null
           telefone?: string | null
           unit_id: string
         }
@@ -1430,6 +1515,7 @@ export type Database = {
           email?: string | null
           id?: string
           nome?: string
+          slack_username?: string | null
           telefone?: string | null
           unit_id?: string
         }
