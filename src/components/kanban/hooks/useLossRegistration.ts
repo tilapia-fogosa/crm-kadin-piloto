@@ -52,13 +52,14 @@ export function useLossRegistration() {
       console.log(`Status anterior do cliente: ${previousStatus}`)
 
       // 1. Registra a atividade
+      // CORREÇÃO: Usando o campo notes para as observações
       const { data: activity, error: activityError } = await supabase
         .from('client_activities')
         .insert({
           client_id: clientId,
           tipo_atividade: activityType,
           tipo_contato: contactType,
-          notes: observations,
+          notes: observations, // CORREÇÃO: Salvando no campo notes
           created_by: session.session.user.id,
           unit_id: clientData.unit_id,
           active: true
@@ -91,12 +92,12 @@ export function useLossRegistration() {
       }
 
       // 3. Atualiza o status do cliente para perdido
+      // CORREÇÃO: Removida a atualização do campo observations
       console.log('Atualizando status do cliente para perdido')
       const { error: updateClientError } = await supabase
         .from('clients')
         .update({ 
           status: 'perdido',
-          observations: observations,
           updated_at: new Date().toISOString()
         })
         .eq('id', clientId)

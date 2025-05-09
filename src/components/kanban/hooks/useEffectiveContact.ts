@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -25,13 +26,14 @@ export function useEffectiveContact() {
       if (clientError) throw clientError
       if (!clientData?.unit_id) throw new Error('Client has no unit_id')
 
+      // CORREÇÃO: Salvando as observações no campo notes da atividade
       const { error: activityError } = await supabase
         .from('client_activities')
         .insert({
           client_id: contact.cardId,
           tipo_contato: contact.type,
           tipo_atividade: 'Contato Efetivo',
-          notes: contact.notes,
+          notes: contact.notes || contact.observations, // CORREÇÃO: Priorizar notes, depois observations
           created_by: session.session.user.id,
           next_contact_date: contact.nextContactDate?.toISOString(),
           unit_id: clientData.unit_id,
@@ -40,12 +42,12 @@ export function useEffectiveContact() {
 
       if (activityError) throw activityError
 
+      // CORREÇÃO: Removida atualização do campo observations do cliente
       if (contact.nextContactDate) {
         const { error: clientError } = await supabase
           .from('clients')
           .update({ 
-            next_contact_date: contact.nextContactDate.toISOString(),
-            observations: contact.observations 
+            next_contact_date: contact.nextContactDate.toISOString()
           })
           .eq('id', contact.cardId)
 

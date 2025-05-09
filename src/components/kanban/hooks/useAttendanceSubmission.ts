@@ -68,14 +68,15 @@ export function useAttendanceSubmission() {
         }
 
         // Registra a atividade de Atendimento
-        console.log(`[${submissionId}] Registrando atividade de atendimento`)
+        // CORREÇÃO: Usando o campo notes para armazenar as observações
+        console.log(`[${submissionId}] Registrando atividade de atendimento com notes:`, notes || observations)
         const { data: attendanceActivity, error: attendanceError } = await supabase
           .from('client_activities')
           .insert({
             client_id: cardId,
             tipo_atividade: 'Atendimento',
             tipo_contato: 'presencial',
-            notes: notes || null, // Incluindo o campo de notas
+            notes: notes || observations || null, // CORREÇÃO: Usando notes como prioridade, depois observations
             unit_id: clientData.unit_id,
             created_by: session.user.id,
             active: true
@@ -100,7 +101,7 @@ export function useAttendanceSubmission() {
               tipo_contato: 'presencial',
               created_by: session.user.id,
               unit_id: clientData.unit_id,
-              notes: notes || null, // Incluindo o campo de notas na atividade de matrícula
+              notes: notes || observations || null, // CORREÇÃO: Usando notes como prioridade, depois observations
               active: true
             })
 
@@ -136,12 +137,12 @@ export function useAttendanceSubmission() {
         }
 
         // Atualiza o status do cliente e limpa o scheduled_date
+        // CORREÇÃO: Removida a atualização do campo observations
         console.log(`[${submissionId}] Atualizando cliente - Limpando scheduled_date e atualizando status`)
         const updateData: any = {
           status: result,
           lead_quality_score: qualityScore ? parseInt(qualityScore) : null,
           next_contact_date: nextContactDate ? format(nextContactDate, 'yyyy-MM-dd') : null,
-          observations: observations || null,
           scheduled_date: null, // Limpando o scheduled_date após o atendimento
           updated_at: new Date().toISOString()
         }
