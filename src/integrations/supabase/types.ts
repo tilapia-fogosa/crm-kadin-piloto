@@ -2678,6 +2678,22 @@ export type Database = {
         Args: { p_unit_id: string }
         Returns: boolean
       }
+      verificar_criterios_alerta_falta: {
+        Args: { p_aluno_id: string }
+        Returns: {
+          tipo_criterio: string
+          detalhes: Json
+          data_falta: string
+          aluno_nome: string
+          turma_id: string
+          professor_id: string
+          unit_id: string
+          dias_supera: number
+          motivo_falta: string
+          professor_nome: string
+          professor_slack: string
+        }[]
+      }
       verify_webhook_credentials: {
         Args: { p_username: string; p_password: string }
         Returns: boolean
