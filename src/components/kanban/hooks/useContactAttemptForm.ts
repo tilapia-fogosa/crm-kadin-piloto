@@ -11,13 +11,22 @@ interface UseContactAttemptFormProps {
   cardId: string
 }
 
+/**
+ * Hook para gerenciar o estado e a lógica do formulário de tentativa de contato
+ * 
+ * @param onSubmit - Função para submeter os dados da tentativa de contato
+ * @param cardId - ID do cartão/cliente associado à tentativa de contato
+ * @returns Estado e manipuladores para o formulário de tentativa de contato
+ */
 export function useContactAttemptForm({ onSubmit, cardId }: UseContactAttemptFormProps) {
+  // Estados do formulário
   const [contactType, setContactType] = useState<ContactType>(undefined)
   const [date, setDate] = useState("")
   const [time, setTime] = useState("")
-  const [notes, setNotes] = useState("") // Novo estado para o campo de notas
+  const [notes, setNotes] = useState("") 
   const [isLossModalOpen, setIsLossModalOpen] = useState(false)
   const [showContactTypeAlert, setShowContactTypeAlert] = useState(false)
+  
   const { toast } = useToast()
 
   // Método para validar o tipo de contato antes de abrir o modal de perda
@@ -42,12 +51,13 @@ export function useContactAttemptForm({ onSubmit, cardId }: UseContactAttemptFor
     setShowContactTypeAlert(false)
   }
 
-  // Novo método para gerenciar as alterações nas notas
+  // Método para gerenciar as alterações nas notas
   const handleNotesChange = (value: string) => {
     console.log('useContactAttemptForm - Notas alteradas:', value.substring(0, 20) + (value.length > 20 ? '...' : ''))
     setNotes(value)
   }
 
+  // Método para validar e submeter o formulário
   const handleSubmit = () => {
     console.log('Validando dados da tentativa de contato')
     
@@ -100,7 +110,7 @@ export function useContactAttemptForm({ onSubmit, cardId }: UseContactAttemptFor
         type: contactType,
         nextContactDate,
         cardId,
-        notes // Incluindo as notas na submissão
+        notes
       })
     } catch (error) {
       console.error('Erro ao processar data/hora:', error)
@@ -116,14 +126,14 @@ export function useContactAttemptForm({ onSubmit, cardId }: UseContactAttemptFor
     contactType,
     date,
     time,
-    notes, // Adicionando notas ao objeto retornado
+    notes,
     isLossModalOpen,
     showContactTypeAlert,
     setDate,
     setTime,
     setIsLossModalOpen,
     handleContactTypeChange,
-    handleNotesChange, // Adicionando o handler para as notas
+    handleNotesChange,
     handleSubmit,
     handleLossButtonClick
   }

@@ -8,6 +8,7 @@ interface ContactAttemptActionsProps {
   showOnLossSubmit?: boolean
   showContactTypeAlert: boolean
   actionType?: 'attempt' | 'contact'
+  disabled?: boolean
 }
 
 export function ContactAttemptActions({ 
@@ -15,7 +16,8 @@ export function ContactAttemptActions({
   onLossClick, 
   showOnLossSubmit,
   showContactTypeAlert,
-  actionType = 'attempt'
+  actionType = 'attempt',
+  disabled = false
 }: ContactAttemptActionsProps) {
   // Log para rastreamento
   console.log('ContactAttemptActions - Renderizando com tipo:', actionType)
@@ -29,6 +31,7 @@ export function ContactAttemptActions({
       <Button 
         onClick={onSubmit}
         className="w-full"
+        disabled={disabled}
       >
         {buttonText}
       </Button>
@@ -46,6 +49,7 @@ export function ContactAttemptActions({
           variant="destructive"
           onClick={onLossClick}
           className="w-full mt-2"
+          disabled={disabled}
         >
           Perdido
         </Button>

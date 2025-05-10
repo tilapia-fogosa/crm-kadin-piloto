@@ -4,25 +4,24 @@ import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { TimeButtons } from "../common/TimeButtons";
 import { DateButtons } from "../common/DateButtons";
-import {
-  advanceBusinessDays,
-  adjustToBusinessHours,
-  getNextBusinessPeriod
-} from "@/utils/date/utils";
 
 interface NextContactDateTimeProps {
   date: string
   time: string
   onDateChange: (value: string) => void
   onTimeChange: (value: string) => void
+  disabled?: boolean
 }
 
 export function NextContactDateTime({ 
   date, 
   time, 
   onDateChange, 
-  onTimeChange 
+  onTimeChange,
+  disabled = false
 }: NextContactDateTimeProps) {
+  console.log("NextContactDateTime - Renderizando componente")
+  
   // Função para formatar data para o formato do input HTML
   const formatDateForInput = (date: Date): string => {
     console.log("Formatando data para input:", date);
@@ -46,26 +45,6 @@ export function NextContactDateTime({
     });
   }
 
-  // Função para definir horários específicos
-  const handleTimeButtonClick = (hours: number, minutes: number) => {
-    console.log(`Botão de horário ${hours}:${minutes} clicado`);
-    
-    // Formatando o horário no formato HH:mm
-    const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    
-    // Se não houver data selecionada, usar a data atual
-    if (!date) {
-      console.log("Data não selecionada, usando data atual");
-      const now = new Date();
-      onDateChange(formatDateForInput(now));
-    }
-    
-    // Atualizando o horário
-    onTimeChange(formattedTime);
-    
-    console.log(`Horário definido para ${formattedTime}`);
-  }
-
   return (
     <>
       <div className="space-y-2">
@@ -78,10 +57,12 @@ export function NextContactDateTime({
               onChange={(e) => onDateChange(e.target.value)}
               className="w-full"
               placeholder="dd/mm/aaaa"
+              disabled={disabled}
             />
           </div>
           <DateButtons 
-            updateDateAndTime={updateDateAndTime} 
+            updateDateAndTime={updateDateAndTime}
+            disabled={disabled}
           />
         </div>
       </div>
@@ -95,6 +76,7 @@ export function NextContactDateTime({
               value={time}
               onChange={(e) => onTimeChange(e.target.value)}
               className="w-full"
+              disabled={disabled}
             />
           </div>
           <div className="flex gap-1">
@@ -106,6 +88,7 @@ export function NextContactDateTime({
                 onTimeChange(formatTimeForInput(newDate));
               }}
               formatDateForInput={formatDateForInput}
+              disabled={disabled}
             />
           </div>
         </div>

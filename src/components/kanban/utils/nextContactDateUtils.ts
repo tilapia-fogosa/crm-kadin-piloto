@@ -1,101 +1,77 @@
 
-import { 
-  advanceBusinessDays, 
-  adjustToBusinessHours,
-  getNextBusinessPeriod
-} from "@/utils/date/utils";
+import { format } from "date-fns";
 
 /**
- * Calcula data/hora para o próximo período de atendimento
- * @param updateDateAndTime Função para atualizar data/hora
+ * Manipula o clique em botões de horário específicos
  */
-export const handleNextPeriod = (updateDateAndTime: (date: Date) => void) => {
-  console.log("Botão Próx.Período clicado");
-  const now = new Date();
-  
-  // Calculando próximo período de atendimento
-  const nextPeriod = getNextBusinessPeriod(now);
-  
-  // Atualizando data e hora
-  updateDateAndTime(nextPeriod);
-};
-
-/**
- * Calcula data/hora para o dia seguinte
- * @param updateDateAndTime Função para atualizar data/hora
- */
-export const handleTomorrow = (updateDateAndTime: (date: Date) => void) => {
-  console.log("Botão Amanhã clicado");
-  const now = new Date();
-  
-  // Avançando para amanhã, considerando dias úteis
-  let tomorrow = advanceBusinessDays(now, 1);
-  
-  // Mantendo o mesmo horário da data atual, mas ajustando para horário comercial
-  tomorrow.setHours(now.getHours(), now.getMinutes(), 0, 0);
-  tomorrow = adjustToBusinessHours(tomorrow);
-  
-  // Atualizando data e hora
-  updateDateAndTime(tomorrow);
-};
-
-/**
- * Calcula data/hora para daqui a dois dias
- * @param updateDateAndTime Função para atualizar data/hora
- */
-export const handleTwoDays = (updateDateAndTime: (date: Date) => void) => {
-  console.log("Botão Em 2 Dias clicado");
-  const now = new Date();
-  
-  // Avançando 2 dias, considerando dias úteis
-  let inTwoDays = advanceBusinessDays(now, 2);
-  
-  // Mantendo o mesmo horário da data atual, mas ajustando para horário comercial
-  inTwoDays.setHours(now.getHours(), now.getMinutes(), 0, 0);
-  inTwoDays = adjustToBusinessHours(inTwoDays);
-  
-  // Atualizando data e hora
-  updateDateAndTime(inTwoDays);
-};
-
-/**
- * Define um horário específico para a data atual ou selecionada
- * @param hours Hora desejada
- * @param minutes Minutos desejados
- * @param dateValue Valor atual da data
- * @param setDateValue Função para atualizar valor da data
- * @param onDateChange Função para atualizar data/hora completa
- */
-export const handleTimeClick = (
+export function handleTimeClick(
   hours: number, 
   minutes: number, 
-  dateValue: string,
+  dateValue: string, 
   setDateValue: (value: string) => void,
   onDateChange: (date: Date) => void,
   formatDateForInput: (date: Date) => string
-) => {
+) {
   console.log(`Botão de horário ${hours}:${minutes} clicado`);
   
+  // Formatando o horário no formato HH:mm
+  const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  
+  // Se não houver data selecionada, usar a data atual
   if (!dateValue) {
     console.log("Data não selecionada, usando data atual");
     const now = new Date();
     setDateValue(formatDateForInput(now));
-    
-    const newDate = new Date(now);
-    newDate.setHours(hours, minutes, 0, 0);
-    
-    // Atualizando data e hora
-    onDateChange(newDate);
-  } else {
-    try {
-      const [year, month, day] = dateValue.split('-').map(Number);
-      const newDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
-      
-      onDateChange(newDate);
-      
-      console.log(`Horário definido para ${hours}:${minutes}`, newDate);
-    } catch (error) {
-      console.error('Erro ao processar data/hora:', error);
-    }
   }
-};
+}
+
+/**
+ * Define o próximo período para contato (manhã/tarde/noite)
+ */
+export function handleNextPeriod(updateDateAndTime: (date: Date) => void) {
+  console.log("Botão 'Próximo Período' clicado");
+  const now = new Date();
+  const currentHour = now.getHours();
+  
+  // Cria uma nova data com base no horário atual
+  const newDate = new Date();
+  
+  // Definir próximo período com base no horário atual
+  if (currentHour < 12) {
+    // Se for manhã, passar para tarde (13h)
+    newDate.setHours(13, 0, 0, 0);
+  } else if (currentHour < 18) {
+    // Se for tarde, passar para noite (18h)
+    newDate.setHours(18, 0, 0, 0);
+  } else {
+    // Se for noite, passar para manhã do próximo dia (9h)
+    newDate.setDate(newDate.getDate() + 1);
+    newDate.setHours(9, 0, 0, 0);
+  }
+  
+  updateDateAndTime(newDate);
+}
+
+/**
+ * Define o próximo contato para amanhã
+ */
+export function handleTomorrow(updateDateAndTime: (date: Date) => void) {
+  console.log("Botão 'Amanhã' clicado");
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(9, 0, 0, 0);
+  
+  updateDateAndTime(tomorrow);
+}
+
+/**
+ * Define o próximo contato para daqui a 2 dias
+ */
+export function handleTwoDays(updateDateAndTime: (date: Date) => void) {
+  console.log("Botão 'Em 2 Dias' clicado");
+  const dayAfterTomorrow = new Date();
+  dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+  dayAfterTomorrow.setHours(9, 0, 0, 0);
+  
+  updateDateAndTime(dayAfterTomorrow);
+}

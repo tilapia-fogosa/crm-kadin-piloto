@@ -9,12 +9,14 @@ interface ContactTypeSelectorProps {
   contactType: ContactType
   onContactTypeChange: (value: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial') => void
   includeFaceToFace?: boolean
+  disabled?: boolean
 }
 
 export function ContactTypeSelector({ 
   contactType, 
   onContactTypeChange,
-  includeFaceToFace = true // Alterado o padrão para true para que "presencial" seja incluído por default
+  includeFaceToFace = true,
+  disabled = false
 }: ContactTypeSelectorProps) {
   // Log para rastreamento
   console.log('ContactTypeSelector - Renderizando com tipo:', contactType)
@@ -27,6 +29,7 @@ export function ContactTypeSelector({
         value={contactType || ''} // Alterado para aceitar string vazia quando undefined
         onValueChange={onContactTypeChange}
         className="flex flex-col space-y-2"
+        disabled={disabled}
       >
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="phone" id="phone" />
