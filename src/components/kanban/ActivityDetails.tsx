@@ -1,9 +1,13 @@
-
+import { useState } from "react"
 import { ContactAttemptForm } from "./ContactAttemptForm"
 import { EffectiveContactForm } from "./EffectiveContactForm"
 import { SchedulingForm } from "./SchedulingForm"
-import { AttendanceForm } from "./AttendanceForm"
+import { AttendanceForm } from "./components/attendance-form"
+import { useContactAttempt } from "./hooks/useContactAttempt"
+import { useAttendanceSubmission } from "./hooks/useAttendanceSubmission"
+import { LossModal } from "./components/loss/LossModal"
 import { ContactAttempt, EffectiveContact, Scheduling, Attendance } from "./types"
+import { PreSaleForm } from "./PreSaleForm"
 
 interface ActivityDetailsProps {
   selectedActivity: string | null

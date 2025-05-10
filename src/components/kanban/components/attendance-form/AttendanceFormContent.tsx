@@ -1,35 +1,46 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Attendance } from "./types"
-import { SaleForm } from "./SaleForm"
-import { useSale } from "./hooks/useSale"
-import { useToast } from "@/components/ui/use-toast"
-import { ResultButton } from "./components/attendance/ResultButton"
-import { QualityScore } from "./components/attendance/QualityScore"
-import { MatriculationMessage } from "./components/attendance/MatriculationMessage"
-import { MatriculationSection } from "./components/attendance/MatriculationSection"
-import { NegotiationSection } from "./components/attendance/NegotiationSection"
-import { LossReasonSection } from "./components/attendance/LossReasonSection"
-import { LossConfirmationDialog } from "./components/attendance/LossConfirmationDialog"
-import { AttendanceFormProps } from "./types/attendance-form.types"
+import { Attendance } from "../../types"
+import { SaleForm } from "../../SaleForm"
+import { useSale } from "../../hooks/useSale"
+import { useToast } from "@/hooks/use-toast"
+import { ResultButtons } from "./ResultButtons"
+import { QualityScore } from "../attendance/QualityScore"
+import { MatriculationMessage } from "../attendance/MatriculationMessage"
+import { MatriculationSection } from "./sections/MatriculationSection"
+import { NegotiationSection } from "./sections/NegotiationSection"
+import { LossReasonSection } from "./sections/LossReasonSection"
+import { LossConfirmationDialog } from "../attendance/LossConfirmationDialog"
+import { AttendanceFormProps } from "../../types/attendance-form.types"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
+import { useAttendanceFormState } from "./hooks/useAttendanceFormState"
 
-export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormProps) {
-  console.log('Renderizando AttendanceForm para cliente:', clientName)
+export function AttendanceFormContent({ onSubmit, cardId, clientName }: AttendanceFormProps) {
+  const {
+    selectedResult,
+    showSaleForm,
+    selectedReasons,
+    observations,
+    qualityScore,
+    nextContactDate,
+    notes,
+    notesValidationError,
+    isProcessing,
+    setShowSaleForm,
+    setSelectedResult,
+    setSelectedReasons,
+    setObservations,
+    setQualityScore,
+    setNextContactDate,
+    setIsProcessing,
+    setNotes,
+    setNotesValidationError
+  } = useAttendanceFormState();
 
-  const [selectedResult, setSelectedResult] = useState<'matriculado' | 'negociacao' | 'perdido' | undefined>(undefined)
-  const [showSaleForm, setShowSaleForm] = useState(false)
-  const [selectedReasons, setSelectedReasons] = useState<string[]>([])
-  const [observations, setObservations] = useState("")
-  const [qualityScore, setQualityScore] = useState<string>("")
-  const [nextContactDate, setNextContactDate] = useState<Date>()
   const [showLossConfirmation, setShowLossConfirmation] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [notes, setNotes] = useState("") // Novo estado para o campo de notas
-  const [notesValidationError, setNotesValidationError] = useState(false) // Estado para validação
-  const { registerSale, isLoading: isSaleLoading } = useSale()
+  const { registerSale } = useSale()
   const { toast } = useToast()
 
   const handleSubmit = async () => {
@@ -81,7 +92,7 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
         selectedReasons,
         observations,
         nextContactDate,
-        notes // Incluindo as notas no payload
+        notes
       })
     } catch (error) {
       console.error('Erro ao registrar atendimento:', error)
@@ -136,16 +147,10 @@ export function AttendanceForm({ onSubmit, cardId, clientName }: AttendanceFormP
         </Alert>
       )}
 
-      <div className="flex flex-col gap-2">
-        {['matriculado', 'negociacao', 'perdido'].map((result) => (
-          <ResultButton
-            key={result}
-            result={result as 'matriculado' | 'negociacao' | 'perdido'}
-            selectedResult={selectedResult}
-            onClick={() => handleResultSelect(result as 'matriculado' | 'negociacao' | 'perdido')}
-          />
-        ))}
-      </div>
+      <ResultButtons 
+        selectedResult={selectedResult} 
+        onResultSelect={handleResultSelect} 
+      />
 
       {selectedResult && (
         <div className="space-y-4 mt-4">
