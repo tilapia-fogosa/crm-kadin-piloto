@@ -618,6 +618,99 @@ export type Database = {
           },
         ]
       }
+      client_webhook_logs: {
+        Row: {
+          attempt_count: number
+          client_id: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          last_attempt: string | null
+          next_retry: string | null
+          payload: Json
+          status: string
+          webhook_id: string
+        }
+        Insert: {
+          attempt_count?: number
+          client_id: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          last_attempt?: string | null
+          next_retry?: string | null
+          payload: Json
+          status: string
+          webhook_id: string
+        }
+        Update: {
+          attempt_count?: number
+          client_id?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          last_attempt?: string | null
+          next_retry?: string | null
+          payload?: Json
+          status?: string
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_webhook_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_webhook_logs_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "client_webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_webhooks: {
+        Row: {
+          active: boolean
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          last_failure: string | null
+          last_success: string | null
+          trigger_status: string
+          unit_ids: string[]
+          url: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_failure?: string | null
+          last_success?: string | null
+          trigger_status: string
+          unit_ids: string[]
+          url: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_failure?: string | null
+          last_success?: string | null
+          trigger_status?: string
+          unit_ids?: string[]
+          url?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           active: boolean
@@ -2651,6 +2744,10 @@ export type Database = {
       publish_update: {
         Args: { p_update_id: string }
         Returns: boolean
+      }
+      retry_failed_client_webhooks: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       retry_failed_webhooks: {
         Args: Record<PropertyKey, never>

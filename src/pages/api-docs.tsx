@@ -2,6 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
 import { WebhookSection } from "@/components/api-docs/webhook-section"
+import { ClientWebhookSection } from "@/components/api-docs/client-webhook-section"
 import { MakeSection } from "@/components/api-docs/make-section"
 import { ApiSection } from "@/components/api-docs/api-section"
 import { UnitsTableSection } from "@/components/api-docs/units-table-section"
@@ -27,7 +28,8 @@ const ApiDocsPage = () => {
       
       <Tabs defaultValue="webhook">
         <TabsList>
-          <TabsTrigger value="webhook">Webhooks</TabsTrigger>
+          <TabsTrigger value="webhook">Webhooks de Venda</TabsTrigger>
+          <TabsTrigger value="client-webhook">Webhooks de Clientes</TabsTrigger>
           <TabsTrigger value="make">Integração Make</TabsTrigger>
           <TabsTrigger value="api">API REST</TabsTrigger>
           <TabsTrigger value="units">Tabela de Unidades</TabsTrigger>
@@ -36,6 +38,10 @@ const ApiDocsPage = () => {
 
         <TabsContent value="webhook">
           <WebhookSection onCopy={copyToClipboard} />
+        </TabsContent>
+
+        <TabsContent value="client-webhook">
+          <ClientWebhookSection onCopy={copyToClipboard} />
         </TabsContent>
 
         <TabsContent value="make">
