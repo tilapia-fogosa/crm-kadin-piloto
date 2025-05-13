@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,6 +21,9 @@ import { ptBR } from "date-fns/locale"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
 import { clientWebhookExample } from "./client-webhook-example"
+import { WebhookActions } from "./webhook-actions"
+import { EditWebhookDialog } from "./edit-webhook-dialog"
+import { UnitNameList } from "./unit-name-list"
 
 interface ClientWebhookSectionProps {
   onCopy: (text: string) => void
@@ -32,6 +35,11 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
   const [description, setDescription] = useState("")
   const [triggerStatus, setTriggerStatus] = useState("")
   const [selectedUnits, setSelectedUnits] = useState<string[]>([])
+  
+  // Estado para edição de webhook
+  const [editingWebhook, setEditingWebhook] = useState<any | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  
   const { toast } = useToast()
 
   // Status do cliente disponíveis
@@ -108,15 +116,6 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
     }
   });
 
-  // Função para formatar unidades
-  const formatUnitsList = (webhook: any) => {
-    if (!webhook.unit_ids || webhook.unit_ids.length === 0) {
-      return "Todas"
-    }
-    
-    return `${webhook.unit_ids.length} unidade(s)`
-  }
-
   // Função para formatar o status trigger
   const formatTriggerStatus = (status: string) => {
     const statusObj = clientStatuses.find(s => s.id === status)
@@ -189,6 +188,12 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
         duration: 5000
       })
     }
+  }
+
+  // Abrir diálogo de edição
+  const handleEdit = (webhook: any) => {
+    setEditingWebhook(webhook)
+    setIsEditDialogOpen(true)
   }
 
   // Adicionar estado para controlar o carregamento
@@ -302,6 +307,7 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
                   <TableHead>Unidades</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Última Execução</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -309,7 +315,9 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
                   <TableRow key={webhook.id}>
                     <TableCell className="font-mono text-sm">{webhook.url}</TableCell>
                     <TableCell>{formatTriggerStatus(webhook.trigger_status)}</TableCell>
-                    <TableCell>{formatUnitsList(webhook)}</TableCell>
+                    <TableCell>
+                      <UnitNameList unitIds={webhook.unit_ids || []} />
+                    </TableCell>
                     <TableCell>
                       <Badge variant={webhook.active ? "default" : "secondary"}>
                         {webhook.active ? "Ativo" : "Inativo"}
@@ -321,6 +329,13 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
                         "dd/MM/yyyy HH:mm",
                         { locale: ptBR }
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <WebhookActions 
+                        webhook={webhook} 
+                        onUpdate={refetch}
+                        onEdit={handleEdit} 
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -386,7 +401,14 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
           )}
         </div>
       </div>
+
+      {/* Diálogo de edição de webhook */}
+      <EditWebhookDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        webhook={editingWebhook}
+        onSuccess={refetch}
+      />
     </div>
   )
 }
-
