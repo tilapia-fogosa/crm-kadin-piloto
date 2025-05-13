@@ -12,7 +12,11 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
+// Inicialização do contexto com valor undefined para detecção de erro
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Log de criação do contexto
+console.log('AuthContext: Contexto criado');
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -175,8 +179,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     currentPath: location.pathname 
   });
 
+  // IMPORTANTE: Certifique-se de que o valor do contexto nunca seja undefined
+  const contextValue: AuthContextType = { 
+    session, 
+    isLoading, 
+    signOut 
+  };
+
   return (
-    <AuthContext.Provider value={{ session, isLoading, signOut }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
@@ -185,6 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
+    console.error('useAuth chamado fora de um AuthProvider');
     throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;

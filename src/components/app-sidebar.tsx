@@ -12,8 +12,12 @@ export function AppSidebar() {
   const location = useLocation();
   const [isClient, setIsClient] = useState(false);
 
+  // Log de inicialização do componente
+  console.log('AppSidebar: Inicializando componente');
+
   useEffect(() => {
     setIsClient(true);
+    console.log('AppSidebar: setIsClient(true)');
   }, []);
 
   const sidebar = (
@@ -28,14 +32,16 @@ export function AppSidebar() {
       <ScrollArea className="flex-1">
         <NavItems currentPath={location.pathname} />
       </ScrollArea>
-      <UserProfile />
+      {isClient && <UserProfile />}
     </div>
   );
 
   if (!isClient) {
+    console.log('AppSidebar: !isClient, retornando null');
     return null;
   }
 
+  console.log('AppSidebar: Renderizando sidebar');
   return (
     <>
       <MobileTrigger open={openMobile} onOpenChange={setOpenMobile}>

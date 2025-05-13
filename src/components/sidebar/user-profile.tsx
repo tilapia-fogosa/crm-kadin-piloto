@@ -14,17 +14,27 @@ import {
 import { useNavigate } from "react-router-dom";
 
 export function UserProfile() {
+  // Adiciona log para rastrear quando este componente é montado
+  console.log('UserProfile: Inicializando componente');
+  
   const { session, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Log de verificação da sessão
+  console.log('UserProfile: Verificando sessão', {
+    hasSession: !!session,
+    userName: session?.user?.user_metadata?.full_name
+  });
+
   const handleLogout = async () => {
+    console.log('UserProfile: Iniciando logout');
     await signOut();
   };
 
   // Função para navegar para a página de alteração de senha
   const handleChangePassword = () => {
-    console.log('Navegando para página de alteração de senha');
+    console.log('UserProfile: Navegando para página de alteração de senha');
     navigate('/auth/change-password');
   };
 

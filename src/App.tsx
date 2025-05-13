@@ -1,4 +1,3 @@
-
 import React from "react"; // Importação explícita do React
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -49,7 +48,6 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        {/* Importante: AuthProvider precisa estar antes de qualquer outro contexto que dependa dele */}
         <AuthProvider>
           <UpdatesProvider>
             <SidebarProvider>
