@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -47,10 +46,18 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
   ]
 
   // Buscar webhooks configurados
-  const { data: webhooks, refetch } = useQuery({
+  const { data: webhooks, refetch, isLoading: isLoadingWebhooks } = useQuery({
     queryKey: ['client-webhooks'],
     queryFn: async () => {
-      console.log('Buscando webhooks de clientes')
+      console.log('Buscando webhooks de clientes');
+      
+      // Verificar se o usuário está autenticado
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        console.log('Usuário não autenticado na busca de webhooks');
+        throw new Error('Not authenticated');
+      }
+      
       const { data, error } = await supabase
         .from('client_webhooks')
         .select(`
@@ -60,19 +67,31 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
             unit_number
           )
         `)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
 
-      if (error) throw error
-      console.log('Webhooks carregados:', data)
-      return data
+      if (error) {
+        console.error('Erro ao buscar webhooks:', error);
+        throw error;
+      }
+      
+      console.log('Webhooks carregados:', data);
+      return data || [];
     }
-  })
+  });
 
   // Buscar logs
-  const { data: logs } = useQuery({
+  const { data: logs, isLoading: isLoadingLogs } = useQuery({
     queryKey: ['client-webhook-logs'],
     queryFn: async () => {
-      console.log('Buscando logs de webhooks de clientes')
+      console.log('Buscando logs de webhooks de clientes');
+      
+      // Verificar se o usuário está autenticado
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        console.log('Usuário não autenticado na busca de logs');
+        throw new Error('Not authenticated');
+      }
+      
       const { data, error } = await supabase
         .from('client_webhook_logs')
         .select(`
@@ -81,13 +100,17 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
           clients (name)
         `)
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(50);
 
-      if (error) throw error
-      console.log('Logs carregados:', data)
-      return data
+      if (error) {
+        console.error('Erro ao buscar logs de webhooks:', error);
+        throw error;
+      }
+      
+      console.log('Logs carregados:', data);
+      return data || [];
     }
-  })
+  });
 
   // Função para formatar unidades
   const formatUnitsList = (webhook: any) => {
@@ -171,6 +194,9 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
       })
     }
   }
+
+  // Adicionar estado para controlar o carregamento
+  const isLoading = isLoadingWebhooks || isLoadingLogs;
 
   return (
     <div className="space-y-6">
@@ -267,81 +293,101 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
       <div className="space-y-4">
         <h4 className="font-medium">Webhooks Configurados</h4>
         <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>URL</TableHead>
-                <TableHead>Status Trigger</TableHead>
-                <TableHead>Unidades</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Última Execução</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {webhooks?.map((webhook) => (
-                <TableRow key={webhook.id}>
-                  <TableCell className="font-mono text-sm">{webhook.url}</TableCell>
-                  <TableCell>{formatTriggerStatus(webhook.trigger_status)}</TableCell>
-                  <TableCell>{formatUnitsList(webhook)}</TableCell>
-                  <TableCell>
-                    <Badge variant={webhook.active ? "default" : "secondary"}>
-                      {webhook.active ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {webhook.last_success && format(
-                      new Date(webhook.last_success),
-                      "dd/MM/yyyy HH:mm",
-                      { locale: ptBR }
-                    )}
-                  </TableCell>
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <p className="text-muted-foreground">Carregando webhooks...</p>
+            </div>
+          ) : webhooks && webhooks.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>URL</TableHead>
+                  <TableHead>Status Trigger</TableHead>
+                  <TableHead>Unidades</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Última Execução</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {webhooks.map((webhook) => (
+                  <TableRow key={webhook.id}>
+                    <TableCell className="font-mono text-sm">{webhook.url}</TableCell>
+                    <TableCell>{formatTriggerStatus(webhook.trigger_status)}</TableCell>
+                    <TableCell>{formatUnitsList(webhook)}</TableCell>
+                    <TableCell>
+                      <Badge variant={webhook.active ? "default" : "secondary"}>
+                        {webhook.active ? "Ativo" : "Inativo"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {webhook.last_success && format(
+                        new Date(webhook.last_success),
+                        "dd/MM/yyyy HH:mm",
+                        { locale: ptBR }
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="p-8 text-center">
+              <p className="text-muted-foreground">Nenhum webhook configurado.</p>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="space-y-4">
         <h4 className="font-medium">Logs Recentes</h4>
         <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Webhook</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Tentativas</TableHead>
-                <TableHead>Erro</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {logs?.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell>
-                    {format(new Date(log.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                  </TableCell>
-                  <TableCell className="font-mono text-sm truncate max-w-[150px]">{log.client_webhooks?.url}</TableCell>
-                  <TableCell className="truncate max-w-[150px]">{log.clients?.name}</TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant={
-                        log.status === 'success' ? "default" :
-                        log.status === 'pending' ? "secondary" : "destructive"
-                      }
-                    >
-                      {log.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{log.attempt_count}</TableCell>
-                  <TableCell className="text-sm text-red-600 truncate max-w-[200px]">
-                    {log.error_message}
-                  </TableCell>
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <p className="text-muted-foreground">Carregando logs...</p>
+            </div>
+          ) : logs && logs.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Webhook</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Tentativas</TableHead>
+                  <TableHead>Erro</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {logs.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell>
+                      {format(new Date(log.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm truncate max-w-[150px]">{log.client_webhooks?.url}</TableCell>
+                    <TableCell className="truncate max-w-[150px]">{log.clients?.name}</TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={
+                          log.status === 'success' ? "default" :
+                          log.status === 'pending' ? "secondary" : "destructive"
+                        }
+                      >
+                        {log.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{log.attempt_count}</TableCell>
+                    <TableCell className="text-sm text-red-600 truncate max-w-[200px]">
+                      {log.error_message}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="p-8 text-center">
+              <p className="text-muted-foreground">Nenhum log encontrado.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
