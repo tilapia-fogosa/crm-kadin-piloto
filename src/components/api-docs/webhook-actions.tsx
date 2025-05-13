@@ -76,25 +76,26 @@ export function WebhookActions({ webhook, onUpdate, onEdit }: WebhookActionsProp
     }
   }
 
-  // Função para excluir webhook
+  // Função para desativar webhook (soft delete)
   const deleteWebhook = async () => {
     try {
       setIsDeleting(true)
-      console.log('Excluindo webhook:', webhook.id)
+      console.log('Desativando webhook (soft delete):', webhook.id)
       
+      // Usar update ao invés de delete para realizar um soft delete
       const { error } = await supabase
         .from('client_webhooks')
-        .delete()
+        .update({ active: false })
         .eq('id', webhook.id)
       
       if (error) {
-        console.error('Erro ao excluir webhook:', error)
+        console.error('Erro ao desativar webhook:', error)
         throw error
       }
       
       toast({
-        title: "Webhook excluído",
-        description: "O webhook foi excluído com sucesso.",
+        title: "Webhook desativado",
+        description: "O webhook foi desativado com sucesso.",
         duration: 3000
       })
       
@@ -104,10 +105,10 @@ export function WebhookActions({ webhook, onUpdate, onEdit }: WebhookActionsProp
       // Fecha o diálogo de confirmação
       setOpenDeleteDialog(false)
     } catch (error) {
-      console.error('Erro ao excluir webhook:', error)
+      console.error('Erro ao desativar webhook:', error)
       toast({
         title: "Erro",
-        description: "Não foi possível excluir o webhook.",
+        description: "Não foi possível desativar o webhook.",
         variant: "destructive",
         duration: 3000
       })
@@ -166,9 +167,9 @@ export function WebhookActions({ webhook, onUpdate, onEdit }: WebhookActionsProp
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar desativação</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir este webhook? Esta ação não pode ser desfeita.
+              Tem certeza que deseja desativar este webhook? Esta ação pode ser revertida posteriormente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -181,7 +182,7 @@ export function WebhookActions({ webhook, onUpdate, onEdit }: WebhookActionsProp
               disabled={isDeleting}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {isDeleting ? "Excluindo..." : "Excluir"}
+              {isDeleting ? "Desativando..." : "Desativar"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
