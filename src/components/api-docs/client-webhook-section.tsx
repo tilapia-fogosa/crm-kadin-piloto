@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -58,15 +59,10 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
         throw new Error('Not authenticated');
       }
       
+      // Modificado para não fazer join com a tabela units
       const { data, error } = await supabase
         .from('client_webhooks')
-        .select(`
-          *,
-          units (
-            name,
-            unit_number
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -393,3 +389,4 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
     </div>
   )
 }
+

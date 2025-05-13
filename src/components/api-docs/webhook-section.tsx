@@ -32,15 +32,10 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
   const { data: webhooks, refetch } = useQuery({
     queryKey: ['sale-webhooks'],
     queryFn: async () => {
+      // Modificado para não fazer join com a tabela units
       const { data, error } = await supabase
         .from('sale_webhooks')
-        .select(`
-          *,
-          units (
-            name,
-            unit_number
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -136,7 +131,6 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
               <TableRow>
                 <TableHead>URL</TableHead>
                 <TableHead>Descrição</TableHead>
-                <TableHead>Unidade</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Última Execução</TableHead>
               </TableRow>
@@ -146,12 +140,6 @@ export function WebhookSection({ onCopy }: WebhookSectionProps) {
                 <TableRow key={webhook.id}>
                   <TableCell className="font-mono text-sm">{webhook.url}</TableCell>
                   <TableCell>{webhook.description}</TableCell>
-                  <TableCell>
-                    {webhook.units 
-                      ? `#${webhook.units.unit_number} - ${webhook.units.name}`
-                      : 'Todas'
-                    }
-                  </TableCell>
                   <TableCell>
                     <Badge variant={webhook.active ? "default" : "secondary"}>
                       {webhook.active ? "Ativo" : "Inativo"}
