@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useToast } from "@/components/ui/use-toast"
 
 export function useSale() {
+  console.log('Iniciando hook useSale')
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
@@ -14,13 +15,18 @@ export function useSale() {
   const { data: userUnit } = useQuery({
     queryKey: ['userUnit'],
     queryFn: async () => {
+      console.log('Buscando unidade do usuário...')
       const { data, error } = await supabase
         .from('unit_users')
         .select('unit_id')
         .eq('active', true)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao buscar unidade do usuário:', error)
+        throw error
+      }
+      console.log('Unidade do usuário encontrada:', data)
       return data
     }
   })
@@ -30,12 +36,17 @@ export function useSale() {
     setIsLoading(true)
     try {
       if (!userUnit?.unit_id) {
+        console.error('Unidade não encontrada')
         throw new Error('Unidade não encontrada')
       }
 
       // Obter o usuário atual
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuário não autenticado')
+      if (!user) {
+        console.error('Usuário não autenticado')
+        throw new Error('Usuário não autenticado')
+      }
+      console.log('Usuário autenticado:', user.id)
 
       const saleData = {
         ...sale,
@@ -58,15 +69,15 @@ export function useSale() {
         throw error
       }
 
-      // Disparar webhooks
-      await supabase.functions.invoke('process-sale-webhooks', {
-        body: { sale_id: newSale.id }
-      })
-
       console.log('Venda registrada com sucesso:', newSale)
+      
+      // Nota: Removemos a chamada de webhook de venda, pois agora
+      // essa funcionalidade é tratada pelos webhooks de clientes com status "matriculado"
+
       toast({
         title: "Venda registrada com sucesso!",
-        duration: 3000
+        description: "O cliente foi marcado como matriculado e os webhooks configurados serão acionados automaticamente.",
+        duration: 5000
       })
     } catch (error: any) {
       console.error('Erro ao registrar venda:', error)

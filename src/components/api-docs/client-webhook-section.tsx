@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -206,6 +205,10 @@ export function ClientWebhookSection({ onCopy }: ClientWebhookSectionProps) {
         <p className="text-sm text-gray-500">
           Configure URLs para receber notificações quando o status de um cliente for atualizado.
         </p>
+        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-700">
+          <strong>Nota:</strong> Os webhooks de venda foram consolidados nesta funcionalidade. 
+          Para receber notificações de vendas, configure um webhook com o status trigger "matriculado".
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

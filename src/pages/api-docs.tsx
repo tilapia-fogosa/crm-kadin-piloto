@@ -1,7 +1,6 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
-import { WebhookSection } from "@/components/api-docs/webhook-section"
 import { ClientWebhookSection } from "@/components/api-docs/client-webhook-section"
 import { MakeSection } from "@/components/api-docs/make-section"
 import { ApiSection } from "@/components/api-docs/api-section"
@@ -26,19 +25,14 @@ const ApiDocsPage = () => {
     <div className="container mx-auto py-10">
       <h1 className="text-3xl font-bold mb-6">Documentação API</h1>
       
-      <Tabs defaultValue="webhook">
+      <Tabs defaultValue="client-webhook">
         <TabsList>
-          <TabsTrigger value="webhook">Webhooks de Venda</TabsTrigger>
           <TabsTrigger value="client-webhook">Webhooks de Clientes</TabsTrigger>
           <TabsTrigger value="make">Integração Make</TabsTrigger>
           <TabsTrigger value="api">API REST</TabsTrigger>
           <TabsTrigger value="units">Tabela de Unidades</TabsTrigger>
           <TabsTrigger value="sources">Tabela de Origens</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="webhook">
-          <WebhookSection onCopy={copyToClipboard} />
-        </TabsContent>
 
         <TabsContent value="client-webhook">
           <ClientWebhookSection onCopy={copyToClipboard} />
