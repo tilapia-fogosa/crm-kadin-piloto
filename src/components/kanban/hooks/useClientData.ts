@@ -142,7 +142,7 @@ export function useClientData(selectedUnitIds: string[] = []) {
           client_activities: (client.client_activities || [])
             .filter(activity => activity.active)
             .map(activity => {
-              // Adicionando o nome do criador da atividade ao final da string formatada
+              // Obtém o nome do criador da atividade a partir do perfil vinculado
               const creatorName = activity.profiles?.full_name || '';
               return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}|${activity.active}|${creatorName}`
             })

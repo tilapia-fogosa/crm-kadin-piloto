@@ -105,7 +105,7 @@ export function ActivityHistory({ activities, onDeleteActivity, clientId }: Acti
               const date = new Date(parts[2])
               const notes = parts[3]
               const id = parts[4]
-              const creatorName = parts[7] || '' // Novo campo: nome do criador
+              const creatorName = parts[7] || '' // Nome do criador
               
               if (!id) {
                 console.error('Activity without ID:', activity)
