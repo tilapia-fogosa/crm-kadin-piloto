@@ -91,6 +91,7 @@ export function useClientData(selectedUnitIds: string[] = []) {
           original_adset,
           scheduled_date,
           valorization_confirmed,
+          registration_name,
           unit_id,
           units (
             id,
@@ -103,7 +104,8 @@ export function useClientData(selectedUnitIds: string[] = []) {
             notes,
             created_at,
             next_contact_date,
-            active
+            active,
+            created_by
           )
         `)
         .eq('active', true)
@@ -128,6 +130,7 @@ export function useClientData(selectedUnitIds: string[] = []) {
           status: client.status,
           unit_id: client.unit_id,
           unit_name: client.units?.name,
+          registration_name: client.registration_name,
           activities_count: client.client_activities?.length || 0
         })
       })

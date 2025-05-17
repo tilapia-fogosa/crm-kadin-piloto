@@ -20,6 +20,14 @@ export function ClientInformation({ card }: ClientInformationProps) {
           <span className="text-sm text-muted-foreground">Origem:</span>
           <span className="text-sm font-medium text-right">{card.leadSource || "-"}</span>
         </div>
+        
+        {card.registrationName && (
+          <div className="flex justify-between items-start">
+            <span className="text-sm text-muted-foreground">Registro:</span>
+            <span className="text-sm font-medium text-right">{card.registrationName}</span>
+          </div>
+        )}
+        
         <div className="flex justify-between items-start">
           <span className="text-sm text-muted-foreground">Anúncio:</span>
           <span className="text-sm font-medium text-right">{card.original_ad || "-"}</span>

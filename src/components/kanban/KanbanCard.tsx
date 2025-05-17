@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Phone, Clock, Calendar } from "lucide-react";
@@ -56,6 +57,7 @@ export function KanbanCard({
   const nextContactColor = getNextContactColor(nextContactDate);
   
   console.log(`KanbanCard - Cliente ${card.id} - scheduledDate: ${card.scheduledDate}, valorizationConfirmed: ${card.valorizationConfirmed}`);
+  console.log(`KanbanCard - Cliente ${card.id} - registrationName: ${card.registrationName || 'não definido'}`);
   
   const handleValorizationChange = useCallback((confirmed: boolean) => {
     console.log(`Valorização mudou para: ${confirmed}`);
@@ -100,6 +102,12 @@ export function KanbanCard({
           <p className="text-sm text-[#666666]">
             Origem: {card.leadSource}
           </p>
+          
+          {card.registrationName && (
+            <p className="text-sm text-[#666666]">
+              Registro: {card.registrationName}
+            </p>
+          )}
           
           <div className="flex items-center gap-2">
             <WhatsAppIcon 

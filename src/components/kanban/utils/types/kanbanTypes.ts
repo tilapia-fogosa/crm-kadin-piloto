@@ -16,6 +16,7 @@ export interface ClientData {
   observations?: string
   status: string
   valorization_confirmed?: boolean
+  registration_name?: string
   unit_id: string
   units?: {
     id: string

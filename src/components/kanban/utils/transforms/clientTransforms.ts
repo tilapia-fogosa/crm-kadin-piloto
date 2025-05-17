@@ -7,6 +7,7 @@ export const transformClientToCard = (client: ClientData) => {
   console.log(`Transformando cliente ${client.name} para card`)
   console.log(`Cliente ${client.id} - scheduled_date: ${client.scheduled_date}, valorização confirmada: ${client.valorization_confirmed}`)
   console.log(`Cliente ${client.id} - unit_id: ${client.unit_id}, unit_name: ${client.units?.name}`)
+  console.log(`Cliente ${client.id} - registration_name: ${client.registration_name || 'não definido'}`)
   
   return {
     id: client.id,
@@ -22,6 +23,7 @@ export const transformClientToCard = (client: ClientData) => {
     original_adset: client.original_adset,
     observations: client.observations,
     valorizationConfirmed: client.valorization_confirmed || false,
+    registrationName: client.registration_name,
     unitId: client.unit_id,
     unitName: client.units?.name
   }

@@ -20,6 +20,7 @@ export type KanbanCard = {
   original_adset?: string
   observations?: string
   valorizationConfirmed?: boolean
+  registrationName?: string
   unitId?: string
   unitName?: string
 }
