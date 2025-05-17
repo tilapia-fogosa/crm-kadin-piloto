@@ -103,7 +103,11 @@ export function useClientData(selectedUnitIds: string[] = []) {
             notes,
             created_at,
             next_contact_date,
-            active
+            active,
+            created_by,
+            profiles:created_by (
+              full_name
+            )
           )
         `)
         .eq('active', true)
@@ -138,7 +142,9 @@ export function useClientData(selectedUnitIds: string[] = []) {
           client_activities: (client.client_activities || [])
             .filter(activity => activity.active)
             .map(activity => {
-              return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}|${activity.active}`
+              // Adicionando o nome do criador da atividade ao final da string formatada
+              const creatorName = activity.profiles?.full_name || '';
+              return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}|${activity.active}|${creatorName}`
             })
         }
       })

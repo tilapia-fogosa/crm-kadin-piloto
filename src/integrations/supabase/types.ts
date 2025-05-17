@@ -1147,11 +1147,14 @@ export type Database = {
           column_id: string
           created_at: string
           description: string | null
+          due_date: string | null
           historico: string | null
           id: string
           origem: string | null
+          priority: string | null
           responsavel: string | null
           retention_date: string | null
+          tags: string[] | null
           title: string
           updated_at: string
         }
@@ -1161,11 +1164,14 @@ export type Database = {
           column_id?: string
           created_at?: string
           description?: string | null
+          due_date?: string | null
           historico?: string | null
           id?: string
           origem?: string | null
+          priority?: string | null
           responsavel?: string | null
           retention_date?: string | null
+          tags?: string[] | null
           title: string
           updated_at?: string
         }
@@ -1175,11 +1181,14 @@ export type Database = {
           column_id?: string
           created_at?: string
           description?: string | null
+          due_date?: string | null
           historico?: string | null
           id?: string
           origem?: string | null
+          priority?: string | null
           responsavel?: string | null
           retention_date?: string | null
+          tags?: string[] | null
           title?: string
           updated_at?: string
         }

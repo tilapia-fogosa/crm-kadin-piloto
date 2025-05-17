@@ -23,6 +23,8 @@ interface ClientActivity {
   notes: string | null
   active: boolean
   next_contact_date?: string | null
+  created_by?: string
+  creator_name?: string
 }
 
 interface Client {
@@ -51,15 +53,37 @@ export function ClientActivitySheet({ client, isOpen, setIsOpen }: ClientActivit
   // Processar as atividades quando o cliente mudar
   useEffect(() => {
     if (client && client.client_activities) {
-      // Filtra apenas atividades ativas e ordena por data (mais recente primeiro)
-      const activeActivities = client.client_activities
-        .filter(activity => activity.active)
+      // Transformar as atividades de string para objetos
+      const processedActivities = client.client_activities
+        .filter(activity => {
+          if (typeof activity === 'string') {
+            const parts = activity.split('|')
+            return parts.length >= 7 && parts[6] === 'true' // Filtra apenas atividades ativas
+          }
+          return activity.active // Para retrocompatibilidade
+        })
+        .map(activity => {
+          if (typeof activity === 'string') {
+            const parts = activity.split('|')
+            return {
+              tipo_atividade: parts[0],
+              tipo_contato: parts[1],
+              created_at: parts[2],
+              notes: parts[3] || null,
+              id: parts[4],
+              next_contact_date: parts[5] || null,
+              active: parts[6] === 'true',
+              creator_name: parts[7] || ''
+            }
+          }
+          return activity // Para retrocompatibilidade
+        })
         .sort((a, b) => 
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         )
       
-      console.log(`${activeActivities.length} atividades ativas encontradas`)
-      setActivities(activeActivities)
+      console.log(`${processedActivities.length} atividades ativas encontradas`)
+      setActivities(processedActivities)
     } else {
       setActivities([])
     }
@@ -147,6 +171,12 @@ export function ClientActivitySheet({ client, isOpen, setIsOpen }: ClientActivit
                       {formatDate(activity.created_at)}
                     </span>
                   </div>
+                  {/* Mostrar o nome do criador */}
+                  {activity.creator_name && (
+                    <p className="text-xs text-muted-foreground ml-10 -mt-0.5">
+                      por: {activity.creator_name}
+                    </p>
+                  )}
                   {activity.notes && (
                     <p className="text-sm text-muted-foreground ml-10">
                       {activity.notes}

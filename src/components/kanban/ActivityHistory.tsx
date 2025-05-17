@@ -105,6 +105,7 @@ export function ActivityHistory({ activities, onDeleteActivity, clientId }: Acti
               const date = new Date(parts[2])
               const notes = parts[3]
               const id = parts[4]
+              const creatorName = parts[7] || '' // Novo campo: nome do criador
               
               if (!id) {
                 console.error('Activity without ID:', activity)
@@ -136,6 +137,12 @@ export function ActivityHistory({ activities, onDeleteActivity, clientId }: Acti
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
+                  {/* Mostrar o nome do criador */}
+                  {creatorName && (
+                    <p className="text-xs text-muted-foreground ml-10 -mt-0.5">
+                      por: {creatorName}
+                    </p>
+                  )}
                   {notes && (
                     <p className="text-sm text-muted-foreground ml-10">
                       {notes}
