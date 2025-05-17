@@ -34,7 +34,7 @@ interface Client {
   lead_source: string
   email?: string
   status: string
-  client_activities?: ClientActivity[]
+  client_activities?: (ClientActivity | string)[]
 }
 
 interface ClientActivitySheetProps {
