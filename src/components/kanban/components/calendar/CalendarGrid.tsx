@@ -3,7 +3,6 @@ import { format, getDaysInMonth, startOfMonth, getDay } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CalendarDayCell } from "./CalendarDayCell"
 import { ScheduledAppointment } from "../../types"
-import { normalizeDate } from "@/utils/date"
 import { UserUnit } from "../../hooks/useUserUnit"
 
 interface CalendarGridProps {
@@ -22,6 +21,7 @@ export function CalendarGrid({
   userUnits
 }: CalendarGridProps) {
   console.log('Renderizando CalendarGrid com unidades:', userUnits?.length);
+  console.log('📅 CalendarGrid - Total de agendamentos recebidos:', scheduledAppointments.length);
 
   const daysInMonth = getDaysInMonth(currentDate)
   const firstDayOfMonth = startOfMonth(currentDate)
@@ -45,27 +45,28 @@ export function CalendarGrid({
   const getDayAppointments = (dayNumber: number) => {
     if (dayNumber <= 0 || dayNumber > daysInMonth || !scheduledAppointments) return []
     
-    // Criamos uma data normalizada para o dia atual no mês corrente
-    const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNumber)
-    
+    // Simplificar a comparação de datas - usar apenas o dia do mês
     return scheduledAppointments.filter(appointment => {
-      // Usamos a função normalizeDate para evitar problemas de fuso horário
-      const appointmentDate = normalizeDate(new Date(appointment.scheduled_date)) as Date
-      const normalizedTargetDate = normalizeDate(targetDate) as Date
+      const appointmentDate = new Date(appointment.scheduled_date)
+      const appointmentDay = appointmentDate.getDate()
+      const appointmentMonth = appointmentDate.getMonth()
+      const appointmentYear = appointmentDate.getFullYear()
       
-      // Comparamos apenas ano, mês e dia
-      const isSameDay = appointmentDate.getDate() === normalizedTargetDate.getDate() &&
-                         appointmentDate.getMonth() === normalizedTargetDate.getMonth() &&
-                         appointmentDate.getFullYear() === normalizedTargetDate.getFullYear()
+      const isSameDay = appointmentDay === dayNumber &&
+                         appointmentMonth === currentDate.getMonth() &&
+                         appointmentYear === currentDate.getFullYear()
       
-      // Para debug - APENAS logar quando encontramos agendamentos para o dia 30
+      // Log apenas para debug específico do dia 30
       if (dayNumber === 30 && isSameDay) {
-        console.log(`Agendamento encontrado para dia 30:`, {
+        console.log(`✅ Agendamento encontrado para dia 30:`, {
           id: appointment.id,
           client_name: appointment.client_name,
           scheduled_date: appointment.scheduled_date,
-          appointmentDate: format(appointmentDate, 'yyyy-MM-dd HH:mm:ss'),
-          normalizedTargetDate: format(normalizedTargetDate, 'yyyy-MM-dd')
+          appointmentDay,
+          appointmentMonth: appointmentMonth + 1,
+          appointmentYear,
+          currentMonth: currentDate.getMonth() + 1,
+          currentYear: currentDate.getFullYear()
         })
       }
       
@@ -74,6 +75,22 @@ export function CalendarGrid({
   }
 
   const days = generateCalendarDays()
+
+  // Debug adicional - mostrar distribuição de agendamentos por dia
+  if (scheduledAppointments.length > 0) {
+    const appointmentsByDay = scheduledAppointments.reduce((acc, appointment) => {
+      const day = new Date(appointment.scheduled_date).getDate()
+      const month = new Date(appointment.scheduled_date).getMonth()
+      const year = new Date(appointment.scheduled_date).getFullYear()
+      
+      if (month === currentDate.getMonth() && year === currentDate.getFullYear()) {
+        acc[day] = (acc[day] || 0) + 1
+      }
+      return acc
+    }, {} as Record<number, number>)
+    
+    console.log('📅 CalendarGrid - Distribuição de agendamentos por dia:', appointmentsByDay)
+  }
 
   return (
     <div className="grid grid-cols-7 gap-0.5 mt-4 text-sm">

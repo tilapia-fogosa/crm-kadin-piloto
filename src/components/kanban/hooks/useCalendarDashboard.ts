@@ -24,24 +24,27 @@ export function useCalendarDashboard(selectedUnitIds: string[]) {
   const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit()
 
   const fetchAppointments = async () => {
-    console.log('🔍 === INÍCIO DEBUG AGENDA DE LEADS (NOVA IMPLEMENTAÇÃO) ===')
+    console.log('🔍 === INÍCIO DEBUG AGENDA DE LEADS (OPÇÃO 1 SIMPLIFICADA) ===')
     console.log('📋 selectedUnitIds recebidos do Kanban:', selectedUnitIds)
     console.log('🔢 Quantidade de unidades vindas do Kanban:', selectedUnitIds?.length || 0)
     console.log('📊 UserUnits do hook:', userUnits?.length || 0)
+    console.log('📅 Data atual para busca:', currentDate)
     
     if (!selectedUnitIds || selectedUnitIds.length === 0) {
-      console.log('❌ Não há selectedUnitIds válidos do Kanban')
-      console.log('🔄 Tentando fallback: buscar TODOS os agendamentos do período para debug')
+      console.log('❌ Não há selectedUnitIds válidos do Kanban - executando fallback')
+      console.log('🔄 Fallback: buscar TODOS os agendamentos do mês')
       
-      // Fallback de debug: buscar TODOS os agendamentos do mês atual
       setIsLoading(true)
       try {
-        const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-        const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59)
+        // Query simplificada para fallback - buscar TODOS os agendamentos do mês
+        const startOfMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-01`
+        const endOfMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()}`
 
-        console.log('📅 [FALLBACK] Período de busca:', {
-          início: startOfMonth.toISOString(),
-          fim: endOfMonth.toISOString()
+        console.log('📅 [FALLBACK] Período simplificado:', {
+          início: startOfMonth,
+          fim: endOfMonth,
+          mês: currentDate.getMonth() + 1,
+          ano: currentDate.getFullYear()
         })
 
         const { data: allClients, error: fallbackError } = await supabase
@@ -57,8 +60,8 @@ export function useCalendarDashboard(selectedUnitIds: string[]) {
           `)
           .not('scheduled_date', 'is', null)
           .eq('active', true)
-          .gte('scheduled_date', startOfMonth.toISOString())
-          .lte('scheduled_date', endOfMonth.toISOString())
+          .gte('scheduled_date', startOfMonth)
+          .lte('scheduled_date', endOfMonth + ' 23:59:59')
           .order('scheduled_date', { ascending: true })
 
         if (fallbackError) {
@@ -85,6 +88,12 @@ export function useCalendarDashboard(selectedUnitIds: string[]) {
               })
 
             console.log('✅ [FALLBACK] Agendamentos processados:', transformedAppointments.length)
+            console.log('📅 [FALLBACK] Agendamentos por dia:', transformedAppointments.reduce((acc, app) => {
+              const day = new Date(app.scheduled_date).getDate()
+              acc[day] = (acc[day] || 0) + 1
+              return acc
+            }, {} as Record<number, number>))
+            
             setAppointments(transformedAppointments)
           } else {
             setAppointments([])
@@ -113,19 +122,19 @@ export function useCalendarDashboard(selectedUnitIds: string[]) {
         return
       }
       
-      // Definir período de busca
-      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59)
+      // Query simplificada - usando apenas strings de data
+      const startOfMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-01`
+      const endOfMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()}`
 
-      console.log('📅 Período de busca:', {
-        início: startOfMonth.toISOString(),
-        fim: endOfMonth.toISOString(),
+      console.log('📅 Período simplificado:', {
+        início: startOfMonth,
+        fim: endOfMonth,
         mês: currentDate.getMonth() + 1,
         ano: currentDate.getFullYear()
       })
 
-      // Query otimizada e independente para a Agenda de Leads
-      console.log('🔍 Executando query otimizada para Agenda de Leads...')
+      // Query otimizada e simplificada
+      console.log('🔍 Executando query simplificada para Agenda de Leads...')
       const { data: clients, error } = await supabase
         .from('clients')
         .select(`
@@ -140,8 +149,8 @@ export function useCalendarDashboard(selectedUnitIds: string[]) {
         .not('scheduled_date', 'is', null)
         .eq('active', true)
         .in('unit_id', unitIds)
-        .gte('scheduled_date', startOfMonth.toISOString())
-        .lte('scheduled_date', endOfMonth.toISOString())
+        .gte('scheduled_date', startOfMonth)
+        .lte('scheduled_date', endOfMonth + ' 23:59:59')
         .order('scheduled_date', { ascending: true })
 
       if (error) {
@@ -160,6 +169,14 @@ export function useCalendarDashboard(selectedUnitIds: string[]) {
             acc[unitName] = (acc[unitName] || 0) + 1
             return acc
           }, {} as Record<string, number>)
+        )
+        
+        console.log('📅 Distribuição por dia do mês:', 
+          clients.reduce((acc, client) => {
+            const day = new Date(client.scheduled_date).getDate()
+            acc[day] = (acc[day] || 0) + 1
+            return acc
+          }, {} as Record<number, number>)
         )
         
         const transformedAppointments: ScheduledAppointment[] = clients
@@ -188,8 +205,8 @@ export function useCalendarDashboard(selectedUnitIds: string[]) {
           .select('id, name, scheduled_date, unit_id, units(name)')
           .not('scheduled_date', 'is', null)
           .eq('active', true)
-          .gte('scheduled_date', startOfMonth.toISOString())
-          .lte('scheduled_date', endOfMonth.toISOString())
+          .gte('scheduled_date', startOfMonth)
+          .lte('scheduled_date', endOfMonth + ' 23:59:59')
 
         console.log('🔍 Debug - Total de agendamentos no período (sem filtro de unidade):', debugClients?.length || 0)
         if (debugClients && debugClients.length > 0) {
@@ -202,7 +219,7 @@ export function useCalendarDashboard(selectedUnitIds: string[]) {
         setAppointments([])
       }
 
-      console.log('🏁 === FIM DEBUG AGENDA DE LEADS (NOVA IMPLEMENTAÇÃO) ===')
+      console.log('🏁 === FIM DEBUG AGENDA DE LEADS (OPÇÃO 1 SIMPLIFICADA) ===')
     } catch (error) {
       console.error('💥 Erro geral em fetchAppointments:', error)
       setAppointments([])
