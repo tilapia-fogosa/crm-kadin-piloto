@@ -25,16 +25,12 @@ const COLUMN_DEFINITIONS: ColumnDefinition[] = [
     filterPredicate: (client: ClientSummaryData) => client.status === 'atendimento-agendado'
   },
   {
-    id: 'atendimento-realizado',
-    title: 'Atendimento',
-    filterPredicate: (client: ClientSummaryData) => client.status === 'atendimento-realizado'
-  },
-  {
     id: 'negociacao',
     title: 'Negociação',
     filterPredicate: (client: ClientSummaryData) => client.status === 'negociacao'
   }
-  // Removidas as colunas 'matriculado' e 'perdido'
+  // Apenas 5 colunas: após atendimento o cliente vai para negociação, matrícula ou perdido
+  // Matriculados e perdidos não aparecem no kanban
 ]
 
 export function transformClientsToColumnData(clients: ClientSummaryData[]): KanbanColumn[] {
@@ -79,7 +75,7 @@ export function transformInfiniteClientsToColumnData(
     .filter(col => col.cards.length > 0)
     .map(col => ({ title: col.title, count: col.cards.length }))
   
-  console.log('Distribuição por coluna ativa (sem matriculados e perdidos):', activeCounts)
+  console.log('Distribuição por coluna ativa (apenas status ativos do funil):', activeCounts)
   
   return columns
 }

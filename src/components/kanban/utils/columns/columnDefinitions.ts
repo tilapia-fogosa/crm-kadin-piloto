@@ -23,11 +23,9 @@ export const KANBAN_COLUMNS: ColumnDefinition[] = [
     filterPredicate: client => client.status === 'atendimento-agendado'
   },
   {
-    id: "atendimento-realizado",
-    title: "Atendimento Realizado",
-    filterPredicate: client => 
-      client.status === 'atendimento-realizado' || 
-      client.status === 'negociacao'
+    id: "negociacao",
+    title: "Negociação",
+    filterPredicate: client => client.status === 'negociacao'
   }
+  // Removida a coluna "atendimento-realizado" - após atendimento o cliente vai para negociação, matrícula ou perdido
 ]
-
