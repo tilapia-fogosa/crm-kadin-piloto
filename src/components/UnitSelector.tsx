@@ -14,9 +14,10 @@ interface UnitSelectorProps {
   value?: string; // Propriedade para controlar o valor externamente
   placeholder?: string; // Nova propriedade para texto placeholder personalizado
   required?: boolean; // Nova propriedade para indicar se a seleção é obrigatória
+  disabled?: boolean; // Nova propriedade para desabilitar o componente
 }
 
-export function UnitSelector({ onChange, value, placeholder, required }: UnitSelectorProps) {
+export function UnitSelector({ onChange, value, placeholder, required, disabled = false }: UnitSelectorProps) {
   const { selectedUnitId, setSelectedUnitId, availableUnits, isLoading } = useUnit();
 
   // Notifica o componente pai quando a unidade selecionada muda através do contexto global
@@ -40,6 +41,7 @@ export function UnitSelector({ onChange, value, placeholder, required }: UnitSel
   
   console.log('UnitSelector - Renderizando com valor:', currentValue || 'nenhum valor');
   console.log('UnitSelector - Usando placeholder:', placeholder || 'Selecione uma unidade');
+  console.log('UnitSelector - Disabled:', disabled);
 
   return (
     <Select
@@ -47,7 +49,7 @@ export function UnitSelector({ onChange, value, placeholder, required }: UnitSel
       onValueChange={(value) => {
         console.log('UnitSelector - Seleção alterada para:', value);
         // Só atualiza o contexto global quando não tem valor controlado externamente
-        if (value !== undefined) {
+        if (value !== undefined && !disabled) {
           // Não atualiza o contexto global se o componente tem controle externo (value prop)
           if (onChange) {
             onChange(value);
@@ -57,6 +59,7 @@ export function UnitSelector({ onChange, value, placeholder, required }: UnitSel
         }
       }}
       required={required}
+      disabled={disabled}
     >
       <SelectTrigger className="w-[200px]">
         <SelectValue placeholder={placeholder || "Selecione uma unidade"} />
