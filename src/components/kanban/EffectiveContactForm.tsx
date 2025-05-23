@@ -13,9 +13,10 @@ interface EffectiveContactFormProps {
   onSubmit: (contact: EffectiveContact) => void
   cardId: string
   onLossSubmit?: (reasons: string[], observations?: string) => void
+  isDisabled?: boolean
 }
 
-export function EffectiveContactForm({ onSubmit, cardId, onLossSubmit }: EffectiveContactFormProps) {
+export function EffectiveContactForm({ onSubmit, cardId, onLossSubmit, isDisabled = false }: EffectiveContactFormProps) {
   const [isLossModalOpen, setIsLossModalOpen] = useState(false)
   const { registerLoss } = useLossRegistration()
   
@@ -67,7 +68,8 @@ export function EffectiveContactForm({ onSubmit, cardId, onLossSubmit }: Effecti
     <div className="space-y-4">
       <ContactTypeSelector 
         contactType={contactType} 
-        onContactTypeChange={handleContactTypeChange} 
+        onContactTypeChange={handleContactTypeChange}
+        disabled={isDisabled}
       />
 
       <NextContactDateTime
@@ -75,11 +77,13 @@ export function EffectiveContactForm({ onSubmit, cardId, onLossSubmit }: Effecti
         time={time}
         onDateChange={handleDateChange}
         onTimeChange={handleTimeChange}
+        disabled={isDisabled}
       />
 
       <NotesField
         notes={notes}
         onNotesChange={handleNotesChange}
+        disabled={isDisabled}
       />
 
       <ContactAttemptActions
@@ -87,7 +91,8 @@ export function EffectiveContactForm({ onSubmit, cardId, onLossSubmit }: Effecti
         onLossClick={openLossModal}
         showOnLossSubmit={!!onLossSubmit}
         showContactTypeAlert={showContactTypeAlert}
-        actionType="contact"  // Define o tipo como "contact" para mostrar o texto correto
+        actionType="contact"
+        disabled={isDisabled}
       />
 
       <LossModal

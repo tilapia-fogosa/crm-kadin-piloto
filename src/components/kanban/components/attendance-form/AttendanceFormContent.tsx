@@ -17,7 +17,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
 import { useAttendanceFormState } from "./hooks/useAttendanceFormState"
 
-export function AttendanceFormContent({ onSubmit, cardId, clientName }: AttendanceFormProps) {
+export function AttendanceFormContent({ onSubmit, cardId, clientName, isDisabled = false }: AttendanceFormProps) {
   const {
     selectedResult,
     showSaleForm,
@@ -44,7 +44,7 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName }: Attendan
   const { toast } = useToast()
 
   const handleSubmit = async () => {
-    if (!selectedResult) return
+    if (!selectedResult || isDisabled) return
     
     try {
       setIsProcessing(true)
@@ -102,6 +102,8 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName }: Attendan
   }
 
   const handleResultSelect = (result: 'matriculado' | 'negociacao' | 'perdido') => {
+    if (isDisabled) return
+    
     console.log('Selecionando resultado:', result)
     if (result === 'perdido') {
       setShowLossConfirmation(true)
@@ -119,6 +121,8 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName }: Attendan
 
   // Handler para o campo de notas
   const handleNotesChange = (value: string) => {
+    if (isDisabled) return
+    
     setNotes(value)
     // Resetar erro de validação quando o usuário digitar algo
     if (value.trim() && notesValidationError) {
@@ -138,25 +142,27 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName }: Attendan
 
   return (
     <div className="space-y-4">
-      {isProcessing && (
+      {(isProcessing || isDisabled) && (
         <Alert>
           <AlertDescription className="flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Processando atendimento...
+            {isDisabled ? 'Aguarde...' : 'Processando atendimento...'}
           </AlertDescription>
         </Alert>
       )}
 
       <ResultButtons 
         selectedResult={selectedResult} 
-        onResultSelect={handleResultSelect} 
+        onResultSelect={handleResultSelect}
+        disabled={isDisabled}
       />
 
       {selectedResult && (
         <div className="space-y-4 mt-4">
           <QualityScore 
             value={qualityScore} 
-            onChange={setQualityScore} 
+            onChange={setQualityScore}
+            disabled={isDisabled}
           />
 
           {selectedResult === 'matriculado' && (
@@ -166,7 +172,7 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName }: Attendan
                 notes={notes}
                 onNotesChange={handleNotesChange}
                 isValidationError={notesValidationError}
-                disabled={isProcessing}
+                disabled={isDisabled || isProcessing}
               />
             </>
           )}
@@ -177,7 +183,7 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName }: Attendan
               observations={observations}
               onDateChange={setNextContactDate}
               onObservationsChange={setObservations}
-              disabled={isProcessing}
+              disabled={isDisabled || isProcessing}
             />
           )}
 
@@ -186,6 +192,7 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName }: Attendan
               selectedReasons={selectedReasons}
               observations={observations}
               onSelectReason={(reasonId) => {
+                if (isDisabled) return
                 setSelectedReasons(prev => 
                   prev.includes(reasonId)
                     ? prev.filter(id => id !== reasonId)
@@ -193,7 +200,7 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName }: Attendan
                 )
               }}
               onObservationsChange={setObservations}
-              disabled={isProcessing}
+              disabled={isDisabled || isProcessing}
             />
           )}
         </div>
@@ -202,7 +209,7 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName }: Attendan
       <Button 
         onClick={handleSubmit}
         className="w-full"
-        disabled={isProcessing || !selectedResult || 
+        disabled={isDisabled || isProcessing || !selectedResult || 
           (selectedResult === 'perdido' && selectedReasons.length === 0) ||
           (selectedResult === 'negociacao' && !nextContactDate) ||
           (selectedResult === 'matriculado' && !notes.trim())}

@@ -5,6 +5,7 @@ export interface AttendanceFormProps {
   onSubmit: (attendance: Attendance) => void
   cardId: string
   clientName: string
+  isDisabled?: boolean
 }
 
 export interface ResultButtonProps {
