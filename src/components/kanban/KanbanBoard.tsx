@@ -4,27 +4,31 @@ import { useActivityOperations } from "./hooks/useActivityOperations"
 import { useWhatsApp } from "./hooks/useWhatsApp"
 import { transformClientsToColumnData } from "./utils/columnUtils"
 import { useState, useEffect } from "react"
-import { startOfDay, isBefore, isEqual } from "date-fns"
 import { useLocation } from "react-router-dom"
 import { BoardHeader } from "./BoardHeader"
 import { KanbanColumn } from "./KanbanColumn"
 import { useUserUnit } from "./hooks/useUserUnit"
+import { Button } from "@/components/ui/button"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 export function KanbanBoard() {
-  // Alterado de selectedUnitId (string | null) para selectedUnitIds (string[])
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit();
-  
   const isMultiUnit = userUnits && userUnits.length > 1;
   
-  // Modificado para passar array de IDs de unidades
-  const { data: clients, isLoading, refetch } = useClientData(selectedUnitIds);
+  const { data: clientsData, isLoading, refetch } = useClientData(
+    selectedUnitIds, 
+    searchTerm, 
+    showPendingOnly,
+    { page: currentPage, limit: 100 }
+  );
   
   const { registerAttempt, registerEffectiveContact, deleteActivity } = useActivityOperations();
   const { handleWhatsAppClick } = useWhatsApp();
-  const [showPendingOnly, setShowPendingOnly] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const location = useLocation();
 
   // Inicializa a seleção de unidades quando as unidades são carregadas
@@ -34,14 +38,17 @@ export function KanbanBoard() {
       console.log("Usuário tem acesso a", userUnits.length, "unidades");
       
       if (userUnits.length === 1) {
-        // Se o usuário tem acesso a apenas uma unidade, seleciona essa unidade
         setSelectedUnitIds([userUnits[0].unit_id]);
       } else {
-        // Para usuários com múltiplas unidades, inicializa com todas as unidades selecionadas
         setSelectedUnitIds(userUnits.map(unit => unit.unit_id));
       }
     }
   }, [userUnits]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedUnitIds, searchTerm, showPendingOnly]);
 
   useEffect(() => {
     console.log("Kanban Board mounted or route changed, refetching data...");
@@ -52,63 +59,29 @@ export function KanbanBoard() {
     return <div className="flex items-center justify-center p-8">Carregando...</div>
   }
 
-  // Funções de filtragem mantidas sem alterações
-  const filterBySearchTerm = (clients: any[] | null) => {
-    if (!clients) return null
-    
-    if (!searchTerm.trim()) {
-      console.log('Termo de pesquisa vazio, retornando todos os clientes')
-      return clients
+  const clients = clientsData?.clients || []
+  const totalCount = clientsData?.totalCount || 0
+  const hasNextPage = clientsData?.hasNextPage || false
+  const totalPages = Math.ceil(totalCount / 100)
+
+  console.log('Total de clientes filtrados:', clients.length)
+  console.log('Total geral:', totalCount)
+  console.log('Página atual:', currentPage)
+  console.log('Total de páginas:', totalPages)
+  
+  const columns = transformClientsToColumnData(clients)
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
     }
-    
-    console.log('Filtrando clientes pelo termo:', searchTerm.trim())
-    const normalizedSearchTerm = searchTerm.toLowerCase().trim()
-    
-    return clients.filter(client => {
-      const matchesName = client.name?.toLowerCase().includes(normalizedSearchTerm)
-      const matchesPhone = client.phone_number?.toLowerCase().includes(normalizedSearchTerm)
-      
-      if (matchesName || matchesPhone) {
-        console.log(`Cliente '${client.name}' corresponde ao termo de pesquisa: ${searchTerm}`)
-      }
-      
-      return matchesName || matchesPhone
-    })
   }
 
-  const filterClients = (clients: any[] | null) => {
-    if (!clients) return null
-    
-    let filteredResults = filterBySearchTerm(clients)
-    
-    if (!showPendingOnly) {
-      console.log('Filtro de pendentes desativado, mostrando todos os clientes após pesquisa')
-      return filteredResults
+  const handleNextPage = () => {
+    if (hasNextPage) {
+      setCurrentPage(currentPage + 1)
     }
-    
-    const today = startOfDay(new Date())
-    console.log('Filtrando clientes pendentes após pesquisa')
-
-    return filteredResults.filter(client => {
-      if (!client.next_contact_date) {
-        console.log('Cliente sem data de próximo contato:', client.name)
-        return true
-      }
-
-      const nextContactDate = startOfDay(new Date(client.next_contact_date))
-      const shouldShow = isBefore(nextContactDate, today) || isEqual(nextContactDate, today)
-      
-      if (shouldShow) {
-        console.log(`Cliente '${client.name}' pendente com próximo contato em: ${nextContactDate}`)
-      }
-      
-      return shouldShow
-    })
   }
-
-  const filteredClients = filterClients(clients)
-  console.log('Total de clientes filtrados:', filteredClients?.length)
-  const columns = transformClientsToColumnData(filteredClients)
 
   return (
     <div className="flex flex-col h-full">
@@ -124,8 +97,35 @@ export function KanbanBoard() {
         isMultiUnit={isMultiUnit || false}
       />
 
+      {/* Pagination controls */}
+      <div className="flex items-center justify-between px-4 py-2 bg-white border-b">
+        <div className="text-sm text-gray-600">
+          Página {currentPage} de {totalPages} - Total: {totalCount} clientes
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Anterior
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNextPage}
+            disabled={!hasNextPage}
+          >
+            Próxima
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
       {/* Scrollable container for kanban columns */}
-      <div className="flex-1 overflow-hidden mt-4">
+      <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-x-auto pb-4">
           <div 
             className="flex gap-4 min-w-fit"

@@ -43,6 +43,47 @@ export interface ClientData {
   }[]
 }
 
+export interface ClientSummaryData {
+  id: string
+  name: string
+  phone_number: string
+  email?: string
+  lead_source: string
+  status: string
+  next_contact_date?: string
+  scheduled_date?: string
+  unit_id: string
+  valorization_confirmed?: boolean
+  registration_name?: string
+  original_ad?: string
+  original_adset?: string
+  observations?: string
+  created_at: string
+  unit_name?: string
+  last_activity?: {
+    id: string
+    tipo_atividade: string
+    tipo_contato: string
+    notes?: string
+    created_at: string
+    next_contact_date?: string
+    created_by?: string
+  }
+}
+
+export interface PaginatedClientData {
+  clients: ClientSummaryData[]
+  totalCount: number
+  hasNextPage: boolean
+  currentPage: number
+}
+
+export interface PaginatedActivitiesData {
+  activities: any[]
+  hasNextPage: boolean
+  currentPage: number
+}
+
 export interface ColumnDefinition {
   id: string
   title: string

@@ -4,41 +4,42 @@ import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 import { useUserUnit } from "./useUserUnit"
 
-export function useClientData(selectedUnitIds: string[] = []) {
+interface PaginationOptions {
+  page?: number
+  limit?: number
+}
+
+export function useClientData(
+  selectedUnitIds: string[] = [], 
+  searchTerm: string = '',
+  showPendingOnly: boolean = false,
+  paginationOptions: PaginationOptions = {}
+) {
   const queryClient = useQueryClient()
   const { data: userUnits } = useUserUnit()
+  const { page = 1, limit = 100 } = paginationOptions
+  const offset = (page - 1) * limit
 
   // Enable realtime subscription when the hook is mounted
   useEffect(() => {
-    console.log('Setting up realtime subscriptions for clients and activities')
+    console.log('Setting up realtime subscriptions for clients by unit')
     
-    // Subscribe to realtime changes
+    // Subscribe to clients changes by unit
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel('clients-by-unit')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'clients'
+          table: 'clients',
+          filter: selectedUnitIds.length > 0 ? `unit_id=in.(${selectedUnitIds.join(',')})` : undefined
         },
         (payload) => {
-          console.log('Client change detected:', payload)
-          queryClient.invalidateQueries({ queryKey: ['clients'] })
-          queryClient.invalidateQueries({ queryKey: ['activity-dashboard'] }) // Adicionado para garantir atualização
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'client_activities'
-        },
-        (payload) => {
-          console.log('Activity change detected:', payload)
-          queryClient.invalidateQueries({ queryKey: ['clients'] })
-          queryClient.invalidateQueries({ queryKey: ['activity-dashboard'] })
+          console.log('Client change detected for unit:', payload)
+          queryClient.invalidateQueries({ 
+            queryKey: ['clients', selectedUnitIds, searchTerm, showPendingOnly] 
+          })
         }
       )
       .subscribe((status) => {
@@ -50,12 +51,19 @@ export function useClientData(selectedUnitIds: string[] = []) {
       console.log('Cleaning up realtime subscriptions')
       supabase.removeChannel(channel)
     }
-  }, [queryClient])
+  }, [queryClient, selectedUnitIds, searchTerm, showPendingOnly])
 
   return useQuery({
-    queryKey: ['clients', userUnits?.map(u => u.unit_id), selectedUnitIds],
+    queryKey: ['clients', selectedUnitIds, searchTerm, showPendingOnly, page],
     queryFn: async () => {
-      console.log('Iniciando busca de clientes com filtro de unidades:', selectedUnitIds);
+      console.log('Fetching paginated clients from kanban_client_summary', {
+        selectedUnitIds,
+        searchTerm,
+        showPendingOnly,
+        page,
+        limit,
+        offset
+      });
       
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Not authenticated')
@@ -64,91 +72,64 @@ export function useClientData(selectedUnitIds: string[] = []) {
       let unitIds: string[] = []
       
       if (selectedUnitIds && selectedUnitIds.length > 0) {
-        // Se unidades específicas foram selecionadas
-        console.log('Filtrando por unidades específicas:', selectedUnitIds)
         unitIds = selectedUnitIds
       } else {
-        // Se nenhuma unidade foi selecionada, usa todas as unidades do usuário
         unitIds = userUnits?.map(u => u.unit_id) || []
-        console.log('Buscando dados de todas as unidades do usuário:', unitIds)
       }
       
-      console.log('Fetching clients data for units:', unitIds)
+      console.log('Fetching from kanban_client_summary for units:', unitIds)
       
-      const { data, error } = await supabase
-        .from('clients')
-        .select(`
-          id,
-          name,
-          phone_number,
-          email,
-          lead_source,
-          observations,
-          status,
-          next_contact_date,
-          created_at,
-          original_ad,
-          original_adset,
-          scheduled_date,
-          valorization_confirmed,
-          registration_name,
-          unit_id,
-          units (
-            id,
-            name
-          ),
-          client_activities (
-            id,
-            tipo_contato,
-            tipo_atividade,
-            notes,
-            created_at,
-            next_contact_date,
-            active,
-            created_by
-          )
-        `)
-        .eq('active', true)
+      let query = supabase
+        .from('kanban_client_summary')
+        .select('*')
         .in('unit_id', unitIds)
+
+      // Adicionar filtros de busca se fornecidos
+      if (searchTerm && searchTerm.trim()) {
+        const normalizedSearch = searchTerm.trim()
+        query = query.or(`name.ilike.%${normalizedSearch}%,phone_number.ilike.%${normalizedSearch}%`)
+      }
+
+      // Filtro de pendentes (next_contact_date no passado ou hoje)
+      if (showPendingOnly) {
+        query = query.lte('next_contact_date', new Date().toISOString())
+      }
+
+      // Adicionar paginação
+      query = query
         .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+
+      const { data, error, count } = await query
 
       if (error) {
-        console.error('Error fetching clients:', error)
+        console.error('Error fetching from kanban_client_summary:', error)
         throw error
       }
 
-      console.log('Total active clients received from database:', data?.length)
+      console.log('Total clients received from kanban_client_summary:', data?.length)
+      console.log('Total count:', count)
       
-      // Log all clients with their next_contact_date for debugging
-      data?.forEach(client => {
-        console.log('Client data:', {
+      // Log some sample data for debugging
+      data?.slice(0, 3).forEach(client => {
+        console.log('Client summary data:', {
           id: client.id,
           name: client.name,
-          email: client.email,
-          original_ad: client.original_ad,
-          original_adset: client.original_adset,
           status: client.status,
-          unit_id: client.unit_id,
-          unit_name: client.units?.name,
-          registration_name: client.registration_name,
-          activities_count: client.client_activities?.length || 0
+          unit_name: client.unit_name,
+          last_activity: client.last_activity
         })
       })
 
-      const clientsWithActivities = data?.map(client => {
-        return {
-          ...client,
-          client_activities: (client.client_activities || [])
-            .filter(activity => activity.active)
-            .map(activity => {
-              return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}|${activity.active}`
-            })
-        }
-      })
-
-      console.log('Total processed active clients:', clientsWithActivities?.length)
-      return clientsWithActivities
+      return {
+        clients: data || [],
+        totalCount: count || 0,
+        hasNextPage: data ? data.length === limit : false,
+        currentPage: page
+      }
     },
-    enabled: userUnits !== undefined && userUnits.length > 0
+    enabled: userUnits !== undefined && userUnits.length > 0,
+    staleTime: 30000, // 30 segundos
+    cacheTime: 5 * 60 * 1000, // 5 minutos
   })
 }

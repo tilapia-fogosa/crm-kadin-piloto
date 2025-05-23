@@ -552,10 +552,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "client_activities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "client_activities_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_client_activities_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_client_activities_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
             referencedColumns: ["id"]
           },
         ]
@@ -600,6 +621,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_loss_reasons_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
             referencedColumns: ["id"]
           },
           {
@@ -661,6 +689,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_webhook_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
             referencedColumns: ["id"]
           },
           {
@@ -797,6 +832,13 @@ export type Database = {
           },
           {
             foreignKeyName: "clients_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_clients_unit_id"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
@@ -1142,54 +1184,102 @@ export type Database = {
       }
       kanban_cards: {
         Row: {
+          acao_retencao: string | null
+          acordo_retencao: string | null
           alerta_evasao_id: string
           aluno_nome: string | null
           column_id: string
           created_at: string
+          data_evasao: string | null
+          data_exclusao_sgs: string | null
+          data_rescisao: string | null
+          data_retencao_confirmada: string | null
           description: string | null
           due_date: string | null
+          educador: string | null
+          exclusao_sgs_confirmada: boolean | null
+          exclusao_whatsapp_confirmada: boolean | null
+          faltas_recorrentes: boolean | null
+          fez_pausa_emergencial: boolean | null
           historico: string | null
           id: string
+          link_ficha_rescisao: string | null
+          motivo_evasao: string | null
+          observacoes_adicionais: string | null
           origem: string | null
           priority: string | null
           responsavel: string | null
+          resultado: string | null
           retention_date: string | null
           tags: string[] | null
           title: string
+          turma: string | null
           updated_at: string
         }
         Insert: {
+          acao_retencao?: string | null
+          acordo_retencao?: string | null
           alerta_evasao_id: string
           aluno_nome?: string | null
           column_id?: string
           created_at?: string
+          data_evasao?: string | null
+          data_exclusao_sgs?: string | null
+          data_rescisao?: string | null
+          data_retencao_confirmada?: string | null
           description?: string | null
           due_date?: string | null
+          educador?: string | null
+          exclusao_sgs_confirmada?: boolean | null
+          exclusao_whatsapp_confirmada?: boolean | null
+          faltas_recorrentes?: boolean | null
+          fez_pausa_emergencial?: boolean | null
           historico?: string | null
           id?: string
+          link_ficha_rescisao?: string | null
+          motivo_evasao?: string | null
+          observacoes_adicionais?: string | null
           origem?: string | null
           priority?: string | null
           responsavel?: string | null
+          resultado?: string | null
           retention_date?: string | null
           tags?: string[] | null
           title: string
+          turma?: string | null
           updated_at?: string
         }
         Update: {
+          acao_retencao?: string | null
+          acordo_retencao?: string | null
           alerta_evasao_id?: string
           aluno_nome?: string | null
           column_id?: string
           created_at?: string
+          data_evasao?: string | null
+          data_exclusao_sgs?: string | null
+          data_rescisao?: string | null
+          data_retencao_confirmada?: string | null
           description?: string | null
           due_date?: string | null
+          educador?: string | null
+          exclusao_sgs_confirmada?: boolean | null
+          exclusao_whatsapp_confirmada?: boolean | null
+          faltas_recorrentes?: boolean | null
+          fez_pausa_emergencial?: boolean | null
           historico?: string | null
           id?: string
+          link_ficha_rescisao?: string | null
+          motivo_evasao?: string | null
+          observacoes_adicionais?: string | null
           origem?: string | null
           priority?: string | null
           responsavel?: string | null
+          resultado?: string | null
           retention_date?: string | null
           tags?: string[] | null
           title?: string
+          turma?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1855,6 +1945,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sales_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "sales_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
@@ -2080,6 +2177,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
             referencedColumns: ["id"]
           },
           {
@@ -2534,7 +2638,50 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      kanban_client_summary: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string | null
+          last_activity: Json | null
+          lead_source: string | null
+          name: string | null
+          next_contact_date: string | null
+          observations: string | null
+          original_ad: string | null
+          original_adset: string | null
+          phone_number: string | null
+          registration_name: string | null
+          scheduled_date: string | null
+          status: string | null
+          unit_id: string | null
+          unit_name: string | null
+          valorization_confirmed: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_lead_source_fkey"
+            columns: ["lead_source"]
+            isOneToOne: false
+            referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_clients_unit_id"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       change_initial_password: {
@@ -2593,6 +2740,15 @@ export type Database = {
           p_data_final?: string
         }
         Returns: Json
+      }
+      get_aluno_detalhes: {
+        Args: { p_aluno_nome: string }
+        Returns: {
+          aluno_id: string
+          turma: string
+          educador: string
+          faltas_recorrentes: boolean
+        }[]
       }
       get_commercial_unit_stats: {
         Args: {
@@ -2733,6 +2889,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      kanban_client_activities: {
+        Args: { p_client_id: string; p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
       manage_user_units: {
         Args: {
           p_creator_id: string
@@ -2775,6 +2935,10 @@ export type Database = {
       unpublish_update: {
         Args: { p_update_id: string }
         Returns: boolean
+      }
+      update_existing_kanban_cards_history: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       user_has_access_to_unit: {
         Args: { unit_id: string }

@@ -1,10 +1,10 @@
 
 import { useState, useEffect } from "react"
-import { ActivityHistory } from "../../ActivityHistory"
 import { ActivitySelector } from "../../ActivitySelector"
 import { ActivityDetails } from "../../ActivityDetails"
 import { CompactHistory } from "../history/CompactHistory"
 import { ClientInformation } from "./ClientInformation"
+import { PaginatedActivityHistory } from "./PaginatedActivityHistory"
 import { KanbanCard, ContactAttempt, EffectiveContact, Scheduling, Attendance } from "../../types"
 
 interface ActivityGridProps {
@@ -54,10 +54,9 @@ export function ActivityGrid({
     }}>
       <div className={`transition-all duration-300 ease-in-out h-full ${isHistoryExpanded ? 'w-full' : 'w-[50px]'}`}>
         {isHistoryExpanded ? (
-          <ActivityHistory
-            activities={card.activities}
-            onDeleteActivity={onDeleteActivity}
+          <PaginatedActivityHistory
             clientId={card.id}
+            onDeleteActivity={onDeleteActivity}
           />
         ) : (
           <CompactHistory
