@@ -110,11 +110,6 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
           <Calendar className="h-4 w-4" />
           <span className="text-xs">Agenda</span>
           <span className="text-xs">de Leads</span>
-          {appointments && appointments.length > 0 && (
-            <span className="text-xs bg-green-100 text-green-800 px-1 rounded">
-              {appointments.length}
-            </span>
-          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
@@ -140,18 +135,6 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
           onReschedule={handleReschedule}
           userUnits={userUnits}
         />
-
-        {/* Debug info para desenvolvimento */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
-            <strong>Debug Info (Nova Implementação):</strong><br/>
-            Unidades selecionadas: {selectedUnitIds?.length || 0}<br/>
-            Agendamentos: {appointments?.length || 0}<br/>
-            Carregando: {isLoading ? 'Sim' : 'Não'}<br/>
-            Atualizando: {isRefreshing ? 'Sim' : 'Não'}<br/>
-            Mês/Ano: {currentDate.getMonth() + 1}/{currentDate.getFullYear()}
-          </div>
-        )}
       </DialogContent>
 
       {selectedClientId && (
