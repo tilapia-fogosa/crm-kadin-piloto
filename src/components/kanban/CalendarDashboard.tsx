@@ -8,7 +8,7 @@ import { CalendarGrid } from "./components/calendar/CalendarGrid"
 import { CalendarFilters } from "./components/calendar/CalendarFilters"
 import { ReschedulingDialog } from "./components/scheduling/ReschedulingDialog"
 import { useAgendaLeads } from "./hooks/useAgendaLeads"
-import { useState, useEffect } from "react"
+import { useState, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useToast } from "@/hooks/use-toast"
 
@@ -24,7 +24,7 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
   const [isReschedulingDialogOpen, setIsReschedulingDialogOpen] = useState(false)
   const [selectedClientId, setSelectedClientId] = useState<string>("")
   const [selectedClientName, setSelectedClientName] = useState<string>("")
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const lastRefetchRef = useRef<number>(0)
 
   const queryClient = useQueryClient()
   const { toast } = useToast()
@@ -43,17 +43,6 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
   console.log('📅 [CalendarDashboard] UserUnits disponíveis:', userUnits?.map(u => ({ id: u.unit_id, name: u.units.name })))
   console.log('📅 [CalendarDashboard] Agendamentos carregados:', appointments?.length || 0)
 
-  // Recarregar dados quando o dialog da agenda é aberto
-  useEffect(() => {
-    if (isDialogOpen && !isLoadingUnits) {
-      console.log('📅 [CalendarDashboard] Dialog aberto - recarregando agenda')
-      setIsRefreshing(true)
-      refetch().finally(() => {
-        setIsRefreshing(false)
-      })
-    }
-  }, [isDialogOpen, isLoadingUnits, refetch])
-
   const handleReschedule = (clientId: string, clientName: string) => {
     console.log('📅 [CalendarDashboard] Abrindo dialog de reagendamento para:', clientName)
     setSelectedClientId(clientId)
@@ -64,24 +53,36 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
   const handleRescheduleSuccess = async () => {
     console.log('📅 [CalendarDashboard] Reagendamento realizado com sucesso - atualizando dados')
     
-    // Invalidar caches relacionados
-    await queryClient.invalidateQueries({ queryKey: ['user-unit'] })
-    await queryClient.invalidateQueries({ queryKey: ['clients'] })
+    // Prevenir múltiplas chamadas em sequência
+    const now = Date.now()
+    if (now - lastRefetchRef.current < 1000) {
+      console.log('📅 [CalendarDashboard] Ignorando refetch - muito recente')
+      return
+    }
+    lastRefetchRef.current = now
     
-    // Recarregar dados da agenda
-    await refetch()
-    
-    // Fechar dialog de reagendamento
-    setIsReschedulingDialogOpen(false)
-    
-    // Mostrar toast de sucesso
-    toast({
-      title: "Reagendamento realizado",
-      description: `Agendamento de ${selectedClientName} foi atualizado com sucesso.`,
-      variant: "default"
-    })
-    
-    console.log('📅 [CalendarDashboard] Dados atualizados após reagendamento')
+    try {
+      // Invalidar caches relacionados
+      await queryClient.invalidateQueries({ queryKey: ['user-unit'] })
+      await queryClient.invalidateQueries({ queryKey: ['clients'] })
+      
+      // Recarregar dados da agenda
+      await refetch()
+      
+      // Fechar dialog de reagendamento
+      setIsReschedulingDialogOpen(false)
+      
+      // Mostrar toast de sucesso
+      toast({
+        title: "Reagendamento realizado",
+        description: `Agendamento de ${selectedClientName} foi atualizado com sucesso.`,
+        variant: "default"
+      })
+      
+      console.log('📅 [CalendarDashboard] Dados atualizados após reagendamento')
+    } catch (error) {
+      console.error('❌ [CalendarDashboard] Erro ao atualizar após reagendamento:', error)
+    }
   }
 
   if (isLoadingUnits) {
@@ -124,13 +125,13 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
             currentDate={currentDate}
             onPreviousMonth={handlePreviousMonth}
             onNextMonth={handleNextMonth}
-            isLoading={isLoading || isRefreshing}
+            isLoading={isLoading}
           />
         </div>
 
         <CalendarGrid
           currentDate={currentDate}
-          isLoadingAppointments={isLoading || isRefreshing}
+          isLoadingAppointments={isLoading}
           scheduledAppointments={appointments}
           onReschedule={handleReschedule}
           userUnits={userUnits}
