@@ -8,11 +8,13 @@ import { useLocation } from "react-router-dom"
 import { BoardHeader } from "./BoardHeader"
 import { InfiniteKanbanColumn } from "./components/column/InfiniteKanbanColumn"
 import { useUserUnit } from "./hooks/useUserUnit"
+import { RealtimeMonitor } from "./components/debug/RealtimeMonitor"
 
 export function KanbanBoard() {
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isDebugMode, setIsDebugMode] = useState(false);
   
   const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit();
   const isMultiUnit = userUnits && userUnits.length > 1;
@@ -53,6 +55,21 @@ export function KanbanBoard() {
     console.log("Kanban Board mounted ou rota mudou, refazendo busca de dados...");
     refetch();
   }, [location.pathname, refetch]);
+
+  // Ativar modo debug com Ctrl+Alt+D
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.altKey && event.key === 'd') {
+        setIsDebugMode(prev => !prev);
+        console.log("Modo debug " + (!isDebugMode ? "ativado" : "desativado"));
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isDebugMode]);
 
   // Auto-load more data if needed
   const checkAndLoadMore = useCallback(() => {
@@ -138,6 +155,9 @@ export function KanbanBoard() {
           </div>
         </div>
       </div>
+      
+      {/* Monitor de diagnóstico - ativado com Ctrl+Alt+D */}
+      <RealtimeMonitor enabled={isDebugMode} />
     </div>
   );
 }
