@@ -83,7 +83,7 @@ export function KanbanBoard() {
   
   const columns = transformInfiniteClientsToColumnData([allClients], 100)
   
-  // Estatísticas por coluna
+  // Estatísticas por coluna para logs
   const columnStats = columns.map(col => ({
     title: col.title,
     count: col.cards.length
@@ -104,22 +104,6 @@ export function KanbanBoard() {
         setSelectedUnitIds={setSelectedUnitIds}
         isMultiUnit={isMultiUnit || false}
       />
-
-      {/* Stats bar simplificada sem total geral */}
-      <div className="flex items-center justify-between px-4 py-2 bg-white border-b">
-        <div className="text-sm text-gray-600">
-          {columnStats.length > 0 && (
-            <span>
-              Distribuição: {columnStats.map(s => `${s.title}: ${s.count}`).join(', ')}
-            </span>
-          )}
-        </div>
-        {isFetchingNextPage && (
-          <div className="text-sm text-blue-600">
-            Carregando mais dados...
-          </div>
-        )}
-      </div>
 
       {/* Scrollable container for kanban columns */}
       <div className="flex-1 overflow-hidden">
