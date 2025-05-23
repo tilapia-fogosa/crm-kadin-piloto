@@ -50,7 +50,7 @@ export function KanbanBoard() {
   }, [userUnits]);
 
   useEffect(() => {
-    console.log("Kanban Board mounted or route changed, refetching data...");
+    console.log("Kanban Board mounted ou rota mudou, refazendo busca de dados...");
     refetch();
   }, [location.pathname, refetch]);
 
@@ -62,7 +62,7 @@ export function KanbanBoard() {
     const columns = transformInfiniteClientsToColumnData(allClients, 100)
     
     if (shouldLoadMore(columns, 100)) {
-      console.log('Auto-loading more data to reach minimum per column')
+      console.log('Auto-carregando mais dados para atingir mínimo por coluna')
       fetchNextPage()
     }
   }, [infiniteData, isFetchingNextPage, hasNextPage, fetchNextPage])
@@ -144,7 +144,7 @@ export function KanbanBoard() {
                   onDeleteActivity={deleteActivity}
                   onLoadMore={() => {
                     if (hasNextPage && !isFetchingNextPage) {
-                      console.log('Loading more from column:', column.title)
+                      console.log('Carregando mais da coluna:', column.title)
                       fetchNextPage()
                     }
                   }}

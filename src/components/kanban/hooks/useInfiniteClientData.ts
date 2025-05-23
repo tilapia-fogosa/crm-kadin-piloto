@@ -24,11 +24,11 @@ export function useInfiniteClientData(
 ) {
   const queryClient = useQueryClient()
   const { data: userUnits } = useUserUnit()
-  const { limit = 400 } = paginationOptions // Limite maior para garantir 100 por coluna
+  const { limit = 400 } = paginationOptions
 
   // Enable realtime subscription when the hook is mounted
   useEffect(() => {
-    console.log('Setting up realtime subscriptions for clients by unit')
+    console.log('Configurando subscriptions realtime para clientes por unidade')
     
     // Subscribe to clients changes by unit
     const channel = supabase
@@ -42,27 +42,27 @@ export function useInfiniteClientData(
           filter: selectedUnitIds.length > 0 ? `unit_id=in.(${selectedUnitIds.join(',')})` : undefined
         },
         (payload) => {
-          console.log('Client change detected for unit:', payload)
+          console.log('Mudança de cliente detectada para unidade:', payload)
           queryClient.invalidateQueries({ 
             queryKey: ['infinite-clients', selectedUnitIds, searchTerm, showPendingOnly] 
           })
         }
       )
       .subscribe((status) => {
-        console.log('Realtime subscription status:', status)
+        console.log('Status da subscription realtime:', status)
       })
 
     // Cleanup subscription on unmount
     return () => {
-      console.log('Cleaning up realtime subscriptions')
+      console.log('Limpando subscriptions realtime')
       supabase.removeChannel(channel)
     }
   }, [queryClient, selectedUnitIds, searchTerm, showPendingOnly])
 
   return useInfiniteQuery<InfiniteClientData>({
     queryKey: ['infinite-clients', selectedUnitIds, searchTerm, showPendingOnly],
-    queryFn: async ({ pageParam = 1 }) => {
-      console.log('Fetching infinite clients from kanban_client_summary', {
+    queryFn: async ({ pageParam = 1 }: { pageParam?: number }) => {
+      console.log('Buscando clientes infinitos de kanban_client_summary', {
         selectedUnitIds,
         searchTerm,
         showPendingOnly,
@@ -71,7 +71,7 @@ export function useInfiniteClientData(
       });
       
       const { data: session } = await supabase.auth.getSession()
-      if (!session.session) throw new Error('Not authenticated')
+      if (!session.session) throw new Error('Não autenticado')
 
       // Determinar as unidades para filtrar
       let unitIds: string[] = []
@@ -82,7 +82,7 @@ export function useInfiniteClientData(
         unitIds = userUnits?.map(u => u.unit_id) || []
       }
       
-      console.log('Fetching from kanban_client_summary for units:', unitIds)
+      console.log('Buscando de kanban_client_summary para unidades:', unitIds)
       
       let query = supabase
         .from('kanban_client_summary')
@@ -101,7 +101,7 @@ export function useInfiniteClientData(
       }
 
       // Adicionar paginação
-      const offset = (pageParam - 1) * limit
+      const offset = ((pageParam as number) - 1) * limit
       query = query
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
@@ -109,7 +109,7 @@ export function useInfiniteClientData(
       const { data, error, count } = await query
 
       if (error) {
-        console.error('Error fetching from kanban_client_summary:', error)
+        console.error('Erro ao buscar de kanban_client_summary:', error)
         throw error
       }
 
@@ -120,7 +120,7 @@ export function useInfiniteClientData(
         clients: (data || []) as ClientSummaryData[],
         totalCount: count || 0,
         hasNextPage: data ? data.length === limit : false,
-        currentPage: pageParam
+        currentPage: pageParam as number
       }
     },
     initialPageParam: 1,
