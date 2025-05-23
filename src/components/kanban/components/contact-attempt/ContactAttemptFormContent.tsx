@@ -13,14 +13,16 @@ interface ContactAttemptFormContentProps {
   onSubmit: (attempt: ContactAttempt) => void
   cardId: string
   onLossSubmit?: (reasons: string[], observations?: string) => void
+  isDisabled?: boolean
 }
 
 export function ContactAttemptFormContent({ 
   onSubmit, 
   cardId, 
-  onLossSubmit 
+  onLossSubmit,
+  isDisabled = false 
 }: ContactAttemptFormContentProps) {
-  console.log('Renderizando ContactAttemptFormContent para cartão:', cardId)
+  console.log('Renderizando ContactAttemptFormContent para cartão:', cardId, 'disabled:', isDisabled)
   
   const { 
     contactType, 
@@ -68,19 +70,22 @@ export function ContactAttemptFormContent({
     <div className="space-y-4">
       <ContactTypeSelector 
         contactType={contactType} 
-        onContactTypeChange={handleContactTypeChange} 
+        onContactTypeChange={handleContactTypeChange}
+        disabled={isDisabled}
       />
 
       <NextContactDateTime 
         date={date} 
         time={time} 
         onDateChange={setDate} 
-        onTimeChange={setTime} 
+        onTimeChange={setTime}
+        disabled={isDisabled}
       />
 
       <NotesField 
         notes={notes}
         onNotesChange={handleNotesChange}
+        disabled={isDisabled}
       />
 
       <ContactAttemptActions 
@@ -88,6 +93,7 @@ export function ContactAttemptFormContent({
         onLossClick={handleLossButtonClick} 
         showOnLossSubmit={!!onLossSubmit}
         showContactTypeAlert={showContactTypeAlert}
+        disabled={isDisabled}
       />
 
       <LossModal

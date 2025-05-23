@@ -5,11 +5,12 @@ import { Label } from "@/components/ui/label"
 interface ValorizationCheckboxProps {
   checked: boolean
   onCheckedChange: (checked: boolean) => void
+  disabled?: boolean
 }
 
-export function ValorizationCheckbox({ checked, onCheckedChange }: ValorizationCheckboxProps) {
+export function ValorizationCheckbox({ checked, onCheckedChange, disabled = false }: ValorizationCheckboxProps) {
   // Log para rastreamento
-  console.log('ValorizationCheckbox - Renderizando com estado:', checked)
+  console.log('ValorizationCheckbox - Renderizando com estado:', checked, 'disabled:', disabled)
   
   const handleChange = (value: boolean) => {
     console.log('ValorizationCheckbox - Mudando para:', value)
@@ -22,6 +23,7 @@ export function ValorizationCheckbox({ checked, onCheckedChange }: ValorizationC
         id="valorizacao"
         checked={checked}
         onCheckedChange={(value) => handleChange(value as boolean)}
+        disabled={disabled}
       />
       <Label htmlFor="valorizacao">Valorização Dia Anterior?</Label>
     </div>

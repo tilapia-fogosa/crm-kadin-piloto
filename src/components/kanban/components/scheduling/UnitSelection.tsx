@@ -6,16 +6,18 @@ interface UnitSelectionProps {
   onUnitChange: (unitId: string) => void
   availableUnitsCount: number
   selectedUnitId?: string
+  disabled?: boolean
 }
 
 export function UnitSelection({ 
   onUnitChange, 
   availableUnitsCount,
-  selectedUnitId
+  selectedUnitId,
+  disabled = false
 }: UnitSelectionProps) {
   // Log para rastreamento
   console.log('UnitSelection - Renderizando com quantidade de unidades:', availableUnitsCount)
-  console.log('UnitSelection - Unidade selecionada atualmente:', selectedUnitId || 'nenhuma')
+  console.log('UnitSelection - Unidade selecionada atualmente:', selectedUnitId || 'nenhuma', 'disabled:', disabled)
   
   return (
     <div className="space-y-2">
@@ -30,6 +32,7 @@ export function UnitSelection({
           value={selectedUnitId}
           placeholder="Escolha uma unidade"
           required={true}
+          disabled={disabled}
         />
       </div>
     </div>

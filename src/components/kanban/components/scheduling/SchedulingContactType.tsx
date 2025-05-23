@@ -6,14 +6,16 @@ import { ContactType } from "../../hooks/useSchedulingForm"
 interface SchedulingContactTypeProps {
   contactType: ContactType
   onContactTypeChange: (value: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial') => void
+  disabled?: boolean
 }
 
 export function SchedulingContactType({ 
   contactType, 
-  onContactTypeChange 
+  onContactTypeChange,
+  disabled = false
 }: SchedulingContactTypeProps) {
   // Log para rastreamento
-  console.log('SchedulingContactType - Renderizando com tipo:', contactType)
+  console.log('SchedulingContactType - Renderizando com tipo:', contactType, 'disabled:', disabled)
   
   return (
     <div className="space-y-2">
@@ -22,6 +24,7 @@ export function SchedulingContactType({
         value={contactType || ''}
         onValueChange={(value: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial') => onContactTypeChange(value)}
         className="flex flex-col space-y-2"
+        disabled={disabled}
       >
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="phone" id="phone" />

@@ -12,11 +12,13 @@ export interface ResultButtonProps {
   result: 'matriculado' | 'negociacao' | 'perdido'
   selectedResult?: string
   onClick: () => void
+  disabled?: boolean
 }
 
 export interface QualityScoreProps {
   value: string
   onChange: (value: string) => void
+  disabled?: boolean
 }
 
 export interface NextContactDateProps {
