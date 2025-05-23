@@ -130,6 +130,38 @@ export function useAgendaLeads(selectedUnitIds: string[] = []) {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
   }
 
+  // Configurar realtime updates para mudanças em scheduled_date
+  useEffect(() => {
+    console.log('🔔 [useAgendaLeads] Configurando realtime subscription')
+    
+    const channel = supabase
+      .channel('agenda-leads-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'clients',
+          filter: 'scheduled_date=not.is.null'
+        },
+        (payload) => {
+          console.log('🔔 [useAgendaLeads] Realtime update recebido:', payload)
+          
+          // Recarregar dados quando houver mudanças
+          if (!isLoadingUnits) {
+            console.log('🔄 [useAgendaLeads] Atualizando dados devido a mudança realtime')
+            fetchAgendaLeads()
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      console.log('🔔 [useAgendaLeads] Removendo realtime subscription')
+      supabase.removeChannel(channel)
+    }
+  }, [currentDate, selectedUnitIds, isLoadingUnits])
+
   useEffect(() => {
     console.log('🔄 [useAgendaLeads] useEffect disparado')
     console.log('📊 [useAgendaLeads] Dependências:', { 

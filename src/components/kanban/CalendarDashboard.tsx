@@ -8,7 +8,9 @@ import { CalendarGrid } from "./components/calendar/CalendarGrid"
 import { CalendarFilters } from "./components/calendar/CalendarFilters"
 import { ReschedulingDialog } from "./components/scheduling/ReschedulingDialog"
 import { useAgendaLeads } from "./hooks/useAgendaLeads"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useQueryClient } from "@tanstack/react-query"
+import { useToast } from "@/hooks/use-toast"
 
 interface CalendarDashboardProps {
   selectedUnitIds: string[]
@@ -18,9 +20,14 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
   console.log('📅 [CalendarDashboard] Renderizando com selectedUnitIds:', selectedUnitIds)
   console.log('📅 [CalendarDashboard] Quantidade de unidades selecionadas:', selectedUnitIds?.length || 0)
   
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isReschedulingDialogOpen, setIsReschedulingDialogOpen] = useState(false)
   const [selectedClientId, setSelectedClientId] = useState<string>("")
   const [selectedClientName, setSelectedClientName] = useState<string>("")
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   const {
     appointments,
@@ -29,17 +36,52 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
     userUnits,
     isLoadingUnits,
     handlePreviousMonth,
-    handleNextMonth
+    handleNextMonth,
+    refetch
   } = useAgendaLeads(selectedUnitIds)
 
   console.log('📅 [CalendarDashboard] UserUnits disponíveis:', userUnits?.map(u => ({ id: u.unit_id, name: u.units.name })))
   console.log('📅 [CalendarDashboard] Agendamentos carregados:', appointments?.length || 0)
+
+  // Recarregar dados quando o dialog da agenda é aberto
+  useEffect(() => {
+    if (isDialogOpen && !isLoadingUnits) {
+      console.log('📅 [CalendarDashboard] Dialog aberto - recarregando agenda')
+      setIsRefreshing(true)
+      refetch().finally(() => {
+        setIsRefreshing(false)
+      })
+    }
+  }, [isDialogOpen, isLoadingUnits, refetch])
 
   const handleReschedule = (clientId: string, clientName: string) => {
     console.log('📅 [CalendarDashboard] Abrindo dialog de reagendamento para:', clientName)
     setSelectedClientId(clientId)
     setSelectedClientName(clientName)
     setIsReschedulingDialogOpen(true)
+  }
+
+  const handleRescheduleSuccess = async () => {
+    console.log('📅 [CalendarDashboard] Reagendamento realizado com sucesso - atualizando dados')
+    
+    // Invalidar caches relacionados
+    await queryClient.invalidateQueries({ queryKey: ['user-unit'] })
+    await queryClient.invalidateQueries({ queryKey: ['clients'] })
+    
+    // Recarregar dados da agenda
+    await refetch()
+    
+    // Fechar dialog de reagendamento
+    setIsReschedulingDialogOpen(false)
+    
+    // Mostrar toast de sucesso
+    toast({
+      title: "Reagendamento realizado",
+      description: `Agendamento de ${selectedClientName} foi atualizado com sucesso.`,
+      variant: "default"
+    })
+    
+    console.log('📅 [CalendarDashboard] Dados atualizados após reagendamento')
   }
 
   if (isLoadingUnits) {
@@ -62,7 +104,7 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
   }
 
   return (
-    <Dialog>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-2">
           <Calendar className="h-4 w-4" />
@@ -87,12 +129,13 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
             currentDate={currentDate}
             onPreviousMonth={handlePreviousMonth}
             onNextMonth={handleNextMonth}
+            isLoading={isLoading || isRefreshing}
           />
         </div>
 
         <CalendarGrid
           currentDate={currentDate}
-          isLoadingAppointments={isLoading}
+          isLoadingAppointments={isLoading || isRefreshing}
           scheduledAppointments={appointments}
           onReschedule={handleReschedule}
           userUnits={userUnits}
@@ -105,6 +148,7 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
             Unidades selecionadas: {selectedUnitIds?.length || 0}<br/>
             Agendamentos: {appointments?.length || 0}<br/>
             Carregando: {isLoading ? 'Sim' : 'Não'}<br/>
+            Atualizando: {isRefreshing ? 'Sim' : 'Não'}<br/>
             Mês/Ano: {currentDate.getMonth() + 1}/{currentDate.getFullYear()}
           </div>
         )}
@@ -116,10 +160,7 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
           onOpenChange={setIsReschedulingDialogOpen}
           clientId={selectedClientId}
           clientName={selectedClientName}
-          onSubmit={(scheduling) => {
-            console.log('📅 [CalendarDashboard] Agendamento remarcado:', scheduling)
-            setIsReschedulingDialogOpen(false)
-          }}
+          onSubmit={handleRescheduleSuccess}
         />
       )}
     </Dialog>
