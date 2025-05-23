@@ -1,33 +1,28 @@
 
 import { UserUnit } from "../../hooks/useUserUnit";
-import { MultiUnitSelector } from "./MultiUnitSelector";
 import { UnitLegend } from "./UnitLegend";
 
 interface CalendarFiltersProps {
   userUnits?: UserUnit[];
   selectedUnitIds: string[];
-  onChangeUnits: (unitIds: string[]) => void;
   isLoading: boolean;
 }
 
 export function CalendarFilters({
   userUnits,
   selectedUnitIds,
-  onChangeUnits,
   isLoading
 }: CalendarFiltersProps) {
-  console.log('Renderizando CalendarFilters com unidades:', userUnits?.length);
+  console.log('🎨 [CalendarFilters] Renderizando com unidades:', userUnits?.length);
+  console.log('🎨 [CalendarFilters] selectedUnitIds vindos do Kanban:', selectedUnitIds);
   
   return (
     <div className="flex flex-col">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-sm font-medium">Unidades:</span>
-        <MultiUnitSelector
-          units={userUnits}
-          selectedUnitIds={selectedUnitIds}
-          onChange={onChangeUnits}
-          isLoading={isLoading}
-        />
+        <span className="text-sm font-medium">Unidades selecionadas no Kanban:</span>
+        <span className="text-xs text-muted-foreground">
+          {selectedUnitIds.length} unidade(s)
+        </span>
       </div>
       
       <UnitLegend 

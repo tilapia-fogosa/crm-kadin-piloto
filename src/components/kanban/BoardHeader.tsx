@@ -32,9 +32,9 @@ export function BoardHeader({
   isMultiUnit,
 }: BoardHeaderProps) {
   // Logs para rastrear mudanças
-  console.log('Termo de pesquisa atual:', searchTerm);
-  console.log('Unidades selecionadas:', selectedUnitIds);
-  console.log('Usuário multi-unidade:', isMultiUnit);
+  console.log('🏢 [BoardHeader] Termo de pesquisa atual:', searchTerm);
+  console.log('🏢 [BoardHeader] Unidades selecionadas:', selectedUnitIds);
+  console.log('🏢 [BoardHeader] Usuário multi-unidade:', isMultiUnit);
   
   return (
     <div className="flex flex-col bg-[#311D64] p-4 gap-4">
@@ -69,7 +69,7 @@ export function BoardHeader({
 
           <div className="flex items-center space-x-2">
             <ActivityDashboard />
-            <CalendarDashboard />
+            <CalendarDashboard selectedUnitIds={selectedUnitIds} />
             
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={onRefresh}>
               <RefreshCw className="h-4 w-4" />

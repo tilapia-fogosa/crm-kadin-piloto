@@ -9,8 +9,12 @@ import { CalendarFilters } from "./components/calendar/CalendarFilters"
 import { ReschedulingDialog } from "./components/scheduling/ReschedulingDialog"
 import { useCalendarDashboard } from "./hooks/useCalendarDashboard"
 
-export function CalendarDashboard() {
-  console.log('Renderizando CalendarDashboard')
+interface CalendarDashboardProps {
+  selectedUnitIds: string[]
+}
+
+export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
+  console.log('📅 [CalendarDashboard] Renderizando com selectedUnitIds vindos do Kanban:', selectedUnitIds)
   
   const {
     currentDate,
@@ -20,14 +24,12 @@ export function CalendarDashboard() {
     selectedClientName,
     userUnits,
     isLoadingUnits,
-    selectedCalendarUnitIds,
-    setSelectedCalendarUnitIds,
     handlePreviousMonth,
     handleNextMonth,
     handleReschedule,
     scheduledAppointments,
     isLoadingAppointments
-  } = useCalendarDashboard();
+  } = useCalendarDashboard(selectedUnitIds);
 
   if (isLoadingUnits) {
     return (
@@ -61,8 +63,7 @@ export function CalendarDashboard() {
         <div className="flex justify-between items-start mb-6">
           <CalendarFilters 
             userUnits={userUnits}
-            selectedUnitIds={selectedCalendarUnitIds}
-            onChangeUnits={setSelectedCalendarUnitIds}
+            selectedUnitIds={selectedUnitIds}
             isLoading={isLoadingUnits}
           />
           
@@ -89,7 +90,7 @@ export function CalendarDashboard() {
           clientId={selectedClientId}
           clientName={selectedClientName}
           onSubmit={(scheduling) => {
-            console.log('Agendamento remarcado:', scheduling)
+            console.log('📅 [CalendarDashboard] Agendamento remarcado:', scheduling)
             setIsReschedulingDialogOpen(false)
           }}
         />
