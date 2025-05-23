@@ -24,14 +24,78 @@ export function useCalendarDashboard(selectedUnitIds: string[]) {
   const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit()
 
   const fetchAppointments = async () => {
-    console.log('🔍 === INÍCIO DEBUG AGENDA DE LEADS (VERSÃO UNIFICADA) ===')
+    console.log('🔍 === INÍCIO DEBUG AGENDA DE LEADS (NOVA IMPLEMENTAÇÃO) ===')
     console.log('📋 selectedUnitIds recebidos do Kanban:', selectedUnitIds)
     console.log('🔢 Quantidade de unidades vindas do Kanban:', selectedUnitIds?.length || 0)
     console.log('📊 UserUnits do hook:', userUnits?.length || 0)
     
     if (!selectedUnitIds || selectedUnitIds.length === 0) {
-      console.log('❌ Não há selectedUnitIds válidos, parando execução')
-      setAppointments([])
+      console.log('❌ Não há selectedUnitIds válidos do Kanban')
+      console.log('🔄 Tentando fallback: buscar TODOS os agendamentos do período para debug')
+      
+      // Fallback de debug: buscar TODOS os agendamentos do mês atual
+      setIsLoading(true)
+      try {
+        const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+        const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59)
+
+        console.log('📅 [FALLBACK] Período de busca:', {
+          início: startOfMonth.toISOString(),
+          fim: endOfMonth.toISOString()
+        })
+
+        const { data: allClients, error: fallbackError } = await supabase
+          .from('clients')
+          .select(`
+            id,
+            name,
+            scheduled_date,
+            unit_id,
+            units (
+              name
+            )
+          `)
+          .not('scheduled_date', 'is', null)
+          .eq('active', true)
+          .gte('scheduled_date', startOfMonth.toISOString())
+          .lte('scheduled_date', endOfMonth.toISOString())
+          .order('scheduled_date', { ascending: true })
+
+        if (fallbackError) {
+          console.error('❌ Erro no fallback:', fallbackError)
+          setAppointments([])
+        } else {
+          console.log('📊 [FALLBACK] Total de agendamentos encontrados:', allClients?.length || 0)
+          
+          if (allClients && allClients.length > 0) {
+            console.log('📋 [FALLBACK] Primeiros 3 agendamentos:', allClients.slice(0, 3))
+            
+            const transformedAppointments: ScheduledAppointment[] = allClients
+              .filter(client => client.name && client.scheduled_date)
+              .map(client => {
+                const unit = client.units as any
+                return {
+                  id: client.id,
+                  client_name: client.name,
+                  scheduled_date: client.scheduled_date,
+                  status: 'agendado',
+                  unit_id: client.unit_id || '',
+                  unit_name: unit?.name || 'Unidade não disponível'
+                }
+              })
+
+            console.log('✅ [FALLBACK] Agendamentos processados:', transformedAppointments.length)
+            setAppointments(transformedAppointments)
+          } else {
+            setAppointments([])
+          }
+        }
+      } catch (error) {
+        console.error('💥 Erro no fallback:', error)
+        setAppointments([])
+      } finally {
+        setIsLoading(false)
+      }
       return
     }
 
@@ -42,7 +106,6 @@ export function useCalendarDashboard(selectedUnitIds: string[]) {
       
       console.log('🎯 Unit IDs para filtro (vindos do Kanban):', unitIds)
       
-      // Verificar se conseguimos ter unit_ids válidos
       if (unitIds.length === 0) {
         console.log('⚠️ ERRO: Nenhum unit_id válido nos selectedUnitIds')
         setAppointments([])
@@ -60,9 +123,9 @@ export function useCalendarDashboard(selectedUnitIds: string[]) {
         mês: currentDate.getMonth() + 1,
         ano: currentDate.getFullYear()
       })
-      console.log('🔑 Unit IDs usados na query:', unitIds)
 
-      // Query principal com filtro de unidades vindas do Kanban
+      // Query otimizada e independente para a Agenda de Leads
+      console.log('🔍 Executando query otimizada para Agenda de Leads...')
       const { data: clients, error } = await supabase
         .from('clients')
         .select(`
@@ -83,13 +146,21 @@ export function useCalendarDashboard(selectedUnitIds: string[]) {
 
       if (error) {
         console.error('❌ Erro na query principal:', error)
+        setAppointments([])
         return
       }
 
       console.log('📊 Agendamentos encontrados na query principal:', clients?.length || 0)
       
       if (clients && clients.length > 0) {
-        console.log('📋 Primeiro agendamento:', clients[0])
+        console.log('📋 Primeiro agendamento encontrado:', clients[0])
+        console.log('📋 Distribuição por unidade:', 
+          clients.reduce((acc, client) => {
+            const unitName = (client.units as any)?.name || 'Sem unidade'
+            acc[unitName] = (acc[unitName] || 0) + 1
+            return acc
+          }, {} as Record<string, number>)
+        )
         
         const transformedAppointments: ScheduledAppointment[] = clients
           .filter(client => client.name && client.scheduled_date)
@@ -105,33 +176,36 @@ export function useCalendarDashboard(selectedUnitIds: string[]) {
             }
           })
 
-        console.log('✅ Agendamentos processados:', transformedAppointments.length)
+        console.log('✅ Agendamentos processados com sucesso:', transformedAppointments.length)
+        console.log('📅 Exemplo de agendamento processado:', transformedAppointments[0])
         setAppointments(transformedAppointments)
       } else {
         console.log('📭 Nenhum agendamento encontrado para as unidades e período especificados')
         
-        // Debug para verificar se existem agendamentos sem filtro de unidade
+        // Debug adicional para verificar se existem agendamentos sem filtro
         const { data: debugClients } = await supabase
           .from('clients')
-          .select('id, name, scheduled_date, unit_id')
+          .select('id, name, scheduled_date, unit_id, units(name)')
           .not('scheduled_date', 'is', null)
           .eq('active', true)
           .gte('scheduled_date', startOfMonth.toISOString())
           .lte('scheduled_date', endOfMonth.toISOString())
 
-        console.log('🔍 Debug - agendamentos sem filtro de unidade:', debugClients?.length || 0)
+        console.log('🔍 Debug - Total de agendamentos no período (sem filtro de unidade):', debugClients?.length || 0)
         if (debugClients && debugClients.length > 0) {
           const debugUnitIds = [...new Set(debugClients.map(c => c.unit_id))]
           console.log('🔍 Debug - unit_ids encontrados nos agendamentos:', debugUnitIds)
           console.log('🔍 Debug - unit_ids que estamos filtrando (Kanban):', unitIds)
+          console.log('🔍 Debug - Intersecção:', debugUnitIds.filter(id => unitIds.includes(id)))
         }
         
         setAppointments([])
       }
 
-      console.log('🏁 === FIM DEBUG AGENDA DE LEADS (VERSÃO UNIFICADA) ===')
+      console.log('🏁 === FIM DEBUG AGENDA DE LEADS (NOVA IMPLEMENTAÇÃO) ===')
     } catch (error) {
       console.error('💥 Erro geral em fetchAppointments:', error)
+      setAppointments([])
     } finally {
       setIsLoading(false)
     }
