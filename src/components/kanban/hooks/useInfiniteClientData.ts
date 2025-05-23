@@ -133,9 +133,10 @@ export function useInfiniteClientData(
         query = query.or(`name.ilike.%${normalizedSearch}%,phone_number.ilike.%${normalizedSearch}%`);
       }
 
-      // Filtro de pendentes (next_contact_date no passado ou hoje)
+      // Filtro de pendentes (next_contact_date no passado/hoje OU nulo)
       if (showPendingOnly) {
-        query = query.lte('next_contact_date', new Date().toISOString());
+        const today = new Date().toISOString();
+        query = query.or(`next_contact_date.lte.${today},next_contact_date.is.null`);
       }
 
       // Adicionar paginação
