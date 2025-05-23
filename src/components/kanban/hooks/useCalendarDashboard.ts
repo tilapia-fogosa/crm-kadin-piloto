@@ -25,47 +25,48 @@ export function useCalendarDashboard() {
   const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit()
 
   const fetchAppointments = async () => {
-    if (!userUnits || userUnits.length === 0) return
-
-    console.log('=== INÍCIO DEBUG CALENDÁRIO ===')
-    console.log('Fetchando agendamentos da tabela clients')
-    console.log('userUnits recebido:', userUnits)
-    console.log('Tipo do userUnits:', typeof userUnits, Array.isArray(userUnits))
-    
-    // Debug detalhado da estrutura do userUnits
-    if (userUnits.length > 0) {
-      console.log('Primeiro item do userUnits:', userUnits[0])
-      console.log('Chaves do primeiro item:', Object.keys(userUnits[0]))
+    if (!userUnits || userUnits.length === 0) {
+      console.log('❌ Não há userUnits disponível, parando execução')
+      return
     }
-    
-    // Tentar diferentes formas de extrair unit_ids
-    console.log('selectedCalendarUnitIds:', selectedCalendarUnitIds)
+
+    console.log('🔍 === INÍCIO DEBUG AGENDA DE LEADS ===')
+    console.log('📋 UserUnits recebido:', userUnits)
+    console.log('🔢 Quantidade de unidades:', userUnits.length)
     
     setIsLoading(true)
     try {
-      // Extrair unit_ids corretamente baseado na estrutura real
+      // Extrair unit_ids usando apenas a propriedade correta
       let unitIds: string[] = []
       
       if (selectedCalendarUnitIds.length > 0 && !selectedCalendarUnitIds.includes('todos')) {
         unitIds = selectedCalendarUnitIds
-        console.log('Usando unidades selecionadas manualmente:', unitIds)
+        console.log('✅ Usando unidades selecionadas manualmente:', unitIds)
       } else {
-        // Tentar extrair unit_ids do userUnits usando a estrutura correta da interface
-        unitIds = userUnits.map(u => {
-          console.log('Processando item userUnit:', u)
-          // Usar as propriedades corretas da interface UserUnit
-          return u.unit_id || u.units?.id
-        }).filter(Boolean)
+        // Extrair unit_ids usando apenas a propriedade unit_id que sabemos que existe
+        unitIds = userUnits
+          .map(u => u.unit_id)
+          .filter(id => id && typeof id === 'string' && id.trim().length > 0)
         
-        console.log('unit_ids extraídos do userUnits:', unitIds)
+        console.log('🎯 Unit IDs extraídos:', unitIds)
+        
+        // Debug detalhado de cada unidade
+        userUnits.forEach((unit, index) => {
+          console.log(`📍 Unidade ${index + 1}:`, {
+            unit_id: unit.unit_id,
+            units_id: unit.units?.id,
+            units_name: unit.units?.name
+          })
+        })
       }
       
-      // Se ainda não temos unitIds, usar uma abordagem de fallback
+      // Verificar se conseguimos extrair unit_ids válidos
       if (unitIds.length === 0) {
-        console.log('FALLBACK: Nenhum unit_id encontrado, tentando buscar todos os agendamentos sem filtro de unidade')
+        console.log('⚠️ ERRO: Nenhum unit_id válido extraído')
+        console.log('📊 Tentando buscar agendamentos sem filtro como fallback')
         
-        // Buscar agendamentos sem filtro de unidade para debug
-        const { data: allClients, error: debugError } = await supabase
+        // Fallback: buscar todos os agendamentos do período
+        const { data: fallbackClients, error: fallbackError } = await supabase
           .from('clients')
           .select(`
             id,
@@ -81,23 +82,19 @@ export function useCalendarDashboard() {
           .gte('scheduled_date', new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString())
           .lte('scheduled_date', new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59).toISOString())
           .order('scheduled_date', { ascending: true })
-        
-        if (!debugError && allClients) {
-          console.log('FALLBACK: Total de agendamentos encontrados SEM filtro de unidade:', allClients.length)
-          console.log('FALLBACK: Primeiros 3 agendamentos:', allClients.slice(0, 3))
-          
-          // Se encontrou agendamentos, significa que o problema é no filtro de unidades
-          const uniqueUnitIds = [...new Set(allClients.map(c => c.unit_id).filter(Boolean))]
-          console.log('FALLBACK: Unit IDs únicos encontrados nos agendamentos:', uniqueUnitIds)
+
+        if (fallbackError) {
+          console.error('❌ Erro no fallback:', fallbackError)
+          return
         }
+
+        console.log('🔄 Fallback executado - agendamentos encontrados:', fallbackClients?.length || 0)
         
-        // Para este fallback, vamos retornar sem filtrar por unidade
-        if (allClients) {
-          const transformedAppointments: ScheduledAppointment[] = allClients
+        if (fallbackClients && fallbackClients.length > 0) {
+          const transformedAppointments: ScheduledAppointment[] = fallbackClients
             .filter(client => client.name && client.scheduled_date)
             .map(client => {
               const unit = client.units as any
-              
               return {
                 id: client.id,
                 client_name: client.name,
@@ -108,23 +105,30 @@ export function useCalendarDashboard() {
               }
             })
 
-          console.log('FALLBACK: Agendamentos transformados:', transformedAppointments.length)
+          console.log('✅ Agendamentos do fallback processados:', transformedAppointments.length)
           setAppointments(transformedAppointments)
-          setIsLoading(false)
-          return
+        } else {
+          console.log('📭 Nenhum agendamento encontrado no fallback')
+          setAppointments([])
         }
+        
+        setIsLoading(false)
+        return
       }
       
+      // Definir período de busca
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59)
 
-      console.log('Período de busca:', {
+      console.log('📅 Período de busca:', {
         início: startOfMonth.toISOString(),
-        fim: endOfMonth.toISOString()
+        fim: endOfMonth.toISOString(),
+        mês: currentDate.getMonth() + 1,
+        ano: currentDate.getFullYear()
       })
-      console.log('IDs de unidades usados na query:', unitIds)
+      console.log('🔑 Unit IDs usados na query:', unitIds)
 
-      // Query com filtro de unidades
+      // Query principal com filtro de unidades
       const { data: clients, error } = await supabase
         .from('clients')
         .select(`
@@ -144,93 +148,108 @@ export function useCalendarDashboard() {
         .order('scheduled_date', { ascending: true })
 
       if (error) {
-        console.error('Erro ao buscar agendamentos:', error)
+        console.error('❌ Erro na query principal:', error)
         return
       }
 
-      console.log('Total de agendamentos encontrados COM filtro:', clients?.length || 0)
+      console.log('📊 Agendamentos encontrados na query principal:', clients?.length || 0)
       
       if (clients && clients.length > 0) {
-        console.log('Primeiro agendamento encontrado:', clients[0])
+        console.log('📋 Primeiro agendamento:', clients[0])
+        
+        const transformedAppointments: ScheduledAppointment[] = clients
+          .filter(client => client.name && client.scheduled_date)
+          .map(client => {
+            const unit = client.units as any
+            return {
+              id: client.id,
+              client_name: client.name,
+              scheduled_date: client.scheduled_date,
+              status: 'agendado',
+              unit_id: client.unit_id || '',
+              unit_name: unit?.name || 'Unidade não disponível'
+            }
+          })
+
+        console.log('✅ Agendamentos processados:', transformedAppointments.length)
+        setAppointments(transformedAppointments)
       } else {
-        console.log('Nenhum agendamento encontrado para o período e unidades selecionadas')
+        console.log('📭 Nenhum agendamento encontrado para as unidades e período especificados')
+        
+        // Verificar se existem agendamentos sem filtro de unidade
+        const { data: debugClients } = await supabase
+          .from('clients')
+          .select('id, name, scheduled_date, unit_id')
+          .not('scheduled_date', 'is', null)
+          .eq('active', true)
+          .gte('scheduled_date', startOfMonth.toISOString())
+          .lte('scheduled_date', endOfMonth.toISOString())
+
+        console.log('🔍 Debug - agendamentos sem filtro de unidade:', debugClients?.length || 0)
+        if (debugClients && debugClients.length > 0) {
+          const debugUnitIds = [...new Set(debugClients.map(c => c.unit_id))]
+          console.log('🔍 Debug - unit_ids encontrados nos agendamentos:', debugUnitIds)
+          console.log('🔍 Debug - unit_ids que estamos filtrando:', unitIds)
+        }
+        
+        setAppointments([])
       }
 
-      // Transform the data to match ScheduledAppointment interface
-      const transformedAppointments: ScheduledAppointment[] = (clients || [])
-        .filter(client => {
-          // Verificar se temos os dados necessários do cliente
-          if (!client.name || !client.scheduled_date) {
-            console.log('Cliente ignorado por falta de dados:', client.id)
-            return false
-          }
-          return true
-        })
-        .map(client => {
-          const unit = client.units as any
-          
-          return {
-            id: client.id,
-            client_name: client.name,
-            scheduled_date: client.scheduled_date,
-            status: 'agendado',
-            unit_id: client.unit_id || '',
-            unit_name: unit?.name || 'Unidade não disponível'
-          }
-        })
-
-      console.log('Agendamentos transformados:', transformedAppointments.length)
-      console.log('=== FIM DEBUG CALENDÁRIO ===')
-      setAppointments(transformedAppointments)
+      console.log('🏁 === FIM DEBUG AGENDA DE LEADS ===')
     } catch (error) {
-      console.error('Erro em fetchAppointments:', error)
+      console.error('💥 Erro geral em fetchAppointments:', error)
     } finally {
       setIsLoading(false)
     }
   }
 
   const handlePreviousMonth = () => {
-    console.log('Navegando para o mês anterior')
+    console.log('⬅️ Navegando para o mês anterior')
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
   }
 
   const handleNextMonth = () => {
-    console.log('Navegando para o próximo mês')
+    console.log('➡️ Navegando para o próximo mês')
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
   }
 
   const handleReschedule = (clientId: string, clientName: string) => {
-    console.log('Abrindo dialog de reagendamento para:', clientName)
+    console.log('📅 Abrindo dialog de reagendamento para:', clientName)
     setSelectedClientId(clientId)
     setSelectedClientName(clientName)
     setIsReschedulingDialogOpen(true)
   }
 
   useEffect(() => {
-    console.log('useEffect disparado - buscando agendamentos')
-    console.log('Estado das dependências:', { 
+    console.log('🔄 useEffect disparado - buscando agendamentos')
+    console.log('📊 Estado das dependências:', { 
       temUnidades: userUnits && userUnits.length > 0, 
       quantidadeUnidades: userUnits?.length || 0,
-      unidadesSelecionadas: selectedCalendarUnitIds
+      unidadesSelecionadas: selectedCalendarUnitIds,
+      mesAtual: currentDate.getMonth() + 1,
+      anoAtual: currentDate.getFullYear()
     })
     
     fetchAppointments()
   }, [userUnits, currentDate, selectedCalendarUnitIds])
 
-  // Initialize selected units when user units are loaded
+  // Inicializar unidades selecionadas quando userUnits carregarem
   useEffect(() => {
     if (userUnits && userUnits.length > 0 && selectedCalendarUnitIds.length === 0) {
-      console.log('Inicializando unidades selecionadas')
-      console.log('userUnits para inicialização:', userUnits)
+      console.log('🚀 Inicializando unidades selecionadas')
       
-      // Tentar extrair unit_ids para inicialização usando as propriedades corretas
-      const unitIds = userUnits.map(u => u.unit_id || u.units?.id).filter(Boolean)
-      console.log('unit_ids para inicialização:', unitIds)
+      // Extrair unit_ids usando apenas a propriedade correta
+      const unitIds = userUnits
+        .map(u => u.unit_id)
+        .filter(id => id && typeof id === 'string' && id.trim().length > 0)
+      
+      console.log('🎯 Unit IDs para inicialização:', unitIds)
       
       if (unitIds.length > 0) {
         setSelectedCalendarUnitIds(unitIds)
+        console.log('✅ Unidades inicializadas com sucesso')
       } else {
-        console.log('Não foi possível extrair unit_ids, usando "todos"')
+        console.log('⚠️ Não foi possível extrair unit_ids válidos, usando "todos"')
         setSelectedCalendarUnitIds(['todos'])
       }
     }
