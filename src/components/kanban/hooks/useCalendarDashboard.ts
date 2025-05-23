@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useUserUnit } from "./useUserUnit"
@@ -49,11 +50,11 @@ export function useCalendarDashboard() {
         unitIds = selectedCalendarUnitIds
         console.log('Usando unidades selecionadas manualmente:', unitIds)
       } else {
-        // Tentar extrair unit_ids do userUnits
+        // Tentar extrair unit_ids do userUnits usando a estrutura correta da interface
         unitIds = userUnits.map(u => {
           console.log('Processando item userUnit:', u)
-          // Tentar diferentes possibilidades de estrutura
-          return u.unit_id || u.units?.id || u.id
+          // Usar as propriedades corretas da interface UserUnit
+          return u.unit_id || u.units?.id
         }).filter(Boolean)
         
         console.log('unit_ids extraídos do userUnits:', unitIds)
@@ -222,8 +223,8 @@ export function useCalendarDashboard() {
       console.log('Inicializando unidades selecionadas')
       console.log('userUnits para inicialização:', userUnits)
       
-      // Tentar extrair unit_ids para inicialização
-      const unitIds = userUnits.map(u => u.unit_id || u.units?.id || u.id).filter(Boolean)
+      // Tentar extrair unit_ids para inicialização usando as propriedades corretas
+      const unitIds = userUnits.map(u => u.unit_id || u.units?.id).filter(Boolean)
       console.log('unit_ids para inicialização:', unitIds)
       
       if (unitIds.length > 0) {
