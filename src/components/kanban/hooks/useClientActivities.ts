@@ -63,10 +63,21 @@ export function useClientActivities(
 
       console.log(`Received activities data for client ${clientId}:`, data)
       
-      // Parse the JSON data safely
+      // Parse the JSON data safely and convert to ActivityData[]
       let activities: ActivityData[] = []
       if (data && Array.isArray(data)) {
-        activities = data as ActivityData[]
+        activities = (data as unknown[]).map((item: any) => ({
+          id: item.id,
+          tipo_atividade: item.tipo_atividade,
+          tipo_contato: item.tipo_contato,
+          notes: item.notes,
+          created_at: item.created_at,
+          next_contact_date: item.next_contact_date,
+          created_by: item.created_by,
+          client_id: item.client_id,
+          scheduled_date: item.scheduled_date,
+          active: item.active
+        }))
       }
       
       console.log(`Processed ${activities.length} activities for client ${clientId}`)

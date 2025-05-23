@@ -1,240 +1,142 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { filterActiveUsers, prepareUserStats } from "../utils/userStatsUtils";
-import { UserStats } from "../types/stats.types";
+import { supabase } from "@/integrations/supabase/client"
 
-/**
- * Busca perfis de usuários para unidades especificadas
- * @param unitFilter - IDs das unidades para filtrar
- * @returns Perfis de usuários únicos
- */
-export const fetchUniqueUserProfiles = async (unitFilter: string[]) => {
-  console.log(`Buscando perfis de usuários para ${unitFilter.length} unidades`);
-  
-  // Se não houver unidades para filtrar, interrompe a busca
-  if (unitFilter.length === 0) {
-    console.log('Nenhuma unidade disponível para filtrar perfis de usuários');
-    return [];
-  }
-  
-  const { data: userProfiles, error: profilesError } = await supabase
-    .from('unit_users')
-    .select(`
-      user_id,
-      profiles!inner (
-        id,
-        full_name
-      )
-    `)
-    .eq('active', true)
-    .in('unit_id', unitFilter);
+export interface UserStatsData {
+  user_id: string
+  user_name: string
+  new_clients: number
+  contact_attempts: number
+  effective_contacts: number
+  scheduled_visits: number
+  awaiting_visits: number
+  completed_visits: number
+  enrollments: number
+  ce_conversion_rate: number
+  ag_conversion_rate: number
+  at_conversion_rate: number
+  ma_conversion_rate: number
+}
 
-  if (profilesError) throw profilesError;
-
-  // Deduplicar userProfiles por user_id para garantir que cada usuário apareça apenas uma vez
-  const uniqueUserProfiles = Array.from(
-    new Map(userProfiles.map(profile => [profile.user_id, profile])).values()
-  );
-
-  console.log(`Encontrados ${userProfiles.length} perfis de usuários, ${uniqueUserProfiles.length} perfis únicos`);
-  
-  return uniqueUserProfiles;
-};
-
-/**
- * Busca clientes ativos criados no período selecionado
- * @param startDate - Data inicial do período
- * @param endDate - Data final do período
- * @param unitFilter - IDs das unidades para filtrar
- * @param selectedSource - Filtro de fonte do lead
- * @returns Clientes encontrados
- */
-export const fetchActiveClientsInPeriod = async (
-  startDate: Date, 
-  endDate: Date, 
-  unitFilter: string[], 
-  selectedSource: string
-) => {
-  // Se não houver unidades para filtrar, retorna lista vazia
-  if (unitFilter.length === 0) {
-    console.log('Nenhuma unidade disponível para filtrar clientes');
-    return [];
-  }
-
-  const clientsQuery = supabase
-    .from('clients')
-    .select('id, created_by')
-    .eq('active', true)
-    .in('unit_id', unitFilter)
-    .gte('created_at', startDate.toISOString())
-    .lte('created_at', endDate.toISOString());
-  
-  // Adicionar filtro de origem se necessário
-  if (selectedSource !== 'todos') {
-    clientsQuery.eq('lead_source', selectedSource);
-  }
-  
-  const clientsResult = await clientsQuery;
-  
-  if (clientsResult.error) throw clientsResult.error;
-  
-  console.log(`Encontrados ${clientsResult.data.length} clientes ativos no período`);
-  
-  return clientsResult.data;
-};
-
-/**
- * Busca todos os clientes ativos para filtragem
- * @param unitFilter - IDs das unidades para filtrar
- * @returns IDs dos clientes ativos
- */
-export const fetchAllActiveClientIds = async (unitFilter: string[]) => {
-  // Se não houver unidades para filtrar, retorna lista vazia
-  if (unitFilter.length === 0) {
-    console.log('Nenhuma unidade disponível para filtrar IDs de clientes');
-    return [];
-  }
-
-  const { data: activeClients, error: activeClientsError } = await supabase
-    .from('clients')
-    .select('id')
-    .eq('active', true)
-    .in('unit_id', unitFilter);
+export async function fetchUserStats(
+  startDate: string,
+  endDate: string,
+  unitIds: string[],
+  sourceId: string = 'todos'
+): Promise<UserStatsData[]> {
+  try {
+    console.log('Fetching user stats:', { startDate, endDate, unitIds, sourceId })
     
-  if (activeClientsError) throw activeClientsError;
-  
-  const activeClientIds = activeClients.map(client => client.id);
-  console.log(`Total de ${activeClientIds.length} clientes ativos para filtro de atividades`);
-  
-  return activeClientIds;
-};
+    const { data, error } = await supabase.rpc('get_commercial_user_stats', {
+      p_start_date: startDate,
+      p_end_date: endDate,
+      p_unit_ids: unitIds,
+      p_source_id: sourceId
+    })
 
-/**
- * Busca atividades de clientes no período
- * @param startDate - Data inicial do período
- * @param endDate - Data final do período
- * @param activeClientIds - IDs dos clientes ativos
- * @param unitFilter - IDs das unidades para filtrar
- * @param selectedSource - Filtro de fonte do lead
- * @returns Atividades filtradas
- */
-export const fetchClientActivities = async (
-  startDate: Date, 
-  endDate: Date, 
-  activeClientIds: string[],
-  unitFilter: string[],
-  selectedSource: string
-) => {
-  // Se não houver clientes ou unidades para filtrar, retorna lista vazia
-  if (activeClientIds.length === 0 || unitFilter.length === 0) {
-    console.log('Nenhum cliente ou unidade disponível para filtrar atividades');
-    return [];
+    if (error) {
+      console.error('Error fetching user stats:', error)
+      throw error
+    }
+
+    console.log('User stats data received:', data)
+
+    if (!data || !Array.isArray(data)) {
+      console.warn('No user stats data received or data is not an array')
+      return []
+    }
+
+    // Map the RPC result to our interface
+    return data.map(row => ({
+      user_id: row.user_id,
+      user_name: row.user_name,
+      new_clients: Number(row.new_clients) || 0,
+      contact_attempts: Number(row.contact_attempts) || 0,
+      effective_contacts: Number(row.effective_contacts) || 0,
+      scheduled_visits: Number(row.scheduled_visits) || 0,
+      awaiting_visits: Number(row.awaiting_visits) || 0,
+      completed_visits: Number(row.completed_visits) || 0,
+      enrollments: Number(row.enrollments) || 0,
+      ce_conversion_rate: Number(row.ce_conversion_rate) || 0,
+      ag_conversion_rate: Number(row.ag_conversion_rate) || 0,
+      at_conversion_rate: Number(row.at_conversion_rate) || 0,
+      ma_conversion_rate: Number(row.ma_conversion_rate) || 0
+    }))
+
+  } catch (error) {
+    console.error('Error in fetchUserStats:', error)
+    throw error
   }
+}
 
-  const activitiesQuery = supabase
-    .from('client_activities')
-    .select(`
-      id, 
-      tipo_atividade, 
-      client_id, 
-      created_by,
-      scheduled_date,
-      clients!inner(
+export async function fetchDetailedUserActivities(
+  userId: string,
+  startDate: string,
+  endDate: string,
+  unitIds: string[]
+) {
+  try {
+    console.log('Fetching detailed user activities:', { userId, startDate, endDate, unitIds })
+    
+    // Get client activities for the user in the specified period
+    const { data: activities, error: activitiesError } = await supabase
+      .from('client_activities')
+      .select(`
         id,
-        lead_source
-      )
-    `)
-    .eq('active', true)
-    .in('client_id', activeClientIds)
-    .in('unit_id', unitFilter)
-    .gte('created_at', startDate.toISOString())
-    .lte('created_at', endDate.toISOString());
-  
-  const activitiesResult = await activitiesQuery;
-  
-  if (activitiesResult.error) throw activitiesResult.error;
-  
-  // Filtrar atividades pelo lead_source se necessário
-  const filteredActivities = selectedSource !== 'todos'
-    ? activitiesResult.data.filter(activity => 
-        activity.clients?.lead_source === selectedSource
-      )
-    : activitiesResult.data;
+        tipo_atividade,
+        tipo_contato,
+        created_at,
+        notes,
+        client_id,
+        clients (
+          name,
+          phone_number,
+          email
+        )
+      `)
+      .eq('created_by', userId)
+      .gte('created_at', startDate)
+      .lte('created_at', endDate)
+      .in('unit_id', unitIds)
+      .eq('active', true)
+      .order('created_at', { ascending: false })
 
-  console.log(`Atividades encontradas: ${activitiesResult.data.length}, após filtro: ${filteredActivities.length}`);
-  
-  return filteredActivities;
-};
+    if (activitiesError) {
+      console.error('Error fetching user activities:', activitiesError)
+      throw activitiesError
+    }
 
-/**
- * Processa dados e retorna estatísticas por usuário
- * @param startDate - Data inicial do período
- * @param endDate - Data final do período
- * @param unitFilter - IDs das unidades para filtrar
- * @param selectedSource - Filtro de fonte do lead
- * @returns Estatísticas de usuários processadas
- */
-export const getUserStats = async (
-  startDate: Date,
-  endDate: Date,
-  unitFilter: string[],
-  selectedSource: string
-): Promise<UserStats[]> => {
-  console.log('Iniciando getUserStats com filtros:', { 
-    startDate: startDate.toISOString(), 
-    endDate: endDate.toISOString(), 
-    unitFilter, 
-    selectedSource 
-  });
+    // Get clients created by the user in the specified period
+    const { data: clients, error: clientsError } = await supabase
+      .from('clients')
+      .select(`
+        id,
+        name,
+        phone_number,
+        email,
+        status,
+        created_at
+      `)
+      .eq('created_by', userId)
+      .gte('created_at', startDate)
+      .lte('created_at', endDate)
+      .in('unit_id', unitIds)
+      .eq('active', true)
+      .order('created_at', { ascending: false })
 
-  // Validar se há unidades para filtrar
-  if (unitFilter.length === 0) {
-    console.log('Nenhuma unidade disponível para buscar estatísticas de usuário');
-    return [];
+    if (clientsError) {
+      console.error('Error fetching user clients:', clientsError)
+      throw clientsError
+    }
+
+    console.log('Detailed activities data:', { activities: activities?.length, clients: clients?.length })
+
+    return {
+      activities: activities || [],
+      clients: clients || []
+    }
+
+  } catch (error) {
+    console.error('Error in fetchDetailedUserActivities:', error)
+    throw error
   }
-
-  // Buscar perfis de usuários
-  const uniqueUserProfiles = await fetchUniqueUserProfiles(unitFilter);
-  
-  // Se não houver usuários, retorna lista vazia
-  if (uniqueUserProfiles.length === 0) {
-    console.log('Nenhum perfil de usuário encontrado nas unidades especificadas');
-    return [];
-  }
-  
-  // Buscar clientes no período
-  const clientsData = await fetchActiveClientsInPeriod(startDate, endDate, unitFilter, selectedSource);
-  
-  // Buscar IDs de clientes ativos
-  const activeClientIds = await fetchAllActiveClientIds(unitFilter);
-  
-  // Buscar atividades
-  const filteredActivities = await fetchClientActivities(startDate, endDate, activeClientIds, unitFilter, selectedSource);
-
-  // Inicializar estatísticas para todos os usuários encontrados
-  const userStats = uniqueUserProfiles.map(userProfile => {
-    // Calcular novos clientes por criador
-    const newClientCount = clientsData.filter(
-      client => client.created_by === userProfile.user_id
-    ).length;
-
-    // Atividades deste usuário
-    const userActivities = filteredActivities.filter(
-      activity => activity.created_by === userProfile.user_id
-    );
-
-    return prepareUserStats(
-      userProfile,
-      newClientCount,
-      userActivities,
-      startDate,
-      endDate
-    );
-  });
-
-  // Filtrar usuários sem atividades e ordenar por nome
-  const filteredStats = filterActiveUsers(userStats);
-  console.log(`Estatísticas processadas para ${filteredStats.length} usuários ativos`);
-  
-  return filteredStats;
-};
+}

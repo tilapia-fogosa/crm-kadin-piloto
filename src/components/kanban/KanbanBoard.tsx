@@ -1,30 +1,34 @@
 
-import { useClientData } from "./hooks/useClientData"
+import { useInfiniteClientData } from "./hooks/useInfiniteClientData"
 import { useActivityOperations } from "./hooks/useActivityOperations"
 import { useWhatsApp } from "./hooks/useWhatsApp"
-import { transformClientsToColumnData } from "./utils/columnUtils"
-import { useState, useEffect } from "react"
+import { transformInfiniteClientsToColumnData, shouldLoadMore } from "./utils/columnUtils"
+import { useState, useEffect, useCallback } from "react"
 import { useLocation } from "react-router-dom"
 import { BoardHeader } from "./BoardHeader"
-import { KanbanColumn } from "./KanbanColumn"
+import { InfiniteKanbanColumn } from "./components/column/InfiniteKanbanColumn"
 import { useUserUnit } from "./hooks/useUserUnit"
-import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
 
 export function KanbanBoard() {
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
   const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit();
   const isMultiUnit = userUnits && userUnits.length > 1;
   
-  const { data: clientsData, isLoading, refetch } = useClientData(
+  const { 
+    data: infiniteData, 
+    isLoading, 
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch 
+  } = useInfiniteClientData(
     selectedUnitIds, 
     searchTerm, 
     showPendingOnly,
-    { page: currentPage, limit: 100 }
+    { limit: 400 } // Limite maior para garantir dados suficientes
   );
   
   const { registerAttempt, registerEffectiveContact, deleteActivity } = useActivityOperations();
@@ -45,43 +49,48 @@ export function KanbanBoard() {
     }
   }, [userUnits]);
 
-  // Reset page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedUnitIds, searchTerm, showPendingOnly]);
-
   useEffect(() => {
     console.log("Kanban Board mounted or route changed, refetching data...");
     refetch();
   }, [location.pathname, refetch]);
 
+  // Auto-load more data if needed
+  const checkAndLoadMore = useCallback(() => {
+    if (!infiniteData?.pages || isFetchingNextPage || !hasNextPage) return
+
+    const allClients = infiniteData.pages.map(page => page.clients)
+    const columns = transformInfiniteClientsToColumnData(allClients, 100)
+    
+    if (shouldLoadMore(columns, 100)) {
+      console.log('Auto-loading more data to reach minimum per column')
+      fetchNextPage()
+    }
+  }, [infiniteData, isFetchingNextPage, hasNextPage, fetchNextPage])
+
+  useEffect(() => {
+    const timer = setTimeout(checkAndLoadMore, 1000)
+    return () => clearTimeout(timer)
+  }, [checkAndLoadMore])
+
   if (isLoading || isLoadingUnits) {
     return <div className="flex items-center justify-center p-8">Carregando...</div>
   }
 
-  const clients = clientsData?.clients || []
-  const totalCount = clientsData?.totalCount || 0
-  const hasNextPage = clientsData?.hasNextPage || false
-  const totalPages = Math.ceil(totalCount / 100)
-
-  console.log('Total de clientes filtrados:', clients.length)
-  console.log('Total geral:', totalCount)
-  console.log('Página atual:', currentPage)
-  console.log('Total de páginas:', totalPages)
+  const allClients = infiniteData?.pages?.map(page => page.clients) || []
+  const totalCount = infiniteData?.pages?.[0]?.totalCount || 0
   
-  const columns = transformClientsToColumnData(clients)
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
-    }
-  }
-
-  const handleNextPage = () => {
-    if (hasNextPage) {
-      setCurrentPage(currentPage + 1)
-    }
-  }
+  console.log('Total de páginas carregadas:', allClients.length)
+  console.log('Total geral de clientes no banco:', totalCount)
+  
+  const columns = transformInfiniteClientsToColumnData(allClients, 100)
+  
+  // Estatísticas por coluna
+  const columnStats = columns.map(col => ({
+    title: col.title,
+    count: col.cards.length
+  })).filter(stat => stat.count > 0)
+  
+  console.log('Estatísticas por coluna:', columnStats)
 
   return (
     <div className="flex flex-col h-full">
@@ -97,31 +106,21 @@ export function KanbanBoard() {
         isMultiUnit={isMultiUnit || false}
       />
 
-      {/* Pagination controls */}
+      {/* Stats bar */}
       <div className="flex items-center justify-between px-4 py-2 bg-white border-b">
         <div className="text-sm text-gray-600">
-          Página {currentPage} de {totalPages} - Total: {totalCount} clientes
+          Total: {totalCount} clientes
+          {columnStats.length > 0 && (
+            <span className="ml-2">
+              • Distribuição: {columnStats.map(s => `${s.title}: ${s.count}`).join(', ')}
+            </span>
+          )}
         </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePreviousPage}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Anterior
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNextPage}
-            disabled={!hasNextPage}
-          >
-            Próxima
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        {isFetchingNextPage && (
+          <div className="text-sm text-blue-600">
+            Carregando mais dados...
+          </div>
+        )}
       </div>
 
       {/* Scrollable container for kanban columns */}
@@ -136,13 +135,21 @@ export function KanbanBoard() {
                 key={column.id}
                 className="flex-shrink-0 w-[320px]"
               >
-                <KanbanColumn
+                <InfiniteKanbanColumn
                   column={column}
                   index={index}
                   onWhatsAppClick={handleWhatsAppClick}
                   onRegisterAttempt={registerAttempt}
                   onRegisterEffectiveContact={registerEffectiveContact}
                   onDeleteActivity={deleteActivity}
+                  onLoadMore={() => {
+                    if (hasNextPage && !isFetchingNextPage) {
+                      console.log('Loading more from column:', column.title)
+                      fetchNextPage()
+                    }
+                  }}
+                  isLoading={isFetchingNextPage}
+                  hasNextPage={hasNextPage}
                 />
               </div>
             ))}
