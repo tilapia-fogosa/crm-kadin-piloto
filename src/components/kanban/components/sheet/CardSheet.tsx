@@ -153,10 +153,10 @@ export function CardSheet({
             await wrapOperation(onRegisterEffectiveContact, contact);
           }}
           onRegisterScheduling={async (scheduling) => {
-            await wrapOperation(registerScheduling, scheduling);
+            await wrapOperation(onRegisterScheduling, scheduling);
           }}
           onRegisterAttendance={async (attendance) => {
-            await wrapOperation(submitAttendance, attendance);
+            await wrapOperation(onRegisterAttendance, attendance);
           }}
           onLossSubmit={handleLossSubmit}
           isSubmitting={isSubmitting}

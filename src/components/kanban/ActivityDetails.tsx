@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { ContactAttemptForm } from "./ContactAttemptForm"
 import { EffectiveContactForm } from "./EffectiveContactForm"
@@ -18,6 +19,7 @@ interface ActivityDetailsProps {
   onRegisterScheduling?: (scheduling: Scheduling) => Promise<void>
   onRegisterAttendance?: (attendance: Attendance) => Promise<void>
   onLossSubmit?: (reasons: string[], observations?: string) => Promise<void>
+  isSubmitting?: boolean
 }
 
 export function ActivityDetails({
@@ -28,35 +30,40 @@ export function ActivityDetails({
   onRegisterEffectiveContact,
   onRegisterScheduling,
   onRegisterAttendance,
-  onLossSubmit
+  onLossSubmit,
+  isSubmitting = false
 }: ActivityDetailsProps) {
   console.log('ActivityDetails - Renderizando com atividade selecionada:', selectedActivity)
   
   return (
     <div className="border-l pl-4">
       <h3 className="font-semibold mb-2">Detalhes da Atividade</h3>
-      {selectedActivity === 'Tentativa de Contato' ? (
+      {selectedActivity === 'tentativa-contato' ? (
         <ContactAttemptForm
           onSubmit={onRegisterAttempt}
           cardId={cardId}
           onLossSubmit={onLossSubmit}
+          isDisabled={isSubmitting}
         />
-      ) : selectedActivity === 'Contato Efetivo' ? (
+      ) : selectedActivity === 'contato-efetivo' ? (
         <EffectiveContactForm
           onSubmit={onRegisterEffectiveContact}
           cardId={cardId}
           onLossSubmit={onLossSubmit}
+          isDisabled={isSubmitting}
         />
-      ) : selectedActivity === 'Agendamento' && onRegisterScheduling ? (
+      ) : selectedActivity === 'agendamento' && onRegisterScheduling ? (
         <SchedulingForm
           onSubmit={onRegisterScheduling}
           cardId={cardId}
+          isDisabled={isSubmitting}
         />
-      ) : selectedActivity === 'Atendimento' && onRegisterAttendance ? (
+      ) : selectedActivity === 'atendimento' && onRegisterAttendance ? (
         <AttendanceForm
           onSubmit={onRegisterAttendance}
           cardId={cardId}
           clientName={clientName}
+          isDisabled={isSubmitting}
         />
       ) : (
         <p className="text-sm text-muted-foreground">
