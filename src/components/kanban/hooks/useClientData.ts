@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 import { useUserUnit } from "./useUserUnit"
+import { PaginatedClientData, ClientSummaryData } from "../utils/types/kanbanTypes"
 
 interface PaginationOptions {
   page?: number
@@ -53,7 +54,7 @@ export function useClientData(
     }
   }, [queryClient, selectedUnitIds, searchTerm, showPendingOnly])
 
-  return useQuery({
+  return useQuery<PaginatedClientData>({
     queryKey: ['clients', selectedUnitIds, searchTerm, showPendingOnly, page],
     queryFn: async () => {
       console.log('Fetching paginated clients from kanban_client_summary', {
@@ -81,7 +82,7 @@ export function useClientData(
       
       let query = supabase
         .from('kanban_client_summary')
-        .select('*')
+        .select('*', { count: 'exact' })
         .in('unit_id', unitIds)
 
       // Adicionar filtros de busca se fornecidos
@@ -122,7 +123,7 @@ export function useClientData(
       })
 
       return {
-        clients: data || [],
+        clients: (data || []) as ClientSummaryData[],
         totalCount: count || 0,
         hasNextPage: data ? data.length === limit : false,
         currentPage: page
@@ -130,6 +131,6 @@ export function useClientData(
     },
     enabled: userUnits !== undefined && userUnits.length > 0,
     staleTime: 30000, // 30 segundos
-    cacheTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 5 * 60 * 1000, // 5 minutos (substitui cacheTime)
   })
 }

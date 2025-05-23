@@ -4,6 +4,7 @@ import { useClientActivities } from "../../hooks/useClientActivities"
 import { ActivityHistory } from "../../ActivityHistory"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
+import { ActivityData } from "../../utils/types/kanbanTypes"
 
 interface PaginatedActivityHistoryProps {
   clientId: string
@@ -15,7 +16,6 @@ export function PaginatedActivityHistory({
   onDeleteActivity 
 }: PaginatedActivityHistoryProps) {
   const [page, setPage] = useState(1)
-  const [allActivities, setAllActivities] = useState<any[]>([])
   
   const { data: activitiesData, isLoading, isFetching } = useClientActivities(
     clientId, 
@@ -23,14 +23,13 @@ export function PaginatedActivityHistory({
     10
   )
 
-  // Merge new activities with existing ones when page changes
+  // Convert activities back to the expected string format for compatibility
+  const formattedActivities = activitiesData?.activities?.map((activity: ActivityData) => {
+    return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}|${activity.active}`
+  }) || []
+
   const activities = activitiesData?.activities || []
   const hasNextPage = activitiesData?.hasNextPage || false
-  
-  // Convert activities back to the expected string format for compatibility
-  const formattedActivities = activities.map((activity: any) => {
-    return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}|${activity.active}`
-  })
 
   const handleLoadMore = () => {
     if (hasNextPage && !isFetching) {

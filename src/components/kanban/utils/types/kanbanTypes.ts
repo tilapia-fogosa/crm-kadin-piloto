@@ -71,6 +71,19 @@ export interface ClientSummaryData {
   }
 }
 
+export interface ActivityData {
+  id: string
+  tipo_atividade: string
+  tipo_contato: string
+  notes?: string
+  created_at: string
+  next_contact_date?: string
+  created_by?: string
+  client_id: string
+  scheduled_date?: string
+  active: boolean
+}
+
 export interface PaginatedClientData {
   clients: ClientSummaryData[]
   totalCount: number
@@ -79,7 +92,7 @@ export interface PaginatedClientData {
 }
 
 export interface PaginatedActivitiesData {
-  activities: any[]
+  activities: ActivityData[]
   hasNextPage: boolean
   currentPage: number
 }

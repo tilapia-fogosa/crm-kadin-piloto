@@ -2,6 +2,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
+import { PaginatedActivitiesData, ActivityData } from "../utils/types/kanbanTypes"
 
 export function useClientActivities(
   clientId: string,
@@ -44,7 +45,7 @@ export function useClientActivities(
     }
   }, [queryClient, clientId])
 
-  return useQuery({
+  return useQuery<PaginatedActivitiesData>({
     queryKey: ['activities', clientId, page],
     queryFn: async () => {
       console.log(`Fetching activities for client ${clientId}, page ${page}, limit ${limit}`)
@@ -60,9 +61,15 @@ export function useClientActivities(
         throw error
       }
 
-      console.log(`Received ${data?.length || 0} activities for client ${clientId}`)
+      console.log(`Received activities data for client ${clientId}:`, data)
       
-      const activities = data || []
+      // Parse the JSON data safely
+      let activities: ActivityData[] = []
+      if (data && Array.isArray(data)) {
+        activities = data as ActivityData[]
+      }
+      
+      console.log(`Processed ${activities.length} activities for client ${clientId}`)
       
       return {
         activities,
@@ -72,6 +79,6 @@ export function useClientActivities(
     },
     enabled: !!clientId,
     staleTime: 30000, // 30 segundos
-    cacheTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 5 * 60 * 1000, // 5 minutos (substitui cacheTime)
   })
 }
