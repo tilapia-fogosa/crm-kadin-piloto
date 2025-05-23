@@ -105,10 +105,9 @@ export function useCalendarDashboard() {
   }
 
   useEffect(() => {
-    if (isOpen) {
-      fetchAppointments()
-    }
-  }, [isOpen, userUnits, currentDate, selectedCalendarUnitIds])
+    // Removida a verificação de isOpen aqui - agora busca dados sempre que as dependências mudarem
+    fetchAppointments()
+  }, [userUnits, currentDate, selectedCalendarUnitIds])
 
   // Initialize selected units when user units are loaded
   useEffect(() => {
