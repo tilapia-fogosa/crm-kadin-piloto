@@ -51,7 +51,9 @@ export function useScheduling() {
 
       if (updateClientError) throw updateClientError
 
+      // Invalida tanto o cache geral quanto o específico das atividades
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
+      await queryClient.invalidateQueries({ queryKey: ['activities', scheduling.cardId] })
 
       // Toast de sucesso removido
     } catch (error) {

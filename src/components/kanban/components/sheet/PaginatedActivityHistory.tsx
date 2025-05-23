@@ -8,11 +8,13 @@ import { ActivityData } from "../../utils/types/kanbanTypes"
 
 interface PaginatedActivityHistoryProps {
   clientId: string
+  isOpen: boolean
   onDeleteActivity: (id: string, clientId: string) => void
 }
 
 export function PaginatedActivityHistory({ 
   clientId, 
+  isOpen,
   onDeleteActivity 
 }: PaginatedActivityHistoryProps) {
   const [page, setPage] = useState(1)
@@ -25,7 +27,8 @@ export function PaginatedActivityHistory({
   } = useClientActivities(
     clientId, 
     page, 
-    10
+    10,
+    isOpen
   )
 
   // Efeito para registrar when the data changes

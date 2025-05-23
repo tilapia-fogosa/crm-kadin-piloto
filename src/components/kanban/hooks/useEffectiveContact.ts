@@ -54,7 +54,9 @@ export function useEffectiveContact() {
         if (clientError) throw clientError
       }
 
+      // Invalida tanto o cache geral quanto o específico das atividades
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
+      await queryClient.invalidateQueries({ queryKey: ['activities', contact.cardId] })
 
       // Toast de sucesso removido
     } catch (error) {

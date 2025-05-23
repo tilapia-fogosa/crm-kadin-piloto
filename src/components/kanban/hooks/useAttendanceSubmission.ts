@@ -157,7 +157,9 @@ export function useAttendanceSubmission() {
           throw updateError
         }
 
+        // Invalida tanto o cache geral quanto o específico das atividades
         await queryClient.invalidateQueries({ queryKey: ['clients'] })
+        await queryClient.invalidateQueries({ queryKey: ['activities', cardId] })
 
         console.log(`[${submissionId}] Atendimento registrado com sucesso`)
         

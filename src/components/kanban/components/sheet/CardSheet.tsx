@@ -6,6 +6,7 @@ import { ActivityGrid } from "./ActivityGrid"
 import { KanbanCard } from "../../types"
 import { useState, useEffect, useCallback } from "react"
 import { ContactAttempt, EffectiveContact, Scheduling, Attendance } from "../../types"
+import { useQueryClient } from "@tanstack/react-query"
 
 interface CardSheetProps {
   card: KanbanCard
@@ -30,6 +31,8 @@ export function CardSheet({
   onRegisterScheduling,
   onRegisterAttendance
 }: CardSheetProps) {
+  
+  const queryClient = useQueryClient()
   
   // Flag para determinar se um dialog de valorização está aberto
   const [valorizationDialogOpen, setValorizationDialogOpen] = useState(false);
@@ -85,13 +88,17 @@ export function CardSheet({
       })
 
       console.log('CardSheet - Perda registrada com sucesso')
+      
+      // Invalida o cache das activities desse client imediatamente
+      await queryClient.invalidateQueries({ queryKey: ['activities', card.id] });
+      
       onOpenChange(false)
     } catch (error) {
       console.error('Erro ao registrar perda:', error)
     } finally {
       setIsSubmitting(false);
     }
-  }, [card.id, onOpenChange, onRegisterAttendance]);
+  }, [card.id, onOpenChange, onRegisterAttendance, queryClient]);
 
   // Componente para agendamento na valorização
   const handleOpenSchedulingForm = useCallback(() => {
@@ -99,18 +106,25 @@ export function CardSheet({
     // Implementação que será feita no componente de valorização
   }, []);
   
-  // Wrapper para todas as operações de registro
+  // Wrapper para todas as operações de registro - CORRIGIDO para invalidar cache antes de fechar
   const wrapOperation = useCallback(async (operation: Function, ...args: any[]) => {
     try {
       setIsSubmitting(true);
       await operation(...args);
+      
+      // Invalida o cache das activities desse client imediatamente
+      console.log('Invalidando cache das atividades do cliente:', card.id);
+      await queryClient.invalidateQueries({ queryKey: ['activities', card.id] });
+      
       setIsSubmitting(false);
+      
+      // Só fecha após garantir que o cache está limpo
       onOpenChange(false);
     } catch (error) {
       console.error('Erro na operação:', error);
       setIsSubmitting(false);
     }
-  }, [onOpenChange]);
+  }, [onOpenChange, card.id, queryClient]);
 
   return (
     <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
@@ -145,6 +159,7 @@ export function CardSheet({
         
         <ActivityGrid 
           card={card}
+          isOpen={isOpen}
           onDeleteActivity={onDeleteActivity}
           onRegisterAttempt={async (attempt) => {
             await wrapOperation(onRegisterAttempt, attempt);

@@ -3,35 +3,24 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 import { PaginatedActivitiesData, ActivityData } from "../utils/types/kanbanTypes"
-import { useDebounceFunction } from "../utils/hooks/useDebounceFunction"
 
 export function useClientActivities(
   clientId: string,
   page: number = 1,
-  limit: number = 10
+  limit: number = 10,
+  isOpen: boolean = true
 ) {
   const queryClient = useQueryClient()
   const offset = (page - 1) * limit
-  
-  // Criar invalidação com debounce para evitar múltiplas atualizações rápidas
-  const debouncedInvalidateQueries = useDebounceFunction(() => {
-    console.log(`Invalidando queries de atividades para cliente ${clientId} após debounce`);
-    queryClient.invalidateQueries({ 
-      queryKey: ['activities', clientId] 
-    });
-  }, 300);
 
-  // Gera um ID único para o canal para evitar conflitos em remontagens rápidas
-  const getChannelSuffix = () => Math.random().toString(36).substring(2, 10);
-
-  // Enable realtime subscription for specific client activities
+  // Enable realtime subscription for specific client activities only when sheet is open
   useEffect(() => {
-    if (!clientId) return
+    if (!clientId || !isOpen) return
 
     console.log(`Configurando subscription realtime para atividades do cliente: ${clientId}`);
     
     // Usar um sufixo único para o canal para evitar conflitos em remontagens rápidas
-    const channelSuffix = getChannelSuffix();
+    const channelSuffix = Math.random().toString(36).substring(2, 10);
     
     const channel = supabase
       .channel(`activities-by-client-${clientId}-${channelSuffix}`)
@@ -46,11 +35,12 @@ export function useClientActivities(
         (payload) => {
           console.log('Mudança de atividade detectada para cliente específico:', clientId, payload);
           
-          // Usar debounce para a invalidação
-          debouncedInvalidateQueries();
+          // Invalidação imediata sem debounce quando sheet estiver aberto
+          queryClient.invalidateQueries({ 
+            queryKey: ['activities', clientId] 
+          });
           
           // Também invalida as queries de clientes para manter tudo sincronizado
-          // Isso garante que o last_activity no card do Kanban também seja atualizado
           queryClient.invalidateQueries({ 
             queryKey: ['infinite-clients'] 
           });
@@ -64,7 +54,7 @@ export function useClientActivities(
       console.log(`Limpando subscription realtime para cliente: ${clientId}`);
       supabase.removeChannel(channel);
     };
-  }, [queryClient, clientId, debouncedInvalidateQueries]);
+  }, [queryClient, clientId, isOpen]);
 
   return useQuery<PaginatedActivitiesData>({
     queryKey: ['activities', clientId, page],
@@ -109,8 +99,9 @@ export function useClientActivities(
         currentPage: page
       };
     },
-    enabled: !!clientId,
-    staleTime: 30000, // 30 segundos
+    enabled: !!clientId && isOpen,
+    refetchOnMount: isOpen ? 'always' : false, // Sempre refetch quando sheet abrir
+    staleTime: isOpen ? 0 : 30000, // Cache zero quando sheet aberto, 30s quando fechado
     gcTime: 5 * 60 * 1000, // 5 minutos
   });
 }

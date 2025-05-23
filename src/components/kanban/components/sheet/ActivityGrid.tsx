@@ -9,6 +9,7 @@ import { KanbanCard, ContactAttempt, EffectiveContact, Scheduling, Attendance } 
 
 interface ActivityGridProps {
   card: KanbanCard
+  isOpen: boolean
   onDeleteActivity: (id: string, clientId: string) => void
   onRegisterAttempt: (attempt: ContactAttempt) => Promise<void>
   onRegisterEffectiveContact: (contact: EffectiveContact) => Promise<void>
@@ -20,6 +21,7 @@ interface ActivityGridProps {
 
 export function ActivityGrid({
   card,
+  isOpen,
   onDeleteActivity,
   onRegisterAttempt,
   onRegisterEffectiveContact,
@@ -58,6 +60,7 @@ export function ActivityGrid({
         {isHistoryExpanded ? (
           <PaginatedActivityHistory
             clientId={card.id}
+            isOpen={isOpen}
             onDeleteActivity={onDeleteActivity}
           />
         ) : (
