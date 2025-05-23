@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, X } from 'lucide-react';
@@ -107,6 +108,12 @@ export function ValorizationButtons({
     }
   };
 
+  const handleReschedulingSuccess = async () => {
+    console.log('Novo agendamento criado com sucesso');
+    onValorizationChange(false);
+    setIsReschedulingDialogOpen(false);
+  };
+
   if (valorizationConfirmed) {
     return (
       <div className="flex flex-col items-end gap-1">
@@ -208,11 +215,7 @@ export function ValorizationButtons({
         onOpenChange={setIsReschedulingDialogOpen}
         clientId={clientId}
         clientName={clientName}
-        onSubmit={async (scheduling) => {
-          console.log('Novo agendamento criado:', scheduling);
-          onValorizationChange(false);
-          setIsReschedulingDialogOpen(false);
-        }}
+        onSubmit={handleReschedulingSuccess}
       />
     </>
   );

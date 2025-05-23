@@ -63,7 +63,7 @@ export function ReschedulingDialog({
           <SchedulingForm 
             onSubmit={handleSubmit}
             cardId={clientId}
-            disabled={isSubmitting}
+            isDisabled={isSubmitting}
           />
         </div>
       </DialogContent>
