@@ -27,7 +27,7 @@ export function useCalendarDashboard() {
   const fetchAppointments = async () => {
     if (!userUnits || userUnits.length === 0) return
 
-    console.log('Fetchando agendamentos para o calendário dashboard')
+    console.log('Fetchando agendamentos da tabela clients')
     console.log('Unidades selecionadas:', selectedCalendarUnitIds)
     console.log('Unidades disponíveis:', userUnits.map(u => ({ id: u.unit_id, name: u.units.name })))
     
@@ -45,22 +45,19 @@ export function useCalendarDashboard() {
         fim: endOfMonth.toISOString()
       })
 
-      // Simplificando a query: usando JOIN direto ao invés de subquery aninhada
-      const { data: activities, error } = await supabase
-        .from('client_activities')
+      // Query correta: buscar diretamente na tabela clients onde scheduled_date não é nulo
+      const { data: clients, error } = await supabase
+        .from('clients')
         .select(`
           id,
+          name,
           scheduled_date,
-          client_id,
-          clients (
-            name,
-            unit_id
-          ),
+          unit_id,
           units (
             name
           )
         `)
-        .eq('tipo_atividade', 'Agendamento')
+        .not('scheduled_date', 'is', null)
         .eq('active', true)
         .in('unit_id', unitIds)
         .gte('scheduled_date', startOfMonth.toISOString())
@@ -72,34 +69,33 @@ export function useCalendarDashboard() {
         return
       }
 
-      console.log('Total de agendamentos encontrados:', activities?.length || 0)
+      console.log('Total de agendamentos encontrados:', clients?.length || 0)
       
-      if (activities && activities.length > 0) {
-        console.log('Primeiro agendamento encontrado:', activities[0])
+      if (clients && clients.length > 0) {
+        console.log('Primeiro agendamento encontrado:', clients[0])
       } else {
         console.log('Nenhum agendamento encontrado para o período e unidades selecionadas')
       }
 
       // Transform the data to match ScheduledAppointment interface
-      const transformedAppointments: ScheduledAppointment[] = (activities || [])
-        .filter(activity => {
+      const transformedAppointments: ScheduledAppointment[] = (clients || [])
+        .filter(client => {
           // Verificar se temos os dados necessários do cliente
-          if (!activity.clients || !activity.clients.name) {
-            console.log('Agendamento ignorado por falta de dados do cliente:', activity.id)
+          if (!client.name || !client.scheduled_date) {
+            console.log('Cliente ignorado por falta de dados:', client.id)
             return false
           }
           return true
         })
-        .map(activity => {
-          const client = activity.clients as any
-          const unit = activity.units as any
+        .map(client => {
+          const unit = client.units as any
           
           return {
-            id: activity.id,
-            client_name: client?.name || 'Nome não disponível',
-            scheduled_date: activity.scheduled_date,
+            id: client.id,
+            client_name: client.name,
+            scheduled_date: client.scheduled_date,
             status: 'agendado',
-            unit_id: client?.unit_id || '',
+            unit_id: client.unit_id || '',
             unit_name: unit?.name || 'Unidade não disponível'
           }
         })
