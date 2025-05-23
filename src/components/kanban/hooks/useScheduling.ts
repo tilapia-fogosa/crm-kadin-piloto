@@ -53,10 +53,7 @@ export function useScheduling() {
 
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
-      toast({
-        title: "Agendamento registrado",
-        description: "O agendamento foi registrado com sucesso",
-      })
+      // Toast de sucesso removido
     } catch (error) {
       console.error('Error registering scheduling:', error)
       toast({

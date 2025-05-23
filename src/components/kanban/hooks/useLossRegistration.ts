@@ -108,12 +108,8 @@ export function useLossRegistration() {
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       console.log('Registro de perda concluído com sucesso')
-      toast({
-        title: "Cliente marcado como perdido",
-        description: "As informações foram registradas com sucesso."
-      })
-
-      return true
+      
+      // Toast de sucesso removido
     } catch (error) {
       console.error('Erro ao registrar perda:', error)
       toast({

@@ -74,11 +74,7 @@ export function useSale() {
       // Nota: Removemos a chamada de webhook de venda, pois agora
       // essa funcionalidade é tratada pelos webhooks de clientes com status "matriculado"
 
-      toast({
-        title: "Venda registrada com sucesso!",
-        description: "O cliente foi marcado como matriculado e os webhooks configurados serão acionados automaticamente.",
-        duration: 5000
-      })
+      // Toast de sucesso removido
     } catch (error: any) {
       console.error('Erro ao registrar venda:', error)
       toast({

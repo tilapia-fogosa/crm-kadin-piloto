@@ -53,10 +53,7 @@ export function useContactAttempt() {
 
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
-      toast({
-        title: "Tentativa registrada",
-        description: "A atividade foi registrada com sucesso",
-      })
+      // Toast de sucesso removido
     } catch (error) {
       console.error('Erro ao registrar tentativa:', error)
       toast({

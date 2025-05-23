@@ -54,10 +54,7 @@ export function useActivityDeletion() {
       // Força a revalidação dos dados do cliente
       await queryClient.invalidateQueries({ queryKey: ['clients'] });
 
-      toast({
-        title: "Atividade excluída",
-        description: "A atividade foi inativada com sucesso",
-      })
+      // Toast de sucesso removido
     } catch (error) {
       console.error('Erro em deleteActivity:', error);
       toast({

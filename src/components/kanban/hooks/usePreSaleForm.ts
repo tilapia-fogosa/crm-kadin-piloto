@@ -74,7 +74,8 @@ export function usePreSaleForm(clientId: string, activityId: string) {
       if (error) throw error
 
       console.log('Venda registrada com sucesso:', sale)
-      toast.success('Pré-venda registrada com sucesso!')
+      
+      // Toast de sucesso removido
       return sale
       
     } catch (error) {

@@ -56,10 +56,7 @@ export function useEffectiveContact() {
 
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
-      toast({
-        title: "Contato efetivo registrado",
-        description: "A atividade foi registrada com sucesso",
-      })
+      // Toast de sucesso removido
     } catch (error) {
       console.error('Error registering effective contact:', error)
       toast({

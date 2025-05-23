@@ -160,10 +160,8 @@ export function useAttendanceSubmission() {
         await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
         console.log(`[${submissionId}] Atendimento registrado com sucesso`)
-        toast({
-          title: "Atendimento registrado",
-          description: "O atendimento foi registrado com sucesso."
-        })
+        
+        // Toast de sucesso removido
 
         return true
       } catch (error) {
