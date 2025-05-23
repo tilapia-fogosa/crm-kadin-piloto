@@ -7,34 +7,40 @@ import { CalendarHeader } from "./components/calendar/CalendarHeader"
 import { CalendarGrid } from "./components/calendar/CalendarGrid"
 import { CalendarFilters } from "./components/calendar/CalendarFilters"
 import { ReschedulingDialog } from "./components/scheduling/ReschedulingDialog"
-import { useCalendarDashboard } from "./hooks/useCalendarDashboard"
+import { useAgendaLeads } from "./hooks/useAgendaLeads"
+import { useState } from "react"
 
 interface CalendarDashboardProps {
   selectedUnitIds: string[]
 }
 
 export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
-  console.log('📅 [CalendarDashboard] Renderizando com selectedUnitIds vindos do Kanban:', selectedUnitIds)
+  console.log('📅 [CalendarDashboard] Renderizando com selectedUnitIds:', selectedUnitIds)
   console.log('📅 [CalendarDashboard] Quantidade de unidades selecionadas:', selectedUnitIds?.length || 0)
   
+  const [isReschedulingDialogOpen, setIsReschedulingDialogOpen] = useState(false)
+  const [selectedClientId, setSelectedClientId] = useState<string>("")
+  const [selectedClientName, setSelectedClientName] = useState<string>("")
+
   const {
+    appointments,
+    isLoading,
     currentDate,
-    isReschedulingDialogOpen,
-    setIsReschedulingDialogOpen,
-    selectedClientId,
-    selectedClientName,
     userUnits,
     isLoadingUnits,
     handlePreviousMonth,
-    handleNextMonth,
-    handleReschedule,
-    scheduledAppointments,
-    isLoadingAppointments
-  } = useCalendarDashboard(selectedUnitIds);
+    handleNextMonth
+  } = useAgendaLeads(selectedUnitIds)
 
-  // Log para debug das unidades disponíveis vs selecionadas
   console.log('📅 [CalendarDashboard] UserUnits disponíveis:', userUnits?.map(u => ({ id: u.unit_id, name: u.units.name })))
-  console.log('📅 [CalendarDashboard] Agendamentos carregados:', scheduledAppointments?.length || 0)
+  console.log('📅 [CalendarDashboard] Agendamentos carregados:', appointments?.length || 0)
+
+  const handleReschedule = (clientId: string, clientName: string) => {
+    console.log('📅 [CalendarDashboard] Abrindo dialog de reagendamento para:', clientName)
+    setSelectedClientId(clientId)
+    setSelectedClientName(clientName)
+    setIsReschedulingDialogOpen(true)
+  }
 
   if (isLoadingUnits) {
     return (
@@ -62,9 +68,9 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
           <Calendar className="h-4 w-4" />
           <span className="text-xs">Agenda</span>
           <span className="text-xs">de Leads</span>
-          {scheduledAppointments && scheduledAppointments.length > 0 && (
+          {appointments && appointments.length > 0 && (
             <span className="text-xs bg-green-100 text-green-800 px-1 rounded">
-              {scheduledAppointments.length}
+              {appointments.length}
             </span>
           )}
         </Button>
@@ -86,8 +92,8 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
 
         <CalendarGrid
           currentDate={currentDate}
-          isLoadingAppointments={isLoadingAppointments}
-          scheduledAppointments={scheduledAppointments}
+          isLoadingAppointments={isLoading}
+          scheduledAppointments={appointments}
           onReschedule={handleReschedule}
           userUnits={userUnits}
         />
@@ -95,10 +101,11 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
         {/* Debug info para desenvolvimento */}
         {process.env.NODE_ENV === 'development' && (
           <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
-            <strong>Debug Info:</strong><br/>
+            <strong>Debug Info (Nova Implementação):</strong><br/>
             Unidades selecionadas: {selectedUnitIds?.length || 0}<br/>
-            Agendamentos: {scheduledAppointments?.length || 0}<br/>
-            Carregando: {isLoadingAppointments ? 'Sim' : 'Não'}
+            Agendamentos: {appointments?.length || 0}<br/>
+            Carregando: {isLoading ? 'Sim' : 'Não'}<br/>
+            Mês/Ano: {currentDate.getMonth() + 1}/{currentDate.getFullYear()}
           </div>
         )}
       </DialogContent>

@@ -1,15 +1,22 @@
 
 import { format } from "date-fns"
-import { ScheduledAppointment } from "../../types"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AppointmentItem } from "./AppointmentItem"
 import { UserUnit } from "../../hooks/useUserUnit"
+
+interface AgendaLead {
+  id: string
+  name: string
+  scheduled_date: string
+  unit_id: string
+  unit_name?: string
+}
 
 interface CalendarDayCellProps {
   day: number | null
   currentDate: Date
   isLoading: boolean
-  appointments: ScheduledAppointment[]
+  appointments: AgendaLead[]
   onReschedule: (clientId: string, clientName: string) => void
   userUnits?: UserUnit[]
 }
@@ -22,12 +29,10 @@ export function CalendarDayCell({
   onReschedule,
   userUnits
 }: CalendarDayCellProps) {
-  // Adicionar log específico para o dia 30
-  if (day === 30) {
-    console.log(`CalendarDayCell - Dia 30: Recebeu ${appointments.length} agendamentos`)
-    if (appointments.length > 0) {
-      console.log('Detalhes dos agendamentos do dia 30:', appointments)
-    }
+  // Log específico para dias com agendamentos
+  if (day && appointments.length > 0) {
+    console.log(`📅 [CalendarDayCell] Dia ${day}: ${appointments.length} agendamento(s)`)
+    console.log(`📅 [CalendarDayCell] Detalhes do dia ${day}:`, appointments)
   }
   
   const isCurrentDay = day === new Date().getDate() && 
@@ -37,18 +42,18 @@ export function CalendarDayCell({
   // Função para obter o índice da unidade para usar com cores
   const getUnitIndex = (unitId: string): number => {
     if (!userUnits || userUnits.length === 0) {
-      console.log('CalendarDayCell - userUnits indefinido ou vazio ao buscar índice para', unitId);
-      return 0;
+      console.log('📅 [CalendarDayCell] userUnits indefinido ou vazio ao buscar índice para', unitId)
+      return 0
     }
     
-    const index = userUnits.findIndex(unit => unit.unit_id === unitId);
+    const index = userUnits.findIndex(unit => unit.unit_id === unitId)
     
     if (index === -1) {
-      console.log(`CalendarDayCell - Unidade não encontrada: ${unitId}`);
+      console.log(`📅 [CalendarDayCell] Unidade não encontrada: ${unitId}`)
     }
     
-    return index >= 0 ? index : 0;
-  };
+    return index >= 0 ? index : 0
+  }
 
   return (
     <div 
@@ -71,7 +76,14 @@ export function CalendarDayCell({
               {appointments?.map(appointment => (
                 <AppointmentItem
                   key={appointment.id}
-                  appointment={appointment}
+                  appointment={{
+                    id: appointment.id,
+                    client_name: appointment.name,
+                    scheduled_date: appointment.scheduled_date,
+                    status: 'agendado',
+                    unit_id: appointment.unit_id,
+                    unit_name: appointment.unit_name
+                  }}
                   onReschedule={onReschedule}
                   unitIndex={getUnitIndex(appointment.unit_id)}
                 />
