@@ -33,6 +33,8 @@ export function CardSheet({
   
   // Flag para determinar se um dialog de valorização está aberto
   const [valorizationDialogOpen, setValorizationDialogOpen] = useState(false);
+  // Flag para indicar quando uma operação está em andamento
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   useEffect(() => {
     console.log('CardSheet - Estado do sheet:', isOpen ? 'aberto' : 'fechado')
@@ -74,6 +76,7 @@ export function CardSheet({
     console.log('CardSheet - Registrando perda:', { reasons, observations })
     
     try {
+      setIsSubmitting(true);
       await onRegisterAttendance({
         cardId: card.id,
         result: 'perdido',
@@ -85,6 +88,8 @@ export function CardSheet({
       onOpenChange(false)
     } catch (error) {
       console.error('Erro ao registrar perda:', error)
+    } finally {
+      setIsSubmitting(false);
     }
   }, [card.id, onOpenChange, onRegisterAttendance]);
 
@@ -93,6 +98,19 @@ export function CardSheet({
     console.log('Abrindo formulário de agendamento a partir dos botões de valorização');
     // Implementação que será feita no componente de valorização
   }, []);
+  
+  // Wrapper para todas as operações de registro
+  const wrapOperation = useCallback(async (operation: Function, ...args: any[]) => {
+    try {
+      setIsSubmitting(true);
+      await operation(...args);
+      setIsSubmitting(false);
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Erro na operação:', error);
+      setIsSubmitting(false);
+    }
+  }, [onOpenChange]);
 
   return (
     <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
@@ -128,11 +146,20 @@ export function CardSheet({
         <ActivityGrid 
           card={card}
           onDeleteActivity={onDeleteActivity}
-          onRegisterAttempt={onRegisterAttempt}
-          onRegisterEffectiveContact={onRegisterEffectiveContact}
-          onRegisterScheduling={onRegisterScheduling}
-          onRegisterAttendance={onRegisterAttendance}
+          onRegisterAttempt={async (attempt) => {
+            await wrapOperation(onRegisterAttempt, attempt);
+          }}
+          onRegisterEffectiveContact={async (contact) => {
+            await wrapOperation(onRegisterEffectiveContact, contact);
+          }}
+          onRegisterScheduling={async (scheduling) => {
+            await wrapOperation(registerScheduling, scheduling);
+          }}
+          onRegisterAttendance={async (attendance) => {
+            await wrapOperation(submitAttendance, attendance);
+          }}
           onLossSubmit={handleLossSubmit}
+          isSubmitting={isSubmitting}
         />
       </SheetContent>
     </Sheet>

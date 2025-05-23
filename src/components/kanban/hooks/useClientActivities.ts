@@ -13,13 +13,16 @@ export function useClientActivities(
   const queryClient = useQueryClient()
   const offset = (page - 1) * limit
   
-  // Criar invalidação com debounce
+  // Criar invalidação com debounce para evitar múltiplas atualizações rápidas
   const debouncedInvalidateQueries = useDebounceFunction(() => {
     console.log(`Invalidando queries de atividades para cliente ${clientId} após debounce`);
     queryClient.invalidateQueries({ 
       queryKey: ['activities', clientId] 
     });
   }, 300);
+
+  // Gera um ID único para o canal para evitar conflitos em remontagens rápidas
+  const getChannelSuffix = () => Math.random().toString(36).substring(2, 10);
 
   // Enable realtime subscription for specific client activities
   useEffect(() => {
@@ -28,14 +31,14 @@ export function useClientActivities(
     console.log(`Configurando subscription realtime para atividades do cliente: ${clientId}`);
     
     // Usar um sufixo único para o canal para evitar conflitos em remontagens rápidas
-    const channelSuffix = Math.random().toString(36).substring(2, 10);
+    const channelSuffix = getChannelSuffix();
     
     const channel = supabase
       .channel(`activities-by-client-${clientId}-${channelSuffix}`)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: '*', // Monitora todos os eventos (insert, update, delete)
           schema: 'public',
           table: 'client_activities',
           filter: `client_id=eq.${clientId}`

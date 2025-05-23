@@ -15,6 +15,7 @@ interface ActivityGridProps {
   onRegisterScheduling: (scheduling: Scheduling) => Promise<void>
   onRegisterAttendance: (attendance: Attendance) => Promise<void>
   onLossSubmit: (reasons: string[], observations?: string) => Promise<void>
+  isSubmitting?: boolean
 }
 
 export function ActivityGrid({
@@ -24,7 +25,8 @@ export function ActivityGrid({
   onRegisterEffectiveContact,
   onRegisterScheduling,
   onRegisterAttendance,
-  onLossSubmit
+  onLossSubmit,
+  isSubmitting = false
 }: ActivityGridProps) {
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(true)
@@ -71,6 +73,7 @@ export function ActivityGrid({
           <ActivitySelector
             selectedActivity={selectedActivity}
             onActivitySelect={handleActivitySelect}
+            disabled={isSubmitting}
           />
         </div>
         
@@ -89,8 +92,18 @@ export function ActivityGrid({
           onRegisterScheduling={onRegisterScheduling}
           onRegisterAttendance={onRegisterAttendance}
           onLossSubmit={onLossSubmit}
+          isSubmitting={isSubmitting}
         />
       </div>
+
+      {isSubmitting && (
+        <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+          <div className="flex flex-col items-center gap-2">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            <p className="text-sm font-medium">Salvando...</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

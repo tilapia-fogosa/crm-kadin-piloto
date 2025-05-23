@@ -1,35 +1,73 @@
 
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { activities } from "./utils/activityUtils"
+import {
+  AlertTriangle,
+  Calendar,
+  Phone,
+  MessageSquare,
+  Briefcase
+} from "lucide-react"
 
 interface ActivitySelectorProps {
   selectedActivity: string | null
-  onActivitySelect: (activityId: string) => void
+  onActivitySelect: (id: string) => void
+  disabled?: boolean
 }
 
-export function ActivitySelector({ selectedActivity, onActivitySelect }: ActivitySelectorProps) {
+export function ActivitySelector({ 
+  selectedActivity, 
+  onActivitySelect,
+  disabled = false 
+}: ActivitySelectorProps) {
+  const isSelected = (id: string) => selectedActivity === id
+
   return (
-    <div className="flex flex-col gap-2">
-      <h3 className="font-semibold mb-2">Nova Atividade</h3>
-      <div className="flex flex-col gap-2">
-        {activities.map((activity) => (
-          <Button
-            key={activity.id}
-            variant="outline"
-            className={cn(
-              "justify-start gap-2",
-              selectedActivity === activity.id && "bg-primary/10"
-            )}
-            onClick={() => onActivitySelect(activity.id)}
-          >
-            <span className="flex items-center justify-center bg-primary text-primary-foreground font-medium rounded min-w-[2rem] h-6 text-xs">
-              {activity.badge}
-            </span>
-            {activity.label}
-          </Button>
-        ))}
-      </div>
+    <div className="space-y-2">
+      <h3 className="font-semibold">Nova Atividade</h3>
+      <Button
+        variant={isSelected("tentativa-contato") ? "default" : "outline"}
+        className="w-full justify-start"
+        onClick={() => onActivitySelect("tentativa-contato")}
+        disabled={disabled}
+      >
+        <div className="bg-orange-500 text-white w-7 h-7 flex items-center justify-center rounded mr-2">
+          <Phone className="h-4 w-4" />
+        </div>
+        Tentativa de Contato
+      </Button>
+      <Button
+        variant={isSelected("contato-efetivo") ? "default" : "outline"}
+        className="w-full justify-start"
+        onClick={() => onActivitySelect("contato-efetivo")}
+        disabled={disabled}
+      >
+        <div className="bg-orange-500 text-white w-7 h-7 flex items-center justify-center rounded mr-2">
+          <MessageSquare className="h-4 w-4" />
+        </div>
+        Contato Efetivo
+      </Button>
+      <Button
+        variant={isSelected("agendamento") ? "default" : "outline"}
+        className="w-full justify-start"
+        onClick={() => onActivitySelect("agendamento")}
+        disabled={disabled}
+      >
+        <div className="bg-orange-500 text-white w-7 h-7 flex items-center justify-center rounded mr-2">
+          <Calendar className="h-4 w-4" />
+        </div>
+        Agendamento
+      </Button>
+      <Button
+        variant={isSelected("atendimento") ? "default" : "outline"}
+        className="w-full justify-start"
+        onClick={() => onActivitySelect("atendimento")}
+        disabled={disabled}
+      >
+        <div className="bg-orange-500 text-white w-7 h-7 flex items-center justify-center rounded mr-2">
+          <Briefcase className="h-4 w-4" />
+        </div>
+        Atendimento
+      </Button>
     </div>
   )
 }
