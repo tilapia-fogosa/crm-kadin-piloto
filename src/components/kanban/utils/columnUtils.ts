@@ -33,17 +33,8 @@ const COLUMN_DEFINITIONS: ColumnDefinition[] = [
     id: 'negociacao',
     title: 'Negociação',
     filterPredicate: (client: ClientSummaryData) => client.status === 'negociacao'
-  },
-  {
-    id: 'matriculado',
-    title: 'Matriculado',
-    filterPredicate: (client: ClientSummaryData) => client.status === 'matriculado'
-  },
-  {
-    id: 'perdido',
-    title: 'Perdido',
-    filterPredicate: (client: ClientSummaryData) => client.status === 'perdido'
   }
+  // Removidas as colunas 'matriculado' e 'perdido'
 ]
 
 export function transformClientsToColumnData(clients: ClientSummaryData[]): KanbanColumn[] {
@@ -88,7 +79,7 @@ export function transformInfiniteClientsToColumnData(
     .filter(col => col.cards.length > 0)
     .map(col => ({ title: col.title, count: col.cards.length }))
   
-  console.log('Distribuição por coluna ativa:', activeCounts)
+  console.log('Distribuição por coluna ativa (sem matriculados e perdidos):', activeCounts)
   
   return columns
 }

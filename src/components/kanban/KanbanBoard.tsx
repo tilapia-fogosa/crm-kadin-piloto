@@ -77,10 +77,9 @@ export function KanbanBoard() {
   }
 
   const allClients = infiniteData?.pages?.flatMap(page => page.clients) || []
-  const totalCount = infiniteData?.pages?.[0]?.totalCount || 0
   
   console.log('Total de páginas carregadas:', infiniteData?.pages?.length || 0)
-  console.log('Total geral de clientes no banco:', totalCount)
+  console.log('Total de clientes ativos carregados:', allClients.length)
   
   const columns = transformInfiniteClientsToColumnData([allClients], 100)
   
@@ -106,13 +105,12 @@ export function KanbanBoard() {
         isMultiUnit={isMultiUnit || false}
       />
 
-      {/* Stats bar */}
+      {/* Stats bar simplificada sem total geral */}
       <div className="flex items-center justify-between px-4 py-2 bg-white border-b">
         <div className="text-sm text-gray-600">
-          Total: {totalCount} clientes
           {columnStats.length > 0 && (
-            <span className="ml-2">
-              • Distribuição: {columnStats.map(s => `${s.title}: ${s.count}`).join(', ')}
+            <span>
+              Distribuição: {columnStats.map(s => `${s.title}: ${s.count}`).join(', ')}
             </span>
           )}
         </div>

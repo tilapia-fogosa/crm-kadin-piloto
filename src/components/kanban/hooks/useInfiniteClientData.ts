@@ -90,6 +90,7 @@ export function useInfiniteClientData(
         .from('kanban_client_summary')
         .select('*', { count: 'exact' })
         .in('unit_id', unitIds)
+        .not('status', 'in', '(matriculado,perdido)') // Filtrar matriculados e perdidos
 
       // Adicionar filtros de busca se fornecidos
       if (searchTerm && searchTerm.trim()) {
@@ -115,8 +116,7 @@ export function useInfiniteClientData(
         throw error
       }
 
-      console.log(`Página ${pageParam}: ${data?.length} clientes recebidos`)
-      console.log('Total count:', count)
+      console.log(`Página ${pageParam}: ${data?.length} clientes recebidos (filtrados)`)
       
       return {
         clients: (data || []) as ClientSummaryData[],
