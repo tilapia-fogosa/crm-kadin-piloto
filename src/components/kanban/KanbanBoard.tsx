@@ -58,8 +58,8 @@ export function KanbanBoard() {
   const checkAndLoadMore = useCallback(() => {
     if (!infiniteData?.pages || isFetchingNextPage || !hasNextPage) return
 
-    const allClients = infiniteData.pages.map(page => page.clients)
-    const columns = transformInfiniteClientsToColumnData(allClients, 100)
+    const allClients = infiniteData.pages.flatMap(page => page.clients)
+    const columns = transformInfiniteClientsToColumnData([allClients], 100)
     
     if (shouldLoadMore(columns, 100)) {
       console.log('Auto-carregando mais dados para atingir mínimo por coluna')
@@ -76,13 +76,13 @@ export function KanbanBoard() {
     return <div className="flex items-center justify-center p-8">Carregando...</div>
   }
 
-  const allClients = infiniteData?.pages?.map(page => page.clients) || []
+  const allClients = infiniteData?.pages?.flatMap(page => page.clients) || []
   const totalCount = infiniteData?.pages?.[0]?.totalCount || 0
   
-  console.log('Total de páginas carregadas:', allClients.length)
+  console.log('Total de páginas carregadas:', infiniteData?.pages?.length || 0)
   console.log('Total geral de clientes no banco:', totalCount)
   
-  const columns = transformInfiniteClientsToColumnData(allClients, 100)
+  const columns = transformInfiniteClientsToColumnData([allClients], 100)
   
   // Estatísticas por coluna
   const columnStats = columns.map(col => ({

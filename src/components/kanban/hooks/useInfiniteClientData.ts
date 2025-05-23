@@ -61,7 +61,9 @@ export function useInfiniteClientData(
 
   return useInfiniteQuery<InfiniteClientData>({
     queryKey: ['infinite-clients', selectedUnitIds, searchTerm, showPendingOnly],
-    queryFn: async ({ pageParam = 1 }: { pageParam?: number }) => {
+    queryFn: async (context) => {
+      const pageParam = context.pageParam as number || 1
+      
       console.log('Buscando clientes infinitos de kanban_client_summary', {
         selectedUnitIds,
         searchTerm,
@@ -101,7 +103,7 @@ export function useInfiniteClientData(
       }
 
       // Adicionar paginação
-      const offset = ((pageParam as number) - 1) * limit
+      const offset = (pageParam - 1) * limit
       query = query
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
@@ -120,7 +122,7 @@ export function useInfiniteClientData(
         clients: (data || []) as ClientSummaryData[],
         totalCount: count || 0,
         hasNextPage: data ? data.length === limit : false,
-        currentPage: pageParam as number
+        currentPage: pageParam
       }
     },
     initialPageParam: 1,
