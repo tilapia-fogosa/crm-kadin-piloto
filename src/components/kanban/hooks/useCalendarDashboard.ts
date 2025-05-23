@@ -28,25 +28,36 @@ export function useCalendarDashboard() {
     if (!userUnits || userUnits.length === 0) return
 
     console.log('Fetchando agendamentos para o calendário dashboard')
+    console.log('Unidades selecionadas:', selectedCalendarUnitIds)
+    console.log('Unidades disponíveis:', userUnits.map(u => ({ id: u.unit_id, name: u.units.name })))
+    
     setIsLoading(true)
     try {
+      // Determinar quais IDs de unidades usar
       const unitIds = selectedCalendarUnitIds.length > 0 ? selectedCalendarUnitIds : userUnits.map(u => u.unit_id)
+      console.log('IDs de unidades usados na query:', unitIds)
+      
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59)
 
-      // Query client_activities for scheduled appointments with client names
+      console.log('Período de busca:', {
+        início: startOfMonth.toISOString(),
+        fim: endOfMonth.toISOString()
+      })
+
+      // Simplificando a query: usando JOIN direto ao invés de subquery aninhada
       const { data: activities, error } = await supabase
         .from('client_activities')
         .select(`
           id,
           scheduled_date,
           client_id,
-          clients!inner (
+          clients (
             name,
-            unit_id,
-            units (
-              name
-            )
+            unit_id
+          ),
+          units (
+            name
           )
         `)
         .eq('tipo_atividade', 'Agendamento')
@@ -61,22 +72,37 @@ export function useCalendarDashboard() {
         return
       }
 
-      console.log('Atividades buscadas:', activities)
+      console.log('Total de agendamentos encontrados:', activities?.length || 0)
+      
+      if (activities && activities.length > 0) {
+        console.log('Primeiro agendamento encontrado:', activities[0])
+      } else {
+        console.log('Nenhum agendamento encontrado para o período e unidades selecionadas')
+      }
 
       // Transform the data to match ScheduledAppointment interface
-      const transformedAppointments: ScheduledAppointment[] = (activities || []).map(activity => {
-        const client = activity.clients as any
-        const unit = client?.units as any
-        
-        return {
-          id: activity.id,
-          client_name: client?.name || 'Nome não disponível',
-          scheduled_date: activity.scheduled_date,
-          status: 'agendado',
-          unit_id: client?.unit_id || '',
-          unit_name: unit?.name || 'Unidade não disponível'
-        }
-      })
+      const transformedAppointments: ScheduledAppointment[] = (activities || [])
+        .filter(activity => {
+          // Verificar se temos os dados necessários do cliente
+          if (!activity.clients || !activity.clients.name) {
+            console.log('Agendamento ignorado por falta de dados do cliente:', activity.id)
+            return false
+          }
+          return true
+        })
+        .map(activity => {
+          const client = activity.clients as any
+          const unit = activity.units as any
+          
+          return {
+            id: activity.id,
+            client_name: client?.name || 'Nome não disponível',
+            scheduled_date: activity.scheduled_date,
+            status: 'agendado',
+            unit_id: client?.unit_id || '',
+            unit_name: unit?.name || 'Unidade não disponível'
+          }
+        })
 
       console.log('Agendamentos transformados:', transformedAppointments)
       setAppointments(transformedAppointments)
@@ -105,13 +131,20 @@ export function useCalendarDashboard() {
   }
 
   useEffect(() => {
-    // Removida a verificação de isOpen aqui - agora busca dados sempre que as dependências mudarem
+    console.log('useEffect disparado - buscando agendamentos')
+    console.log('Estado das dependências:', { 
+      temUnidades: userUnits && userUnits.length > 0, 
+      quantidadeUnidades: userUnits?.length || 0,
+      unidadesSelecionadas: selectedCalendarUnitIds
+    })
+    
     fetchAppointments()
   }, [userUnits, currentDate, selectedCalendarUnitIds])
 
   // Initialize selected units when user units are loaded
   useEffect(() => {
     if (userUnits && userUnits.length > 0 && selectedCalendarUnitIds.length === 0) {
+      console.log('Inicializando unidades selecionadas:', userUnits.map(u => u.unit_id))
       setSelectedCalendarUnitIds(userUnits.map(u => u.unit_id))
     }
   }, [userUnits, selectedCalendarUnitIds.length])
