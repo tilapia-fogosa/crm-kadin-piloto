@@ -16,6 +16,8 @@ export function KanbanBoard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDebugMode, setIsDebugMode] = useState(false);
   
+  console.log('📊 [KanbanBoard] Renderizando com searchTerm:', searchTerm)
+  
   const { data: userUnits, isLoading: isLoadingUnits } = useUserUnit();
   const isMultiUnit = userUnits && userUnits.length > 1;
   
@@ -38,8 +40,9 @@ export function KanbanBoard() {
   const { handleWhatsAppClick } = useWhatsApp();
   const location = useLocation();
 
-  // Handler estável para mudanças de pesquisa
+  // CORREÇÃO: Handler estável para mudanças de pesquisa com useCallback
   const handleSearchChange = useCallback((term: string) => {
+    console.log('📊 [KanbanBoard] handleSearchChange chamado com:', term)
     setSearchTerm(term)
   }, [])
 
@@ -96,6 +99,7 @@ export function KanbanBoard() {
 
   // CORREÇÃO: Acessar clients corretamente de cada página
   const allClients = infiniteData?.pages?.flatMap(page => page.clients) || []
+  console.log('📊 [KanbanBoard] Total de clientes encontrados:', allClients.length)
   
   const columns = transformInfiniteClientsToColumnData([allClients], 100)
 

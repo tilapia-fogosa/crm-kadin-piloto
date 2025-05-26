@@ -26,6 +26,12 @@ export function useInfiniteClientData(
   const { data: userUnits } = useUserUnit()
   const { limit = 400 } = paginationOptions
   
+  console.log('📊 [useInfiniteClientData] Hook chamado com:', { 
+    selectedUnitIds, 
+    searchTerm, 
+    showPendingOnly 
+  })
+  
   // Hook para gerar um ID único para os canais em caso de remontagem rápida
   const getChannelSuffix = () => Math.random().toString(36).substring(2, 10);
 
@@ -95,13 +101,7 @@ export function useInfiniteClientData(
     queryFn: async (context) => {
       const pageParam = context.pageParam as number || 1;
       
-      console.log('📊 [useInfiniteClientData] Buscando clientes infinitos de kanban_client_summary', {
-        selectedUnitIds,
-        searchTerm,
-        showPendingOnly,
-        page: pageParam,
-        limit
-      });
+      console.log('📊 [useInfiniteClientData] Executando query com searchTerm:', searchTerm);
       
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error('Não autenticado');
@@ -126,6 +126,7 @@ export function useInfiniteClientData(
       // Adicionar filtros de busca se fornecidos
       if (searchTerm && searchTerm.trim()) {
         const normalizedSearch = searchTerm.trim();
+        console.log('📊 [useInfiniteClientData] Aplicando filtro de pesquisa:', normalizedSearch);
         query = query.or(`name.ilike.%${normalizedSearch}%,phone_number.ilike.%${normalizedSearch}%`);
       }
 
@@ -148,7 +149,7 @@ export function useInfiniteClientData(
         throw error;
       }
 
-      console.log(`📊 [useInfiniteClientData] Página ${pageParam}: ${data?.length} clientes recebidos`);
+      console.log(`📊 [useInfiniteClientData] Página ${pageParam}: ${data?.length} clientes recebidos para termo "${searchTerm}"`);
       
       return {
         clients: (data || []) as ClientSummaryData[],

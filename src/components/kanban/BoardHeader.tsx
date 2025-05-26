@@ -7,7 +7,7 @@ import { ActivityDashboard } from "./ActivityDashboard"
 import { CalendarDashboard } from "./CalendarDashboard"
 import { Input } from "@/components/ui/input"
 import { MultiUnitSelector } from "./components/calendar/MultiUnitSelector"
-import { useState, useCallback, memo } from "react"
+import { useState, useCallback, memo, useEffect } from "react"
 import { useDebounce } from "./utils/hooks/useDebounce"
 
 interface BoardHeaderProps {
@@ -35,22 +35,29 @@ function BoardHeaderComponent({
   isMultiUnit,
   isSearching = false
 }: BoardHeaderProps) {
+  console.log('🔍 [BoardHeader] Renderizando com searchTerm:', searchTerm)
+  
   // Estado local apenas para o input (responsividade imediata)
   const [rawSearch, setRawSearch] = useState(searchTerm)
+  console.log('🔍 [BoardHeader] rawSearch atual:', rawSearch)
   
   // Debounce do valor digitado
   const debouncedSearchTerm = useDebounce(rawSearch, 500)
+  console.log('🔍 [BoardHeader] debouncedSearchTerm:', debouncedSearchTerm)
 
-  // Quando o valor debounced muda, notifica o pai
-  useState(() => {
+  // CORREÇÃO: Quando o valor debounced muda, notifica o pai via useEffect
+  useEffect(() => {
     if (debouncedSearchTerm !== searchTerm) {
+      console.log('🔍 [BoardHeader] Propagando debouncedSearchTerm para pai:', debouncedSearchTerm)
       onSearchChange(debouncedSearchTerm)
     }
-  })
+  }, [debouncedSearchTerm, searchTerm, onSearchChange])
 
   // Handler otimizado para mudanças no input
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setRawSearch(e.target.value)
+    const newValue = e.target.value
+    console.log('🔍 [BoardHeader] Input onChange:', newValue)
+    setRawSearch(newValue)
   }, [])
   
   return (
