@@ -91,13 +91,13 @@ export function useLossRegistration() {
         if (reasonsError) throw reasonsError
       }
 
-      // 3. Atualiza o status do cliente para perdido
-      // CORREÇÃO: Removida a atualização do campo observations
-      console.log('Atualizando status do cliente para perdido')
+      // 3. Atualiza o status do cliente para perdido E limpa a scheduled_date
+      console.log('Atualizando status do cliente para perdido e limpando scheduled_date')
       const { error: updateClientError } = await supabase
         .from('clients')
         .update({ 
           status: 'perdido',
+          scheduled_date: null, // NOVO: Limpa a data de agendamento
           updated_at: new Date().toISOString()
         })
         .eq('id', clientId)
