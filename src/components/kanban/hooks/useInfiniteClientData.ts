@@ -106,7 +106,7 @@ export function useInfiniteClientData(
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error('Não autenticado');
 
-      // Determinar as unidades para filtrar
+      // Determinar as unidades para filtrar - usando a nova estrutura normalizada
       let unitIds: string[] = [];
       
       if (selectedUnitIds && selectedUnitIds.length > 0) {

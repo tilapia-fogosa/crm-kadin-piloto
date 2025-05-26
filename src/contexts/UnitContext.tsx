@@ -11,7 +11,7 @@ interface UnitContextType {
   selectedUnitIds: string[];
   setSelectedUnitIds: (unitIds: string[]) => void;
   
-  availableUnits: { unit_id: string; units: { id: string; name: string; } }[];
+  availableUnits: { unit_id: string; unit_name: string; }[];
   isLoading: boolean;
   error: Error | null;
 }

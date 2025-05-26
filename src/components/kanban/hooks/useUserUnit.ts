@@ -1,8 +1,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useMemo } from "react";
 
-export interface UserUnit {
+// Interface para os dados brutos retornados pelo Supabase
+interface UserUnitRaw {
   unit_id: string;
   units: {
     id: string;
@@ -10,8 +12,14 @@ export interface UserUnit {
   };
 }
 
+// Interface normalizada que será exportada
+export interface UserUnit {
+  unit_id: string;
+  unit_name: string;
+}
+
 export function useUserUnit() {
-  return useQuery({
+  const { data: rawData, isLoading, error } = useQuery({
     queryKey: ['user-unit'],
     queryFn: async () => {
       console.log('Iniciando busca de unidades do usuário');
@@ -52,8 +60,23 @@ export function useUserUnit() {
         return true;
       });
 
-      console.log('Unidades encontradas (sem duplicatas):', uniqueUnits);
-      return uniqueUnits as UserUnit[];
+      console.log('Unidades encontradas (dados brutos):', uniqueUnits);
+      return uniqueUnits as UserUnitRaw[];
     }
   });
+
+  // Normaliza os dados para a estrutura esperada pelo UnitContext
+  const data = useMemo(() => {
+    if (!rawData) return undefined;
+    
+    const normalized = rawData.map(({ unit_id, units }) => ({
+      unit_id: units.id, // Pega o ID da unidade aninhada
+      unit_name: units.name // Adiciona o nome para facilitar uso futuro
+    }));
+    
+    console.log('Dados normalizados:', normalized);
+    return normalized;
+  }, [rawData]);
+
+  return { data, isLoading, error };
 }

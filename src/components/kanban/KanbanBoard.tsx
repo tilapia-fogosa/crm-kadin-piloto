@@ -46,7 +46,7 @@ export function KanbanBoard() {
     setSearchTerm(term)
   }, [])
 
-  // Inicializa a seleção de unidades quando as unidades são carregadas
+  // Inicializa a seleção de unidades quando as unidades são carregadas - usando nova estrutura
   useEffect(() => {
     if (userUnits && userUnits.length > 0) {
       if (userUnits.length === 1) {
@@ -103,6 +103,15 @@ export function KanbanBoard() {
   
   const columns = transformInfiniteClientsToColumnData([allClients], 100)
 
+  // Transformar unidades para o formato esperado pelo BoardHeader
+  const availableUnitsForHeader = userUnits?.map(unit => ({
+    unit_id: unit.unit_id,
+    units: {
+      id: unit.unit_id,
+      name: unit.unit_name
+    }
+  })) || [];
+
   return (
     <div className="flex flex-col h-full">
       <BoardHeader 
@@ -111,7 +120,7 @@ export function KanbanBoard() {
         onRefresh={() => refetch()}
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
-        availableUnits={userUnits || []}
+        availableUnits={availableUnitsForHeader}
         selectedUnitIds={selectedUnitIds}
         setSelectedUnitIds={setSelectedUnitIds}
         isMultiUnit={isMultiUnit || false}
