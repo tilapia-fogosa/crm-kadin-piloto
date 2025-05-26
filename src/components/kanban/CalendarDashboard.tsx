@@ -40,7 +40,7 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
     refetch
   } = useAgendaLeads(selectedUnitIds)
 
-  console.log('📅 [CalendarDashboard] UserUnits disponíveis:', userUnits?.map(u => ({ id: u.unit_id, name: u.units.name })))
+  console.log('📅 [CalendarDashboard] UserUnits disponíveis:', userUnits?.map(u => ({ id: u.unit_id, name: u.unit_name })))
   console.log('📅 [CalendarDashboard] Agendamentos carregados:', appointments?.length || 0)
 
   const handleReschedule = (clientId: string, clientName: string) => {
