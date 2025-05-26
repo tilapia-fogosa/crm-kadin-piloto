@@ -13,10 +13,7 @@ export function useDebounce<T>(value: T, delay: number = 500): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
-    console.log('useDebounce: Configurando timer para valor:', value);
-    
     const timer = setTimeout(() => {
-      console.log('useDebounce: Aplicando valor após debounce:', value);
       setDebouncedValue(value);
     }, delay);
 

@@ -7,7 +7,7 @@ import { ActivityDashboard } from "./ActivityDashboard"
 import { CalendarDashboard } from "./CalendarDashboard"
 import { Input } from "@/components/ui/input"
 import { MultiUnitSelector } from "./components/calendar/MultiUnitSelector"
-import { useState, useEffect } from "react"
+import { useState, useCallback, memo } from "react"
 import { useDebounce } from "./utils/hooks/useDebounce"
 
 interface BoardHeaderProps {
@@ -15,7 +15,7 @@ interface BoardHeaderProps {
   setShowPendingOnly: (value: boolean) => void
   onRefresh: () => void
   searchTerm: string
-  setSearchTerm: (value: string) => void
+  onSearchChange: (value: string) => void
   availableUnits: { unit_id: string; units: { id: string; name: string } }[]
   selectedUnitIds: string[]
   setSelectedUnitIds: (unitIds: string[]) => void
@@ -23,41 +23,35 @@ interface BoardHeaderProps {
   isSearching?: boolean
 }
 
-export function BoardHeader({
+function BoardHeaderComponent({
   showPendingOnly,
   setShowPendingOnly,
   onRefresh,
   searchTerm,
-  setSearchTerm,
+  onSearchChange,
   availableUnits,
   selectedUnitIds,
   setSelectedUnitIds,
   isMultiUnit,
   isSearching = false
 }: BoardHeaderProps) {
+  // Estado local apenas para o input (responsividade imediata)
   const [rawSearch, setRawSearch] = useState(searchTerm)
+  
+  // Debounce do valor digitado
   const debouncedSearchTerm = useDebounce(rawSearch, 500)
 
-  console.log('🔍 [BoardHeader] Raw search:', rawSearch)
-  console.log('🔍 [BoardHeader] Debounced search:', debouncedSearchTerm)
-  console.log('🏢 [BoardHeader] Unidades selecionadas:', selectedUnitIds)
-  console.log('🏢 [BoardHeader] Usuário multi-unidade:', isMultiUnit)
-  
-  // Sincronizar o termo de pesquisa debounced com o estado pai
-  useEffect(() => {
+  // Quando o valor debounced muda, notifica o pai
+  useState(() => {
     if (debouncedSearchTerm !== searchTerm) {
-      console.log('🔍 [BoardHeader] Atualizando searchTerm pai com valor debounced:', debouncedSearchTerm)
-      setSearchTerm(debouncedSearchTerm)
+      onSearchChange(debouncedSearchTerm)
     }
-  }, [debouncedSearchTerm, searchTerm, setSearchTerm])
+  })
 
-  // Sincronizar rawSearch quando searchTerm muda externamente
-  useEffect(() => {
-    if (searchTerm !== rawSearch && searchTerm !== debouncedSearchTerm) {
-      console.log('🔍 [BoardHeader] Sincronizando rawSearch com searchTerm externo:', searchTerm)
-      setRawSearch(searchTerm)
-    }
-  }, [searchTerm, rawSearch, debouncedSearchTerm])
+  // Handler otimizado para mudanças no input
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setRawSearch(e.target.value)
+  }, [])
   
   return (
     <div className="flex flex-col bg-[#311D64] p-4 gap-4">
@@ -115,13 +109,23 @@ export function BoardHeader({
           type="text"
           placeholder="Pesquise o contato por nome ou telefone"
           value={rawSearch}
-          onChange={(e) => {
-            console.log('🔍 [BoardHeader] Input onChange:', e.target.value)
-            setRawSearch(e.target.value)
-          }}
+          onChange={handleInputChange}
           className="pl-10 pr-10 bg-white/10 text-white placeholder:text-gray-400 border-gray-700 focus-visible:ring-primary/50"
         />
       </div>
     </div>
   )
 }
+
+// Memoizar o componente para evitar re-renders desnecessários
+export const BoardHeader = memo(BoardHeaderComponent, (prevProps, nextProps) => {
+  // Re-render apenas se props importantes mudaram
+  return (
+    prevProps.showPendingOnly === nextProps.showPendingOnly &&
+    prevProps.searchTerm === nextProps.searchTerm &&
+    prevProps.isSearching === nextProps.isSearching &&
+    prevProps.selectedUnitIds.length === nextProps.selectedUnitIds.length &&
+    JSON.stringify(prevProps.selectedUnitIds) === JSON.stringify(nextProps.selectedUnitIds) &&
+    prevProps.isMultiUnit === nextProps.isMultiUnit
+  )
+})
