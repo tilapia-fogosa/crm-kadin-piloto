@@ -71,7 +71,7 @@ export function UnitSelector({ onChange, value, placeholder, required, disabled 
         )}
         {availableUnits.map((unitUser) => (
           <SelectItem key={unitUser.unit_id} value={unitUser.unit_id}>
-            {unitUser.units.name}
+            {unitUser.unit_name}
           </SelectItem>
         ))}
       </SelectContent>

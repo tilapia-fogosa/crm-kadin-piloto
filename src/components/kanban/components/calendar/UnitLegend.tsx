@@ -40,7 +40,7 @@ export function UnitLegend({ availableUnits, selectedUnitIds = [] }: UnitLegendP
               className={`w-3 h-3 rounded-sm flex items-center justify-center ${textColor}`}
               style={{ backgroundColor: unitColor }}
             />
-            <span className="text-xs">{unit.units.name}</span>
+            <span className="text-xs">{unit.unit_name}</span>
           </div>
         );
       })}

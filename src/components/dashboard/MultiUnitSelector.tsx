@@ -93,7 +93,7 @@ export function MultiUnitSelector() {
     
     if (selectedUnitIds.length === 1) {
       const selectedUnit = availableUnits.find(unit => unit.unit_id === selectedUnitIds[0]);
-      return selectedUnit?.units.name || "Uma unidade";
+      return selectedUnit?.unit_name || "Uma unidade";
     }
     
     return `${selectedUnitIds.length} unidades`;
@@ -149,7 +149,7 @@ export function MultiUnitSelector() {
                         htmlFor={`unit-${unit.unit_id}`}
                         className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
-                        {unit.units.name}
+                        {unit.unit_name}
                       </label>
                     </div>
                   </div>

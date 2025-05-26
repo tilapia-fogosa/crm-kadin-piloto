@@ -1,4 +1,3 @@
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MONTHS, YEARS } from "../../constants/dashboard.constants";
 import { useUnit } from "@/contexts/UnitContext";
@@ -40,7 +39,7 @@ export function ActivityFilters({
             <SelectItem value="todas">Todas as Unidades</SelectItem>
             {availableUnits?.map((unitUser) => (
               <SelectItem key={unitUser.unit_id} value={unitUser.unit_id}>
-                {unitUser.units.name}
+                {unitUser.unit_name}
               </SelectItem>
             ))}
           </SelectContent>

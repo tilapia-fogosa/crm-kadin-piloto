@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { MultiUnitSelector } from "./components/calendar/MultiUnitSelector"
 import { useState, useCallback, memo, useEffect } from "react"
 import { useDebounce } from "./utils/hooks/useDebounce"
+import { UserUnit } from "./hooks/useUserUnit"
 
 interface BoardHeaderProps {
   showPendingOnly: boolean
@@ -16,7 +17,7 @@ interface BoardHeaderProps {
   onRefresh: () => void
   searchTerm: string
   onSearchChange: (value: string) => void
-  availableUnits: { unit_id: string; units: { id: string; name: string } }[]
+  availableUnits: UserUnit[]
   selectedUnitIds: string[]
   setSelectedUnitIds: (unitIds: string[]) => void
   isMultiUnit: boolean

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useUserUnit } from "./useUserUnit"
@@ -103,7 +102,7 @@ export function useAgendaLeads(selectedUnitIds: string[] = []) {
             name: client.name,
             scheduled_date: client.scheduled_date,
             unit_id: client.unit_id,
-            unit_name: unit?.units.name || 'Unidade não encontrada'
+            unit_name: unit?.unit_name || 'Unidade não encontrada'
           }
         })
 

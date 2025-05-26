@@ -1,4 +1,3 @@
-
 import { useInfiniteClientData } from "./hooks/useInfiniteClientData"
 import { useActivityOperations } from "./hooks/useActivityOperations"
 import { useWhatsApp } from "./hooks/useWhatsApp"
@@ -103,15 +102,6 @@ export function KanbanBoard() {
   
   const columns = transformInfiniteClientsToColumnData([allClients], 100)
 
-  // Transformar unidades para o formato esperado pelo BoardHeader
-  const availableUnitsForHeader = userUnits?.map(unit => ({
-    unit_id: unit.unit_id,
-    units: {
-      id: unit.unit_id,
-      name: unit.unit_name
-    }
-  })) || [];
-
   return (
     <div className="flex flex-col h-full">
       <BoardHeader 
@@ -120,7 +110,7 @@ export function KanbanBoard() {
         onRefresh={() => refetch()}
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
-        availableUnits={availableUnitsForHeader}
+        availableUnits={userUnits || []}
         selectedUnitIds={selectedUnitIds}
         setSelectedUnitIds={setSelectedUnitIds}
         isMultiUnit={isMultiUnit || false}

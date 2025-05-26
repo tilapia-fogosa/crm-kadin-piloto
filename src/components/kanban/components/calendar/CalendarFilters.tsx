@@ -36,7 +36,7 @@ export function CalendarFilters({
         <div className="space-y-1">
           {selectedUnits.map(unit => (
             <div key={unit.unit_id} className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded">
-              📍 {unit.units.name}
+              📍 {unit.unit_name}
             </div>
           ))}
         </div>
