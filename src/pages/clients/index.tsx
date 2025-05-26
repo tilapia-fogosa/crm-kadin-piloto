@@ -1,10 +1,9 @@
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { toast } from "@/components/ui/use-toast"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { ClientsTable } from "@/components/clients/clients-table"
-import { useLocation } from "react-router-dom"
 import { UnitSelector } from "@/components/UnitSelector"
 import { useUnit } from "@/contexts/UnitContext"
 import { Input } from "@/components/ui/input"
@@ -16,14 +15,13 @@ import { Search } from "lucide-react"
 export default function ClientsPage() {
   const [clientToDelete, setClientToDelete] = useState<any>(null)
   const queryClient = useQueryClient()
-  const location = useLocation()
-  const { selectedUnitId, isLoading: isLoadingUnit } = useUnit()
+  const { selectedUnitId } = useUnit() // Já garantido que não é null pelo UnitProvider
+
+  console.log('ClientsPage renderizando com selectedUnitId:', selectedUnitId);
 
   const { data: clients, isLoading, refetch } = useQuery({
     queryKey: ['all-clients', selectedUnitId],
     queryFn: async () => {
-      if (!selectedUnitId) return [];
-
       console.log('Fetching clients for unit:', selectedUnitId);
       
       // Modificada a query para incluir as atividades do cliente
@@ -62,7 +60,7 @@ export default function ClientsPage() {
       
       return data;
     },
-    enabled: !!selectedUnitId
+    // Não precisa mais de enabled, pois selectedUnitId já está garantido
   });
 
   const {
@@ -79,11 +77,6 @@ export default function ClientsPage() {
     isFilterActive,
     filterOptions
   } = useClientFiltering(clients)
-
-  useEffect(() => {
-    console.log("Clients page mounted or route changed, refetching data...")
-    refetch()
-  }, [location.pathname, refetch])
 
   const handleDelete = async (clientId: string) => {
     try {
@@ -115,7 +108,7 @@ export default function ClientsPage() {
   }
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-full">Carregando...</div>
+    return <div className="flex items-center justify-center h-full">Carregando clientes...</div>
   }
 
   return (
@@ -125,55 +118,49 @@ export default function ClientsPage() {
         <UnitSelector />
       </div>
       
-      {isLoadingUnit ? (
-        <div>Carregando...</div>
-      ) : !selectedUnitId ? (
-        <div>Selecione uma unidade para ver os clientes</div>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Buscar por nome ou telefone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-[250px] pl-8 md:w-[300px]"
-                />
-              </div>
-              
-              <ClientFilterDialog 
-                filters={filters}
-                filterOptions={filterOptions}
-                applyFilters={applyFilters}
-                resetFilters={resetFilters}
-                isFilterActive={isFilterActive}
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Buscar por nome ou telefone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-[250px] pl-8 md:w-[300px]"
               />
             </div>
             
-            <div className="text-sm text-muted-foreground">
-              Total: {totalResults} clientes
-            </div>
-          </div>
-
-          <ClientsTable
-            clients={paginatedClients}
-            clientToDelete={clientToDelete}
-            onDelete={handleDelete}
-            setClientToDelete={setClientToDelete}
-          />
-
-          {totalPages > 1 && (
-            <ClientsPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
+            <ClientFilterDialog 
+              filters={filters}
+              filterOptions={filterOptions}
+              applyFilters={applyFilters}
+              resetFilters={resetFilters}
+              isFilterActive={isFilterActive}
             />
-          )}
+          </div>
+          
+          <div className="text-sm text-muted-foreground">
+            Total: {totalResults} clientes
+          </div>
         </div>
-      )}
+
+        <ClientsTable
+          clients={paginatedClients}
+          clientToDelete={clientToDelete}
+          onDelete={handleDelete}
+          setClientToDelete={setClientToDelete}
+        />
+
+        {totalPages > 1 && (
+          <ClientsPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
+      </div>
     </div>
   )
 }

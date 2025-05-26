@@ -22,33 +22,40 @@ export function UnitProvider({ children }: { children: React.ReactNode }) {
   const { data: userUnits, isLoading, error } = useUserUnit();
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
-  const [initialized, setInitialized] = useState(false);
 
-  // Set first available unit as default when units are loaded (para seleção única)
+  console.log('UnitProvider status:', { isLoading, userUnits, selectedUnitId });
+
+  // Inicializa a seleção de unidade quando os dados são carregados
   useEffect(() => {
-    console.log('UnitProvider effect:', { isLoading, userUnits, initialized });
-    
-    if (!isLoading && userUnits && userUnits.length > 0 && !initialized) {
-      console.log('Setting initial unit:', userUnits[0].unit_id);
+    if (!isLoading && userUnits && userUnits.length > 0 && !selectedUnitId) {
+      console.log('Inicializando selectedUnitId com primeira unidade:', userUnits[0].unit_id);
       setSelectedUnitId(userUnits[0].unit_id);
-      
-      // Inicializa também o array de unidades selecionadas
       setSelectedUnitIds([userUnits[0].unit_id]);
-      
-      setInitialized(true);
     }
-  }, [userUnits, isLoading, initialized]);
+  }, [userUnits, isLoading, selectedUnitId]);
 
   // Sincroniza a seleção única com a seleção múltipla
   useEffect(() => {
     if (selectedUnitId) {
       console.log('Sincronizando selectedUnitId para selectedUnitIds:', selectedUnitId);
-      // Se selectedUnitId for definido, garante que está também em selectedUnitIds
       if (!selectedUnitIds.includes(selectedUnitId)) {
         setSelectedUnitIds([selectedUnitId]);
       }
     }
   }, [selectedUnitId]);
+
+  // Gate de renderização: só renderiza children quando o contexto estiver pronto
+  if (isLoading || !userUnits || selectedUnitId === null) {
+    console.log('UnitProvider ainda carregando ou sem unidade selecionada');
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-sm text-muted-foreground">Carregando unidades...</p>
+        </div>
+      </div>
+    );
+  }
 
   const value = {
     selectedUnitId,
@@ -56,11 +63,11 @@ export function UnitProvider({ children }: { children: React.ReactNode }) {
     selectedUnitIds,
     setSelectedUnitIds,
     availableUnits: userUnits || [],
-    isLoading: isLoading || !initialized,
+    isLoading: false, // Sempre false aqui, pois já passou pelo gate
     error
   };
 
-  console.log('UnitProvider rendering with:', value);
+  console.log('UnitProvider renderizando children com contexto completo:', value);
 
   return (
     <UnitContext.Provider value={value}>
