@@ -22,6 +22,7 @@ export function KanbanBoard() {
   const { 
     data: infiniteData, 
     isLoading, 
+    isFetching,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -39,9 +40,9 @@ export function KanbanBoard() {
 
   // Inicializa a seleção de unidades quando as unidades são carregadas
   useEffect(() => {
-    console.log("Inicializando seleção de unidade");
+    console.log("🏢 [KanbanBoard] Inicializando seleção de unidade");
     if (userUnits && userUnits.length > 0) {
-      console.log("Usuário tem acesso a", userUnits.length, "unidades");
+      console.log("🏢 [KanbanBoard] Usuário tem acesso a", userUnits.length, "unidades");
       
       if (userUnits.length === 1) {
         setSelectedUnitIds([userUnits[0].unit_id]);
@@ -52,7 +53,7 @@ export function KanbanBoard() {
   }, [userUnits]);
 
   useEffect(() => {
-    console.log("Kanban Board mounted ou rota mudou, refazendo busca de dados...");
+    console.log("🔄 [KanbanBoard] Kanban Board mounted ou rota mudou, refazendo busca de dados...");
     refetch();
   }, [location.pathname, refetch]);
 
@@ -61,7 +62,7 @@ export function KanbanBoard() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.altKey && event.key === 'd') {
         setIsDebugMode(prev => !prev);
-        console.log("Modo debug " + (!isDebugMode ? "ativado" : "desativado"));
+        console.log("🐛 [KanbanBoard] Modo debug " + (!isDebugMode ? "ativado" : "desativado"));
       }
     };
     
@@ -79,7 +80,7 @@ export function KanbanBoard() {
     const columns = transformInfiniteClientsToColumnData([allClients], 100)
     
     if (shouldLoadMore(columns, 100)) {
-      console.log('Auto-carregando mais dados para atingir mínimo por coluna')
+      console.log('📊 [KanbanBoard] Auto-carregando mais dados para atingir mínimo por coluna')
       fetchNextPage()
     }
   }, [infiniteData, isFetchingNextPage, hasNextPage, fetchNextPage])
@@ -95,18 +96,20 @@ export function KanbanBoard() {
 
   const allClients = infiniteData?.pages?.flatMap(page => page.clients) || []
   
-  console.log('Total de páginas carregadas:', infiniteData?.pages?.length || 0)
-  console.log('Total de clientes ativos carregados:', allClients.length)
+  console.log('📊 [KanbanBoard] Total de páginas carregadas:', infiniteData?.pages?.length || 0)
+  console.log('📊 [KanbanBoard] Total de clientes ativos carregados:', allClients.length)
   
   const columns = transformInfiniteClientsToColumnData([allClients], 100)
   
-  // Estatísticas por coluna para logs
-  const columnStats = columns.map(col => ({
-    title: col.title,
-    count: col.cards.length
-  })).filter(stat => stat.count > 0)
-  
-  console.log('Estatísticas por coluna:', columnStats)
+  // Estatísticas por coluna para logs (reduzidas)
+  if (isDebugMode) {
+    const columnStats = columns.map(col => ({
+      title: col.title,
+      count: col.cards.length
+    })).filter(stat => stat.count > 0)
+    
+    console.log('📊 [KanbanBoard] Estatísticas por coluna:', columnStats)
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -120,6 +123,7 @@ export function KanbanBoard() {
         selectedUnitIds={selectedUnitIds}
         setSelectedUnitIds={setSelectedUnitIds}
         isMultiUnit={isMultiUnit || false}
+        isSearching={isFetching && !isFetchingNextPage}
       />
 
       {/* Scrollable container for kanban columns */}
@@ -143,7 +147,7 @@ export function KanbanBoard() {
                   onDeleteActivity={deleteActivity}
                   onLoadMore={() => {
                     if (hasNextPage && !isFetchingNextPage) {
-                      console.log('Carregando mais da coluna:', column.title)
+                      console.log('📊 [KanbanBoard] Carregando mais da coluna:', column.title)
                       fetchNextPage()
                     }
                   }}

@@ -7,6 +7,8 @@ import { useCallback, useRef } from 'react';
  * @param fn Função a ser executada com debounce
  * @param delay Tempo de espera em ms
  * @returns Função com debounce aplicado
+ * 
+ * @deprecated Use useDebounce para valores em vez de funções
  */
 export function useDebounceFunction<T extends (...args: any[]) => any>(
   fn: T,
@@ -14,8 +16,7 @@ export function useDebounceFunction<T extends (...args: any[]) => any>(
 ): (...args: Parameters<T>) => void {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Log para demonstrar quando o hook é inicializado
-  console.log('useDebounceFunction inicializado com delay:', delay);
+  console.log('⚠️ [useDebounceFunction] DEPRECATED: Use useDebounce para valores');
   
   return useCallback(
     (...args: Parameters<T>) => {
@@ -24,7 +25,6 @@ export function useDebounceFunction<T extends (...args: any[]) => any>(
       }
       
       timerRef.current = setTimeout(() => {
-        console.log('Executando função após debounce');
         fn(...args);
         timerRef.current = null;
       }, delay);

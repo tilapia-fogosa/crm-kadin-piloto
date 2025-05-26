@@ -1,6 +1,6 @@
 
 import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType, ContactAttempt, EffectiveContact } from "../../types"
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, memo } from "react"
 import { DeleteActivityDialog } from "../../DeleteActivityDialog"
 import { useActivityOperations } from "../../hooks/useActivityOperations"
 import { ColumnHeader } from "./ColumnHeader"
@@ -18,7 +18,7 @@ interface InfiniteKanbanColumnProps {
   hasNextPage?: boolean
 }
 
-export function InfiniteKanbanColumn({ 
+function InfiniteKanbanColumnComponent({ 
   column, 
   index = 0,
   onWhatsAppClick, 
@@ -60,7 +60,7 @@ export function InfiniteKanbanColumn({
     const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100
 
     if (isNearBottom) {
-      console.log('Loading more items for column:', column.title)
+      console.log('📊 [InfiniteKanbanColumn] Loading more items for column:', column.title)
       onLoadMore()
     }
   }, [onLoadMore, hasNextPage, isLoading, column.title])
@@ -90,10 +90,8 @@ export function InfiniteKanbanColumn({
             isOpen={selectedCard?.id === card.id}
             onOpenChange={(open) => {
               if (open) {
-                console.log('Abrindo card sheet para:', card.clientName);
                 setSelectedCard(card)
               } else {
-                console.log('Fechando card sheet para:', selectedCard?.clientName);
                 setSelectedCard(null)
               }
             }}
@@ -121,7 +119,7 @@ export function InfiniteKanbanColumn({
         {isLoading && (
           <div className="flex items-center justify-center p-4">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-            <span className="ml-2">Carregando mais...</span>
+            <span className="ml-2 text-sm text-muted-foreground">Carregando mais...</span>
           </div>
         )}
         
@@ -140,3 +138,15 @@ export function InfiniteKanbanColumn({
     </div>
   )
 }
+
+// Memoizar o componente para evitar re-renders desnecessários
+export const InfiniteKanbanColumn = memo(InfiniteKanbanColumnComponent, (prevProps, nextProps) => {
+  // Re-render apenas se props importantes mudaram
+  return (
+    prevProps.column.id === nextProps.column.id &&
+    prevProps.column.cards.length === nextProps.column.cards.length &&
+    prevProps.isLoading === nextProps.isLoading &&
+    prevProps.hasNextPage === nextProps.hasNextPage &&
+    JSON.stringify(prevProps.column.cards.map(c => c.id)) === JSON.stringify(nextProps.column.cards.map(c => c.id))
+  )
+})

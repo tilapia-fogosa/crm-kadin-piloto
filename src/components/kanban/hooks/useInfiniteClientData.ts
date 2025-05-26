@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 import { useUserUnit } from "./useUserUnit"
 import { ClientSummaryData } from "../utils/types/kanbanTypes"
-import { useDebounceFunction } from "../utils/hooks/useDebounceFunction"
 
 interface InfiniteClientData {
   clients: ClientSummaryData[]
@@ -27,20 +26,12 @@ export function useInfiniteClientData(
   const { data: userUnits } = useUserUnit()
   const { limit = 400 } = paginationOptions
   
-  // Criar função de invalidação com debounce para não sobrecarregar com múltiplas atualizações
-  const debouncedInvalidateQueries = useDebounceFunction(() => {
-    console.log('Invalidando queries de clientes após debounce');
-    queryClient.invalidateQueries({ 
-      queryKey: ['infinite-clients', selectedUnitIds, searchTerm, showPendingOnly] 
-    });
-  }, 300);
-  
   // Hook para gerar um ID único para os canais em caso de remontagem rápida
   const getChannelSuffix = () => Math.random().toString(36).substring(2, 10);
 
   // Configurar subscriptions realtime quando o hook é montado
   useEffect(() => {
-    console.log('Configurando subscriptions realtime para o Kanban');
+    console.log('🔔 [useInfiniteClientData] Configurando subscriptions realtime para o Kanban');
     const unitIdFilter = selectedUnitIds.length > 0 
       ? `unit_id=in.(${selectedUnitIds.join(',')})`
       : undefined;
@@ -57,16 +48,18 @@ export function useInfiniteClientData(
           filter: unitIdFilter
         },
         (payload) => {
-          console.log('Mudança de cliente detectada:', payload);
-          debouncedInvalidateQueries();
+          console.log('🔔 [useInfiniteClientData] Mudança de cliente detectada:', payload);
+          // Invalidação mais seletiva - apenas para essa query específica
+          queryClient.invalidateQueries({ 
+            queryKey: ['infinite-clients', selectedUnitIds, searchTerm, showPendingOnly] 
+          });
         }
       )
       .subscribe((status) => {
-        console.log('Status da subscription clients:', status);
+        console.log('🔔 [useInfiniteClientData] Status da subscription clients:', status);
       });
 
     // 2. Subscription para mudanças na tabela client_activities (filtrado por unidades)
-    // Isto é crítico - atualiza o kanban quando novas atividades são registradas
     const activitiesChannel = supabase
       .channel(`activities-by-unit-${getChannelSuffix()}`)
       .on(
@@ -78,28 +71,31 @@ export function useInfiniteClientData(
           filter: unitIdFilter
         },
         (payload) => {
-          console.log('Mudança de atividade detectada para unidade:', payload);
-          debouncedInvalidateQueries();
+          console.log('🔔 [useInfiniteClientData] Mudança de atividade detectada:', payload);
+          // Invalidação mais seletiva
+          queryClient.invalidateQueries({ 
+            queryKey: ['infinite-clients', selectedUnitIds, searchTerm, showPendingOnly] 
+          });
         }
       )
       .subscribe((status) => {
-        console.log('Status da subscription activities:', status);
+        console.log('🔔 [useInfiniteClientData] Status da subscription activities:', status);
       });
 
     // Cleanup de todas as subscriptions no unmount
     return () => {
-      console.log('Limpando subscriptions realtime do Kanban');
+      console.log('🔔 [useInfiniteClientData] Limpando subscriptions realtime do Kanban');
       supabase.removeChannel(clientsChannel);
       supabase.removeChannel(activitiesChannel);
     };
-  }, [queryClient, selectedUnitIds, searchTerm, showPendingOnly, debouncedInvalidateQueries]);
+  }, [queryClient, selectedUnitIds, searchTerm, showPendingOnly]);
 
   return useInfiniteQuery<InfiniteClientData>({
     queryKey: ['infinite-clients', selectedUnitIds, searchTerm, showPendingOnly],
     queryFn: async (context) => {
       const pageParam = context.pageParam as number || 1;
       
-      console.log('Buscando clientes infinitos de kanban_client_summary', {
+      console.log('📊 [useInfiniteClientData] Buscando clientes infinitos de kanban_client_summary', {
         selectedUnitIds,
         searchTerm,
         showPendingOnly,
@@ -119,7 +115,7 @@ export function useInfiniteClientData(
         unitIds = userUnits?.map(u => u.unit_id) || [];
       }
       
-      console.log('Buscando de kanban_client_summary para unidades:', unitIds);
+      console.log('📊 [useInfiniteClientData] Buscando de kanban_client_summary para unidades:', unitIds);
       
       let query = supabase
         .from('kanban_client_summary')
@@ -148,11 +144,11 @@ export function useInfiniteClientData(
       const { data, error, count } = await query;
 
       if (error) {
-        console.error('Erro ao buscar de kanban_client_summary:', error);
+        console.error('❌ [useInfiniteClientData] Erro ao buscar de kanban_client_summary:', error);
         throw error;
       }
 
-      console.log(`Página ${pageParam}: ${data?.length} clientes recebidos (apenas status ativos do funil)`);
+      console.log(`📊 [useInfiniteClientData] Página ${pageParam}: ${data?.length} clientes recebidos`);
       
       return {
         clients: (data || []) as ClientSummaryData[],
@@ -166,7 +162,9 @@ export function useInfiniteClientData(
       return lastPage.hasNextPage ? lastPage.currentPage + 1 : undefined;
     },
     enabled: userUnits !== undefined && userUnits.length > 0,
-    staleTime: 30000, // 30 segundos
+    staleTime: 2 * 60 * 1000, // 2 minutos - dados ficam "frescos" por mais tempo
     gcTime: 5 * 60 * 1000, // 5 minutos
+    keepPreviousData: true, // CRÍTICO: mantém dados anteriores até novos chegarem
+    refetchOnWindowFocus: false, // Evita refetch ao mudar de aba
   });
 }
