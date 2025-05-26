@@ -76,6 +76,7 @@ export function KanbanBoard() {
   const checkAndLoadMore = useCallback(() => {
     if (!infiniteData?.pages || isFetchingNextPage || !hasNextPage) return
 
+    // CORREÇÃO: Acessar clients corretamente de cada página
     const allClients = infiniteData.pages.flatMap(page => page.clients)
     const columns = transformInfiniteClientsToColumnData([allClients], 100)
     
@@ -94,6 +95,7 @@ export function KanbanBoard() {
     return <div className="flex items-center justify-center p-8">Carregando...</div>
   }
 
+  // CORREÇÃO: Acessar clients corretamente de cada página
   const allClients = infiniteData?.pages?.flatMap(page => page.clients) || []
   
   console.log('📊 [KanbanBoard] Total de páginas carregadas:', infiniteData?.pages?.length || 0)

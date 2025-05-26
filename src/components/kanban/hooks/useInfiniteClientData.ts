@@ -1,5 +1,5 @@
 
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useEffect } from "react"
 import { useUserUnit } from "./useUserUnit"
@@ -164,7 +164,7 @@ export function useInfiniteClientData(
     enabled: userUnits !== undefined && userUnits.length > 0,
     staleTime: 2 * 60 * 1000, // 2 minutos - dados ficam "frescos" por mais tempo
     gcTime: 5 * 60 * 1000, // 5 minutos
-    keepPreviousData: true, // CRÍTICO: mantém dados anteriores até novos chegarem
+    placeholderData: keepPreviousData, // CORREÇÃO: usar placeholderData em vez de keepPreviousData
     refetchOnWindowFocus: false, // Evita refetch ao mudar de aba
   });
 }
