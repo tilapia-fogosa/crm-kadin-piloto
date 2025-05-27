@@ -70,9 +70,10 @@ export function MultiMonthSelector({
   
   // Função para aplicar as seleções
   const handleConfirm = () => {
-    // Se nenhuma seleção, padrão para mês atual
+    // Se nenhuma seleção, padrão para mês atual (corrigido para usar mês atual)
     if (tempSelectedMonths.length === 0) {
-      const currentMonth = new Date().getMonth().toString();
+      const currentMonth = (new Date().getMonth() + 1).toString();
+      console.log('MultiMonthSelector - Aplicando fallback para mês atual:', currentMonth);
       onMonthChange([currentMonth]);
     } else {
       onMonthChange(tempSelectedMonths);

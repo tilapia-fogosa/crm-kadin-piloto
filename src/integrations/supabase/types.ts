@@ -938,30 +938,6 @@ export type Database = {
         }
         Relationships: []
       }
-      estagiarios: {
-        Row: {
-          active: boolean
-          created_at: string
-          id: string
-          nome: string
-          unit_id: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          nome: string
-          unit_id: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          nome?: string
-          unit_id?: string
-        }
-        Relationships: []
-      }
       estoque: {
         Row: {
           created_at: string

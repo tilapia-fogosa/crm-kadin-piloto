@@ -12,9 +12,13 @@ import { calculateTotals } from "./utils/stats.utils";
 export function CommercialDashboard() {
   console.log("Rendering CommercialDashboard");
   
+  // Calcular o mês atual corretamente (JavaScript usa 0-11, mas nossa constante usa 1-12)
+  const currentMonth = (new Date().getMonth() + 1).toString();
+  console.log("Mês atual calculado:", currentMonth);
+  
   // Estado dos filtros com seleção múltipla
   const [selectedSources, setSelectedSources] = useState<string[]>(['todos']);
-  const [selectedMonths, setSelectedMonths] = useState<string[]>([new Date().getMonth().toString()]);
+  const [selectedMonths, setSelectedMonths] = useState<string[]>([currentMonth]);
   const [selectedYears, setSelectedYears] = useState<string[]>([new Date().getFullYear().toString()]);
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>(['todos']);
 
