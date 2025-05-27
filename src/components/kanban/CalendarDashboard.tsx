@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "lucide-react"
@@ -55,6 +54,16 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
 
   console.log('📅 [CalendarDashboard] UserUnits disponíveis:', userUnits?.map(u => ({ id: u.unit_id, name: u.unit_name })))
   console.log('📅 [CalendarDashboard] Agendamentos carregados:', appointments?.length || 0)
+
+  // Mapear AgendaLead para ScheduledAppointment
+  const mappedAppointments = appointments.map(appointment => ({
+    id: appointment.id,
+    client_name: appointment.name,
+    scheduled_date: appointment.scheduled_date,
+    status: 'agendado',
+    unit_id: appointment.unit_id,
+    unit_name: appointment.unit_name
+  }))
 
   const handleReschedule = (clientId: string, clientName: string) => {
     console.log('📅 [CalendarDashboard] Abrindo dialog de reagendamento para:', clientName)
@@ -245,7 +254,7 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
           <CalendarGrid
             currentDate={currentDate}
             isLoadingAppointments={isLoading}
-            scheduledAppointments={appointments}
+            scheduledAppointments={mappedAppointments}
             onReschedule={handleReschedule}
             onConfirmPresence={handleConfirmPresence}
             onCancelAppointment={handleCancelAppointment}
