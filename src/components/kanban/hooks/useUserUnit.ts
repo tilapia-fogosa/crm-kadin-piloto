@@ -70,11 +70,12 @@ export function useUserUnit() {
     if (!rawData) return undefined;
     
     const normalized = rawData.map(({ unit_id, units }) => ({
-      unit_id: units.id, // Pega o ID da unidade aninhada
+      unit_id: unit_id, // CORREÇÃO: usar o unit_id original em vez de units.id
       unit_name: units.name // Adiciona o nome para facilitar uso futuro
     }));
     
     console.log('Dados normalizados:', normalized);
+    console.log('IDs das unidades normalizadas:', normalized.map(u => u.unit_id));
     return normalized;
   }, [rawData]);
 
