@@ -1,9 +1,11 @@
+
 import React from "react"; // Importação explícita do React
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SidebarProvider } from "./components/ui/sidebar";
 import { AuthProvider } from "./contexts/AuthContext";
+import { UnitProvider } from "./contexts/UnitContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import ProtectedLayout from "./components/layouts/ProtectedLayout";
 import LoginPage from "./pages/auth/LoginPage";
@@ -71,10 +73,12 @@ function App() {
                     </ProtectedRoute>
                   } />
 
-                  {/* Protected routes with layout */}
+                  {/* Protected routes with layout - wrapped with UnitProvider */}
                   <Route element={
                     <ProtectedRoute>
-                      <ProtectedLayout />
+                      <UnitProvider>
+                        <ProtectedLayout />
+                      </UnitProvider>
                     </ProtectedRoute>
                   }>
                     <Route path="/dashboard" element={<Index />} />
