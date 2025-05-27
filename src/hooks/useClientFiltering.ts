@@ -14,7 +14,6 @@ type Client = {
   [key: string]: any
 }
 
-// Tipo de data simplificado compatível com componentes NextContactDate/NextContactDateTime
 type DateRange = {
   from: Date | undefined
   to: Date | undefined
@@ -43,12 +42,27 @@ export function useClientFiltering(clients: Client[] = []) {
   const [isFilterActive, setIsFilterActive] = useState(false)
   const itemsPerPage = 100
 
-  console.log('Filtering clients with search term:', searchTerm)
-  console.log('Current page:', currentPage)
-  console.log('Active filters:', filters)
+  console.log('🔍 [useClientFiltering] Processando:', {
+    totalClients: clients.length,
+    searchTerm,
+    currentPage,
+    hasFilters: Object.values(filters).some(f => f !== null)
+  });
 
+  // Calcular opções de filtro baseadas nos clientes disponíveis
   const filterOptions = useMemo(() => {
-    console.log('Calculando opções de filtro a partir de', clients.length, 'clientes');
+    console.log('📋 [useClientFiltering] Calculando opções de filtro para', clients.length, 'clientes');
+    
+    if (!clients || clients.length === 0) {
+      console.log('⚠️ [useClientFiltering] Sem clientes para gerar opções de filtro');
+      return {
+        statuses: [],
+        leadSources: [],
+        originalAds: [],
+        registrationNames: []
+      };
+    }
+
     const statusSet = new Set<string>()
     const leadSourceSet = new Set<string>()
     const originalAdSet = new Set<string>()
@@ -61,123 +75,145 @@ export function useClientFiltering(clients: Client[] = []) {
       if (client.registration_name) registrationNameSet.add(client.registration_name)
     })
 
-    return {
+    const options = {
       statuses: Array.from(statusSet).sort(),
       leadSources: Array.from(leadSourceSet).sort(),
       originalAds: Array.from(originalAdSet).sort(),
       registrationNames: Array.from(registrationNameSet).sort()
-    }
+    };
+
+    console.log('📊 [useClientFiltering] Opções geradas:', {
+      statuses: options.statuses.length,
+      leadSources: options.leadSources.length,
+      originalAds: options.originalAds.length,
+      registrationNames: options.registrationNames.length
+    });
+
+    return options;
   }, [clients])
 
+  // Aplicar filtros aos clientes
   const filteredClients = useMemo(() => {
-    if (!clients.length) return []
+    if (!clients || clients.length === 0) {
+      console.log('⚠️ [useClientFiltering] Sem clientes para filtrar');
+      return [];
+    }
     
-    console.log('Iniciando filtragem de clientes...')
+    console.log('🎯 [useClientFiltering] Iniciando filtragem...');
     
-    let result = clients
+    let result = [...clients]; // Clone para evitar mutação
 
-    if (searchTerm.trim()) {
-      const normalizedSearch = searchTerm.toLowerCase().trim()
-      console.log('Aplicando filtro de texto:', normalizedSearch)
+    // Filtro de texto (nome ou telefone)
+    if (searchTerm && searchTerm.trim()) {
+      const normalizedSearch = searchTerm.toLowerCase().trim();
+      console.log('🔤 [useClientFiltering] Aplicando filtro de texto:', normalizedSearch);
       
+      const beforeFilter = result.length;
       result = result.filter(client => 
         client.name?.toLowerCase().includes(normalizedSearch) ||
         client.phone_number?.toLowerCase().includes(normalizedSearch)
-      )
+      );
+      
+      console.log(`📝 [useClientFiltering] Filtro de texto: ${beforeFilter} → ${result.length} clientes`);
     }
 
+    // Filtro de data
     if (filters.dateRange?.from) {
-      console.log('Aplicando filtro de data:', filters.dateRange)
+      console.log('📅 [useClientFiltering] Aplicando filtro de data:', filters.dateRange);
       
+      const beforeFilter = result.length;
       result = result.filter(client => {
-        // Parseamos a data do cliente
-        const clientDate = parseISO(client.created_at)
+        const clientDate = parseISO(client.created_at);
         if (!isValid(clientDate)) {
-          console.log('Data inválida para cliente:', client.id, client.created_at)
-          return false
+          console.log('⚠️ [useClientFiltering] Data inválida:', client.created_at);
+          return false;
         }
         
-        // Aplicamos startOfDay à data "from" para garantir que comece às 00:00:00
         const fromDate = filters.dateRange?.from 
           ? startOfDay(filters.dateRange.from)
-          : undefined
+          : undefined;
         
-        // Aplicamos endOfDay à data "to" para garantir que termine às 23:59:59.999
         const toDate = filters.dateRange?.to 
           ? endOfDay(filters.dateRange.to) 
-          : undefined
+          : undefined;
         
-        // Verificação da data "from"
-        const isAfterFrom = fromDate 
-          ? clientDate >= fromDate 
-          : true
-          
-        // Verificação da data "to"
-        const isBeforeTo = toDate 
-          ? clientDate <= toDate 
-          : true
+        const isAfterFrom = fromDate ? clientDate >= fromDate : true;
+        const isBeforeTo = toDate ? clientDate <= toDate : true;
         
-        const includeClient = isAfterFrom && isBeforeTo
-        
-        console.log(`Cliente ${client.id} (${format(clientDate, 'dd/MM/yyyy HH:mm:ss')}): ${includeClient ? 'incluído' : 'excluído'} no filtro de ${fromDate ? format(fromDate, 'dd/MM/yyyy HH:mm:ss') : 'sem início'} até ${toDate ? format(toDate, 'dd/MM/yyyy HH:mm:ss') : 'sem fim'}`)
-        
-        return includeClient
-      })
+        return isAfterFrom && isBeforeTo;
+      });
       
-      console.log(`Após filtro de data: ${result.length} clientes encontrados`)
+      console.log(`📅 [useClientFiltering] Filtro de data: ${beforeFilter} → ${result.length} clientes`);
     }
 
+    // Filtros específicos
     if (filters.status) {
-      console.log('Aplicando filtro de status:', filters.status)
-      result = result.filter(client => client.status === filters.status)
+      const beforeFilter = result.length;
+      result = result.filter(client => client.status === filters.status);
+      console.log(`📊 [useClientFiltering] Filtro status: ${beforeFilter} → ${result.length} clientes`);
     }
 
     if (filters.leadSource) {
-      console.log('Aplicando filtro de origem:', filters.leadSource)
-      result = result.filter(client => client.lead_source === filters.leadSource)
+      const beforeFilter = result.length;
+      result = result.filter(client => client.lead_source === filters.leadSource);
+      console.log(`📈 [useClientFiltering] Filtro origem: ${beforeFilter} → ${result.length} clientes`);
     }
 
     if (filters.originalAd) {
-      console.log('Aplicando filtro de anúncio:', filters.originalAd)
-      result = result.filter(client => client.original_ad === filters.originalAd)
+      const beforeFilter = result.length;
+      result = result.filter(client => client.original_ad === filters.originalAd);
+      console.log(`📺 [useClientFiltering] Filtro anúncio: ${beforeFilter} → ${result.length} clientes`);
     }
 
     if (filters.registrationName) {
-      console.log('Aplicando filtro de responsável:', filters.registrationName)
-      result = result.filter(client => client.registration_name === filters.registrationName)
+      const beforeFilter = result.length;
+      result = result.filter(client => client.registration_name === filters.registrationName);
+      console.log(`👤 [useClientFiltering] Filtro responsável: ${beforeFilter} → ${result.length} clientes`);
     }
 
-    console.log(`Filtragem concluída: ${result.length} clientes encontrados`)
-    return result
+    console.log(`✅ [useClientFiltering] Filtragem concluída: ${result.length} clientes finais`);
+    return result;
   }, [clients, searchTerm, filters])
 
+  // Paginação
   const paginatedClients = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    return filteredClients.slice(startIndex, startIndex + itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginated = filteredClients.slice(startIndex, startIndex + itemsPerPage);
+    
+    console.log('📄 [useClientFiltering] Paginação:', {
+      page: currentPage,
+      startIndex,
+      paginatedCount: paginated.length,
+      totalFiltered: filteredClients.length
+    });
+    
+    return paginated;
   }, [filteredClients, currentPage])
 
-  const totalPages = Math.ceil(filteredClients.length / itemsPerPage)
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
 
+  // Atualizar estado de filtro ativo
   useMemo(() => {
     const hasActiveFilters = filters.dateRange?.from !== undefined || 
       filters.status !== null || 
       filters.leadSource !== null || 
       filters.originalAd !== null || 
-      filters.registrationName !== null
+      filters.registrationName !== null;
     
-    setIsFilterActive(hasActiveFilters)
+    setIsFilterActive(hasActiveFilters);
   }, [filters])
 
   const applyFilters = (newFilters: ClientFilters) => {
-    console.log('Aplicando novos filtros:', newFilters)
-    setFilters(newFilters)
-    setCurrentPage(1)
+    console.log('🎛️ [useClientFiltering] Aplicando novos filtros:', newFilters);
+    setFilters(newFilters);
+    setCurrentPage(1); // Reset para primeira página
   }
 
   const resetFilters = () => {
-    console.log('Resetando todos os filtros')
-    setFilters(initialFilters)
-    setCurrentPage(1)
+    console.log('🔄 [useClientFiltering] Resetando todos os filtros');
+    setFilters(initialFilters);
+    setSearchTerm('');
+    setCurrentPage(1);
   }
 
   return {
