@@ -14,10 +14,20 @@ import { getUnitColor, shouldUseWhiteText } from "../../utils/unitColors"
 interface AppointmentItemProps {
   appointment: ScheduledAppointment
   onReschedule: (clientId: string, clientName: string) => void
+  onConfirmPresence: (clientId: string, clientName: string) => void
+  onCancelAppointment: (clientId: string, clientName: string) => void
   unitIndex: number
 }
 
-export function AppointmentItem({ appointment, onReschedule, unitIndex }: AppointmentItemProps) {
+export function AppointmentItem({ 
+  appointment, 
+  onReschedule, 
+  onConfirmPresence,
+  onCancelAppointment,
+  unitIndex 
+}: AppointmentItemProps) {
+  console.log('📅 [AppointmentItem] Renderizando agendamento:', appointment.client_name)
+  
   // Verificação de segurança para índice negativo
   const safeUnitIndex = unitIndex >= 0 ? unitIndex : 0;
   
@@ -25,7 +35,7 @@ export function AppointmentItem({ appointment, onReschedule, unitIndex }: Appoin
   const unitColor = getUnitColor(safeUnitIndex);
   const textColorClass = shouldUseWhiteText(unitColor) ? 'text-white' : 'text-gray-800';
   
-  console.log(`AppointmentItem - Renderizando ${appointment.client_name} com cor da unidade ${safeUnitIndex}:`, unitColor);
+  console.log(`📅 [AppointmentItem] Renderizando ${appointment.client_name} com cor da unidade ${safeUnitIndex}:`, unitColor);
   
   return (
     <div 
@@ -35,7 +45,9 @@ export function AppointmentItem({ appointment, onReschedule, unitIndex }: Appoin
       <span>
         {format(new Date(appointment.scheduled_date), 'HH:mm')} - {appointment.client_name}
       </span>
-      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+      
+      {/* Botão sempre visível - removida a classe opacity-0 group-hover:opacity-100 */}
+      <div className="transition-opacity">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
@@ -50,8 +62,12 @@ export function AppointmentItem({ appointment, onReschedule, unitIndex }: Appoin
             <DropdownMenuItem onClick={() => onReschedule(appointment.id, appointment.client_name)}>
               Remarcar
             </DropdownMenuItem>
-            <DropdownMenuItem>Confirmar Presença</DropdownMenuItem>
-            <DropdownMenuItem>Cancelar Agendamento</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onConfirmPresence(appointment.id, appointment.client_name)}>
+              Confirmar Presença
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onCancelAppointment(appointment.id, appointment.client_name)}>
+              Cancelar Agendamento
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
