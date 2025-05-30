@@ -1617,44 +1617,83 @@ export type Database = {
       }
       produtividade_ah: {
         Row: {
-          aluno_id: string
           apostila: string | null
           comentario: string | null
           created_at: string
           erros: number | null
           exercicios: number | null
           id: string
+          pessoa_id: string
           professor_correcao: string | null
+          tipo_pessoa: string
           updated_at: string
         }
         Insert: {
-          aluno_id: string
           apostila?: string | null
           comentario?: string | null
           created_at?: string
           erros?: number | null
           exercicios?: number | null
           id?: string
+          pessoa_id: string
           professor_correcao?: string | null
+          tipo_pessoa?: string
           updated_at?: string
         }
         Update: {
-          aluno_id?: string
           apostila?: string | null
           comentario?: string | null
           created_at?: string
           erros?: number | null
           exercicios?: number | null
+          id?: string
+          pessoa_id?: string
+          professor_correcao?: string | null
+          tipo_pessoa?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      produtividade_ah_funcionarios: {
+        Row: {
+          apostila: string | null
+          comentario: string | null
+          created_at: string
+          erros: number | null
+          exercicios: number | null
+          funcionario_id: string
+          id: string
+          professor_correcao: string | null
+          updated_at: string
+        }
+        Insert: {
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string
+          erros?: number | null
+          exercicios?: number | null
+          funcionario_id: string
+          id?: string
+          professor_correcao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string
+          erros?: number | null
+          exercicios?: number | null
+          funcionario_id?: string
           id?: string
           professor_correcao?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "produtividade_ah_aluno_id_fkey"
-            columns: ["aluno_id"]
+            foreignKeyName: "produtividade_ah_funcionarios_funcionario_id_fkey"
+            columns: ["funcionario_id"]
             isOneToOne: false
-            referencedRelation: "alunos"
+            referencedRelation: "funcionarios"
             referencedColumns: ["id"]
           },
         ]

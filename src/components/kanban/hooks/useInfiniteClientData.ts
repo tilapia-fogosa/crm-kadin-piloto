@@ -130,10 +130,15 @@ export function useInfiniteClientData(
         query = query.or(`name.ilike.%${normalizedSearch}%,phone_number.ilike.%${normalizedSearch}%`);
       }
 
-      // Filtro de pendentes (next_contact_date no passado/hoje OU nulo)
+      // Filtro de pendentes (next_contact_date até o final do dia atual OU nulo)
       if (showPendingOnly) {
-        const today = new Date().toISOString();
-        query = query.or(`next_contact_date.lte.${today},next_contact_date.is.null`);
+        // CORREÇÃO: Usar final do dia atual (23:59:59) em vez do timestamp exato
+        const endOfToday = new Date();
+        endOfToday.setHours(23, 59, 59, 999);
+        const endOfTodayISO = endOfToday.toISOString();
+        
+        console.log('📊 [useInfiniteClientData] Aplicando filtro de pendentes até:', endOfTodayISO);
+        query = query.or(`next_contact_date.lte.${endOfTodayISO},next_contact_date.is.null`);
       }
 
       // Adicionar paginação
