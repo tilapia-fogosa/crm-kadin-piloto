@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { LeadConversionFunnel } from '@/components/dashboard/LeadConversionFunnel';
 import { ActivityFunnelStats } from '@/components/dashboard/ActivityFunnelStats';
+import { AttendanceRateStats } from '@/components/dashboard/AttendanceRateStats';
 import { MultiUnitSelector } from '@/components/dashboard/MultiUnitSelector';
 
 function Index() {
@@ -44,6 +45,9 @@ function Index() {
           
           {/* Estatísticas de atividades do funil */}
           <ActivityFunnelStats unitIds={selectedUnitIds} />
+          
+          {/* Nova seção: Taxa de Comparecimento */}
+          <AttendanceRateStats unitIds={selectedUnitIds} />
           
           {/* Disclaimer sobre atividades */}
           <Alert variant="destructive" className="border-red-500 bg-red-50">

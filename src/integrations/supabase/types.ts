@@ -2765,6 +2765,16 @@ export type Database = {
           faltas_recorrentes: boolean
         }[]
       }
+      get_attendance_rate_stats: {
+        Args: {
+          p_start_date: string
+          p_end_date: string
+          p_prev_start_date: string
+          p_prev_end_date: string
+          p_unit_ids: string[]
+        }
+        Returns: Json
+      }
       get_commercial_unit_stats: {
         Args: {
           p_start_date: string
@@ -2844,6 +2854,10 @@ export type Database = {
           p_prev_end_date: string
           p_unit_ids: string[]
         }
+        Returns: Json
+      }
+      get_funcionario_devolutiva: {
+        Args: { p_funcionario_id: string; p_data_inicial: string }
         Returns: Json
       }
       get_leads_stats: {
