@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { toast } from "@/components/ui/use-toast"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -39,8 +38,8 @@ export default function ClientsPage() {
       }
 
       try {
-        // Query simplificada primeiro, sem joins complexos
-        console.log('📊 [ClientsPage Query] Executando query básica...');
+        // Query otimizada SEM client_activities - lazy loading implementado
+        console.log('📊 [ClientsPage Query] Executando query otimizada sem atividades...');
         
         const { data, error, count } = await supabase
           .from('clients')
@@ -80,7 +79,7 @@ export default function ClientsPage() {
           return [];
         }
 
-        console.log('✅ [ClientsPage Query] Dados recebidos com sucesso:', {
+        console.log('✅ [ClientsPage Query] Dados recebidos com sucesso (SEM atividades):', {
           totalClients: data.length,
           firstClient: data[0]?.name || 'N/A',
           unitId: selectedUnitId
@@ -104,8 +103,8 @@ export default function ClientsPage() {
     },
     enabled: !!selectedUnitId, // Só executa se tiver selectedUnitId
     retry: 3, // Tentar 3 vezes em caso de erro
-    staleTime: 0, // Sempre buscar dados frescos
-    gcTime: 0, // Não usar cache
+    staleTime: 2 * 60 * 1000, // 2 minutos - dados ficam "frescos" por mais tempo
+    gcTime: 5 * 60 * 1000, // 5 minutos
     refetchOnWindowFocus: false,
     refetchOnMount: true,
   });

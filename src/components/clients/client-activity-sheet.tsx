@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { format } from "date-fns"
 import { 
   Sheet, 
@@ -10,21 +10,13 @@ import {
 } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
-import { Phone, Copy, X } from "lucide-react"
+import { Phone, Copy, X, Loader2, RefreshCw, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getActivityBadge, getContactType } from "@/components/kanban/utils/activityUtils"
+import { useClientActivitiesForSheet } from "@/hooks/useClientActivitiesForSheet"
+import { Skeleton } from "@/components/ui/skeleton"
 
-// Define os tipos para atividades e clientes
-interface ClientActivity {
-  id: string
-  tipo_atividade: string
-  tipo_contato: string
-  created_at: string
-  notes: string | null
-  active: boolean
-  next_contact_date?: string | null
-}
-
+// Define o tipo básico do cliente para o sheet
 interface Client {
   id: string
   name: string
@@ -32,7 +24,6 @@ interface Client {
   lead_source: string
   email?: string
   status: string
-  client_activities?: ClientActivity[]
 }
 
 interface ClientActivitySheetProps {
@@ -42,28 +33,17 @@ interface ClientActivitySheetProps {
 }
 
 export function ClientActivitySheet({ client, isOpen, setIsOpen }: ClientActivitySheetProps) {
+  console.log('🎭 [ClientActivitySheet] Renderizado para cliente:', client?.name, 'isOpen:', isOpen)
+  
   const { toast } = useToast()
-  const [activities, setActivities] = useState<ClientActivity[]>([])
-
-  // Log para rastreamento do fluxo
-  console.log('ClientActivitySheet renderizado para cliente:', client?.name)
-
-  // Processar as atividades quando o cliente mudar
-  useEffect(() => {
-    if (client && client.client_activities) {
-      // Filtra apenas atividades ativas e ordena por data (mais recente primeiro)
-      const activeActivities = client.client_activities
-        .filter(activity => activity.active)
-        .sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )
-      
-      console.log(`${activeActivities.length} atividades ativas encontradas`)
-      setActivities(activeActivities)
-    } else {
-      setActivities([])
-    }
-  }, [client])
+  
+  // Usar o hook de lazy loading - só busca quando sheet está aberto
+  const { 
+    data: activities, 
+    isLoading, 
+    error,
+    refetch 
+  } = useClientActivitiesForSheet(client?.id, isOpen)
 
   // Função para copiar o número de telefone
   const handleCopyPhone = () => {
@@ -84,6 +64,12 @@ export function ClientActivitySheet({ client, isOpen, setIsOpen }: ClientActivit
           variant: "destructive",
         })
       })
+  }
+
+  // Função para tentar novamente em caso de erro
+  const handleRetry = () => {
+    console.log('🔄 [ClientActivitySheet] Tentando recarregar atividades')
+    refetch()
   }
 
   // Formata a data para exibição
@@ -131,38 +117,91 @@ export function ClientActivitySheet({ client, isOpen, setIsOpen }: ClientActivit
         </SheetHeader>
 
         <div className="mt-6">
-          <h3 className="font-semibold mb-2">Histórico de Atividades</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold">Histórico de Atividades</h3>
+            {!isLoading && !error && (
+              <Button onClick={handleRetry} size="sm" variant="ghost">
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          
           <ScrollArea className="h-[500px] w-full rounded-md border p-4">
-            {activities.length > 0 ? (
-              activities.map((activity) => (
-                <div key={activity.id} className="mb-4 text-sm space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="flex items-center justify-center bg-primary text-primary-foreground font-medium rounded min-w-[2rem] h-6 text-xs">
-                      {getActivityBadge(activity.tipo_atividade)}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {getContactType(activity.tipo_contato)}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {formatDate(activity.created_at)}
-                    </span>
-                  </div>
-                  {activity.notes && (
-                    <p className="text-sm text-muted-foreground ml-10">
-                      {activity.notes}
-                    </p>
-                  )}
-                  {activity.next_contact_date && (
-                    <p className="text-xs text-muted-foreground ml-10">
-                      Próximo contato: {formatDate(activity.next_contact_date)}
-                    </p>
-                  )}
+            {isLoading && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  <span className="text-sm text-muted-foreground">Carregando atividades...</span>
                 </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Nenhuma atividade registrada
-              </p>
+                {/* Skeleton loading */}
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-6 w-12" />
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                    <Skeleton className="h-4 w-full ml-10" />
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {error && (
+              <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                <AlertCircle className="h-8 w-8 text-red-500" />
+                <div className="text-center">
+                  <p className="text-red-700 font-medium">Erro ao carregar atividades</p>
+                  <p className="text-sm text-red-600 mt-1">
+                    Não foi possível carregar as atividades deste cliente
+                  </p>
+                </div>
+                <Button onClick={handleRetry} variant="outline" size="sm">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Tentar novamente
+                </Button>
+              </div>
+            )}
+            
+            {!isLoading && !error && activities && activities.length > 0 && (
+              <div className="space-y-4">
+                {activities.map((activity) => (
+                  <div key={activity.id} className="mb-4 text-sm space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center bg-primary text-primary-foreground font-medium rounded min-w-[2rem] h-6 text-xs">
+                        {getActivityBadge(activity.tipo_atividade)}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {getContactType(activity.tipo_contato)}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {formatDate(activity.created_at)}
+                      </span>
+                    </div>
+                    {activity.notes && (
+                      <p className="text-sm text-muted-foreground ml-10">
+                        {activity.notes}
+                      </p>
+                    )}
+                    {activity.next_contact_date && (
+                      <p className="text-xs text-muted-foreground ml-10">
+                        Próximo contato: {formatDate(activity.next_contact_date)}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {!isLoading && !error && activities && activities.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-8 space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma atividade registrada
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  As atividades aparecerão aqui quando forem criadas
+                </p>
+              </div>
             )}
           </ScrollArea>
         </div>
