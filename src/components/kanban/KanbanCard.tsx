@@ -1,5 +1,5 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Phone, Clock, Calendar } from "lucide-react";
 import { KanbanCard as KanbanCardType } from "./types";
@@ -30,7 +30,7 @@ const getNextContactColor = (nextContactDate: Date | null): string => {
   return "text-[#FF3333]";
 }
 
-export function KanbanCard({
+function KanbanCardComponent({
   card,
   onClick,
   onWhatsAppClick,
@@ -168,3 +168,37 @@ export function KanbanCard({
     </Card>
   );
 }
+
+// Memoizar o componente comparando apenas campos relevantes que afetam a renderização
+export const KanbanCard = memo(KanbanCardComponent, (prevProps, nextProps) => {
+  const prevCard = prevProps.card;
+  const nextCard = nextProps.card;
+  
+  // Comparação otimizada usando timestamp se disponível
+  if (prevCard.lastUpdated && nextCard.lastUpdated) {
+    const isEqual = prevCard.lastUpdated === nextCard.lastUpdated;
+    if (!isEqual) {
+      console.log(`🔄 [KanbanCard] Card ${nextCard.clientName} atualizado - timestamp mudou`);
+    }
+    return isEqual;
+  }
+  
+  // Fallback para comparação detalhada se não houver timestamp
+  const isEqual = (
+    prevCard.id === nextCard.id &&
+    prevCard.clientName === nextCard.clientName &&
+    prevCard.nextContactDate === nextCard.nextContactDate &&
+    prevCard.scheduledDate === nextCard.scheduledDate &&
+    prevCard.valorizationConfirmed === nextCard.valorizationConfirmed &&
+    prevCard.leadSource === nextCard.leadSource &&
+    prevCard.registrationName === nextCard.registrationName &&
+    prevCard.phoneNumber === nextCard.phoneNumber &&
+    JSON.stringify(prevCard.activities) === JSON.stringify(nextCard.activities)
+  );
+  
+  if (!isEqual) {
+    console.log(`🔄 [KanbanCard] Card ${nextCard.clientName} atualizado - campos mudaram`);
+  }
+  
+  return isEqual;
+});

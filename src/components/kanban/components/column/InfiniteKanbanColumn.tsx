@@ -141,12 +141,43 @@ function InfiniteKanbanColumnComponent({
 
 // Memoizar o componente para evitar re-renders desnecessários
 export const InfiniteKanbanColumn = memo(InfiniteKanbanColumnComponent, (prevProps, nextProps) => {
-  // Re-render apenas se props importantes mudaram
-  return (
-    prevProps.column.id === nextProps.column.id &&
-    prevProps.column.cards.length === nextProps.column.cards.length &&
-    prevProps.isLoading === nextProps.isLoading &&
-    prevProps.hasNextPage === nextProps.hasNextPage &&
-    JSON.stringify(prevProps.column.cards.map(c => c.id)) === JSON.stringify(nextProps.column.cards.map(c => c.id))
-  )
+  // Verificar se props básicas mudaram
+  if (
+    prevProps.column.id !== nextProps.column.id ||
+    prevProps.column.cards.length !== nextProps.column.cards.length ||
+    prevProps.isLoading !== nextProps.isLoading ||
+    prevProps.hasNextPage !== nextProps.hasNextPage
+  ) {
+    console.log('🔄 [InfiniteKanbanColumn] Props básicas mudaram - re-render necessário');
+    return false; // Re-render necessário
+  }
+
+  // Verificar se algum card mudou em campos relevantes
+  for (let i = 0; i < prevProps.column.cards.length; i++) {
+    const prevCard = prevProps.column.cards[i];
+    const nextCard = nextProps.column.cards[i];
+    
+    // Usar timestamp se disponível para comparação mais eficiente
+    if (prevCard.lastUpdated && nextCard.lastUpdated) {
+      if (prevCard.lastUpdated !== nextCard.lastUpdated) {
+        console.log(`🔄 [InfiniteKanbanColumn] Card ${nextCard.clientName} mudou (timestamp) - re-render necessário`);
+        return false; // Re-render necessário
+      }
+    } else {
+      // Fallback para comparação detalhada
+      if (
+        prevCard.id !== nextCard.id ||
+        prevCard.nextContactDate !== nextCard.nextContactDate ||
+        prevCard.scheduledDate !== nextCard.scheduledDate ||
+        prevCard.valorizationConfirmed !== nextCard.valorizationConfirmed ||
+        JSON.stringify(prevCard.activities) !== JSON.stringify(nextCard.activities)
+      ) {
+        console.log(`🔄 [InfiniteKanbanColumn] Card ${nextCard.clientName} mudou (campos) - re-render necessário`);
+        return false; // Re-render necessário
+      }
+    }
+  }
+
+  console.log('⚡ [InfiniteKanbanColumn] Nenhuma mudança detectada - mantendo cache');
+  return true; // Sem mudanças, não re-render
 })

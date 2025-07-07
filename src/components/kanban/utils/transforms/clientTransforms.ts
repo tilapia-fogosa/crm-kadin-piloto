@@ -29,6 +29,8 @@ export const transformClientToCard = (client: any) => {
     valorizationConfirmed: client.valorization_confirmed || false,
     registrationName: client.registration_name,
     unitId: client.unit_id,
-    unitName: client.unit_name
+    unitName: client.unit_name,
+    // Adicionar timestamp da última atualização para detectar mudanças
+    lastUpdated: client.updated_at || client.created_at
   }
 }

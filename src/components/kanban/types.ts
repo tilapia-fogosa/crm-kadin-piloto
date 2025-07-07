@@ -23,6 +23,7 @@ export type KanbanCard = {
   registrationName?: string
   unitId?: string
   unitName?: string
+  lastUpdated?: string // Timestamp da última atualização
 }
 
 export type ContactAttempt = {
