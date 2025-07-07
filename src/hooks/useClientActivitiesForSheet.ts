@@ -52,12 +52,25 @@ export function useClientActivitiesForSheet(
           table: 'client_activities',
           filter: `client_id=eq.${clientId}`
         },
-        (payload) => {
+        async (payload) => {
           console.log('🔔 [useClientActivitiesForSheet] Mudança detectada:', payload)
           
-          // Invalidar cache imediatamente para refrescar dados
-          queryClient.invalidateQueries({ 
+          // Invalidar cache do sheet imediatamente
+          await queryClient.invalidateQueries({ 
             queryKey: ['client-activities-sheet', clientId] 
+          })
+          
+          // NOVO: Também invalidar o cache do infinite-clients para forçar atualização do kanban
+          console.log('🔄 [useClientActivitiesForSheet] Invalidando cache do kanban também...')
+          await queryClient.invalidateQueries({ 
+            queryKey: ['infinite-clients'],
+            refetchType: 'all'
+          })
+          
+          // Forçar refetch do kanban
+          await queryClient.refetchQueries({
+            queryKey: ['infinite-clients'],
+            type: 'all'
           })
         }
       )
@@ -119,8 +132,10 @@ export function useClientActivitiesForSheet(
       return data || []
     },
     enabled: Boolean(clientId) && debouncedIsOpen, // Só executa se tiver clientId E sheet aberto
-    staleTime: debouncedIsOpen ? 0 : 5 * 60 * 1000, // Sempre fresh quando aberto, 5min cache quando fechado
-    gcTime: 10 * 60 * 1000, // 10 minutos no garbage collector
-    refetchOnWindowFocus: false, // Evita refetch desnecessário
+    staleTime: 0, // SEMPRE fresh para sincronizar com kanban
+    gcTime: 30 * 1000, // 30 segundos - cache mais agressivo
+    refetchOnWindowFocus: true, // Refetch ao mudar de aba para manter sincronizado
+    refetchOnMount: 'always', // Sempre refetch ao montar
+    networkMode: 'always', // Sempre tentar network requests
   })
 }

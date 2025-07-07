@@ -41,24 +41,53 @@ export function useInfiniteClientData(
 
     console.log('🔔 [useInfiniteClientData] Configurando subscriptions realtime OTIMIZADAS');
     
-    // Invalidação agressiva com debug
+    // Invalidação super agressiva com debug e múltiplas estratégias
     const invalidateWithForce = async (reason: string, payload?: any) => {
-      console.log(`🔄 [REALTIME] ${reason}:`, payload);
+      console.log(`🔄 [REALTIME BRUTE FORCE] ${reason}:`, payload);
       
-      // Invalidar e forçar refetch imediatamente
-      await queryClient.invalidateQueries({ 
-        queryKey: ['infinite-clients'],
-        refetchType: 'active'
-      });
-      
-      // Timeout para garantir execução
-      setTimeout(() => {
-        console.log('🔄 [REALTIME] Refetch forçado após timeout');
-        queryClient.refetchQueries({
+      try {
+        // Estratégia 1: Limpar cache completamente
+        console.log('🧹 [REALTIME] Removendo queries antigas...');
+        await queryClient.removeQueries({ queryKey: ['infinite-clients'] });
+        
+        // Estratégia 2: Invalidar com força total
+        console.log('🔄 [REALTIME] Invalidando com refetchType ALL...');
+        await queryClient.invalidateQueries({ 
           queryKey: ['infinite-clients'],
-          type: 'active'
+          refetchType: 'all'
         });
-      }, 100);
+        
+        // Estratégia 3: Refetch forçado imediato
+        console.log('💪 [REALTIME] Forçando refetch imediato...');
+        await queryClient.refetchQueries({
+          queryKey: ['infinite-clients'],
+          type: 'all'
+        });
+        
+        // Estratégia 4: Timeout de segurança para refetch adicional
+        setTimeout(async () => {
+          console.log('⏰ [REALTIME] Timeout de segurança - refetch adicional');
+          await queryClient.refetchQueries({
+            queryKey: ['infinite-clients'],
+            type: 'all'
+          });
+        }, 200);
+        
+        // Estratégia 5: Segundo timeout mais agressivo
+        setTimeout(async () => {
+          console.log('🚨 [REALTIME] Timeout agressivo - clearing + refetch');
+          queryClient.clear(); // Nuclear option
+          await queryClient.refetchQueries({
+            queryKey: ['infinite-clients'],
+            type: 'all'
+          });
+        }, 500);
+        
+      } catch (error) {
+        console.error('❌ [REALTIME] Erro na invalidação:', error);
+        // Fallback nuclear
+        queryClient.clear();
+      }
     };
 
     // Canal único estável para evitar reconexões
@@ -169,11 +198,12 @@ export function useInfiniteClientData(
       return lastPage.hasNextPage ? lastPage.currentPage + 1 : undefined;
     },
     enabled: userUnits !== undefined && userUnits.length > 0,
-    staleTime: 0, // CORREÇÃO: Sempre considerar dados stale para forçar atualizações
-    gcTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 0, // SEMPRE considerar dados stale para forçar atualizações
+    gcTime: 30 * 1000, // 30 segundos - cache mais agressivo
     placeholderData: keepPreviousData, 
-    refetchOnWindowFocus: false, // Evita refetch ao mudar de aba
-    refetchOnMount: 'always', // Sempre refetch ao montar
-    refetchInterval: false, // Evita polling desnecessário
+    refetchOnWindowFocus: true, // Habilita refetch ao mudar de aba para garantir dados frescos
+    refetchOnMount: 'always', // SEMPRE refetch ao montar
+    refetchInterval: false, // Sem polling desnecessário
+    networkMode: 'always', // Sempre tentar network requests
   });
 }
