@@ -32,69 +32,70 @@ export function useInfiniteClientData(
     showPendingOnly 
   })
   
-  // Hook para gerar um ID único para os canais em caso de remontagem rápida
-  const getChannelSuffix = () => Math.random().toString(36).substring(2, 10);
-
-  // Configurar subscriptions realtime quando o hook é montado
+  // Configurar subscriptions realtime quando o hook é montado - ESTABILIZADO
   useEffect(() => {
-    console.log('🔔 [useInfiniteClientData] Configurando subscriptions realtime para o Kanban');
-    const unitIdFilter = selectedUnitIds.length > 0 
-      ? `unit_id=in.(${selectedUnitIds.join(',')})`
-      : undefined;
+    if (!userUnits || userUnits.length === 0) {
+      console.log('🔔 [useInfiniteClientData] Aguardando userUnits...');
+      return;
+    }
+
+    console.log('🔔 [useInfiniteClientData] Configurando subscriptions realtime OTIMIZADAS');
     
-    // 1. Subscription para mudanças na tabela clients (filtrado por unidades)
-    const clientsChannel = supabase
-      .channel(`clients-by-unit-${getChannelSuffix()}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'clients',
-          filter: unitIdFilter
-        },
-        (payload) => {
-          console.log('🔔 [useInfiniteClientData] Mudança de cliente detectada:', payload);
-          // Invalidação mais seletiva - apenas para essa query específica
-          queryClient.invalidateQueries({ 
-            queryKey: ['infinite-clients', selectedUnitIds, searchTerm, showPendingOnly] 
-          });
-        }
-      )
-      .subscribe((status) => {
-        console.log('🔔 [useInfiniteClientData] Status da subscription clients:', status);
+    // Invalidação agressiva com debug
+    const invalidateWithForce = async (reason: string, payload?: any) => {
+      console.log(`🔄 [REALTIME] ${reason}:`, payload);
+      
+      // Invalidar e forçar refetch imediatamente
+      await queryClient.invalidateQueries({ 
+        queryKey: ['infinite-clients'],
+        refetchType: 'active'
       });
-
-    // 2. Subscription para mudanças na tabela client_activities (filtrado por unidades)
-    const activitiesChannel = supabase
-      .channel(`activities-by-unit-${getChannelSuffix()}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'client_activities',
-          filter: unitIdFilter
-        },
-        (payload) => {
-          console.log('🔔 [useInfiniteClientData] Mudança de atividade detectada:', payload);
-          // Invalidação mais seletiva
-          queryClient.invalidateQueries({ 
-            queryKey: ['infinite-clients', selectedUnitIds, searchTerm, showPendingOnly] 
-          });
-        }
-      )
-      .subscribe((status) => {
-        console.log('🔔 [useInfiniteClientData] Status da subscription activities:', status);
-      });
-
-    // Cleanup de todas as subscriptions no unmount
-    return () => {
-      console.log('🔔 [useInfiniteClientData] Limpando subscriptions realtime do Kanban');
-      supabase.removeChannel(clientsChannel);
-      supabase.removeChannel(activitiesChannel);
+      
+      // Timeout para garantir execução
+      setTimeout(() => {
+        console.log('🔄 [REALTIME] Refetch forçado após timeout');
+        queryClient.refetchQueries({
+          queryKey: ['infinite-clients'],
+          type: 'active'
+        });
+      }, 100);
     };
-  }, [queryClient, selectedUnitIds, searchTerm, showPendingOnly]);
+
+    // Canal único estável para evitar reconexões
+    const stableChannelId = `kanban-realtime-${Date.now()}`;
+    
+    const channel = supabase
+      .channel(stableChannelId)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'clients'
+        },
+        (payload) => invalidateWithForce('Cliente alterado', payload)
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'client_activities'
+        },
+        (payload) => invalidateWithForce('Atividade alterada', payload)
+      )
+      .subscribe((status) => {
+        console.log(`🔔 [useInfiniteClientData] Status da subscription ${stableChannelId}:`, status);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ [REALTIME] Subscription ativa e pronta!');
+        }
+      });
+
+    return () => {
+      console.log('🔔 [useInfiniteClientData] Limpando subscription:', stableChannelId);
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, userUnits]); // Dependências mínimas e estáveis
 
   return useInfiniteQuery<InfiniteClientData>({
     queryKey: ['infinite-clients', selectedUnitIds, searchTerm, showPendingOnly],
@@ -168,9 +169,11 @@ export function useInfiniteClientData(
       return lastPage.hasNextPage ? lastPage.currentPage + 1 : undefined;
     },
     enabled: userUnits !== undefined && userUnits.length > 0,
-    staleTime: 2 * 60 * 1000, // 2 minutos - dados ficam "frescos" por mais tempo
+    staleTime: 0, // CORREÇÃO: Sempre considerar dados stale para forçar atualizações
     gcTime: 5 * 60 * 1000, // 5 minutos
-    placeholderData: keepPreviousData, // CORREÇÃO: usar placeholderData em vez de keepPreviousData
+    placeholderData: keepPreviousData, 
     refetchOnWindowFocus: false, // Evita refetch ao mudar de aba
+    refetchOnMount: 'always', // Sempre refetch ao montar
+    refetchInterval: false, // Evita polling desnecessário
   });
 }

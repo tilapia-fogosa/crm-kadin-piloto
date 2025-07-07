@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
       alerta_evasao: {
@@ -137,7 +142,7 @@ export type Database = {
             foreignKeyName: "alertas_falta_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
-            referencedRelation: "unidades"
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -206,6 +211,7 @@ export type Database = {
           dias_apostila: number | null
           dias_supera: number | null
           email: string | null
+          faltas_consecutivas: number
           id: string
           idade: number | null
           indice: string | null
@@ -224,6 +230,7 @@ export type Database = {
           ultima_pagina: number | null
           ultimo_nivel: string | null
           unit_id: string
+          valor_mensalidade: number | null
           vencimento_contrato: string | null
         }
         Insert: {
@@ -238,6 +245,7 @@ export type Database = {
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
+          faltas_consecutivas?: number
           id?: string
           idade?: number | null
           indice?: string | null
@@ -256,6 +264,7 @@ export type Database = {
           ultima_pagina?: number | null
           ultimo_nivel?: string | null
           unit_id: string
+          valor_mensalidade?: number | null
           vencimento_contrato?: string | null
         }
         Update: {
@@ -270,6 +279,7 @@ export type Database = {
           dias_apostila?: number | null
           dias_supera?: number | null
           email?: string | null
+          faltas_consecutivas?: number
           id?: string
           idade?: number | null
           indice?: string | null
@@ -288,6 +298,7 @@ export type Database = {
           ultima_pagina?: number | null
           ultimo_nivel?: string | null
           unit_id?: string
+          valor_mensalidade?: number | null
           vencimento_contrato?: string | null
         }
         Relationships: [
@@ -299,6 +310,105 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      alunos_backup: {
+        Row: {
+          active: boolean | null
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
+          codigo: string | null
+          coordenador_responsavel: string | null
+          created_at: string | null
+          curso: string | null
+          data_onboarding: string | null
+          dias_apostila: number | null
+          dias_supera: number | null
+          email: string | null
+          id: string | null
+          idade: number | null
+          indice: string | null
+          is_funcionario: boolean | null
+          matricula: string | null
+          motivo_procura: string | null
+          niveldesafio: string | null
+          nome: string | null
+          percepcao_coordenador: string | null
+          pontos_atencao: string | null
+          telefone: string | null
+          texto_devolutiva: string | null
+          turma_id: string | null
+          ultima_correcao_ah: string | null
+          ultima_falta: string | null
+          ultima_pagina: number | null
+          ultimo_nivel: string | null
+          unit_id: string | null
+          vencimento_contrato: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
+          codigo?: string | null
+          coordenador_responsavel?: string | null
+          created_at?: string | null
+          curso?: string | null
+          data_onboarding?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
+          id?: string | null
+          idade?: number | null
+          indice?: string | null
+          is_funcionario?: boolean | null
+          matricula?: string | null
+          motivo_procura?: string | null
+          niveldesafio?: string | null
+          nome?: string | null
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          telefone?: string | null
+          texto_devolutiva?: string | null
+          turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultimo_nivel?: string | null
+          unit_id?: string | null
+          vencimento_contrato?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
+          codigo?: string | null
+          coordenador_responsavel?: string | null
+          created_at?: string | null
+          curso?: string | null
+          data_onboarding?: string | null
+          dias_apostila?: number | null
+          dias_supera?: number | null
+          email?: string | null
+          id?: string | null
+          idade?: number | null
+          indice?: string | null
+          is_funcionario?: boolean | null
+          matricula?: string | null
+          motivo_procura?: string | null
+          niveldesafio?: string | null
+          nome?: string | null
+          percepcao_coordenador?: string | null
+          pontos_atencao?: string | null
+          telefone?: string | null
+          texto_devolutiva?: string | null
+          turma_id?: string | null
+          ultima_correcao_ah?: string | null
+          ultima_falta?: string | null
+          ultima_pagina?: number | null
+          ultimo_nivel?: string | null
+          unit_id?: string | null
+          vencimento_contrato?: string | null
+        }
+        Relationships: []
       }
       apostilas: {
         Row: {
@@ -839,6 +949,106 @@ export type Database = {
           },
           {
             foreignKeyName: "fk_clients_unit_id"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients_backup: {
+        Row: {
+          active: boolean
+          age_range: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          email: string | null
+          id: string
+          lead_quality_score: number | null
+          lead_source: string
+          meta_id: string | null
+          name: string
+          next_contact_date: string | null
+          observations: string | null
+          original_ad: string | null
+          original_adset: string | null
+          phone_number: string
+          registration_cpf: string | null
+          registration_name: string | null
+          scheduled_date: string | null
+          status: string
+          unit_id: string | null
+          updated_at: string
+          valorization_confirmed: boolean | null
+        }
+        Insert: {
+          active?: boolean
+          age_range?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          lead_quality_score?: number | null
+          lead_source: string
+          meta_id?: string | null
+          name: string
+          next_contact_date?: string | null
+          observations?: string | null
+          original_ad?: string | null
+          original_adset?: string | null
+          phone_number: string
+          registration_cpf?: string | null
+          registration_name?: string | null
+          scheduled_date?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+          valorization_confirmed?: boolean | null
+        }
+        Update: {
+          active?: boolean
+          age_range?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          lead_quality_score?: number | null
+          lead_source?: string
+          meta_id?: string | null
+          name?: string
+          next_contact_date?: string | null
+          observations?: string | null
+          original_ad?: string | null
+          original_adset?: string | null
+          phone_number?: string
+          registration_cpf?: string | null
+          registration_name?: string | null
+          scheduled_date?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+          valorization_confirmed?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_backup_lead_source_fkey"
+            columns: ["lead_source"]
+            isOneToOne: false
+            referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_backup_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_backup_unit_id_fkey1"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
@@ -1559,9 +1769,53 @@ export type Database = {
           },
         ]
       }
+      posts: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          published_at: string | null
+          scheduled_for: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          scheduled_for: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          scheduled_for?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produtividade_abaco: {
         Row: {
-          aluno_id: string
+          aluno_nome: string | null
           apostila: string | null
           comentario: string | null
           created_at: string
@@ -1571,12 +1825,15 @@ export type Database = {
           fez_desafio: boolean | null
           id: string
           is_reposicao: boolean
+          motivo_falta: string | null
           pagina: string | null
+          pessoa_id: string
           presente: boolean
+          tipo_pessoa: string | null
           updated_at: string
         }
         Insert: {
-          aluno_id: string
+          aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
           created_at?: string
@@ -1586,12 +1843,15 @@ export type Database = {
           fez_desafio?: boolean | null
           id?: string
           is_reposicao?: boolean
+          motivo_falta?: string | null
           pagina?: string | null
+          pessoa_id: string
           presente?: boolean
+          tipo_pessoa?: string | null
           updated_at?: string
         }
         Update: {
-          aluno_id?: string
+          aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
           created_at?: string
@@ -1601,22 +1861,75 @@ export type Database = {
           fez_desafio?: boolean | null
           id?: string
           is_reposicao?: boolean
+          motivo_falta?: string | null
           pagina?: string | null
+          pessoa_id?: string
           presente?: boolean
+          tipo_pessoa?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "produtividade_abaco_aluno_id_fkey"
-            columns: ["aluno_id"]
-            isOneToOne: false
-            referencedRelation: "alunos"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      produtividade_abaco_backup: {
+        Row: {
+          aluno_nome: string | null
+          apostila: string | null
+          comentario: string | null
+          created_at: string | null
+          data_aula: string | null
+          erros: number | null
+          exercicios: number | null
+          fez_desafio: boolean | null
+          id: string | null
+          is_reposicao: boolean | null
+          motivo_falta: string | null
+          pagina: string | null
+          pessoa_id: string | null
+          presente: boolean | null
+          tipo_pessoa: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          aluno_nome?: string | null
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string | null
+          data_aula?: string | null
+          erros?: number | null
+          exercicios?: number | null
+          fez_desafio?: boolean | null
+          id?: string | null
+          is_reposicao?: boolean | null
+          motivo_falta?: string | null
+          pagina?: string | null
+          pessoa_id?: string | null
+          presente?: boolean | null
+          tipo_pessoa?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          aluno_nome?: string | null
+          apostila?: string | null
+          comentario?: string | null
+          created_at?: string | null
+          data_aula?: string | null
+          erros?: number | null
+          exercicios?: number | null
+          fez_desafio?: boolean | null
+          id?: string | null
+          is_reposicao?: boolean | null
+          motivo_falta?: string | null
+          pagina?: string | null
+          pessoa_id?: string | null
+          presente?: boolean | null
+          tipo_pessoa?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       produtividade_ah: {
         Row: {
+          aluno_nome: string | null
           apostila: string | null
           comentario: string | null
           created_at: string
@@ -1629,6 +1942,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
           created_at?: string
@@ -1641,6 +1955,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
           created_at?: string
@@ -1654,49 +1969,44 @@ export type Database = {
         }
         Relationships: []
       }
-      produtividade_ah_funcionarios: {
+      produtividade_ah_backup: {
         Row: {
           apostila: string | null
           comentario: string | null
-          created_at: string
+          created_at: string | null
           erros: number | null
           exercicios: number | null
-          funcionario_id: string
-          id: string
+          id: string | null
+          pessoa_id: string | null
           professor_correcao: string | null
-          updated_at: string
+          tipo_pessoa: string | null
+          updated_at: string | null
         }
         Insert: {
           apostila?: string | null
           comentario?: string | null
-          created_at?: string
+          created_at?: string | null
           erros?: number | null
           exercicios?: number | null
-          funcionario_id: string
-          id?: string
+          id?: string | null
+          pessoa_id?: string | null
           professor_correcao?: string | null
-          updated_at?: string
+          tipo_pessoa?: string | null
+          updated_at?: string | null
         }
         Update: {
           apostila?: string | null
           comentario?: string | null
-          created_at?: string
+          created_at?: string | null
           erros?: number | null
           exercicios?: number | null
-          funcionario_id?: string
-          id?: string
+          id?: string | null
+          pessoa_id?: string | null
           professor_correcao?: string | null
-          updated_at?: string
+          tipo_pessoa?: string | null
+          updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "produtividade_ah_funcionarios_funcionario_id_fkey"
-            columns: ["funcionario_id"]
-            isOneToOne: false
-            referencedRelation: "funcionarios"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       professores: {
         Row: {
@@ -1777,6 +2087,30 @@ export type Database = {
           is_admin?: boolean | null
           must_change_password?: boolean | null
           role?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      projeto_sao_rafael_textos: {
+        Row: {
+          created_at: string
+          id: string
+          mes_ano: string
+          texto_geral: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mes_ano: string
+          texto_geral?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mes_ano?: string
+          texto_geral?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2295,7 +2629,6 @@ export type Database = {
         Row: {
           created_at: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
-          horario: string
           id: string
           nome: string
           professor_id: string
@@ -2305,7 +2638,6 @@ export type Database = {
         Insert: {
           created_at?: string
           dia_semana: Database["public"]["Enums"]["dia_semana"]
-          horario: string
           id?: string
           nome: string
           professor_id: string
@@ -2315,7 +2647,6 @@ export type Database = {
         Update: {
           created_at?: string
           dia_semana?: Database["public"]["Enums"]["dia_semana"]
-          horario?: string
           id?: string
           nome?: string
           professor_id?: string
@@ -2409,6 +2740,8 @@ export type Database = {
           created_at: string
           email: string | null
           enrollment_fee: number | null
+          evolution_instance_name: string | null
+          evolutionapi_token: string | null
           id: string
           legal_representative: string | null
           material_fee: number | null
@@ -2434,6 +2767,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           enrollment_fee?: number | null
+          evolution_instance_name?: string | null
+          evolutionapi_token?: string | null
           id?: string
           legal_representative?: string | null
           material_fee?: number | null
@@ -2459,6 +2794,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           enrollment_fee?: number | null
+          evolution_instance_name?: string | null
+          evolutionapi_token?: string | null
           id?: string
           legal_representative?: string | null
           material_fee?: number | null
@@ -2566,6 +2903,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      users: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          id: string
+          name: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       webhook_credentials: {
         Row: {
@@ -2699,6 +3066,27 @@ export type Database = {
       }
     }
     Functions: {
+      buscar_dados_abaco_projeto_sao_rafael: {
+        Args: { p_mes_ano: string; p_professor_id: string }
+        Returns: {
+          ano_mes: string
+          nome_aluno: string
+          total_exercicios: number
+          total_erros: number
+          percentual_acerto: number
+          total_presencas: number
+        }[]
+      }
+      buscar_dados_ah_projeto_sao_rafael: {
+        Args: { p_mes_ano: string; p_professor_id: string }
+        Returns: {
+          ano_mes: string
+          nome_aluno: string
+          total_exercicios: number
+          total_erros: number
+          percentual_acerto: number
+        }[]
+      }
       change_initial_password: {
         Args: { user_id: string; new_password: string }
         Returns: boolean
@@ -2821,6 +3209,17 @@ export type Database = {
           ma_conversion_rate: number
         }[]
       }
+      get_correcoes_ah_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          professor_correcao: string
+          mes_atual: number
+          mes_anterior: number
+          ultimos_3_meses: number
+          ultimos_6_meses: number
+          ultimos_12_meses: number
+        }[]
+      }
       get_daily_activities_by_type: {
         Args: { p_start_date: string; p_end_date: string; p_unit_ids: string[] }
         Returns: {
@@ -2867,6 +3266,31 @@ export type Database = {
       get_periodo_data: {
         Args: { p_periodo: string }
         Returns: string
+      }
+      get_produtividade_abaco_limpa: {
+        Args: {
+          p_pessoa_id: string
+          p_data_inicial: string
+          p_data_final: string
+        }
+        Returns: {
+          id: string
+          pessoa_id: string
+          tipo_pessoa: string
+          data_aula: string
+          presente: boolean
+          apostila: string
+          pagina: string
+          exercicios: number
+          erros: number
+          fez_desafio: boolean
+          comentario: string
+          motivo_falta: string
+          is_reposicao: boolean
+          aluno_nome: string
+          created_at: string
+          updated_at: string
+        }[]
       }
       get_registration_stats: {
         Args: {
@@ -3041,21 +3465,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -3073,14 +3501,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -3096,14 +3526,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -3119,14 +3551,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -3134,14 +3568,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
