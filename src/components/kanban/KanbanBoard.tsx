@@ -8,17 +8,16 @@ import { BoardHeader } from "./BoardHeader"
 import { InfiniteKanbanColumn } from "./components/column/InfiniteKanbanColumn"
 import { useUserUnit } from "./hooks/useUserUnit"
 import { RealtimeMonitor } from "./components/debug/RealtimeMonitor"
+import { useNotification } from "@/contexts/NotificationContext"
 
 export function KanbanBoard() {
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDebugMode, setIsDebugMode] = useState(false);
   
-  // Refs para notificação de novos leads
-  const previousClientCountRef = useRef<number>(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Hook para sistema global de notificações
+  const { soundEnabled, setSoundEnabled } = useNotification();
   
   console.log('📊 [KanbanBoard] Renderizando com searchTerm:', searchTerm)
   
@@ -79,55 +78,9 @@ export function KanbanBoard() {
     };
   }, [isDebugMode]);
 
-  // Inicializar áudio para notificações quando som estiver habilitado
-  useEffect(() => {
-    if (soundEnabled && !audioRef.current) {
-      try {
-        audioRef.current = new Audio('/sounds/notification.mp3');
-        audioRef.current.preload = 'auto';
-        console.log('🔊 [KanbanBoard] Áudio inicializado');
-      } catch (error) {
-        console.error('🔊 [KanbanBoard] Erro ao inicializar áudio:', error);
-      }
-    }
-  }, [soundEnabled]);
-  
   // CORREÇÃO: Acessar clients corretamente de cada página
   const allClients = infiniteData?.pages?.flatMap(page => page.clients) || []
   console.log('📊 [KanbanBoard] Total de clientes encontrados:', allClients.length)
-
-  // Detectar novos leads e tocar notificação
-  useEffect(() => {
-    const currentCount = allClients?.length || 0;
-    
-    // Se é a primeira vez ou está carregando, apenas atualiza a referência
-    if (previousClientCountRef.current === 0 || isLoading) {
-      previousClientCountRef.current = currentCount;
-      return;
-    }
-    
-    // Se há mais clientes que antes e som está habilitado, é um novo lead
-    if (currentCount > previousClientCountRef.current && soundEnabled && audioRef.current) {
-      const newLeadsCount = currentCount - previousClientCountRef.current;
-      console.log('🔊 [KanbanBoard] Novo(s) lead(s) detectado(s):', newLeadsCount);
-      
-      try {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play()
-          .then(() => {
-            console.log('🔊 [KanbanBoard] Som reproduzido com sucesso');
-          })
-          .catch(error => {
-            console.error('🔊 [KanbanBoard] Erro ao reproduzir som:', error);
-          });
-      } catch (error) {
-        console.error('🔊 [KanbanBoard] Erro ao tocar áudio:', error);
-      }
-    }
-    
-    // Atualizar referência
-    previousClientCountRef.current = currentCount;
-  }, [allClients, soundEnabled, isLoading]);
 
   // Auto-load more data if needed
   const checkAndLoadMore = useCallback(() => {
@@ -157,8 +110,6 @@ export function KanbanBoard() {
       <BoardHeader 
         showPendingOnly={showPendingOnly}
         setShowPendingOnly={setShowPendingOnly}
-        soundEnabled={soundEnabled}
-        setSoundEnabled={setSoundEnabled}
         onRefresh={() => refetch()}
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}

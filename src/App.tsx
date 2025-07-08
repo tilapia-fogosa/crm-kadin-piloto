@@ -11,6 +11,7 @@ import ProtectedLayout from "./components/layouts/ProtectedLayout";
 import LoginPage from "./pages/auth/LoginPage";
 import NotFound from "@/pages/NotFound";
 import { UpdatesProvider } from "./contexts/UpdatesContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
 import { Toaster } from "./components/ui/toaster";
 
 // Page imports 
@@ -52,7 +53,8 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <UpdatesProvider>
-            <SidebarProvider>
+            <NotificationProvider>
+              <SidebarProvider>
               <div className="flex min-h-screen w-full">
                 <Routes>
                   {/* Public routes - authentication */}
@@ -102,6 +104,7 @@ function App() {
               </div>
               <Toaster />
             </SidebarProvider>
+            </NotificationProvider>
           </UpdatesProvider>
         </AuthProvider>
       </BrowserRouter>

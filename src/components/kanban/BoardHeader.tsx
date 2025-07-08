@@ -2,7 +2,7 @@
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { RefreshCw, Search, Loader2 } from "lucide-react"
+import { RefreshCw, Search, Loader2, Volume2 } from "lucide-react"
 import { ActivityDashboard } from "./ActivityDashboard"
 import { CalendarDashboard } from "./CalendarDashboard"
 import { Input } from "@/components/ui/input"
@@ -10,12 +10,11 @@ import { MultiUnitSelector } from "./components/calendar/MultiUnitSelector"
 import { useState, useCallback, memo, useEffect } from "react"
 import { useDebounce } from "./utils/hooks/useDebounce"
 import { UserUnit } from "./hooks/useUserUnit"
+import { useNotification } from "@/contexts/NotificationContext"
 
 interface BoardHeaderProps {
   showPendingOnly: boolean
   setShowPendingOnly: (value: boolean) => void
-  soundEnabled: boolean
-  setSoundEnabled: (value: boolean) => void
   onRefresh: () => void
   searchTerm: string
   onSearchChange: (value: string) => void
@@ -29,8 +28,6 @@ interface BoardHeaderProps {
 function BoardHeaderComponent({
   showPendingOnly,
   setShowPendingOnly,
-  soundEnabled,
-  setSoundEnabled,
   onRefresh,
   searchTerm,
   onSearchChange,
@@ -40,6 +37,8 @@ function BoardHeaderComponent({
   isMultiUnit,
   isSearching = false
 }: BoardHeaderProps) {
+  // Hook para sistema global de notificações
+  const { soundEnabled, setSoundEnabled, testSound, isAudioSupported } = useNotification();
   console.log('🔍 [BoardHeader] Renderizando com searchTerm:', searchTerm)
   
   // Estado local apenas para o input (responsividade imediata)
@@ -104,6 +103,20 @@ function BoardHeaderComponent({
                 onCheckedChange={setSoundEnabled}
               />
               <Label htmlFor="sound-mode" className="text-white">Som para novos leads</Label>
+              {soundEnabled && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/20 p-1 h-6 w-6"
+                  onClick={testSound}
+                  title="Testar som"
+                >
+                  <Volume2 className="h-3 w-3" />
+                </Button>
+              )}
+              {!isAudioSupported && soundEnabled && (
+                <span className="text-yellow-300 text-xs">⚠️</span>
+              )}
             </div>
           </div>
 
@@ -145,7 +158,6 @@ export const BoardHeader = memo(BoardHeaderComponent, (prevProps, nextProps) => 
   // Re-render apenas se props importantes mudaram
   return (
     prevProps.showPendingOnly === nextProps.showPendingOnly &&
-    prevProps.soundEnabled === nextProps.soundEnabled &&
     prevProps.searchTerm === nextProps.searchTerm &&
     prevProps.isSearching === nextProps.isSearching &&
     prevProps.selectedUnitIds.length === nextProps.selectedUnitIds.length &&
