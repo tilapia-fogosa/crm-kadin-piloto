@@ -7,11 +7,13 @@ import { useLocation } from "react-router-dom"
 import { BoardHeader } from "./BoardHeader"
 import { InfiniteKanbanColumn } from "./components/column/InfiniteKanbanColumn"
 import { useUserUnit } from "./hooks/useUserUnit"
+import { useNewLeadNotification } from "./hooks/useNewLeadNotification"
 import { RealtimeMonitor } from "./components/debug/RealtimeMonitor"
 
 export function KanbanBoard() {
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDebugMode, setIsDebugMode] = useState(false);
   
@@ -100,6 +102,12 @@ export function KanbanBoard() {
   const allClients = infiniteData?.pages?.flatMap(page => page.clients) || []
   console.log('📊 [KanbanBoard] Total de clientes encontrados:', allClients.length)
   
+  // Hook para notificação de novos leads
+  useNewLeadNotification({
+    soundEnabled,
+    clientsData: allClients
+  })
+  
   const columns = transformInfiniteClientsToColumnData([allClients], 100)
 
   return (
@@ -107,6 +115,8 @@ export function KanbanBoard() {
       <BoardHeader 
         showPendingOnly={showPendingOnly}
         setShowPendingOnly={setShowPendingOnly}
+        soundEnabled={soundEnabled}
+        setSoundEnabled={setSoundEnabled}
         onRefresh={() => refetch()}
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}

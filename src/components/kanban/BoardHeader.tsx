@@ -14,6 +14,8 @@ import { UserUnit } from "./hooks/useUserUnit"
 interface BoardHeaderProps {
   showPendingOnly: boolean
   setShowPendingOnly: (value: boolean) => void
+  soundEnabled: boolean
+  setSoundEnabled: (value: boolean) => void
   onRefresh: () => void
   searchTerm: string
   onSearchChange: (value: string) => void
@@ -27,6 +29,8 @@ interface BoardHeaderProps {
 function BoardHeaderComponent({
   showPendingOnly,
   setShowPendingOnly,
+  soundEnabled,
+  setSoundEnabled,
   onRefresh,
   searchTerm,
   onSearchChange,
@@ -83,13 +87,24 @@ function BoardHeaderComponent({
         </div>
         
         <div className="col-span-2 flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="pending-mode"
-              checked={showPendingOnly}
-              onCheckedChange={setShowPendingOnly}
-            />
-            <Label htmlFor="pending-mode" className="text-white">Mostrar apenas pendentes</Label>
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="pending-mode"
+                checked={showPendingOnly}
+                onCheckedChange={setShowPendingOnly}
+              />
+              <Label htmlFor="pending-mode" className="text-white">Mostrar apenas pendentes</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="sound-mode"
+                checked={soundEnabled}
+                onCheckedChange={setSoundEnabled}
+              />
+              <Label htmlFor="sound-mode" className="text-white">Som para novos leads</Label>
+            </div>
           </div>
 
           <div className="flex items-center space-x-2">
