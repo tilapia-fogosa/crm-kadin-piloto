@@ -145,6 +145,7 @@ export const BoardHeader = memo(BoardHeaderComponent, (prevProps, nextProps) => 
   // Re-render apenas se props importantes mudaram
   return (
     prevProps.showPendingOnly === nextProps.showPendingOnly &&
+    prevProps.soundEnabled === nextProps.soundEnabled &&
     prevProps.searchTerm === nextProps.searchTerm &&
     prevProps.isSearching === nextProps.isSearching &&
     prevProps.selectedUnitIds.length === nextProps.selectedUnitIds.length &&
