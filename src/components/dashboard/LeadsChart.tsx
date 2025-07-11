@@ -1,4 +1,4 @@
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, LabelList } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +46,7 @@ export function LeadsChart() {
 
       console.log('Dados agregados recebidos da RPC:', rawData?.length);
 
-      // Log: Processando dados para formato do gráfico
+      // Log: Processando dados para formato do gráfico (já vem ordenado ASC do banco)
       const leadsByMonth: Record<string, any> = {};
       const allSources = new Set<string>();
 
@@ -56,19 +56,16 @@ export function LeadsChart() {
         const monthKey = format(date, 'MMM/yy', { locale: ptBR });
         
         if (!leadsByMonth[monthKey]) {
-          leadsByMonth[monthKey] = { month: monthKey };
+          leadsByMonth[monthKey] = { month: monthKey, total: 0 };
         }
         
         leadsByMonth[monthKey][row.lead_source] = Number(row.lead_count);
+        leadsByMonth[monthKey].total += Number(row.lead_count);
         allSources.add(row.lead_source);
       });
 
-      // Log: Garantindo ordem cronológica dos dados
-      const sortedData = Object.values(leadsByMonth).sort((a, b) => {
-        const dateA = new Date(a.month.split('/').reverse().join('-'));
-        const dateB = new Date(b.month.split('/').reverse().join('-'));
-        return dateA.getTime() - dateB.getTime();
-      });
+      // Log: Dados já vêm ordenados cronologicamente do banco (ORDER BY ASC)
+      const sortedData = Object.values(leadsByMonth);
 
       return {
         data: sortedData,
@@ -125,7 +122,19 @@ export function LeadsChart() {
                 stackId="a"
                 fill={getColorForSource(source, index)}
                 radius={[4, 4, 0, 0]}
-              />
+              >
+                {index === 0 && (
+                  <LabelList 
+                    dataKey="total" 
+                    position="top" 
+                    style={{ 
+                      fill: 'hsl(var(--foreground))', 
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}
+                  />
+                )}
+              </Bar>
             ))}
           </BarChart>
         </ResponsiveContainer>
