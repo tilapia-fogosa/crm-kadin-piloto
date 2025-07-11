@@ -2053,11 +2053,16 @@ export type Database = {
         Row: {
           access_blocked: boolean | null
           avatar_url: string | null
+          calendar_id: string | null
           created_at: string
           email: string | null
           email_confirmed: boolean | null
           first_access_at: string | null
           full_name: string | null
+          g_access_token: string | null
+          g_refresh_token: string | null
+          g_token_expiration: string | null
+          google_email: string | null
           id: string
           is_admin: boolean | null
           must_change_password: boolean | null
@@ -2067,11 +2072,16 @@ export type Database = {
         Insert: {
           access_blocked?: boolean | null
           avatar_url?: string | null
+          calendar_id?: string | null
           created_at?: string
           email?: string | null
           email_confirmed?: boolean | null
           first_access_at?: string | null
           full_name?: string | null
+          g_access_token?: string | null
+          g_refresh_token?: string | null
+          g_token_expiration?: string | null
+          google_email?: string | null
           id: string
           is_admin?: boolean | null
           must_change_password?: boolean | null
@@ -2081,11 +2091,16 @@ export type Database = {
         Update: {
           access_blocked?: boolean | null
           avatar_url?: string | null
+          calendar_id?: string | null
           created_at?: string
           email?: string | null
           email_confirmed?: boolean | null
           first_access_at?: string | null
           full_name?: string | null
+          g_access_token?: string | null
+          g_refresh_token?: string | null
+          g_token_expiration?: string | null
+          google_email?: string | null
           id?: string
           is_admin?: boolean | null
           must_change_password?: boolean | null
@@ -3261,6 +3276,14 @@ export type Database = {
       get_funcionario_devolutiva: {
         Args: { p_funcionario_id: string; p_data_inicial: string }
         Returns: Json
+      }
+      get_leads_by_month_and_source: {
+        Args: { p_unit_ids: string[]; p_months_back?: number }
+        Returns: {
+          month_year: string
+          lead_source: string
+          lead_count: number
+        }[]
       }
       get_leads_stats: {
         Args: { p_unit_ids: string[] }

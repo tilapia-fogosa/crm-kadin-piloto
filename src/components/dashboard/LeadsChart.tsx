@@ -2,7 +2,7 @@ import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } fro
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { subMonths, format } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useUnit } from "@/contexts/UnitContext";
 
@@ -25,57 +25,54 @@ export function LeadsChart() {
   const { data, isLoading } = useQuery({
     queryKey: ['leads-by-month-and-source', selectedUnitIds],
     queryFn: async () => {
-      console.log('Buscando leads do gráfico para unidades:', selectedUnitIds);
+      console.log('Buscando leads do gráfico para unidades (via RPC):', selectedUnitIds);
       
       if (!selectedUnitIds || selectedUnitIds.length === 0) {
         console.log('Nenhuma unidade selecionada para o gráfico');
         return { data: [], sources: [] };
       }
 
-      const now = new Date();
-      const sixMonthsAgo = subMonths(now, 6);
-
-      const { data: leads, error } = await supabase
-        .from('clients')
-        .select('created_at, lead_source')
-        .eq('active', true)
-        .in('unit_id', selectedUnitIds)
-        .gte('created_at', sixMonthsAgo.toISOString())
-        .order('created_at', { ascending: true });
+      // Log: Usando função RPC para obter dados agregados do banco
+      const { data: rawData, error } = await supabase
+        .rpc('get_leads_by_month_and_source', { 
+          p_unit_ids: selectedUnitIds,
+          p_months_back: 6
+        });
 
       if (error) {
-        console.error('Erro ao buscar leads para o gráfico:', error);
+        console.error('Erro ao buscar leads via RPC:', error);
         throw error;
       }
 
-      console.log('Leads encontrados para o gráfico:', leads?.length);
+      console.log('Dados agregados recebidos da RPC:', rawData?.length);
 
-      const leadsByMonth = leads?.reduce((acc: any, lead) => {
-        const date = new Date(lead.created_at);
+      // Log: Processando dados para formato do gráfico
+      const leadsByMonth: Record<string, any> = {};
+      const allSources = new Set<string>();
+
+      rawData?.forEach(row => {
+        const [year, month] = row.month_year.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1);
         const monthKey = format(date, 'MMM/yy', { locale: ptBR });
         
-        if (!acc[monthKey]) {
-          acc[monthKey] = {};
+        if (!leadsByMonth[monthKey]) {
+          leadsByMonth[monthKey] = { month: monthKey };
         }
         
-        const source = lead.lead_source || 'outros';
-        acc[monthKey][source] = (acc[monthKey][source] || 0) + 1;
-        acc[monthKey].month = monthKey;
-        
-        return acc;
-      }, {});
+        leadsByMonth[monthKey][row.lead_source] = Number(row.lead_count);
+        allSources.add(row.lead_source);
+      });
 
-      const chartData = Object.values(leadsByMonth || {});
-      
-      const allSources = Array.from(
-        new Set(
-          leads?.map(lead => lead.lead_source || 'outros') || []
-        )
-      );
+      // Log: Garantindo ordem cronológica dos dados
+      const sortedData = Object.values(leadsByMonth).sort((a, b) => {
+        const dateA = new Date(a.month.split('/').reverse().join('-'));
+        const dateB = new Date(b.month.split('/').reverse().join('-'));
+        return dateA.getTime() - dateB.getTime();
+      });
 
       return {
-        data: chartData,
-        sources: allSources
+        data: sortedData,
+        sources: Array.from(allSources)
       };
     },
     staleTime: 60 * 60 * 1000,
