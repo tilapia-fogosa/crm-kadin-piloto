@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "@/components/ui/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -11,9 +11,11 @@ import { ClientsPagination } from "@/components/clients/ClientsPagination"
 import { ClientFilterDialog } from "@/components/clients/ClientFilterDialog"
 import { Search, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useDebounce } from "@/components/kanban/utils/hooks/useDebounce"
 
 export default function ClientsPage() {
   const [clientToDelete, setClientToDelete] = useState<any>(null)
+  const [rawSearch, setRawSearch] = useState<string>("")
   const queryClient = useQueryClient()
   const { selectedUnitId } = useUnit()
 
@@ -38,6 +40,24 @@ export default function ClientsPage() {
     filterOptions,
     refetch
   } = useServerSideClientFiltering(selectedUnitId)
+
+  // Aplicar debounce na busca para evitar múltiplas consultas
+  const debouncedSearch = useDebounce(rawSearch, 500)
+  
+  // Sincronizar busca inicial com searchTerm do hook
+  useEffect(() => {
+    if (rawSearch === "" && searchTerm !== "") {
+      setRawSearch(searchTerm)
+    }
+  }, [searchTerm, rawSearch])
+
+  // Aplicar o valor com debounce ao hook de filtragem
+  useEffect(() => {
+    if (debouncedSearch !== searchTerm) {
+      console.log('🔍 [ClientsPage] Aplicando busca com debounce:', debouncedSearch)
+      setSearchTerm(debouncedSearch)
+    }
+  }, [debouncedSearch, searchTerm, setSearchTerm])
 
   console.log('📊 [ClientsPage] Estado da paginação server-side:', {
     isLoading,
@@ -177,8 +197,8 @@ export default function ClientsPage() {
               <Input
                 type="search"
                 placeholder="Buscar por nome ou telefone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={rawSearch}
+                onChange={(e) => setRawSearch(e.target.value)}
                 className="w-[250px] pl-8 md:w-[300px]"
               />
             </div>
