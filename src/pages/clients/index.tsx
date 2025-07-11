@@ -1,12 +1,12 @@
 import { useState } from "react"
 import { toast } from "@/components/ui/use-toast"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { ClientsTable } from "@/components/clients/clients-table"
 import { UnitSelector } from "@/components/UnitSelector"
 import { useUnit } from "@/contexts/UnitContext"
 import { Input } from "@/components/ui/input"
-import { useClientFiltering } from "@/hooks/useClientFiltering"
+import { useServerSideClientFiltering } from "@/hooks/useServerSideClientFiltering"
 import { ClientsPagination } from "@/components/clients/ClientsPagination"
 import { ClientFilterDialog } from "@/components/clients/ClientFilterDialog"
 import { Search, RefreshCw } from "lucide-react"
@@ -19,119 +19,35 @@ export default function ClientsPage() {
 
   console.log('🔍 [ClientsPage] Renderizando com selectedUnitId:', selectedUnitId);
 
-  // Query principal com logs detalhados e tratamento de erro
-  const { 
-    data: clients, 
-    isLoading, 
-    error,
-    refetch,
-    isError 
-  } = useQuery({
-    queryKey: ['all-clients', selectedUnitId],
-    queryFn: async () => {
-      console.log('🚀 [ClientsPage Query] Iniciando busca de clientes');
-      console.log('🏢 [ClientsPage Query] Unit ID:', selectedUnitId);
-      
-      if (!selectedUnitId) {
-        console.error('❌ [ClientsPage Query] selectedUnitId é null/undefined');
-        throw new Error('Unidade não selecionada');
-      }
-
-      try {
-        // Query otimizada SEM client_activities - lazy loading implementado
-        console.log('📊 [ClientsPage Query] Executando query otimizada sem atividades...');
-        
-        const { data, error, count } = await supabase
-          .from('clients')
-          .select(`
-            id,
-            name,
-            phone_number,
-            email,
-            lead_source,
-            observations,
-            status,
-            created_at,
-            original_ad,
-            original_adset,
-            registration_name,
-            active,
-            unit_id
-          `, { count: 'exact' })
-          .eq('active', true)
-          .eq('unit_id', selectedUnitId)
-          .order('created_at', { ascending: false });
-
-        console.log('📋 [ClientsPage Query] Response details:', {
-          hasError: !!error,
-          dataLength: data?.length || 0,
-          totalCount: count,
-          errorMessage: error?.message
-        });
-
-        if (error) {
-          console.error('❌ [ClientsPage Query] Erro do Supabase:', error);
-          throw new Error(`Erro na consulta: ${error.message}`);
-        }
-
-        if (!data) {
-          console.warn('⚠️ [ClientsPage Query] Data é null, retornando array vazio');
-          return [];
-        }
-
-        console.log('✅ [ClientsPage Query] Dados recebidos com sucesso (SEM atividades):', {
-          totalClients: data.length,
-          firstClient: data[0]?.name || 'N/A',
-          unitId: selectedUnitId
-        });
-
-        // Log amostra dos primeiros 3 clientes para debug
-        data.slice(0, 3).forEach((client, index) => {
-          console.log(`📝 [ClientsPage Query] Cliente ${index + 1}:`, {
-            id: client.id,
-            name: client.name,
-            status: client.status,
-            created_at: client.created_at
-          });
-        });
-
-        return data;
-      } catch (queryError) {
-        console.error('💥 [ClientsPage Query] Erro capturado:', queryError);
-        throw queryError;
-      }
-    },
-    enabled: !!selectedUnitId, // Só executa se tiver selectedUnitId
-    retry: 3, // Tentar 3 vezes em caso de erro
-    staleTime: 2 * 60 * 1000, // 2 minutos - dados ficam "frescos" por mais tempo
-    gcTime: 5 * 60 * 1000, // 5 minutos
-    refetchOnWindowFocus: false,
-    refetchOnMount: true,
-  });
-
-  // Logs de estado da query
-  console.log('📊 [ClientsPage] Estado da query:', {
+  // Usar hook de paginação server-side
+  const {
+    clients,
+    totalCount,
     isLoading,
     isError,
-    hasData: !!clients,
-    dataLength: clients?.length || 0,
-    error: error?.message
-  });
-
-  const {
-    searchTerm,
-    setSearchTerm,
+    error,
     currentPage,
     setCurrentPage,
-    paginatedClients,
     totalPages,
-    totalResults,
+    searchTerm,
+    setSearchTerm,
     filters,
     applyFilters,
     resetFilters,
     isFilterActive,
-    filterOptions
-  } = useClientFiltering(clients || [])
+    filterOptions,
+    refetch
+  } = useServerSideClientFiltering(selectedUnitId)
+
+  console.log('📊 [ClientsPage] Estado da paginação server-side:', {
+    isLoading,
+    isError,
+    clientsCount: clients.length,
+    totalCount,
+    currentPage,
+    totalPages,
+    error: error?.message
+  });
 
   // Handler para forçar atualização
   const handleForceRefresh = async () => {
@@ -139,8 +55,8 @@ export default function ClientsPage() {
     
     try {
       // Limpar todos os caches relacionados
-      await queryClient.invalidateQueries({ queryKey: ['all-clients'] });
-      await queryClient.removeQueries({ queryKey: ['all-clients'] });
+      await queryClient.invalidateQueries({ queryKey: ['clients-paginated'] });
+      await queryClient.invalidateQueries({ queryKey: ['client-filter-options'] });
       
       // Refetch forçado
       await refetch();
@@ -170,7 +86,7 @@ export default function ClientsPage() {
 
       if (updateError) throw updateError
 
-      await queryClient.invalidateQueries({ queryKey: ['all-clients'] })
+      await queryClient.invalidateQueries({ queryKey: ['clients-paginated'] })
 
       toast({
         title: "Cliente inativado",
@@ -233,8 +149,8 @@ export default function ClientsPage() {
   }
 
   console.log('🎯 [ClientsPage] Renderizando conteúdo final:', {
-    totalClients: clients?.length || 0,
-    paginatedCount: paginatedClients?.length || 0,
+    totalClients: totalCount,
+    currentPageCount: clients?.length || 0,
     currentPage,
     totalPages,
     hasSearchTerm: !!searchTerm
@@ -277,37 +193,41 @@ export default function ClientsPage() {
           </div>
           
           <div className="text-sm text-muted-foreground">
-            Total: {totalResults} clientes encontrados
-            {clients && ` (${clients.length} total na unidade)`}
+            Total: {totalCount} clientes encontrados
+            {isLoading ? '' : ` (Página ${currentPage} de ${totalPages})`}
           </div>
         </div>
 
-        {/* Mostrar mensagem se não há clientes */}
-        {(!clients || clients.length === 0) ? (
+        {/* Mostrar mensagem se não há clientes ou se não há dados com filtros */}
+        {totalCount === 0 && !isLoading ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <h3 className="text-lg font-semibold text-gray-700">Nenhum cliente encontrado</h3>
+            <h3 className="text-lg font-semibold text-gray-700">
+              {isFilterActive || searchTerm ? 'Nenhum resultado para os filtros aplicados' : 'Nenhum cliente encontrado'}
+            </h3>
             <p className="text-sm text-gray-500 mt-2">
-              Não há clientes cadastrados para esta unidade ou todos estão inativos.
+              {isFilterActive || searchTerm 
+                ? 'Tente alterar os filtros de busca ou limpar todos os filtros.'
+                : 'Não há clientes cadastrados para esta unidade ou todos estão inativos.'}
             </p>
-            <Button onClick={handleForceRefresh} variant="outline" className="mt-4">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Verificar Novamente
-            </Button>
-          </div>
-        ) : paginatedClients.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <h3 className="text-lg font-semibold text-gray-700">Nenhum resultado para os filtros aplicados</h3>
-            <p className="text-sm text-gray-500 mt-2">
-              Tente alterar os filtros de busca ou limpar todos os filtros.
-            </p>
-            <Button onClick={resetFilters} variant="outline" className="mt-4">
-              Limpar Filtros
+            <Button 
+              onClick={isFilterActive || searchTerm ? resetFilters : handleForceRefresh} 
+              variant="outline" 
+              className="mt-4"
+            >
+              {isFilterActive || searchTerm ? (
+                <>Limpar Filtros</>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Verificar Novamente
+                </>
+              )}
             </Button>
           </div>
         ) : (
           <>
             <ClientsTable
-              clients={paginatedClients}
+              clients={clients}
               clientToDelete={clientToDelete}
               onDelete={handleDelete}
               setClientToDelete={setClientToDelete}
