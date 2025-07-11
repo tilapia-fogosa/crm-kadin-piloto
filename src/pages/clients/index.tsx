@@ -43,13 +43,6 @@ export default function ClientsPage() {
 
   // Aplicar debounce na busca para evitar múltiplas consultas
   const debouncedSearch = useDebounce(rawSearch, 500)
-  
-  // Sincronizar busca inicial com searchTerm do hook
-  useEffect(() => {
-    if (rawSearch === "" && searchTerm !== "") {
-      setRawSearch(searchTerm)
-    }
-  }, [searchTerm, rawSearch])
 
   // Aplicar o valor com debounce ao hook de filtragem
   useEffect(() => {
