@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Loader2 } from "lucide-react";
+import { Mic, Circle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -184,7 +184,7 @@ export function VoiceTranscriptionButton({
     }
     
     if (isRecording) {
-      return <MicOff className="h-4 w-4 text-destructive" />;
+      return <Circle className="h-4 w-4 fill-current animate-pulse" />;
     }
     
     return <Mic className="h-4 w-4" />;
@@ -199,21 +199,28 @@ export function VoiceTranscriptionButton({
   };
 
   return (
-    <Button
-      type="button"
-      variant={getButtonVariant()}
-      size={size}
-      onClick={handleClick}
-      disabled={disabled || isProcessing}
-      title={
-        isProcessing 
-          ? "Processando transcrição..." 
-          : isRecording 
-            ? "Clique para parar gravação" 
-            : "Clique para gravar áudio"
-      }
-    >
-      {getButtonContent()}
-    </Button>
+    <div className="flex items-center gap-2">
+      <Button
+        type="button"
+        variant={getButtonVariant()}
+        size={size}
+        onClick={handleClick}
+        disabled={disabled || isProcessing}
+        title={
+          isProcessing 
+            ? "Processando transcrição..." 
+            : isRecording 
+              ? "Clique para enviar o áudio" 
+              : "Clique para gravar áudio"
+        }
+      >
+        {getButtonContent()}
+      </Button>
+      {isRecording && (
+        <span className="text-sm text-muted-foreground animate-pulse">
+          Clique para enviar o áudio
+        </span>
+      )}
+    </div>
   );
 }
