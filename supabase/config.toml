@@ -3,5 +3,8 @@
 verify_jwt = false
 invoker = "service_role" # Adicionando esta configuração para restringir acesso
 
+[functions.transcribe-audio]
+verify_jwt = false
+
 # Nota: O processamento de webhooks de venda foi desativado
 # e está sendo tratado pelos webhooks de clientes com status "matriculado"
