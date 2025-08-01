@@ -37,19 +37,21 @@ export function useLossRegistration() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Não autenticado')
 
-      // Get client's unit_id and current status
+      // Get client's unit_id, current status AND scheduled_date
       const { data: clientData, error: fetchClientError } = await supabase
         .from('clients')
-        .select('unit_id, status')
+        .select('unit_id, status, scheduled_date')
         .eq('id', clientId)
         .single()
 
       if (fetchClientError) throw fetchClientError
       if (!clientData?.unit_id) throw new Error('Client has no unit_id')
       
-      // Armazenando o status anterior do cliente antes de ser marcado como perdido
+      // Armazenando o status anterior do cliente e scheduled_date antes de ser marcado como perdido
       const previousStatus = clientData.status
+      const scheduledDateAnterior = clientData.scheduled_date
       console.log(`Status anterior do cliente: ${previousStatus}`)
+      console.log(`Scheduled date anterior: ${scheduledDateAnterior}`)
 
       // 1. Registra a atividade
       // CORREÇÃO: Usando o campo notes para as observações
@@ -104,7 +106,28 @@ export function useLossRegistration() {
 
       if (updateClientError) throw updateClientError
 
-      // 4. Atualiza o cache do React Query
+      // 4. Enviar webhook de cancelamento de agendamento se havia scheduled_date
+      if (scheduledDateAnterior) {
+        try {
+          await supabase.functions.invoke('activity-webhook', {
+            body: {
+              tipo_evento: 'scheduled_date_change',
+              tipo_mudanca: 'agendamento_cancelado',
+              client_id: clientId,
+              unit_id: clientData.unit_id,
+              scheduled_date_anterior: scheduledDateAnterior,
+              scheduled_date_novo: null,
+              created_by: session.session.user.id
+            }
+          })
+          console.log('Webhook de cancelamento de agendamento enviado')
+        } catch (webhookError) {
+          console.error('Erro ao enviar webhook de cancelamento:', webhookError)
+          // Não bloquear o fluxo se webhook falhar
+        }
+      }
+
+      // 5. Atualiza o cache do React Query
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
 
       console.log('Registro de perda concluído com sucesso')

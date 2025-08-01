@@ -41,15 +41,15 @@ export function useAttendanceSubmission() {
       })
 
       try {
-        // Get client's unit_id and current status
+        // Get client's unit_id, current status AND scheduled_date
         const { data: clientData, error: clientError } = await supabase
           .from('clients')
-          .select('unit_id, status')
+          .select('unit_id, status, scheduled_date')
           .eq('id', cardId)
           .single()
 
         if (clientError) {
-          console.error(`[${submissionId}] Erro ao buscar unit_id do cliente:`, clientError)
+          console.error(`[${submissionId}] Erro ao buscar dados do cliente:`, clientError)
           throw clientError
         }
         if (!clientData?.unit_id) {
@@ -57,9 +57,11 @@ export function useAttendanceSubmission() {
           throw new Error('Client has no unit_id')
         }
         
-        // Armazenando o status anterior do cliente
+        // Armazenando o status anterior do cliente e scheduled_date
         const previousStatus = clientData.status
+        const scheduledDateAnterior = clientData.scheduled_date
         console.log(`[${submissionId}] Status anterior do cliente: ${previousStatus}`)
+        console.log(`[${submissionId}] Scheduled date anterior: ${scheduledDateAnterior}`)
 
         const session = (await supabase.auth.getSession()).data.session
         if (!session) {
@@ -175,6 +177,27 @@ export function useAttendanceSubmission() {
         if (updateError) {
           console.error(`[${submissionId}] Erro ao atualizar cliente:`, updateError)
           throw updateError
+        }
+
+        // Enviar webhook de cancelamento de agendamento se havia scheduled_date (não bloqueia se falhar)
+        if (scheduledDateAnterior) {
+          try {
+            console.log(`[${submissionId}] Enviando webhook de cancelamento de agendamento`)
+            await supabase.functions.invoke('activity-webhook', {
+              body: {
+                tipo_evento: 'scheduled_date_change',
+                tipo_mudanca: 'agendamento_cancelado',
+                client_id: cardId,
+                unit_id: clientData.unit_id,
+                scheduled_date_anterior: scheduledDateAnterior,
+                scheduled_date_novo: null,
+                created_by: session.user.id
+              }
+            })
+            console.log(`[${submissionId}] Webhook de cancelamento de agendamento enviado`)
+          } catch (webhookError) {
+            console.warn(`[${submissionId}] Falha no webhook de cancelamento (não bloqueante):`, webhookError)
+          }
         }
 
         // Invalida tanto o cache geral quanto o específico das atividades
