@@ -103,20 +103,24 @@ export function useLossRegistration() {
       // 4. Enviar webhook unificado para perda com informações completas
       const tipoMudancaAgendamento = getScheduleChangeType(scheduledDateAnterior, null)
       
-      await sendActivityWebhookSafe({
+      const webhookPayload = {
         activity_id: activity.id,
         client_id: clientId,
         tipo_atividade: activityType,
         tipo_contato: contactType,
         unit_id: clientData.unit_id,
         created_by: session.session.user.id,
-        operacao: 'criado',
+        operacao: 'criado' as const,
         notes: observations,
         scheduled_date_anterior: scheduledDateAnterior,
         tipo_mudanca_agendamento: tipoMudancaAgendamento,
         previous_status: previousStatus,
         new_status: 'perdido'
-      })
+      }
+      
+      console.log('📤 [useLossRegistration] Webhook payload completo:', webhookPayload)
+      
+      await sendActivityWebhookSafe(webhookPayload)
 
       // 5. Atualiza o cache do React Query
       await queryClient.invalidateQueries({ queryKey: ['clients'] })

@@ -97,20 +97,24 @@ export function useAttendanceSubmission() {
         
         const tipoMudancaAgendamento = getScheduleChangeType(scheduledDateAnterior, null)
         
-        await sendActivityWebhookSafe({
+        const webhookPayload = {
           activity_id: attendanceActivity.id,
           client_id: cardId,
-          tipo_atividade: 'Atendimento',
-          tipo_contato: 'presencial',
+          tipo_atividade: 'Atendimento' as const,
+          tipo_contato: 'presencial' as const,
           unit_id: clientData.unit_id,
           created_by: session.user.id,
-          operacao: 'criado',
+          operacao: 'criado' as const,
           notes: notes || observations || `Atendimento realizado - Resultado: ${result}`,
           scheduled_date_anterior: scheduledDateAnterior,
           tipo_mudanca_agendamento: tipoMudancaAgendamento,
           previous_status: previousStatus,
           new_status: result
-        })
+        }
+        
+        console.log(`📤 [useAttendanceSubmission] Webhook payload completo:`, webhookPayload)
+        
+        await sendActivityWebhookSafe(webhookPayload)
 
         // Se for matriculado, registra atividade de Matrícula
         if (result === 'matriculado') {

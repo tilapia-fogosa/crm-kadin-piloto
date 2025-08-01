@@ -67,6 +67,20 @@ export function useScheduling() {
       const novaScheduledDate = scheduling.scheduledDate.toISOString()
       const tipoMudanca = getScheduleChangeType(scheduledDateAnterior, novaScheduledDate)
       
+      console.log('📤 [useScheduling] Enviando webhook com dados completos:', {
+        activity_id: 'temp-id',
+        client_id: scheduling.cardId,
+        tipo_atividade: 'Agendamento',
+        tipo_contato: scheduling.type,
+        unit_id: unitId,
+        created_by: session.session.user.id,
+        operacao: 'criado',
+        scheduled_date: novaScheduledDate,
+        notes: scheduling.notes,
+        scheduled_date_anterior: scheduledDateAnterior,
+        tipo_mudanca_agendamento: tipoMudanca
+      })
+      
       await sendActivityWebhookSafe({
         activity_id: 'temp-id', // Será substituído pela Edge Function
         client_id: scheduling.cardId,

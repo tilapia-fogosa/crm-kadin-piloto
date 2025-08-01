@@ -92,6 +92,37 @@ serve(async (req) => {
       throw new Error('Erro ao buscar dados da unidade')
     }
 
+    // Helper function para determinar tipo de operação
+    function getOperationType(tipoAtividade: string): string {
+      switch (tipoAtividade) {
+        case 'Agendamento':
+          return 'agendamento'
+        case 'Atendimento':
+        case 'Matrícula':
+          return 'atendimento'
+        case 'Tentativa de Contato':
+        case 'Contato Efetivo':
+          return 'contato'
+        default:
+          return 'atividade'
+      }
+    }
+
+    // Log detalhado de validação de campos
+    console.log('🔍 [Activity Webhook] Validação de campos obrigatórios:', {
+      activity_id: payload.activity_id,
+      client_id: payload.client_id,
+      tipo_atividade: payload.tipo_atividade,
+      tipo_contato: payload.tipo_contato,
+      unit_id: payload.unit_id,
+      created_by: payload.created_by,
+      operacao: payload.operacao,
+      scheduled_date_anterior: payload.scheduled_date_anterior,
+      tipo_mudanca_agendamento: payload.tipo_mudanca_agendamento,
+      previous_status: payload.previous_status,
+      new_status: payload.new_status
+    })
+
     // Construir payload unificado do webhook
     const webhookPayload = {
       activity_id: payload.activity_id,
@@ -122,22 +153,6 @@ serve(async (req) => {
         scheduled_date_novo: payload.scheduled_date_novo
       })
     }
-
-// Helper function para determinar tipo de operação
-function getOperationType(tipoAtividade: string): string {
-  switch (tipoAtividade) {
-    case 'Agendamento':
-      return 'agendamento'
-    case 'Atendimento':
-    case 'Matrícula':
-      return 'atendimento'
-    case 'Tentativa de Contato':
-    case 'Contato Efetivo':
-      return 'contato'
-    default:
-      return 'atividade'
-  }
-}
     
     console.log('📊 [Activity Webhook] Auditoria completa de agendamento:', {
       scheduled_date_anterior: payload.scheduled_date_anterior,
