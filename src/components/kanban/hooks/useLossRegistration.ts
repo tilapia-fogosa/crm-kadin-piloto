@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { useUserUnit } from "./useUserUnit"
 import { useUnit } from "@/contexts/UnitContext"
+import { sendActivityWebhookSafe, fetchClientData, getScheduleChangeType } from "../utils/webhookService"
 
 interface LossRegistrationProps {
   clientId: string
@@ -37,15 +38,8 @@ export function useLossRegistration() {
       const { data: session } = await supabase.auth.getSession()
       if (!session.session) throw new Error('Não autenticado')
 
-      // Get client's unit_id, current status AND scheduled_date
-      const { data: clientData, error: fetchClientError } = await supabase
-        .from('clients')
-        .select('unit_id, status, scheduled_date')
-        .eq('id', clientId)
-        .single()
-
-      if (fetchClientError) throw fetchClientError
-      if (!clientData?.unit_id) throw new Error('Client has no unit_id')
+      // Buscar dados do cliente usando função centralizada
+      const clientData = await fetchClientData(clientId)
       
       // Armazenando o status anterior do cliente e scheduled_date antes de ser marcado como perdido
       const previousStatus = clientData.status
@@ -106,26 +100,23 @@ export function useLossRegistration() {
 
       if (updateClientError) throw updateClientError
 
-      // 4. Enviar webhook de cancelamento de agendamento se havia scheduled_date
-      if (scheduledDateAnterior) {
-        try {
-          await supabase.functions.invoke('activity-webhook', {
-            body: {
-              tipo_evento: 'scheduled_date_change',
-              tipo_mudanca: 'agendamento_cancelado',
-              client_id: clientId,
-              unit_id: clientData.unit_id,
-              scheduled_date_anterior: scheduledDateAnterior,
-              scheduled_date_novo: null,
-              created_by: session.session.user.id
-            }
-          })
-          console.log('Webhook de cancelamento de agendamento enviado')
-        } catch (webhookError) {
-          console.error('Erro ao enviar webhook de cancelamento:', webhookError)
-          // Não bloquear o fluxo se webhook falhar
-        }
-      }
+      // 4. Enviar webhook unificado para perda com informações completas
+      const tipoMudancaAgendamento = getScheduleChangeType(scheduledDateAnterior, null)
+      
+      await sendActivityWebhookSafe({
+        activity_id: activity.id,
+        client_id: clientId,
+        tipo_atividade: activityType,
+        tipo_contato: contactType,
+        unit_id: clientData.unit_id,
+        created_by: session.session.user.id,
+        operacao: 'criado',
+        notes: observations,
+        scheduled_date_anterior: scheduledDateAnterior,
+        tipo_mudanca_agendamento: tipoMudancaAgendamento,
+        previous_status: previousStatus,
+        new_status: 'perdido'
+      })
 
       // 5. Atualiza o cache do React Query
       await queryClient.invalidateQueries({ queryKey: ['clients'] })

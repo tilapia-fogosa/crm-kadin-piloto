@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Scheduling } from "../types"
+import { sendActivityWebhookSafe, fetchClientData, getScheduleChangeType } from "../utils/webhookService"
 
 export function useScheduling() {
   const { toast } = useToast()
@@ -62,57 +63,23 @@ export function useScheduling() {
 
       if (updateClientError) throw updateClientError
 
-      // Enviar webhook ÚNICO com todas as informações (não bloqueia se falhar)
-      try {
-        const novaScheduledDate = scheduling.scheduledDate.toISOString()
-        const tipoMudanca = scheduledDateAnterior ? 'reagendamento' : 'agendamento_criado'
-        
-        console.log('📤 [useScheduling] Enviando webhook único com informações completas:', {
-          activity_id: 'temp-id',
-          client_id: scheduling.cardId,
-          tipo_atividade: 'Agendamento',
-          tipo_contato: scheduling.type,
-          scheduled_date: novaScheduledDate,
-          notes: scheduling.notes,
-          unit_id: unitId,
-          created_by: session.session.user.id,
-          operacao: 'criado',
-          scheduled_date_anterior: scheduledDateAnterior,
-          tipo_mudanca_agendamento: tipoMudanca
-        })
-        
-        console.log('🔍 [useScheduling] Validação dos campos:', {
-          scheduledDateAnterior_existe: scheduledDateAnterior !== null && scheduledDateAnterior !== undefined,
-          scheduledDateAnterior_valor: scheduledDateAnterior,
-          tipoMudanca_valor: tipoMudanca,
-          sera_reagendamento: !!scheduledDateAnterior
-        })
-        
-        const { data: webhookResponse, error: webhookError } = await supabase.functions.invoke('activity-webhook', {
-          body: {
-            activity_id: 'temp-id', // Será substituído pela Edge Function
-            client_id: scheduling.cardId,
-            tipo_atividade: 'Agendamento',
-            tipo_contato: scheduling.type,
-            scheduled_date: novaScheduledDate,
-            notes: scheduling.notes,
-            unit_id: unitId,
-            created_by: session.session.user.id,
-            operacao: 'criado',
-            // Campos adicionais de mudança de agendamento
-            scheduled_date_anterior: scheduledDateAnterior,
-            tipo_mudanca_agendamento: tipoMudanca
-          }
-        })
-        
-        if (webhookError) {
-          console.error('❌ [useScheduling] Erro no webhook:', webhookError)
-        } else {
-          console.log('✅ [useScheduling] Webhook único enviado com sucesso:', webhookResponse)
-        }
-      } catch (webhookError) {
-        console.error('⚠️ [useScheduling] Falha no webhook (não bloqueante):', webhookError)
-      }
+      // Enviar webhook unificado (não bloqueia se falhar)
+      const novaScheduledDate = scheduling.scheduledDate.toISOString()
+      const tipoMudanca = getScheduleChangeType(scheduledDateAnterior, novaScheduledDate)
+      
+      await sendActivityWebhookSafe({
+        activity_id: 'temp-id', // Será substituído pela Edge Function
+        client_id: scheduling.cardId,
+        tipo_atividade: 'Agendamento',
+        tipo_contato: scheduling.type,
+        unit_id: unitId,
+        created_by: session.session.user.id,
+        operacao: 'criado',
+        scheduled_date: novaScheduledDate,
+        notes: scheduling.notes,
+        scheduled_date_anterior: scheduledDateAnterior,
+        tipo_mudanca_agendamento: tipoMudanca
+      })
 
       // Invalida tanto o cache geral quanto o específico das atividades
       await queryClient.invalidateQueries({ queryKey: ['clients'] })

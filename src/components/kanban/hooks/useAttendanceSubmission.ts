@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
 import { useDebounceSubmission } from "./useDebounceSubmission"
 import { useQueryClient } from "@tanstack/react-query"
+import { sendActivityWebhookSafe, getScheduleChangeType } from "../utils/webhookService"
 
 export function useAttendanceSubmission() {
   const { toast } = useToast()
@@ -91,25 +92,25 @@ export function useAttendanceSubmission() {
           throw attendanceError
         }
 
-        // Enviar webhook para atendimento (não bloqueia se falhar)
-        try {
-          console.log(`[${submissionId}] Enviando webhook para atendimento`)
-          await supabase.functions.invoke('activity-webhook', {
-            body: {
-              activity_id: attendanceActivity.id,
-              client_id: cardId,
-              tipo_atividade: 'Atendimento',
-              tipo_contato: 'presencial',
-              notes: notes || observations || `Atendimento realizado - Resultado: ${result}`,
-              unit_id: clientData.unit_id,
-              created_by: session.user.id,
-              operacao: 'criado'
-            }
-          })
-          console.log(`[${submissionId}] Webhook enviado com sucesso`)
-        } catch (webhookError) {
-          console.warn(`[${submissionId}] Falha no webhook (não bloqueante):`, webhookError)
-        }
+        // Enviar webhook unificado para atendimento
+        console.log(`[${submissionId}] Enviando webhook unificado para atendimento`)
+        
+        const tipoMudancaAgendamento = getScheduleChangeType(scheduledDateAnterior, null)
+        
+        await sendActivityWebhookSafe({
+          activity_id: attendanceActivity.id,
+          client_id: cardId,
+          tipo_atividade: 'Atendimento',
+          tipo_contato: 'presencial',
+          unit_id: clientData.unit_id,
+          created_by: session.user.id,
+          operacao: 'criado',
+          notes: notes || observations || `Atendimento realizado - Resultado: ${result}`,
+          scheduled_date_anterior: scheduledDateAnterior,
+          tipo_mudanca_agendamento: tipoMudancaAgendamento,
+          previous_status: previousStatus,
+          new_status: result
+        })
 
         // Se for matriculado, registra atividade de Matrícula
         if (result === 'matriculado') {
@@ -179,26 +180,8 @@ export function useAttendanceSubmission() {
           throw updateError
         }
 
-        // Enviar webhook de cancelamento de agendamento se havia scheduled_date (não bloqueia se falhar)
-        if (scheduledDateAnterior) {
-          try {
-            console.log(`[${submissionId}] Enviando webhook de cancelamento de agendamento`)
-            await supabase.functions.invoke('activity-webhook', {
-              body: {
-                tipo_evento: 'scheduled_date_change',
-                tipo_mudanca: 'agendamento_cancelado',
-                client_id: cardId,
-                unit_id: clientData.unit_id,
-                scheduled_date_anterior: scheduledDateAnterior,
-                scheduled_date_novo: null,
-                created_by: session.user.id
-              }
-            })
-            console.log(`[${submissionId}] Webhook de cancelamento de agendamento enviado`)
-          } catch (webhookError) {
-            console.warn(`[${submissionId}] Falha no webhook de cancelamento (não bloqueante):`, webhookError)
-          }
-        }
+        // Webhook de mudança de status já enviado acima com campos completos
+        // Não precisa de webhook separado pois já incluímos scheduled_date_anterior e tipo_mudanca_agendamento
 
         // Invalida tanto o cache geral quanto o específico das atividades
         await queryClient.invalidateQueries({ queryKey: ['clients'] })

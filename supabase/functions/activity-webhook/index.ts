@@ -10,16 +10,28 @@ const corsHeaders = {
 interface WebhookPayload {
   activity_id: string
   client_id: string
-  tipo_atividade: string
-  tipo_contato: string
-  scheduled_date?: string
-  notes?: string
+  tipo_atividade: 'Agendamento' | 'Atendimento' | 'Matrícula' | 'Tentativa de Contato' | 'Contato Efetivo'
+  tipo_contato: 'phone' | 'whatsapp' | 'whatsapp-call' | 'presencial'
   unit_id: string
   created_by: string
-  operacao?: 'criado' | 'atualizado' | 'excluido'
-  // Novos campos para mudança de agendamento
+  operacao: 'criado' | 'atualizado' | 'excluido'
+  
+  // Campos opcionais
+  scheduled_date?: string
+  notes?: string
+  
+  // Campos de mudança de agendamento (SEMPRE incluir para auditoria)
   scheduled_date_anterior?: string | null
   tipo_mudanca_agendamento?: 'agendamento_criado' | 'reagendamento' | 'agendamento_cancelado'
+  
+  // Contexto adicional
+  previous_status?: string
+  new_status?: string
+  
+  // Campos especiais para eventos de mudança
+  tipo_evento?: 'scheduled_date_change'
+  tipo_mudanca?: string
+  scheduled_date_novo?: string | null
 }
 
 serve(async (req) => {
@@ -80,13 +92,13 @@ serve(async (req) => {
       throw new Error('Erro ao buscar dados da unidade')
     }
 
-    // Construir payload do webhook
+    // Construir payload unificado do webhook
     const webhookPayload = {
       activity_id: payload.activity_id,
       tipo_atividade: payload.tipo_atividade,
       tipo_contato: payload.tipo_contato,
-      tipo_operacao: payload.tipo_atividade === 'Agendamento' ? 'agendamento' : 'atendimento',
-      operacao: payload.operacao || 'criado', // Padrão é 'criado'
+      tipo_operacao: getOperationType(payload.tipo_atividade),
+      operacao: payload.operacao,
       scheduled_date: payload.scheduled_date,
       client_name: clientData.name,
       phone_number: clientData.phone_number,
@@ -94,17 +106,46 @@ serve(async (req) => {
       unit_name: unitData.name,
       notes: payload.notes,
       created_at: new Date().toISOString(),
-      // Campos de mudança de agendamento (sempre incluir se tipo_mudanca_agendamento existir)
-      ...(payload.tipo_mudanca_agendamento && {
-        scheduled_date_anterior: payload.scheduled_date_anterior,
-        tipo_mudanca_agendamento: payload.tipo_mudanca_agendamento
-      })
-    }
-    
-    console.log('📊 [Activity Webhook] Campos de agendamento recebidos:', {
+      
+      // SEMPRE incluir campos de mudança de agendamento para auditoria completa
       scheduled_date_anterior: payload.scheduled_date_anterior,
       tipo_mudanca_agendamento: payload.tipo_mudanca_agendamento,
-      incluindo_campos: !!payload.tipo_mudanca_agendamento
+      
+      // Contexto adicional se disponível
+      previous_status: payload.previous_status,
+      new_status: payload.new_status,
+      
+      // Campos especiais para eventos de mudança de scheduled_date
+      ...(payload.tipo_evento === 'scheduled_date_change' && {
+        tipo_evento: payload.tipo_evento,
+        tipo_mudanca: payload.tipo_mudanca,
+        scheduled_date_novo: payload.scheduled_date_novo
+      })
+    }
+
+// Helper function para determinar tipo de operação
+function getOperationType(tipoAtividade: string): string {
+  switch (tipoAtividade) {
+    case 'Agendamento':
+      return 'agendamento'
+    case 'Atendimento':
+    case 'Matrícula':
+      return 'atendimento'
+    case 'Tentativa de Contato':
+    case 'Contato Efetivo':
+      return 'contato'
+    default:
+      return 'atividade'
+  }
+}
+    
+    console.log('📊 [Activity Webhook] Auditoria completa de agendamento:', {
+      scheduled_date_anterior: payload.scheduled_date_anterior,
+      tipo_mudanca_agendamento: payload.tipo_mudanca_agendamento,
+      scheduled_date_atual: payload.scheduled_date,
+      tipo_evento: payload.tipo_evento,
+      operacao: payload.operacao,
+      contexto_completo: true
     })
 
     console.log('📤 [Activity Webhook] Enviando payload:', webhookPayload)
