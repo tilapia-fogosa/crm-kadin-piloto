@@ -81,6 +81,13 @@ export function useScheduling() {
           tipo_mudanca_agendamento: tipoMudanca
         })
         
+        console.log('🔍 [useScheduling] Validação dos campos:', {
+          scheduledDateAnterior_existe: scheduledDateAnterior !== null && scheduledDateAnterior !== undefined,
+          scheduledDateAnterior_valor: scheduledDateAnterior,
+          tipoMudanca_valor: tipoMudanca,
+          sera_reagendamento: !!scheduledDateAnterior
+        })
+        
         const { data: webhookResponse, error: webhookError } = await supabase.functions.invoke('activity-webhook', {
           body: {
             activity_id: 'temp-id', // Será substituído pela Edge Function

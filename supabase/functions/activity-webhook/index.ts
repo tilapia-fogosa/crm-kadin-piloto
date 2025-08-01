@@ -94,12 +94,18 @@ serve(async (req) => {
       unit_name: unitData.name,
       notes: payload.notes,
       created_at: new Date().toISOString(),
-      // Campos de mudança de agendamento (se aplicável)
-      ...(payload.scheduled_date_anterior !== undefined && {
+      // Campos de mudança de agendamento (sempre incluir se tipo_mudanca_agendamento existir)
+      ...(payload.tipo_mudanca_agendamento && {
         scheduled_date_anterior: payload.scheduled_date_anterior,
         tipo_mudanca_agendamento: payload.tipo_mudanca_agendamento
       })
     }
+    
+    console.log('📊 [Activity Webhook] Campos de agendamento recebidos:', {
+      scheduled_date_anterior: payload.scheduled_date_anterior,
+      tipo_mudanca_agendamento: payload.tipo_mudanca_agendamento,
+      incluindo_campos: !!payload.tipo_mudanca_agendamento
+    })
 
     console.log('📤 [Activity Webhook] Enviando payload:', webhookPayload)
 
