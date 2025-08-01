@@ -63,7 +63,8 @@ export function useScheduling() {
             scheduled_date: scheduling.scheduledDate.toISOString(),
             notes: scheduling.notes,
             unit_id: unitId,
-            created_by: session.session.user.id
+            created_by: session.session.user.id,
+            operacao: 'criado'
           }
         })
         console.log('✅ [useScheduling] Webhook enviado com sucesso')

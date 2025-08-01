@@ -100,7 +100,8 @@ export function useAttendanceSubmission() {
               tipo_contato: 'presencial',
               notes: notes || observations || `Atendimento realizado - Resultado: ${result}`,
               unit_id: clientData.unit_id,
-              created_by: session.user.id
+              created_by: session.user.id,
+              operacao: 'criado'
             }
           })
           console.log(`[${submissionId}] Webhook enviado com sucesso`)

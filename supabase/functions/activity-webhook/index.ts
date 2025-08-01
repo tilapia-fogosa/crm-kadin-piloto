@@ -16,6 +16,7 @@ interface WebhookPayload {
   notes?: string
   unit_id: string
   created_by: string
+  operacao?: 'criado' | 'atualizado' | 'excluido'
 }
 
 serve(async (req) => {
@@ -82,6 +83,7 @@ serve(async (req) => {
       tipo_atividade: payload.tipo_atividade,
       tipo_contato: payload.tipo_contato,
       tipo_operacao: payload.tipo_atividade === 'Agendamento' ? 'agendamento' : 'atendimento',
+      operacao: payload.operacao || 'criado', // Padrão é 'criado'
       scheduled_date: payload.scheduled_date,
       client_name: clientData.name,
       phone_number: clientData.phone_number,
