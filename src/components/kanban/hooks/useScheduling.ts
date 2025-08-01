@@ -62,61 +62,49 @@ export function useScheduling() {
 
       if (updateClientError) throw updateClientError
 
-      // Enviar webhook para agendamento (não bloqueia se falhar)
+      // Enviar webhook ÚNICO com todas as informações (não bloqueia se falhar)
       try {
-        console.log('📤 [useScheduling] Enviando webhook para agendamento')
-        await supabase.functions.invoke('activity-webhook', {
+        const novaScheduledDate = scheduling.scheduledDate.toISOString()
+        const tipoMudanca = scheduledDateAnterior ? 'reagendamento' : 'agendamento_criado'
+        
+        console.log('📤 [useScheduling] Enviando webhook único com informações completas:', {
+          activity_id: 'temp-id',
+          client_id: scheduling.cardId,
+          tipo_atividade: 'Agendamento',
+          tipo_contato: scheduling.type,
+          scheduled_date: novaScheduledDate,
+          notes: scheduling.notes,
+          unit_id: unitId,
+          created_by: session.session.user.id,
+          operacao: 'criado',
+          scheduled_date_anterior: scheduledDateAnterior,
+          tipo_mudanca_agendamento: tipoMudanca
+        })
+        
+        const { data: webhookResponse, error: webhookError } = await supabase.functions.invoke('activity-webhook', {
           body: {
             activity_id: 'temp-id', // Será substituído pela Edge Function
             client_id: scheduling.cardId,
             tipo_atividade: 'Agendamento',
             tipo_contato: scheduling.type,
-            scheduled_date: scheduling.scheduledDate.toISOString(),
+            scheduled_date: novaScheduledDate,
             notes: scheduling.notes,
             unit_id: unitId,
             created_by: session.session.user.id,
-            operacao: 'criado'
-          }
-        })
-        console.log('✅ [useScheduling] Webhook de atividade enviado com sucesso')
-      } catch (webhookError) {
-        console.warn('⚠️ [useScheduling] Falha no webhook de atividade (não bloqueante):', webhookError)
-      }
-
-      // Enviar webhook de mudança de scheduled_date (não bloqueia se falhar)
-      try {
-        const novaScheduledDate = scheduling.scheduledDate.toISOString()
-        const tipoMudanca = scheduledDateAnterior ? 'reagendamento' : 'agendamento_criado'
-        
-        console.log(`📅 [useScheduling] Dados para webhook de mudança:`, {
-          tipo_evento: 'scheduled_date_change',
-          tipo_mudanca: tipoMudanca,
-          client_id: scheduling.cardId,
-          unit_id: unitId,
-          scheduled_date_anterior: scheduledDateAnterior,
-          scheduled_date_novo: novaScheduledDate,
-          created_by: session.session.user.id
-        })
-        
-        const { data: webhookResponse, error: webhookError } = await supabase.functions.invoke('activity-webhook', {
-          body: {
-            tipo_evento: 'scheduled_date_change',
-            tipo_mudanca: tipoMudanca,
-            client_id: scheduling.cardId,
-            unit_id: unitId,
+            operacao: 'criado',
+            // Campos adicionais de mudança de agendamento
             scheduled_date_anterior: scheduledDateAnterior,
-            scheduled_date_novo: novaScheduledDate,
-            created_by: session.session.user.id
+            tipo_mudanca_agendamento: tipoMudanca
           }
         })
         
         if (webhookError) {
-          console.error('❌ [useScheduling] Erro no webhook de mudança:', webhookError)
+          console.error('❌ [useScheduling] Erro no webhook:', webhookError)
         } else {
-          console.log(`✅ [useScheduling] Webhook de mudança enviado (${tipoMudanca}):`, webhookResponse)
+          console.log('✅ [useScheduling] Webhook único enviado com sucesso:', webhookResponse)
         }
       } catch (webhookError) {
-        console.error('⚠️ [useScheduling] Falha no webhook de mudança (não bloqueante):', webhookError)
+        console.error('⚠️ [useScheduling] Falha no webhook (não bloqueante):', webhookError)
       }
 
       // Invalida tanto o cache geral quanto o específico das atividades

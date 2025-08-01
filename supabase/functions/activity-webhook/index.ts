@@ -17,16 +17,9 @@ interface WebhookPayload {
   unit_id: string
   created_by: string
   operacao?: 'criado' | 'atualizado' | 'excluido'
-}
-
-interface ScheduledDateChangePayload {
-  tipo_evento: 'scheduled_date_change'
-  tipo_mudanca: 'agendamento_criado' | 'reagendamento' | 'agendamento_cancelado'
-  client_id: string
-  unit_id: string
-  scheduled_date_anterior: string | null
-  scheduled_date_novo: string | null
-  created_by: string
+  // Novos campos para mudança de agendamento
+  scheduled_date_anterior?: string | null
+  tipo_mudanca_agendamento?: 'agendamento_criado' | 'reagendamento' | 'agendamento_cancelado'
 }
 
 serve(async (req) => {
@@ -42,13 +35,8 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    const payload: WebhookPayload | ScheduledDateChangePayload = await req.json()
+    const payload: WebhookPayload = await req.json()
     console.log('📋 [Activity Webhook] Payload recebido:', payload)
-
-    // Verificar se é um webhook de mudança de scheduled_date
-    if ('tipo_evento' in payload && payload.tipo_evento === 'scheduled_date_change') {
-      return await handleScheduledDateChange(supabase, payload as ScheduledDateChangePayload)
-    }
 
     // Buscar URL do webhook
     const { data: webhookData, error: webhookError } = await supabase
@@ -105,7 +93,12 @@ serve(async (req) => {
       observations: clientData.observations,
       unit_name: unitData.name,
       notes: payload.notes,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      // Campos de mudança de agendamento (se aplicável)
+      ...(payload.scheduled_date_anterior !== undefined && {
+        scheduled_date_anterior: payload.scheduled_date_anterior,
+        tipo_mudanca_agendamento: payload.tipo_mudanca_agendamento
+      })
     }
 
     console.log('📤 [Activity Webhook] Enviando payload:', webhookPayload)
@@ -146,104 +139,3 @@ serve(async (req) => {
       }
     )
   }
-})
-
-async function handleScheduledDateChange(supabase: any, payload: ScheduledDateChangePayload) {
-  try {
-    console.log('📅 [Scheduled Date Change] Processando mudança:', payload.tipo_mudanca)
-
-    // Buscar URL do webhook
-    const { data: webhookData, error: webhookError } = await supabase
-      .from('dados_importantes')
-      .select('data')
-      .eq('id', 11)
-      .single()
-
-    if (webhookError || !webhookData?.data) {
-      console.log('⚠️ [Scheduled Date Change] Webhook URL não configurada')
-      return new Response(
-        JSON.stringify({ success: false, message: 'Webhook URL não configurada' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    const webhookUrl = webhookData.data
-    console.log('🔗 [Scheduled Date Change] URL do webhook:', webhookUrl)
-
-    // Buscar dados do cliente
-    const { data: clientData, error: clientError } = await supabase
-      .from('clients')
-      .select('name, phone_number, observations')
-      .eq('id', payload.client_id)
-      .single()
-
-    if (clientError) {
-      console.error('❌ [Scheduled Date Change] Erro ao buscar cliente:', clientError)
-      throw new Error('Erro ao buscar dados do cliente')
-    }
-
-    // Buscar dados da unidade
-    const { data: unitData, error: unitError } = await supabase
-      .from('units')
-      .select('name')
-      .eq('id', payload.unit_id)
-      .single()
-
-    if (unitError) {
-      console.error('❌ [Scheduled Date Change] Erro ao buscar unidade:', unitError)
-      throw new Error('Erro ao buscar dados da unidade')
-    }
-
-    // Construir payload do webhook para mudança de scheduled_date
-    const webhookPayload = {
-      tipo_evento: 'scheduled_date_change',
-      tipo_mudanca: payload.tipo_mudanca,
-      client_id: payload.client_id,
-      client_name: clientData.name,
-      phone_number: clientData.phone_number,
-      observations: clientData.observations,
-      unit_name: unitData.name,
-      scheduled_date_anterior: payload.scheduled_date_anterior,
-      scheduled_date_novo: payload.scheduled_date_novo,
-      created_at: new Date().toISOString()
-    }
-
-    console.log('📤 [Scheduled Date Change] Enviando payload:', webhookPayload)
-
-    // Enviar webhook
-    const webhookResponse = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(webhookPayload)
-    })
-
-    if (!webhookResponse.ok) {
-      const errorText = await webhookResponse.text()
-      console.error('❌ [Scheduled Date Change] Erro na resposta do webhook:', errorText)
-      throw new Error(`Webhook falhou: ${webhookResponse.status} - ${errorText}`)
-    }
-
-    console.log('✅ [Scheduled Date Change] Webhook enviado com sucesso')
-
-    return new Response(
-      JSON.stringify({ success: true, message: 'Webhook de mudança de agendamento enviado com sucesso' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-
-  } catch (error) {
-    console.error('❌ [Scheduled Date Change] Erro:', error)
-    
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
-      }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
-  }
-}
