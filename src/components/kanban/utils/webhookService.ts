@@ -42,10 +42,51 @@ export const fetchClientData = async (clientId: string) => {
 }
 
 /**
+ * Verifica se já existe um webhook recente para evitar duplicação
+ */
+const checkRecentWebhook = async (clientId: string, tipoAtividade: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('client_webhook_logs')
+      .select('id, created_at')
+      .eq('client_id', clientId)
+      .eq('status', 'success')
+      .gte('created_at', new Date(Date.now() - 30000).toISOString()) // Últimos 30 segundos
+      .limit(1)
+
+    if (error) {
+      console.warn('⚠️ [WebhookService] Erro ao verificar webhooks recentes:', error)
+      return false
+    }
+
+    const hasRecent = data && data.length > 0
+    if (hasRecent) {
+      console.log('🔄 [WebhookService] Webhook duplicado detectado - ignorando:', {
+        clientId,
+        tipoAtividade,
+        ultimoWebhook: data[0].created_at
+      })
+    }
+    
+    return hasRecent
+  } catch (error) {
+    console.warn('⚠️ [WebhookService] Falha na verificação de duplicação:', error)
+    return false
+  }
+}
+
+/**
  * Função principal para envio de webhook unificado
  */
 export const sendActivityWebhook = async (payload: ActivityWebhookPayload): Promise<WebhookResult> => {
   try {
+    // Verificar se há webhook duplicado recente
+    const isDuplicate = await checkRecentWebhook(payload.client_id, payload.tipo_atividade)
+    if (isDuplicate) {
+      console.log('⏭️ [WebhookService] Webhook ignorado devido à duplicação')
+      return { success: true } // Retorna sucesso para não afetar o fluxo
+    }
+
     logWebhook('Enviando webhook unificado', payload)
     
     const { data: response, error } = await supabase.functions.invoke('activity-webhook', {
