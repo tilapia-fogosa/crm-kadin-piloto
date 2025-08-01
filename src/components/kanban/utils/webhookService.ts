@@ -9,6 +9,12 @@ import { supabase } from "@/integrations/supabase/client"
 import { ActivityWebhookPayload, WebhookResult } from "../types/webhook.types"
 
 /**
+ * Cache simples para controlar webhooks duplicados
+ */
+const webhookCache = new Map<string, number>()
+const CACHE_DURATION = 30000 // 30 segundos
+
+/**
  * Log detalhado para debugging
  */
 const logWebhook = (operation: string, payload: ActivityWebhookPayload) => {
@@ -42,37 +48,35 @@ export const fetchClientData = async (clientId: string) => {
 }
 
 /**
- * Verifica se já existe um webhook recente para evitar duplicação
+ * Verifica se há webhook duplicado usando cache em memória
  */
-const checkRecentWebhook = async (clientId: string, tipoAtividade: string): Promise<boolean> => {
-  try {
-    const { data, error } = await supabase
-      .from('client_webhook_logs')
-      .select('id, created_at')
-      .eq('client_id', clientId)
-      .eq('status', 'success')
-      .gte('created_at', new Date(Date.now() - 30000).toISOString()) // Últimos 30 segundos
-      .limit(1)
-
-    if (error) {
-      console.warn('⚠️ [WebhookService] Erro ao verificar webhooks recentes:', error)
-      return false
+const checkDuplicateWebhook = (clientId: string, tipoAtividade: string): boolean => {
+  const cacheKey = `${clientId}-${tipoAtividade}`
+  const now = Date.now()
+  
+  // Limpar entradas expiradas do cache
+  for (const [key, timestamp] of webhookCache.entries()) {
+    if (now - timestamp > CACHE_DURATION) {
+      webhookCache.delete(key)
     }
-
-    const hasRecent = data && data.length > 0
-    if (hasRecent) {
-      console.log('🔄 [WebhookService] Webhook duplicado detectado - ignorando:', {
-        clientId,
-        tipoAtividade,
-        ultimoWebhook: data[0].created_at
-      })
-    }
-    
-    return hasRecent
-  } catch (error) {
-    console.warn('⚠️ [WebhookService] Falha na verificação de duplicação:', error)
-    return false
   }
+  
+  // Verificar se existe entrada recente
+  const lastWebhook = webhookCache.get(cacheKey)
+  if (lastWebhook && (now - lastWebhook) < CACHE_DURATION) {
+    console.log('🔄 [WebhookService] Webhook duplicado detectado (cache):', {
+      clientId,
+      tipoAtividade,
+      lastWebhook: new Date(lastWebhook).toISOString(),
+      timeDiff: now - lastWebhook
+    })
+    return true
+  }
+  
+  // Adicionar ao cache
+  webhookCache.set(cacheKey, now)
+  console.log('✨ [WebhookService] Webhook adicionado ao cache:', { cacheKey, timestamp: now })
+  return false
 }
 
 /**
@@ -80,10 +84,10 @@ const checkRecentWebhook = async (clientId: string, tipoAtividade: string): Prom
  */
 export const sendActivityWebhook = async (payload: ActivityWebhookPayload): Promise<WebhookResult> => {
   try {
-    // Verificar se há webhook duplicado recente
-    const isDuplicate = await checkRecentWebhook(payload.client_id, payload.tipo_atividade)
+    // Verificar se há webhook duplicado usando cache
+    const isDuplicate = checkDuplicateWebhook(payload.client_id, payload.tipo_atividade)
     if (isDuplicate) {
-      console.log('⏭️ [WebhookService] Webhook ignorado devido à duplicação')
+      console.log('⏭️ [WebhookService] Webhook ignorado devido à duplicação (cache)')
       return { success: true } // Retorna sucesso para não afetar o fluxo
     }
 
