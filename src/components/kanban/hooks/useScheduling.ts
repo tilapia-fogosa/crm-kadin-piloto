@@ -51,6 +51,26 @@ export function useScheduling() {
 
       if (updateClientError) throw updateClientError
 
+      // Enviar webhook para agendamento (não bloqueia se falhar)
+      try {
+        console.log('📤 [useScheduling] Enviando webhook para agendamento')
+        await supabase.functions.invoke('activity-webhook', {
+          body: {
+            activity_id: 'temp-id', // Será substituído pela Edge Function
+            client_id: scheduling.cardId,
+            tipo_atividade: 'Agendamento',
+            tipo_contato: scheduling.type,
+            scheduled_date: scheduling.scheduledDate.toISOString(),
+            notes: scheduling.notes,
+            unit_id: unitId,
+            created_by: session.session.user.id
+          }
+        })
+        console.log('✅ [useScheduling] Webhook enviado com sucesso')
+      } catch (webhookError) {
+        console.warn('⚠️ [useScheduling] Falha no webhook (não bloqueante):', webhookError)
+      }
+
       // Invalida tanto o cache geral quanto o específico das atividades
       await queryClient.invalidateQueries({ queryKey: ['clients'] })
       await queryClient.invalidateQueries({ queryKey: ['activities', scheduling.cardId] })

@@ -89,6 +89,25 @@ export function useAttendanceSubmission() {
           throw attendanceError
         }
 
+        // Enviar webhook para atendimento (não bloqueia se falhar)
+        try {
+          console.log(`[${submissionId}] Enviando webhook para atendimento`)
+          await supabase.functions.invoke('activity-webhook', {
+            body: {
+              activity_id: attendanceActivity.id,
+              client_id: cardId,
+              tipo_atividade: 'Atendimento',
+              tipo_contato: 'presencial',
+              notes: notes || observations || `Atendimento realizado - Resultado: ${result}`,
+              unit_id: clientData.unit_id,
+              created_by: session.user.id
+            }
+          })
+          console.log(`[${submissionId}] Webhook enviado com sucesso`)
+        } catch (webhookError) {
+          console.warn(`[${submissionId}] Falha no webhook (não bloqueante):`, webhookError)
+        }
+
         // Se for matriculado, registra atividade de Matrícula
         if (result === 'matriculado') {
           console.log(`[${submissionId}] Cliente matriculado, registrando atividade de matrícula`)
