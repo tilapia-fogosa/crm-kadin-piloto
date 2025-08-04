@@ -1,0 +1,8 @@
+-- Desativar RLS temporariamente para testes
+ALTER TABLE public.clients DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_activities DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_webhooks DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_webhook_logs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.units DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.unit_users DISABLE ROW LEVEL SECURITY;
