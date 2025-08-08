@@ -41,52 +41,14 @@ export function useInfiniteClientData(
 
     console.log('🔔 [useInfiniteClientData] Configurando subscriptions realtime OTIMIZADAS');
     
-    // Invalidação super agressiva com debug e múltiplas estratégias
+    // Invalidação leve e consistente: invalida e refaz o fetch do Kanban
     const invalidateWithForce = async (reason: string, payload?: any) => {
-      console.log(`🔄 [REALTIME BRUTE FORCE] ${reason}:`, payload);
-      
+      console.log(`🔄 [REALTIME] ${reason}:`, payload)
       try {
-        // Estratégia 1: Limpar cache completamente
-        console.log('🧹 [REALTIME] Removendo queries antigas...');
-        await queryClient.removeQueries({ queryKey: ['infinite-clients'] });
-        
-        // Estratégia 2: Invalidar com força total
-        console.log('🔄 [REALTIME] Invalidando com refetchType ALL...');
-        await queryClient.invalidateQueries({ 
-          queryKey: ['infinite-clients'],
-          refetchType: 'all'
-        });
-        
-        // Estratégia 3: Refetch forçado imediato
-        console.log('💪 [REALTIME] Forçando refetch imediato...');
-        await queryClient.refetchQueries({
-          queryKey: ['infinite-clients'],
-          type: 'all'
-        });
-        
-        // Estratégia 4: Timeout de segurança para refetch adicional
-        setTimeout(async () => {
-          console.log('⏰ [REALTIME] Timeout de segurança - refetch adicional');
-          await queryClient.refetchQueries({
-            queryKey: ['infinite-clients'],
-            type: 'all'
-          });
-        }, 200);
-        
-        // Estratégia 5: Segundo timeout mais agressivo
-        setTimeout(async () => {
-          console.log('🚨 [REALTIME] Timeout agressivo - clearing + refetch');
-          queryClient.clear(); // Nuclear option
-          await queryClient.refetchQueries({
-            queryKey: ['infinite-clients'],
-            type: 'all'
-          });
-        }, 500);
-        
+        await queryClient.invalidateQueries({ queryKey: ['infinite-clients'], refetchType: 'all' })
+        await queryClient.refetchQueries({ queryKey: ['infinite-clients'], type: 'all' })
       } catch (error) {
-        console.error('❌ [REALTIME] Erro na invalidação:', error);
-        // Fallback nuclear
-        queryClient.clear();
+        console.error('❌ [REALTIME] Erro na invalidação:', error)
       }
     };
 

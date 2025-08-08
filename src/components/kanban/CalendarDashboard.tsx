@@ -64,7 +64,7 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
     try {
       // Invalidar caches relacionados
       await queryClient.invalidateQueries({ queryKey: ['user-unit'] })
-      await queryClient.invalidateQueries({ queryKey: ['clients'] })
+      await queryClient.invalidateQueries({ queryKey: ['infinite-clients'] })
       
       // Recarregar dados da agenda
       await refetch()

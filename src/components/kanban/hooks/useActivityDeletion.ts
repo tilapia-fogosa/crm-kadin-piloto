@@ -51,8 +51,8 @@ export function useActivityDeletion() {
 
       console.log('Resposta da inativação:', data);
 
-      // Força a revalidação dos dados do cliente e das atividades específicas
-      await queryClient.invalidateQueries({ queryKey: ['clients'] });
+      await queryClient.invalidateQueries({ queryKey: ['infinite-clients'], refetchType: 'all' })
+      await queryClient.refetchQueries({ queryKey: ['infinite-clients'], type: 'all' })
       await queryClient.invalidateQueries({ queryKey: ['activities', clientId] });
 
       // Toast de sucesso removido

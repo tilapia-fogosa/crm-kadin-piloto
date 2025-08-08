@@ -123,7 +123,8 @@ export function useLossRegistration() {
       await sendActivityWebhookSafe(webhookPayload)
 
       // 5. Atualiza o cache do React Query
-      await queryClient.invalidateQueries({ queryKey: ['clients'] })
+      await queryClient.invalidateQueries({ queryKey: ['infinite-clients'], refetchType: 'all' })
+      await queryClient.refetchQueries({ queryKey: ['infinite-clients'], type: 'all' })
 
       console.log('Registro de perda concluído com sucesso')
       

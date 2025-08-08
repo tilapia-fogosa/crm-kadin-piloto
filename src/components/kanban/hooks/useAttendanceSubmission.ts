@@ -187,8 +187,9 @@ export function useAttendanceSubmission() {
         // Webhook de mudança de status já enviado acima com campos completos
         // Não precisa de webhook separado pois já incluímos scheduled_date_anterior e tipo_mudanca_agendamento
 
-        // Invalida tanto o cache geral quanto o específico das atividades
-        await queryClient.invalidateQueries({ queryKey: ['clients'] })
+        // Invalida Kanban e atividades para atualização instantânea
+        await queryClient.invalidateQueries({ queryKey: ['infinite-clients'], refetchType: 'all' })
+        await queryClient.refetchQueries({ queryKey: ['infinite-clients'], type: 'all' })
         await queryClient.invalidateQueries({ queryKey: ['activities', cardId] })
 
         console.log(`[${submissionId}] Atendimento registrado com sucesso`)

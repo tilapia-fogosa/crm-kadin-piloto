@@ -51,8 +51,9 @@ export function useContactAttempt() {
 
       if (updateClientError) throw updateClientError
 
-      // Invalida tanto o cache geral quanto o específico das atividades
-      await queryClient.invalidateQueries({ queryKey: ['clients'] })
+      // Invalida Kanban e atividades para atualização instantânea
+      await queryClient.invalidateQueries({ queryKey: ['infinite-clients'], refetchType: 'all' })
+      await queryClient.refetchQueries({ queryKey: ['infinite-clients'], type: 'all' })
       await queryClient.invalidateQueries({ queryKey: ['activities', attempt.cardId] })
 
       // Toast de sucesso removido

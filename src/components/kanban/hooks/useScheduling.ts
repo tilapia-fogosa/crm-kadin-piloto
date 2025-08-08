@@ -84,8 +84,9 @@ export function useScheduling() {
       console.log('📤 [useScheduling] Enviando webhook payload:', webhookPayload)
       await sendActivityWebhookSafe(webhookPayload)
 
-      // Invalida tanto o cache geral quanto o específico das atividades
-      await queryClient.invalidateQueries({ queryKey: ['clients'] })
+      // Invalida Kanban e atividades para atualização instantânea
+      await queryClient.invalidateQueries({ queryKey: ['infinite-clients'], refetchType: 'all' })
+      await queryClient.refetchQueries({ queryKey: ['infinite-clients'], type: 'all' })
       await queryClient.invalidateQueries({ queryKey: ['activities', scheduling.cardId] })
 
       // Toast de sucesso removido
