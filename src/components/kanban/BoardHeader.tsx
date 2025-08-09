@@ -23,6 +23,7 @@ interface BoardHeaderProps {
   setSelectedUnitIds: (unitIds: string[]) => void
   isMultiUnit: boolean
   isSearching?: boolean
+  onOpenClient: (clientId: string) => void
 }
 
 function BoardHeaderComponent({
@@ -35,7 +36,8 @@ function BoardHeaderComponent({
   selectedUnitIds,
   setSelectedUnitIds,
   isMultiUnit,
-  isSearching = false
+  isSearching = false,
+  onOpenClient
 }: BoardHeaderProps) {
   // Hook para sistema global de notificações
   const { soundEnabled, setSoundEnabled, testSound, isAudioSupported } = useNotification();
@@ -122,7 +124,7 @@ function BoardHeaderComponent({
 
           <div className="flex items-center space-x-2">
             <ActivityDashboard />
-            <CalendarDashboard selectedUnitIds={selectedUnitIds} />
+            <CalendarDashboard selectedUnitIds={selectedUnitIds} onOpenClient={onOpenClient} />
             
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={onRefresh}>
               <RefreshCw className="h-4 w-4" />

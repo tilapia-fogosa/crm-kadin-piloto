@@ -18,6 +18,7 @@ interface CalendarGridProps {
   scheduledAppointments?: AgendaLead[]
   onReschedule: (clientId: string, clientName: string) => void
   userUnits?: UserUnit[]
+  onOpenClient?: (clientId: string) => void
 }
 
 export function CalendarGrid({
@@ -25,7 +26,8 @@ export function CalendarGrid({
   isLoadingAppointments,
   scheduledAppointments = [],
   onReschedule,
-  userUnits
+  userUnits,
+  onOpenClient
 }: CalendarGridProps) {
   console.log('📅 [CalendarGrid] Renderizando com unidades:', userUnits?.length)
   console.log('📅 [CalendarGrid] Total de agendamentos recebidos:', scheduledAppointments.length)
@@ -112,6 +114,7 @@ export function CalendarGrid({
           appointments={day ? getDayAppointments(day) : []}
           onReschedule={onReschedule}
           userUnits={userUnits}
+          onOpenClient={onOpenClient}
         />
       ))}
     </div>

@@ -15,9 +15,10 @@ interface AppointmentItemProps {
   appointment: ScheduledAppointment
   onReschedule: (clientId: string, clientName: string) => void
   unitIndex: number
+  onOpenClient?: (clientId: string) => void
 }
 
-export function AppointmentItem({ appointment, onReschedule, unitIndex }: AppointmentItemProps) {
+export function AppointmentItem({ appointment, onReschedule, unitIndex, onOpenClient }: AppointmentItemProps) {
   // Verificação de segurança para índice negativo
   const safeUnitIndex = unitIndex >= 0 ? unitIndex : 0;
   
@@ -29,8 +30,9 @@ export function AppointmentItem({ appointment, onReschedule, unitIndex }: Appoin
   
   return (
     <div 
-      className={`text-xs p-1 rounded flex items-center justify-between group ${textColorClass}`}
+      className={`text-xs p-1 rounded flex items-center justify-between group cursor-pointer ${textColorClass}`}
       style={{ backgroundColor: unitColor }}
+      onClick={() => onOpenClient?.(appointment.id)}
     >
       <span>
         {format(new Date(appointment.scheduled_date), 'HH:mm')} - {appointment.client_name}
@@ -42,6 +44,7 @@ export function AppointmentItem({ appointment, onReschedule, unitIndex }: Appoin
               variant="ghost" 
               size="icon" 
               className={`h-4 w-4 p-0 ${textColorClass} hover:bg-opacity-20`}
+              onClick={(e) => e.stopPropagation()}
             >
               <MoreHorizontal className="h-3 w-3" />
             </Button>

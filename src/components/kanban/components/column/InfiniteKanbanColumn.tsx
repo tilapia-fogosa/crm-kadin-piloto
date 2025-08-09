@@ -16,6 +16,8 @@ interface InfiniteKanbanColumnProps {
   onLoadMore?: () => void
   isLoading?: boolean
   hasNextPage?: boolean
+  openClientId?: string
+  onOpenedFromAgenda?: () => void
 }
 
 function InfiniteKanbanColumnComponent({ 
@@ -27,7 +29,9 @@ function InfiniteKanbanColumnComponent({
   onDeleteActivity,
   onLoadMore,
   isLoading = false,
-  hasNextPage = false
+  hasNextPage = false,
+  openClientId,
+  onOpenedFromAgenda
 }: InfiniteKanbanColumnProps) {
   const [selectedCard, setSelectedCard] = useState<KanbanCardType | null>(null)
   const [activityToDelete, setActivityToDelete] = useState<{id: string, clientId: string} | null>(null)
@@ -72,6 +76,16 @@ function InfiniteKanbanColumnComponent({
     scrollContainer.addEventListener('scroll', handleScroll)
     return () => scrollContainer.removeEventListener('scroll', handleScroll)
   }, [handleScroll])
+
+  // Abrir card automaticamente quando solicitado pela Agenda
+  useEffect(() => {
+    if (!openClientId) return
+    const match = column.cards.find(c => c.id === openClientId)
+    if (match) {
+      setSelectedCard(match)
+      onOpenedFromAgenda?.()
+    }
+  }, [openClientId, column.cards, onOpenedFromAgenda])
 
   const isEven = index % 2 === 0
 

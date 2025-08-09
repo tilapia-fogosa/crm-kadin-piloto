@@ -19,6 +19,7 @@ interface CalendarDayCellProps {
   appointments: AgendaLead[]
   onReschedule: (clientId: string, clientName: string) => void
   userUnits?: UserUnit[]
+  onOpenClient?: (clientId: string) => void
 }
 
 export function CalendarDayCell({
@@ -27,7 +28,8 @@ export function CalendarDayCell({
   isLoading,
   appointments,
   onReschedule,
-  userUnits
+  userUnits,
+  onOpenClient
 }: CalendarDayCellProps) {
   // Log específico para dias com agendamentos
   if (day && appointments.length > 0) {
@@ -86,6 +88,7 @@ export function CalendarDayCell({
                   }}
                   onReschedule={onReschedule}
                   unitIndex={getUnitIndex(appointment.unit_id)}
+                  onOpenClient={onOpenClient}
                 />
               ))}
             </div>

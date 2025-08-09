@@ -14,9 +14,10 @@ import { useToast } from "@/hooks/use-toast"
 
 interface CalendarDashboardProps {
   selectedUnitIds: string[]
+  onOpenClient?: (clientId: string) => void
 }
 
-export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
+export function CalendarDashboard({ selectedUnitIds, onOpenClient }: CalendarDashboardProps) {
   console.log('📅 [CalendarDashboard] Renderizando com selectedUnitIds:', selectedUnitIds)
   console.log('📅 [CalendarDashboard] Quantidade de unidades selecionadas:', selectedUnitIds?.length || 0)
   
@@ -48,6 +49,12 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
     setSelectedClientId(clientId)
     setSelectedClientName(clientName)
     setIsReschedulingDialogOpen(true)
+  }
+
+  const handleOpenClientClick = (clientId: string) => {
+    console.log('📅 [CalendarDashboard] Abrindo card do cliente via Agenda:', clientId)
+    onOpenClient?.(clientId)
+    setIsDialogOpen(false)
   }
 
   const handleRescheduleSuccess = async () => {
@@ -135,6 +142,7 @@ export function CalendarDashboard({ selectedUnitIds }: CalendarDashboardProps) {
           scheduledAppointments={appointments}
           onReschedule={handleReschedule}
           userUnits={userUnits}
+          onOpenClient={handleOpenClientClick}
         />
       </DialogContent>
 
