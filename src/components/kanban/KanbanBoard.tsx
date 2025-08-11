@@ -15,6 +15,7 @@ export function KanbanBoard() {
   const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDebugMode, setIsDebugMode] = useState(false);
+  const [openClientId, setOpenClientId] = useState<string | null>(null);
   
   // Hook para sistema global de notificações
   const { soundEnabled, setSoundEnabled } = useNotification();
@@ -118,6 +119,7 @@ export function KanbanBoard() {
         setSelectedUnitIds={setSelectedUnitIds}
         isMultiUnit={isMultiUnit || false}
         isSearching={isFetching && !isFetchingNextPage}
+        onOpenClient={(id) => setOpenClientId(id)}
       />
 
       {/* Scrollable container for kanban columns */}
@@ -146,6 +148,8 @@ export function KanbanBoard() {
                   }}
                   isLoading={isFetchingNextPage}
                   hasNextPage={hasNextPage}
+                  openClientId={openClientId || undefined}
+                  onOpenedFromAgenda={() => setOpenClientId(null)}
                 />
               </div>
             ))}
