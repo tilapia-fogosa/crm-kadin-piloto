@@ -100,6 +100,23 @@ export function KanbanBoard() {
     return () => clearTimeout(timer)
   }, [checkAndLoadMore])
 
+  // Quando abrir um cliente vindo da Agenda, garante carregar páginas até encontrá-lo
+  useEffect(() => {
+    if (!openClientId) return
+    const found = allClients.some((c: any) => c.id === openClientId)
+    console.log('📊 [KanbanBoard] openClientId recebido:', openClientId, '| já carregado?', found)
+    if (!found) {
+      if (hasNextPage && !isFetchingNextPage) {
+        console.log('📊 [KanbanBoard] Cliente não encontrado. Buscando próxima página...')
+        fetchNextPage()
+      } else if (!hasNextPage) {
+        console.warn('⚠️ [KanbanBoard] Cliente não encontrado nas páginas carregadas e não há mais páginas.')
+      }
+    } else {
+      console.log('✅ [KanbanBoard] Cliente encontrado nos dados carregados. A coluna deverá abrir o CardSheet.')
+    }
+  }, [openClientId, allClients, hasNextPage, isFetchingNextPage, fetchNextPage])
+
   if (isLoading || isLoadingUnits) {
     return <div className="flex items-center justify-center p-8">Carregando...</div>
   }

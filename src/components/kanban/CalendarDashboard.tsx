@@ -1,5 +1,5 @@
 
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -103,6 +103,7 @@ export function CalendarDashboard({ selectedUnitIds, onOpenClient }: CalendarDas
           </Button>
         </DialogTrigger>
         <DialogContent>
+          <DialogTitle className="sr-only">Agenda de Leads</DialogTitle>
           <div className="flex items-center justify-center p-8">
             <Skeleton className="h-[400px] w-full" />
           </div>
@@ -121,6 +122,7 @@ export function CalendarDashboard({ selectedUnitIds, onOpenClient }: CalendarDas
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+        <DialogTitle className="sr-only">Agenda de Leads</DialogTitle>
         <div className="flex justify-between items-start mb-6">
           <CalendarFilters 
             userUnits={userUnits}
