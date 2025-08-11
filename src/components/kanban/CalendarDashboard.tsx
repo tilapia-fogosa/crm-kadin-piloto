@@ -54,7 +54,7 @@ export function CalendarDashboard({ selectedUnitIds, onOpenClient }: CalendarDas
   const handleOpenClientClick = (clientId: string) => {
     console.log('📅 [CalendarDashboard] Abrindo card do cliente via Agenda:', clientId)
     onOpenClient?.(clientId)
-    setIsDialogOpen(false)
+    // Mantém a agenda aberta para o usuário continuar interagindo
   }
 
   const handleRescheduleSuccess = async () => {
