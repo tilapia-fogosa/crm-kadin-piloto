@@ -79,6 +79,7 @@ export interface ActivityData {
   created_at: string
   next_contact_date?: string
   created_by?: string
+  author_name?: string
   client_id: string
   scheduled_date?: string
   active: boolean

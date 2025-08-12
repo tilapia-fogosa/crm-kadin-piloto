@@ -238,7 +238,7 @@ export type Database = {
           pontos_atencao: string | null
           telefone: string | null
           texto_devolutiva: string | null
-          turma_id: string
+          turma_id: string | null
           ultima_correcao_ah: string | null
           ultima_falta: string | null
           ultima_pagina: number | null
@@ -272,7 +272,7 @@ export type Database = {
           pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
-          turma_id: string
+          turma_id?: string | null
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
           ultima_pagina?: number | null
@@ -306,7 +306,7 @@ export type Database = {
           pontos_atencao?: string | null
           telefone?: string | null
           texto_devolutiva?: string | null
-          turma_id?: string
+          turma_id?: string | null
           ultima_correcao_ah?: string | null
           ultima_falta?: string | null
           ultima_pagina?: number | null
@@ -316,6 +316,20 @@ export type Database = {
           vencimento_contrato?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_alunos_turma_id"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "fk_alunos_turma_id"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_alunos_unit_id"
             columns: ["unit_id"]
@@ -445,6 +459,51 @@ export type Database = {
           id?: string
           nome?: string
           total_paginas?: number
+        }
+        Relationships: []
+      }
+      aulas: {
+        Row: {
+          created_at: string
+          data_aula: string
+          descricao: string | null
+          display_order: number | null
+          duracao_minutos: number | null
+          hls_url: string
+          id: string
+          mes: string | null
+          published: boolean
+          thumbnail_url: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_aula: string
+          descricao?: string | null
+          display_order?: number | null
+          duracao_minutos?: number | null
+          hls_url: string
+          id?: string
+          mes?: string | null
+          published?: boolean
+          thumbnail_url?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_aula?: string
+          descricao?: string | null
+          display_order?: number | null
+          duracao_minutos?: number | null
+          hls_url?: string
+          id?: string
+          mes?: string | null
+          published?: boolean
+          thumbnail_url?: string | null
+          titulo?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -922,6 +981,7 @@ export type Database = {
           created_by: string | null
           deleted_at: string | null
           email: string | null
+          etapa_bot: Database["public"]["Enums"]["etapa-do-bot"] | null
           id: string
           lead_quality_score: number | null
           lead_source: string
@@ -936,6 +996,7 @@ export type Database = {
           primeiro_nome: string | null
           registration_cpf: string | null
           registration_name: string | null
+          resumo_atendimento: string | null
           scheduled_date: string | null
           status: string
           tipo_atendimento: Database["public"]["Enums"]["tipo_atendimento"]
@@ -952,6 +1013,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           email?: string | null
+          etapa_bot?: Database["public"]["Enums"]["etapa-do-bot"] | null
           id?: string
           lead_quality_score?: number | null
           lead_source: string
@@ -966,6 +1028,7 @@ export type Database = {
           primeiro_nome?: string | null
           registration_cpf?: string | null
           registration_name?: string | null
+          resumo_atendimento?: string | null
           scheduled_date?: string | null
           status?: string
           tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
@@ -982,6 +1045,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           email?: string | null
+          etapa_bot?: Database["public"]["Enums"]["etapa-do-bot"] | null
           id?: string
           lead_quality_score?: number | null
           lead_source?: string
@@ -996,6 +1060,7 @@ export type Database = {
           primeiro_nome?: string | null
           registration_cpf?: string | null
           registration_name?: string | null
+          resumo_atendimento?: string | null
           scheduled_date?: string | null
           status?: string
           tipo_atendimento?: Database["public"]["Enums"]["tipo_atendimento"]
@@ -1142,6 +1207,39 @@ export type Database = {
           },
         ]
       }
+      course_enrollments: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          enrolled_at: string
+          id: string
+          student_id: string
+          student_source: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          enrolled_at?: string
+          id?: string
+          student_id: string
+          student_source: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          enrolled_at?: string
+          id?: string
+          student_id?: string
+          student_source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dados_importantes: {
         Row: {
           data: string | null
@@ -1261,6 +1359,111 @@ export type Database = {
           tipo_item?: string
           unit_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      evento_participantes: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          evento_id: string
+          forma_pagamento: string
+          id: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          evento_id: string
+          forma_pagamento: string
+          id?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          evento_id?: string
+          forma_pagamento?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evento_participantes_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evento_participantes_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eventos: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          data_evento: string
+          descricao: string | null
+          id: string
+          local: string | null
+          numero_vagas: number
+          responsavel: string | null
+          tipo: string
+          titulo: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          data_evento: string
+          descricao?: string | null
+          id?: string
+          local?: string | null
+          numero_vagas?: number
+          responsavel?: string | null
+          tipo?: string
+          titulo: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          data_evento?: string
+          descricao?: string | null
+          id?: string
+          local?: string | null
+          numero_vagas?: number
+          responsavel?: string | null
+          tipo?: string
+          titulo?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      faq: {
+        Row: {
+          created_at: string
+          faq: string | null
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          faq?: string | null
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          faq?: string | null
+          id?: number
         }
         Relationships: []
       }
@@ -2344,6 +2547,36 @@ export type Database = {
           },
         ]
       }
+      resultados_alunos: {
+        Row: {
+          acertos_calculo_mental: number
+          aluno_id: string
+          created_at: string
+          data_aula: string
+          id: string
+          quantidade_acertos: number
+          updated_at: string
+        }
+        Insert: {
+          acertos_calculo_mental: number
+          aluno_id: string
+          created_at?: string
+          data_aula: string
+          id?: string
+          quantidade_acertos: number
+          updated_at?: string
+        }
+        Update: {
+          acertos_calculo_mental?: number
+          aluno_id?: string
+          created_at?: string
+          data_aula?: string
+          id?: string
+          quantidade_acertos?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sale_webhooks: {
         Row: {
           active: boolean
@@ -2581,7 +2814,7 @@ export type Database = {
           new_data: Json | null
           old_data: Json | null
           operation: string
-          student_id: string
+          student_id: string | null
         }
         Insert: {
           created_at?: string
@@ -2591,7 +2824,7 @@ export type Database = {
           new_data?: Json | null
           old_data?: Json | null
           operation: string
-          student_id: string
+          student_id?: string | null
         }
         Update: {
           created_at?: string
@@ -2601,7 +2834,7 @@ export type Database = {
           new_data?: Json | null
           old_data?: Json | null
           operation?: string
-          student_id?: string
+          student_id?: string | null
         }
         Relationships: [
           {
@@ -2863,7 +3096,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "turmas_professor_id_fkey"
+            foreignKeyName: "turmas_professor_fkey"
             columns: ["professor_id"]
             isOneToOne: false
             referencedRelation: "professores"
@@ -3245,7 +3478,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "turmas_professor_id_fkey"
+            foreignKeyName: "turmas_professor_fkey"
             columns: ["professor_id"]
             isOneToOne: false
             referencedRelation: "professores"
@@ -3763,6 +3996,7 @@ export type Database = {
         | "sabado"
         | "domingo"
       due_day: "5" | "10" | "15" | "20" | "25"
+      "etapa-do-bot": "apresentacao" | "rapport" | "agendamento" | "pos-venda"
       gender: "masculino" | "feminino"
       marital_status: "solteiro" | "casado" | "divorciado" | "viuvo" | "outro"
       origem_alerta:
@@ -3927,6 +4161,7 @@ export const Constants = {
         "domingo",
       ],
       due_day: ["5", "10", "15", "20", "25"],
+      "etapa-do-bot": ["apresentacao", "rapport", "agendamento", "pos-venda"],
       gender: ["masculino", "feminino"],
       marital_status: ["solteiro", "casado", "divorciado", "viuvo", "outro"],
       origem_alerta: [

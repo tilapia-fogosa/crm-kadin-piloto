@@ -178,6 +178,11 @@ export function ClientActivitySheet({ client, isOpen, setIsOpen }: ClientActivit
                         {formatDate(activity.created_at)}
                       </span>
                     </div>
+                    {activity.author_name && (
+                      <p className="text-sm ml-10 text-primary font-medium">
+                        {activity.author_name}
+                      </p>
+                    )}
                     {activity.notes && (
                       <p className="text-sm text-muted-foreground ml-10">
                         {activity.notes}

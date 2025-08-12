@@ -36,11 +36,11 @@ export function ActivityHistory({ activities, onDeleteActivity, clientId }: Acti
     const filteredActivities = activities.filter(activity => {
       const parts = activity.split('|')
       // Verifica se a atividade tem todos os campos necessários e está ativa
-      if (parts.length < 7) {
+      if (parts.length < 8) {
         console.error('Invalid activity format:', activity)
         return false
       }
-      return parts[6] === 'true' // Filtra apenas atividades ativas
+      return parts[7] === 'true' // Filtra apenas atividades ativas
     })
     
     // Função para comparar datas
@@ -103,8 +103,9 @@ export function ActivityHistory({ activities, onDeleteActivity, clientId }: Acti
               const tipo_atividade = parts[0]
               const tipo_contato = parts[1]
               const date = new Date(parts[2])
-              const notes = parts[3]
-              const id = parts[4]
+              const authorName = parts[3]
+              const notes = parts[4]
+              const id = parts[5]
               
               if (!id) {
                 console.error('Activity without ID:', activity)
@@ -136,6 +137,11 @@ export function ActivityHistory({ activities, onDeleteActivity, clientId }: Acti
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
+                  {authorName && (
+                    <p className="text-sm ml-10 text-primary font-medium">
+                      {authorName}
+                    </p>
+                  )}
                   {notes && (
                     <p className="text-sm text-muted-foreground ml-10">
                       {notes}

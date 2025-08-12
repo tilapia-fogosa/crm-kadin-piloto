@@ -12,6 +12,9 @@ interface ClientActivity {
   notes: string | null
   active: boolean
   next_contact_date?: string | null
+  created_by?: string | null
+  author_name?: string | null
+  client_id?: string | null
 }
 
 /**
@@ -106,30 +109,34 @@ export function useClientActivitiesForSheet(
         throw new Error('Client ID é obrigatório')
       }
 
-      const { data, error } = await supabase
-        .from('client_activities')
-        .select(`
-          id,
-          tipo_atividade,
-          tipo_contato,
-          created_at,
-          notes,
-          active,
-          next_contact_date
-        `)
-        .eq('client_id', clientId)
-        .eq('active', true)
-        .order('created_at', { ascending: false })
-        .limit(limit)
+      const { data, error } = await supabase.rpc('kanban_client_activities', {
+        p_client_id: clientId,
+        p_limit: limit,
+        p_offset: 0
+      })
 
       if (error) {
-        console.error('❌ [useClientActivitiesForSheet] Erro ao buscar atividades:', error)
+        console.error('❌ [useClientActivitiesForSheet] Erro ao buscar atividades (RPC):', error)
         throw error
       }
 
-      console.log(`✅ [useClientActivitiesForSheet] ${data?.length || 0} atividades carregadas`)
-      
-      return data || []
+      const activities: ClientActivity[] = Array.isArray(data)
+        ? (data as any[]).map((item) => ({
+            id: item.id,
+            tipo_atividade: item.tipo_atividade,
+            tipo_contato: item.tipo_contato,
+            created_at: item.created_at,
+            notes: item.notes ?? null,
+            active: item.active,
+            next_contact_date: item.next_contact_date ?? null,
+            created_by: item.created_by ?? null,
+            author_name: item.author_name ?? null,
+            client_id: item.client_id ?? null,
+          }))
+        : []
+
+      console.log(`✅ [useClientActivitiesForSheet] ${activities.length} atividades carregadas (RPC)`)      
+      return activities
     },
     enabled: Boolean(clientId) && debouncedIsOpen, // Só executa se tiver clientId E sheet aberto
     staleTime: 0, // SEMPRE fresh para sincronizar com kanban

@@ -38,10 +38,11 @@ export function PaginatedActivityHistory({
     }
   }, [activitiesData, clientId]);
 
-  // Convert activities back to the expected string format for compatibility
-  const formattedActivities = activitiesData?.activities?.map((activity: ActivityData) => {
-    return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}|${activity.active}`
-  }) || []
+// Convert activities back to the expected string format for compatibility
+const formattedActivities = activitiesData?.activities?.map((activity: ActivityData) => {
+  // formato: tipo_atividade|tipo_contato|created_at|author_name|notes|id|next_contact_date|active
+  return `${activity.tipo_atividade}|${activity.tipo_contato}|${activity.created_at}|${activity.author_name || ''}|${activity.notes || ''}|${activity.id}|${activity.next_contact_date || ''}|${activity.active}`
+}) || []
 
   const activities = activitiesData?.activities || []
   const hasNextPage = activitiesData?.hasNextPage || false

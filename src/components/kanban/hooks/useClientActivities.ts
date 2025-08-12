@@ -85,6 +85,7 @@ export function useClientActivities(
           created_at: item.created_at,
           next_contact_date: item.next_contact_date,
           created_by: item.created_by,
+          author_name: item.author_name,
           client_id: item.client_id,
           scheduled_date: item.scheduled_date,
           active: item.active
