@@ -11,7 +11,8 @@ import { useAgendaLeads } from "./hooks/useAgendaLeads"
 import { useState, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useToast } from "@/hooks/use-toast"
-
+import { ClientActivitySheet } from "@/components/clients/client-activity-sheet"
+import { supabase } from "@/integrations/supabase/client"
 interface CalendarDashboardProps {
   selectedUnitIds: string[]
   onOpenClient?: (clientId: string) => void
@@ -27,6 +28,10 @@ export function CalendarDashboard({ selectedUnitIds, onOpenClient }: CalendarDas
   const [selectedClientName, setSelectedClientName] = useState<string>("")
   const lastRefetchRef = useRef<number>(0)
 
+  // Painel simplificado de atividades do cliente
+  const [isActivitySheetOpen, setIsActivitySheetOpen] = useState(false)
+  type BasicClient = { id: string; name: string; phone_number: string; lead_source: string; email?: string; status: string }
+  const [selectedClientForActivities, setSelectedClientForActivities] = useState<BasicClient | null>(null)
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
@@ -51,12 +56,46 @@ export function CalendarDashboard({ selectedUnitIds, onOpenClient }: CalendarDas
     setIsReschedulingDialogOpen(true)
   }
 
-  const handleOpenClientClick = (clientId: string) => {
-    console.log('📅 [CalendarDashboard] Abrindo card do cliente via Agenda:', clientId)
-    onOpenClient?.(clientId)
+  const handleOpenClientClick = async (clientId: string) => {
+    console.log('📅 [CalendarDashboard] Abrindo painel simplificado para cliente via Agenda:', clientId)
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, name, phone_number, lead_source, email, status')
+        .eq('id', clientId)
+        .single()
+      
+      if (error || !data) {
+        console.error('❌ [CalendarDashboard] Erro ao buscar cliente:', error)
+        toast({
+          title: 'Erro ao carregar cliente',
+          description: 'Não foi possível carregar os dados do cliente.',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      const basicClient: BasicClient = {
+        id: data.id as string,
+        name: data.name as unknown as string,
+        phone_number: data.phone_number as unknown as string,
+        lead_source: data.lead_source as unknown as string,
+        email: data.email as unknown as string | undefined,
+        status: data.status as unknown as string,
+      }
+      setSelectedClientForActivities(basicClient)
+      setIsActivitySheetOpen(true)
+      console.log('✅ [CalendarDashboard] Cliente carregado. Abrindo Sheet de atividades.')
+    } catch (err) {
+      console.error('❌ [CalendarDashboard] Exceção ao buscar cliente:', err)
+      toast({
+        title: 'Erro inesperado',
+        description: 'Tente novamente em instantes.',
+        variant: 'destructive',
+      })
+    }
     // Mantém a agenda aberta para o usuário continuar interagindo
   }
-
   const handleRescheduleSuccess = async () => {
     console.log('📅 [CalendarDashboard] Reagendamento realizado com sucesso - atualizando dados')
     
@@ -157,6 +196,12 @@ export function CalendarDashboard({ selectedUnitIds, onOpenClient }: CalendarDas
           onSubmit={handleRescheduleSuccess}
         />
       )}
+
+      <ClientActivitySheet
+        client={selectedClientForActivities}
+        isOpen={isActivitySheetOpen}
+        setIsOpen={setIsActivitySheetOpen}
+      />
     </Dialog>
   )
 }
