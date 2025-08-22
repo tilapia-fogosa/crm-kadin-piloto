@@ -21,6 +21,7 @@ interface LossReasonData {
   atendimento_agendado: number;
   negociacao: number;
   perdido: number;
+  sem_status_anterior: number;
   total_motivo: number;
 }
 
@@ -126,7 +127,7 @@ export function LossReasonsReport() {
       const { start, end } = getDateRange();
       const currentUserId = (await supabase.auth.getUser()).data.user?.id;
       
-      const { data, error } = await supabase.rpc('get_loss_reasons_report' as any, {
+      const { data, error } = await supabase.rpc('get_loss_reasons_report', {
         p_start_date: start,
         p_end_date: end,
         p_unit_ids: filters.unitIds.length > 0 ? filters.unitIds : null,
@@ -147,6 +148,7 @@ export function LossReasonsReport() {
     atendimento_agendado: totals.atendimento_agendado + row.atendimento_agendado,
     negociacao: totals.negociacao + row.negociacao,
     perdido: totals.perdido + row.perdido,
+    sem_status_anterior: totals.sem_status_anterior + row.sem_status_anterior,
     total_motivo: totals.total_motivo + row.total_motivo,
   }), {
     novo_cadastro: 0,
@@ -155,6 +157,7 @@ export function LossReasonsReport() {
     atendimento_agendado: 0,
     negociacao: 0,
     perdido: 0,
+    sem_status_anterior: 0,
     total_motivo: 0,
   });
 
@@ -367,6 +370,7 @@ export function LossReasonsReport() {
                     <TableHead className="text-center">Atend. Agendado</TableHead>
                     <TableHead className="text-center">Negociação</TableHead>
                     <TableHead className="text-center">Perdido</TableHead>
+                    <TableHead className="text-center">Sem Status</TableHead>
                     <TableHead className="text-center font-semibold">Total</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -417,6 +421,13 @@ export function LossReasonsReport() {
                         )}
                       </TableCell>
                       <TableCell className="text-center">
+                        {row.sem_status_anterior > 0 ? (
+                          <Badge variant="secondary">{row.sem_status_anterior}</Badge>
+                        ) : (
+                          '-'
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
                         <Badge variant="default">{row.total_motivo}</Badge>
                       </TableCell>
                     </TableRow>
@@ -443,6 +454,9 @@ export function LossReasonsReport() {
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge variant="outline">{columnTotals.perdido}</Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline">{columnTotals.sem_status_anterior}</Badge>
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge className="bg-primary">{columnTotals.total_motivo}</Badge>
