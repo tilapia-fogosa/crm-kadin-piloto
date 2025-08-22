@@ -31,6 +31,7 @@ import UserManagementPage from "@/pages/admin/user-management";
 import UpdatesPage from "@/pages/updates/index";
 import UpdatesAdminPage from "@/pages/updates/admin";
 import ChangePassword from "@/pages/auth/ChangePassword";
+import RelatoriosAvancadosPage from "@/pages/relatorios-avancados";
 
 // Componente App que contém o QueryClientProvider
 function App() {
@@ -92,6 +93,7 @@ function App() {
                     <Route path="/enrollments" element={<EnrollmentsPage />} />
                     <Route path="/sales" element={<EnrollmentsPage />} />
                     <Route path="/api-docs" element={<ApiDocsPage />} />
+                    <Route path="/relatorios-avancados" element={<RelatoriosAvancadosPage />} />
                     <Route path="/commercial-stats" element={<CommercialStats />} />
                     <Route path="/schedule" element={<SchedulePage />} />
                     <Route path="/admin/user-management" element={<UserManagementPage />} />

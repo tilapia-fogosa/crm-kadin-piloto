@@ -12,7 +12,8 @@ import {
   DollarSign,
   LineChart,
   Calendar,
-  Bell
+  Bell,
+  BarChart3
 } from "lucide-react";
 import { UpdatesButton } from "./updates-button";
 
@@ -33,6 +34,7 @@ export const navigation = [
   { name: "Indicadores Comerciais", href: "/commercial-stats", icon: LineChart },
   { name: "Usuários", href: "/users", icon: Users },
   { name: "API Docs", href: "/api-docs", icon: FileCode },
+  { name: "Relatórios Avançados", href: "/relatorios-avancados", icon: BarChart3 },
 ];
 
 interface NavItemsProps {
