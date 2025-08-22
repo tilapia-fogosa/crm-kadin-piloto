@@ -1,18 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, Download, Filter, RotateCcw } from "lucide-react";
+import { CalendarIcon, Filter, RotateCcw } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format, startOfMonth, endOfMonth, subDays, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 
+/**
+ * Log: Interface para dados do relatório de motivos de perda
+ * Define a estrutura dos dados retornados pela RPC function get_loss_reasons_report
+ */
 interface LossReasonData {
   motivo_perda: string;
   novo_cadastro: number;
@@ -21,10 +24,13 @@ interface LossReasonData {
   atendimento_agendado: number;
   negociacao: number;
   perdido: number;
-  sem_status_anterior: number;
   total_motivo: number;
 }
 
+/**
+ * Log: Interface para filtros do relatório
+ * Permite filtrar por período, unidades e usuários
+ */
 interface Filters {
   dateRange: 'custom' | '7days' | '30days' | 'currentMonth' | 'lastMonth';
   startDate?: Date;
@@ -33,6 +39,10 @@ interface Filters {
   createdByIds: string[];
 }
 
+/**
+ * Log: Opções pré-definidas de períodos de tempo
+ * Oferece períodos comuns para facilitar a seleção do usuário
+ */
 const dateRangeOptions = [
   { value: '7days', label: 'Últimos 7 dias' },
   { value: '30days', label: 'Últimos 30 dias' },
@@ -41,20 +51,34 @@ const dateRangeOptions = [
   { value: 'custom', label: 'Período personalizado' },
 ];
 
+/**
+ * Log: Componente principal do relatório de motivos de perda
+ * Implementa filtros dinâmicos e exibe dados em tabela formatada
+ * Segue o padrão de layout dos painéis comerciais e de atividades
+ */
 export function LossReasonsReport() {
+  console.log('Inicializando LossReasonsReport');
+  
+  // Estado dos filtros com valores padrão
   const [filters, setFilters] = useState<Filters>({
     dateRange: '30days',
     unitIds: [],
     createdByIds: [],
   });
 
+  // Estado para seleção de datas customizadas
   const [dateRange, setDateRange] = useState<{
     from?: Date;
     to?: Date;
   }>({});
 
-  // Calculate date range based on selection
+  /**
+   * Log: Função para calcular intervalos de data baseados na seleção
+   * Converte opções pré-definidas em datas específicas para a consulta SQL
+   */
   const getDateRange = () => {
+    console.log('Calculando intervalo de datas para:', filters.dateRange);
+    
     const now = new Date();
     switch (filters.dateRange) {
       case '7days':
@@ -91,41 +115,74 @@ export function LossReasonsReport() {
     }
   };
 
-  // Fetch available units
+  /**
+   * Log: Query para buscar unidades disponíveis
+   * Utilizada para filtrar o relatório por unidades específicas
+   */
   const { data: units } = useQuery({
     queryKey: ['units-for-loss-report'],
     queryFn: async () => {
+      console.log('Buscando unidades para filtros do relatório');
+      
       const { data, error } = await supabase
         .from('units')
         .select('id, name')
         .eq('active', true)
         .order('name');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar unidades:', error);
+        throw error;
+      }
+      
+      console.log('Unidades carregadas:', data?.length);
       return data;
     },
   });
 
-  // Fetch available users
+  /**
+   * Log: Query para buscar usuários disponíveis  
+   * Utilizada para filtrar o relatório por usuário que registrou a perda
+   */
   const { data: users } = useQuery({
     queryKey: ['users-for-loss-report'],
     queryFn: async () => {
+      console.log('Buscando usuários para filtros do relatório');
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name')
         .order('full_name');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar usuários:', error);
+        throw error;
+      }
+      
+      console.log('Usuários carregados:', data?.length);
       return data;
     },
   });
 
-  // Fetch loss reasons report
+  /**
+   * Log: Query principal para buscar dados do relatório
+   * Chama a RPC function get_loss_reasons_report com os filtros aplicados
+   */
   const { data: reportData, isLoading, refetch } = useQuery({
     queryKey: ['loss-reasons-report', filters],
     queryFn: async () => {
+      console.log('Buscando dados do relatório com filtros:', filters);
+      
       const { start, end } = getDateRange();
       const currentUserId = (await supabase.auth.getUser()).data.user?.id;
+      
+      console.log('Parâmetros da consulta:', {
+        start,
+        end,
+        unitIds: filters.unitIds,
+        createdByIds: filters.createdByIds,
+        currentUserId
+      });
       
       const { data, error } = await supabase.rpc('get_loss_reasons_report', {
         p_start_date: start,
@@ -135,12 +192,20 @@ export function LossReasonsReport() {
         p_current_user_id: currentUserId,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao executar RPC:', error);
+        throw error;
+      }
+      
+      console.log('Dados do relatório carregados:', data?.length, 'registros');
       return (data || []) as LossReasonData[];
     },
   });
 
-  // Calculate column totals
+  /**
+   * Log: Cálculo de totais por coluna
+   * Soma todos os valores de cada status para exibir na linha de totais
+   */
   const columnTotals = reportData?.reduce((totals, row) => ({
     novo_cadastro: totals.novo_cadastro + row.novo_cadastro,
     tentativa_contato: totals.tentativa_contato + row.tentativa_contato,
@@ -148,7 +213,6 @@ export function LossReasonsReport() {
     atendimento_agendado: totals.atendimento_agendado + row.atendimento_agendado,
     negociacao: totals.negociacao + row.negociacao,
     perdido: totals.perdido + row.perdido,
-    sem_status_anterior: totals.sem_status_anterior + row.sem_status_anterior,
     total_motivo: totals.total_motivo + row.total_motivo,
   }), {
     novo_cadastro: 0,
@@ -157,11 +221,16 @@ export function LossReasonsReport() {
     atendimento_agendado: 0,
     negociacao: 0,
     perdido: 0,
-    sem_status_anterior: 0,
     total_motivo: 0,
   });
 
+  /**
+   * Log: Função para resetar todos os filtros
+   * Retorna aos valores padrão para nova consulta
+   */
   const resetFilters = () => {
+    console.log('Resetando filtros do relatório');
+    
     setFilters({
       dateRange: '30days',
       unitIds: [],
@@ -172,7 +241,7 @@ export function LossReasonsReport() {
 
   return (
     <div className="space-y-6">
-      {/* Filtros */}
+      {/* Card de Filtros */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -185,7 +254,7 @@ export function LossReasonsReport() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Período */}
+            {/* Seletor de Período */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Período</label>
               <Select
@@ -205,7 +274,7 @@ export function LossReasonsReport() {
               </Select>
             </div>
 
-            {/* Período personalizado */}
+            {/* Período personalizado - só aparece quando "custom" selecionado */}
             {filters.dateRange === 'custom' && (
               <>
                 <div className="space-y-2">
@@ -278,7 +347,7 @@ export function LossReasonsReport() {
               </>
             )}
 
-            {/* Unidades */}
+            {/* Seletor de Unidades */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Unidades</label>
               <Select
@@ -305,7 +374,7 @@ export function LossReasonsReport() {
               </Select>
             </div>
 
-            {/* Usuários */}
+            {/* Seletor de Usuários */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Criado por</label>
               <Select
@@ -333,6 +402,7 @@ export function LossReasonsReport() {
             </div>
           </div>
 
+          {/* Botões de ação */}
           <div className="flex gap-2 mt-4">
             <Button onClick={() => refetch()} size="sm">
               Atualizar Relatório
@@ -345,7 +415,7 @@ export function LossReasonsReport() {
         </CardContent>
       </Card>
 
-      {/* Tabela de Resultados */}
+      {/* Card com Tabela de Resultados - Layout seguindo padrão dos outros painéis */}
       <Card>
         <CardHeader>
           <CardTitle>Relatório de Motivos de Perda por Status</CardTitle>
@@ -353,122 +423,88 @@ export function LossReasonsReport() {
             Distribuição dos motivos de perda por status anterior do cliente no funil
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
           ) : (
             <div className="overflow-x-auto">
+              {/* Tabela seguindo o padrão do painel de atividades */}
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="font-semibold">Motivo de Perda</TableHead>
-                    <TableHead className="text-center">Novo Cadastro</TableHead>
-                    <TableHead className="text-center">Tentativa Contato</TableHead>
-                    <TableHead className="text-center">Contato Efetivo</TableHead>
-                    <TableHead className="text-center">Atend. Agendado</TableHead>
-                    <TableHead className="text-center">Negociação</TableHead>
-                    <TableHead className="text-center">Perdido</TableHead>
-                    <TableHead className="text-center">Sem Status</TableHead>
-                    <TableHead className="text-center font-semibold">Total</TableHead>
+                  <TableRow className="hover:bg-transparent [&>th]:px-2.5">
+                    <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold">Motivo de Perda</TableHead>
+                    <TableHead className="text-center whitespace-pre-line text-xs font-semibold">
+                      {"Novo\nCadastro"}
+                    </TableHead>
+                    <TableHead className="text-center whitespace-pre-line text-xs font-semibold">
+                      {"Tentativa\nContato"}
+                    </TableHead>
+                    <TableHead className="text-center whitespace-pre-line text-xs font-semibold">
+                      {"Contato\nEfetivo"}
+                    </TableHead>
+                    <TableHead className="text-center whitespace-pre-line text-xs font-semibold">
+                      {"Atend.\nAgendado"}
+                    </TableHead>
+                    <TableHead className="text-center text-xs font-semibold">Negociação</TableHead>
+                    <TableHead className="text-center text-xs font-semibold">Perdido</TableHead>
+                    <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold">Total</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {/* Renderização das linhas de dados */}
                   {reportData?.map((row, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{row.motivo_perda}</TableCell>
-                      <TableCell className="text-center">
-                        {row.novo_cadastro > 0 ? (
-                          <Badge variant="secondary">{row.novo_cadastro}</Badge>
-                        ) : (
-                          '-'
-                        )}
+                    <TableRow key={index} className="hover:bg-muted/50 [&>td]:px-2.5">
+                      <TableCell className="text-left bg-[#FEC6A1] text-xs py-0 font-medium">
+                        {row.motivo_perda}
                       </TableCell>
-                      <TableCell className="text-center">
-                        {row.tentativa_contato > 0 ? (
-                          <Badge variant="secondary">{row.tentativa_contato}</Badge>
-                        ) : (
-                          '-'
-                        )}
+                      <TableCell className="text-center text-xs py-0">
+                        {row.novo_cadastro > 0 ? row.novo_cadastro : '-'}
                       </TableCell>
-                      <TableCell className="text-center">
-                        {row.contato_efetivo > 0 ? (
-                          <Badge variant="secondary">{row.contato_efetivo}</Badge>
-                        ) : (
-                          '-'
-                        )}
+                      <TableCell className="text-center text-xs py-0">
+                        {row.tentativa_contato > 0 ? row.tentativa_contato : '-'}
                       </TableCell>
-                      <TableCell className="text-center">
-                        {row.atendimento_agendado > 0 ? (
-                          <Badge variant="secondary">{row.atendimento_agendado}</Badge>
-                        ) : (
-                          '-'
-                        )}
+                      <TableCell className="text-center text-xs py-0">
+                        {row.contato_efetivo > 0 ? row.contato_efetivo : '-'}
                       </TableCell>
-                      <TableCell className="text-center">
-                        {row.negociacao > 0 ? (
-                          <Badge variant="secondary">{row.negociacao}</Badge>
-                        ) : (
-                          '-'
-                        )}
+                      <TableCell className="text-center text-xs py-0">
+                        {row.atendimento_agendado > 0 ? row.atendimento_agendado : '-'}
                       </TableCell>
-                      <TableCell className="text-center">
-                        {row.perdido > 0 ? (
-                          <Badge variant="secondary">{row.perdido}</Badge>
-                        ) : (
-                          '-'
-                        )}
+                      <TableCell className="text-center text-xs py-0">
+                        {row.negociacao > 0 ? row.negociacao : '-'}
                       </TableCell>
-                      <TableCell className="text-center">
-                        {row.sem_status_anterior > 0 ? (
-                          <Badge variant="secondary">{row.sem_status_anterior}</Badge>
-                        ) : (
-                          '-'
-                        )}
+                      <TableCell className="text-center text-xs py-0">
+                        {row.perdido > 0 ? row.perdido : '-'}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="default">{row.total_motivo}</Badge>
+                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0 font-semibold">
+                        {row.total_motivo}
                       </TableCell>
                     </TableRow>
                   ))}
 
-                  {/* Linha de totais */}
+                  {/* Linha de totais seguindo padrão dos outros painéis */}
                   {columnTotals && (
-                    <TableRow className="border-t-2 font-semibold bg-muted/30">
-                      <TableCell className="font-bold">TOTAL</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="outline">{columnTotals.novo_cadastro}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="outline">{columnTotals.tentativa_contato}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="outline">{columnTotals.contato_efetivo}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="outline">{columnTotals.atendimento_agendado}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="outline">{columnTotals.negociacao}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="outline">{columnTotals.perdido}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="outline">{columnTotals.sem_status_anterior}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge className="bg-primary">{columnTotals.total_motivo}</Badge>
+                    <TableRow className="hover:bg-muted/50 [&>td]:px-2.5 font-bold border-t-2">
+                      <TableCell className="text-left bg-[#FEC6A1] text-xs py-0 font-bold">TOTAL</TableCell>
+                      <TableCell className="text-center text-xs py-0">{columnTotals.novo_cadastro}</TableCell>
+                      <TableCell className="text-center text-xs py-0">{columnTotals.tentativa_contato}</TableCell>
+                      <TableCell className="text-center text-xs py-0">{columnTotals.contato_efetivo}</TableCell>
+                      <TableCell className="text-center text-xs py-0">{columnTotals.atendimento_agendado}</TableCell>
+                      <TableCell className="text-center text-xs py-0">{columnTotals.negociacao}</TableCell>
+                      <TableCell className="text-center text-xs py-0">{columnTotals.perdido}</TableCell>
+                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0 font-bold">
+                        {columnTotals.total_motivo}
                       </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
               </Table>
 
+              {/* Mensagem quando não há dados */}
               {(!reportData || reportData.length === 0) && (
                 <div className="text-center py-8 text-muted-foreground">
-                  Nenhum dado encontrado para os filtros selecionados.
+                  Nenhum dado encontrado para os filtros selecionados
                 </div>
               )}
             </div>

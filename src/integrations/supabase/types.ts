@@ -3919,7 +3919,6 @@ export type Database = {
           negociacao: number
           novo_cadastro: number
           perdido: number
-          sem_status_anterior: number
           tentativa_contato: number
           total_motivo: number
         }[]
