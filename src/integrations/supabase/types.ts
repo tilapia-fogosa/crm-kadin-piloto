@@ -3975,6 +3975,36 @@ export type Database = {
           scheduled_visits: number
         }[]
       }
+      get_temporal_loss_reasons_report: {
+        Args: {
+          p_created_by_ids?: string[]
+          p_current_user_id?: string
+          p_end_date?: string
+          p_start_date?: string
+          p_unit_ids?: string[]
+        }
+        Returns: {
+          mes_1_count: number
+          mes_1_header: string
+          mes_1_percent: number
+          mes_2_count: number
+          mes_2_header: string
+          mes_2_percent: number
+          mes_3_count: number
+          mes_3_header: string
+          mes_3_percent: number
+          mes_4_count: number
+          mes_4_header: string
+          mes_4_percent: number
+          mes_5_count: number
+          mes_5_header: string
+          mes_5_percent: number
+          mes_6_count: number
+          mes_6_header: string
+          mes_6_percent: number
+          motivo_perda: string
+        }[]
+      }
       get_turma_modal_data: {
         Args: { p_data_consulta?: string; p_turma_id: string }
         Returns: Json

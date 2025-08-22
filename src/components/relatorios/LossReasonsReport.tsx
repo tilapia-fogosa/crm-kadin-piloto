@@ -1,16 +1,18 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, Filter, RotateCcw } from "lucide-react";
+import { CalendarIcon, Filter, RotateCcw, TrendingUp } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format, startOfMonth, endOfMonth, subDays, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { MultipleUnitSelect } from "@/components/auth/MultipleUnitSelect";
+import { MultipleUserSelect } from "@/components/auth/MultipleUserSelect";
 
 /**
  * Log: Interface para dados do relatório de motivos de perda
@@ -28,8 +30,22 @@ interface LossReasonData {
 }
 
 /**
+ * Log: Interface para dados do relatório temporal
+ * Define a estrutura dos dados retornados pela RPC function get_temporal_loss_reasons_report
+ */
+interface TemporalLossReasonData {
+  motivo_perda: string;
+  mes_1_count: number; mes_1_percent: number; mes_1_header: string;
+  mes_2_count: number; mes_2_percent: number; mes_2_header: string;
+  mes_3_count: number; mes_3_percent: number; mes_3_header: string;
+  mes_4_count: number; mes_4_percent: number; mes_4_header: string;
+  mes_5_count: number; mes_5_percent: number; mes_5_header: string;
+  mes_6_count: number; mes_6_percent: number; mes_6_header: string;
+}
+
+/**
  * Log: Interface para filtros do relatório
- * Permite filtrar por período, unidades e usuários
+ * Permite filtrar por período, unidades e usuários usando multi-select
  */
 interface Filters {
   dateRange: 'custom' | '7days' | '30days' | 'currentMonth' | 'lastMonth';
@@ -115,54 +131,8 @@ export function LossReasonsReport() {
     }
   };
 
-  /**
-   * Log: Query para buscar unidades disponíveis
-   * Utilizada para filtrar o relatório por unidades específicas
-   */
-  const { data: units } = useQuery({
-    queryKey: ['units-for-loss-report'],
-    queryFn: async () => {
-      console.log('Buscando unidades para filtros do relatório');
-      
-      const { data, error } = await supabase
-        .from('units')
-        .select('id, name')
-        .eq('active', true)
-        .order('name');
-      
-      if (error) {
-        console.error('Erro ao buscar unidades:', error);
-        throw error;
-      }
-      
-      console.log('Unidades carregadas:', data?.length);
-      return data;
-    },
-  });
-
-  /**
-   * Log: Query para buscar usuários disponíveis  
-   * Utilizada para filtrar o relatório por usuário que registrou a perda
-   */
-  const { data: users } = useQuery({
-    queryKey: ['users-for-loss-report'],
-    queryFn: async () => {
-      console.log('Buscando usuários para filtros do relatório');
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .order('full_name');
-      
-      if (error) {
-        console.error('Erro ao buscar usuários:', error);
-        throw error;
-      }
-      
-      console.log('Usuários carregados:', data?.length);
-      return data;
-    },
-  });
+  // As queries para units e users são removidas pois agora usamos os componentes multi-select
+  // que já fazem suas próprias queries
 
   /**
    * Log: Query principal para buscar dados do relatório
@@ -203,6 +173,36 @@ export function LossReasonsReport() {
   });
 
   /**
+   * Log: Query para buscar dados do relatório temporal
+   * Chama a RPC function get_temporal_loss_reasons_report com os mesmos filtros
+   */
+  const { data: temporalData, isLoading: isLoadingTemporal, refetch: refetchTemporal } = useQuery({
+    queryKey: ['temporal-loss-reasons-report', filters],
+    queryFn: async () => {
+      console.log('Buscando dados do relatório temporal com filtros:', filters);
+      
+      const { start, end } = getDateRange();
+      const currentUserId = (await supabase.auth.getUser()).data.user?.id;
+      
+      const { data, error } = await supabase.rpc('get_temporal_loss_reasons_report', {
+        p_start_date: start,
+        p_end_date: end,
+        p_unit_ids: filters.unitIds.length > 0 ? filters.unitIds : null,
+        p_created_by_ids: filters.createdByIds.length > 0 ? filters.createdByIds : null,
+        p_current_user_id: currentUserId,
+      });
+
+      if (error) {
+        console.error('Erro ao executar RPC temporal:', error);
+        throw error;
+      }
+      
+      console.log('Dados do relatório temporal carregados:', data?.length, 'registros');
+      return (data || []) as TemporalLossReasonData[];
+    },
+  });
+
+  /**
    * Log: Cálculo de totais por coluna
    * Soma todos os valores de cada status para exibir na linha de totais
    */
@@ -237,6 +237,16 @@ export function LossReasonsReport() {
       createdByIds: [],
     });
     setDateRange({});
+  };
+
+  /**
+   * Log: Função para refazer ambas as consultas
+   * Atualiza tanto o relatório principal quanto o temporal
+   */
+  const refetchAll = () => {
+    console.log('Atualizando todos os relatórios');
+    refetch();
+    refetchTemporal();
   };
 
   return (
@@ -347,65 +357,29 @@ export function LossReasonsReport() {
               </>
             )}
 
-            {/* Seletor de Unidades */}
+            {/* Multi-seletor de Unidades */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Unidades</label>
-              <Select
-                value={filters.unitIds.length === 1 ? filters.unitIds[0] : ""}
-                onValueChange={(value) => {
-                  if (value === "all") {
-                    setFilters({ ...filters, unitIds: [] });
-                  } else {
-                    setFilters({ ...filters, unitIds: [value] });
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Todas as unidades" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as unidades</SelectItem>
-                  {units?.map((unit) => (
-                    <SelectItem key={unit.id} value={unit.id}>
-                      {unit.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultipleUnitSelect
+                selectedUnits={filters.unitIds}
+                onUnitsChange={(unitIds) => setFilters({ ...filters, unitIds })}
+              />
             </div>
 
-            {/* Seletor de Usuários */}
+            {/* Multi-seletor de Usuários */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Criado por</label>
-              <Select
-                value={filters.createdByIds.length === 1 ? filters.createdByIds[0] : ""}
-                onValueChange={(value) => {
-                  if (value === "all") {
-                    setFilters({ ...filters, createdByIds: [] });
-                  } else {
-                    setFilters({ ...filters, createdByIds: [value] });
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos os usuários" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os usuários</SelectItem>
-                  {users?.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.full_name || 'Usuário sem nome'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultipleUserSelect
+                selectedUsers={filters.createdByIds}
+                onUsersChange={(userIds) => setFilters({ ...filters, createdByIds: userIds })}
+              />
             </div>
           </div>
 
           {/* Botões de ação */}
           <div className="flex gap-2 mt-4">
-            <Button onClick={() => refetch()} size="sm">
-              Atualizar Relatório
+            <Button onClick={refetchAll} size="sm">
+              Atualizar Relatórios
             </Button>
             <Button onClick={resetFilters} variant="outline" size="sm">
               <RotateCcw className="h-4 w-4 mr-1" />
@@ -450,6 +424,7 @@ export function LossReasonsReport() {
                     <TableHead className="text-center text-xs font-semibold">Negociação</TableHead>
                     <TableHead className="text-center text-xs font-semibold">Perdido</TableHead>
                     <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold">Total</TableHead>
+                    <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold">% Total</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -477,8 +452,14 @@ export function LossReasonsReport() {
                       <TableCell className="text-center text-xs py-0">
                         {row.perdido > 0 ? row.perdido : '-'}
                       </TableCell>
-                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0 font-semibold">
+                      <TableCell className="text-center text-xs py-0 bg-[#FEC6A1] font-semibold">
                         {row.total_motivo}
+                      </TableCell>
+                      <TableCell className="text-center text-xs py-0 bg-[#FEC6A1] font-semibold">
+                        {columnTotals && columnTotals.total_motivo > 0
+                          ? `${((row.total_motivo / columnTotals.total_motivo) * 100).toFixed(1)}%`
+                          : '0.0%'
+                        }
                       </TableCell>
                     </TableRow>
                   ))}
@@ -496,6 +477,9 @@ export function LossReasonsReport() {
                       <TableCell className="text-center bg-[#FEC6A1] text-xs py-0 font-bold">
                         {columnTotals.total_motivo}
                       </TableCell>
+                      <TableCell className="text-center bg-[#FEC6A1] text-xs py-0 font-bold">
+                        100.0%
+                      </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -507,6 +491,138 @@ export function LossReasonsReport() {
                   Nenhum dado encontrado para os filtros selecionados
                 </div>
               )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Segundo Relatório - Evolução Temporal dos Motivos de Perda */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Evolução Temporal dos Motivos de Perda
+          </CardTitle>
+          <CardDescription>
+            Distribuição mensal dos motivos de perda nos últimos 6 meses (count e percentual)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          {isLoadingTemporal ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent [&>th]:px-2.5">
+                    <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold sticky left-0">
+                      Motivo de Perda
+                    </TableHead>
+                    {/* Gerar headers dinâmicos para os 6 meses */}
+                    {temporalData && temporalData.length > 0 && (
+                      <>
+                        <TableHead className="text-center text-xs font-semibold" colSpan={2}>
+                          {temporalData[0].mes_1_header}
+                        </TableHead>
+                        <TableHead className="text-center text-xs font-semibold" colSpan={2}>
+                          {temporalData[0].mes_2_header}
+                        </TableHead>
+                        <TableHead className="text-center text-xs font-semibold" colSpan={2}>
+                          {temporalData[0].mes_3_header}
+                        </TableHead>
+                        <TableHead className="text-center text-xs font-semibold" colSpan={2}>
+                          {temporalData[0].mes_4_header}
+                        </TableHead>
+                        <TableHead className="text-center text-xs font-semibold" colSpan={2}>
+                          {temporalData[0].mes_5_header}
+                        </TableHead>
+                        <TableHead className="text-center text-xs font-semibold" colSpan={2}>
+                          {temporalData[0].mes_6_header}
+                        </TableHead>
+                      </>
+                    )}
+                  </TableRow>
+                  <TableRow className="hover:bg-transparent [&>th]:px-2.5">
+                    <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold sticky left-0">
+                      {/* Espaço vazio para alinhar com a linha de cima */}
+                    </TableHead>
+                    {/* Sub-headers N e %N para cada mês */}
+                    {Array.from({ length: 6 }, (_, index) => (
+                      <React.Fragment key={index}>
+                        <TableHead className="text-center text-xs font-semibold">N</TableHead>
+                        <TableHead className="text-center text-xs font-semibold">%N</TableHead>
+                      </React.Fragment>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {temporalData?.map((row, index) => (
+                    <TableRow key={index} className="hover:bg-muted/50 [&>td]:px-2.5">
+                      <TableCell className="text-left bg-[#FEC6A1] text-xs py-0 font-medium sticky left-0">
+                        {row.motivo_perda}
+                      </TableCell>
+                      
+                      {/* Mês 1 */}
+                      <TableCell className="text-center text-xs py-0">
+                        {row.mes_1_count > 0 ? row.mes_1_count : '-'}
+                      </TableCell>
+                      <TableCell className="text-center text-xs py-0">
+                        {row.mes_1_percent > 0 ? `${row.mes_1_percent}%` : '-'}
+                      </TableCell>
+                      
+                      {/* Mês 2 */}
+                      <TableCell className="text-center text-xs py-0">
+                        {row.mes_2_count > 0 ? row.mes_2_count : '-'}
+                      </TableCell>
+                      <TableCell className="text-center text-xs py-0">
+                        {row.mes_2_percent > 0 ? `${row.mes_2_percent}%` : '-'}
+                      </TableCell>
+                      
+                      {/* Mês 3 */}
+                      <TableCell className="text-center text-xs py-0">
+                        {row.mes_3_count > 0 ? row.mes_3_count : '-'}
+                      </TableCell>
+                      <TableCell className="text-center text-xs py-0">
+                        {row.mes_3_percent > 0 ? `${row.mes_3_percent}%` : '-'}
+                      </TableCell>
+                      
+                      {/* Mês 4 */}
+                      <TableCell className="text-center text-xs py-0">
+                        {row.mes_4_count > 0 ? row.mes_4_count : '-'}
+                      </TableCell>
+                      <TableCell className="text-center text-xs py-0">
+                        {row.mes_4_percent > 0 ? `${row.mes_4_percent}%` : '-'}
+                      </TableCell>
+                      
+                      {/* Mês 5 */}
+                      <TableCell className="text-center text-xs py-0">
+                        {row.mes_5_count > 0 ? row.mes_5_count : '-'}
+                      </TableCell>
+                      <TableCell className="text-center text-xs py-0">
+                        {row.mes_5_percent > 0 ? `${row.mes_5_percent}%` : '-'}
+                      </TableCell>
+                      
+                      {/* Mês 6 */}
+                      <TableCell className="text-center text-xs py-0">
+                        {row.mes_6_count > 0 ? row.mes_6_count : '-'}
+                      </TableCell>
+                      <TableCell className="text-center text-xs py-0">
+                        {row.mes_6_percent > 0 ? `${row.mes_6_percent}%` : '-'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              
+              {/* Mensagem quando não há dados temporais */}
+              {!temporalData || temporalData.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Nenhum dado temporal encontrado para os filtros aplicados.</p>
+                  <p className="text-sm mt-2">Tente ajustar os filtros ou período selecionado.</p>
+                </div>
+              ) : null}
             </div>
           )}
         </CardContent>
