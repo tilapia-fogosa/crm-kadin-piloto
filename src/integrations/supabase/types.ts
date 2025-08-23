@@ -4003,6 +4003,8 @@ export type Database = {
           mes_6_header: string
           mes_6_percent: number
           motivo_perda: string
+          total_n: number
+          total_percent: number
         }[]
       }
       get_turma_modal_data: {

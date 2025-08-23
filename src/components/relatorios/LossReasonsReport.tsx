@@ -41,6 +41,8 @@ interface TemporalLossReasonData {
   mes_4_count: number; mes_4_percent: number; mes_4_header: string;
   mes_5_count: number; mes_5_percent: number; mes_5_header: string;
   mes_6_count: number; mes_6_percent: number; mes_6_header: string;
+  total_n: number; 
+  total_percent: number;
 }
 
 /**
@@ -520,41 +522,45 @@ export function LossReasonsReport() {
                     <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold sticky left-0">
                       Motivo de Perda
                     </TableHead>
-                    {/* Gerar headers dinâmicos para os 6 meses */}
-                    {temporalData && temporalData.length > 0 && (
-                      <>
-                        <TableHead className="text-center text-xs font-semibold" colSpan={2}>
-                          {temporalData[0].mes_1_header}
-                        </TableHead>
-                        <TableHead className="text-center text-xs font-semibold" colSpan={2}>
-                          {temporalData[0].mes_2_header}
-                        </TableHead>
-                        <TableHead className="text-center text-xs font-semibold" colSpan={2}>
-                          {temporalData[0].mes_3_header}
-                        </TableHead>
-                        <TableHead className="text-center text-xs font-semibold" colSpan={2}>
-                          {temporalData[0].mes_4_header}
-                        </TableHead>
-                        <TableHead className="text-center text-xs font-semibold" colSpan={2}>
-                          {temporalData[0].mes_5_header}
-                        </TableHead>
-                        <TableHead className="text-center text-xs font-semibold" colSpan={2}>
-                          {temporalData[0].mes_6_header}
-                        </TableHead>
-                      </>
-                    )}
+                     {/* Gerar headers dinâmicos para os 6 meses */}
+                     {temporalData && temporalData.length > 0 && (
+                       <>
+                         <TableHead className="text-center text-xs font-semibold" colSpan={2}>
+                           {temporalData[0].mes_1_header}
+                         </TableHead>
+                         <TableHead className="text-center text-xs font-semibold" colSpan={2}>
+                           {temporalData[0].mes_2_header}
+                         </TableHead>
+                         <TableHead className="text-center text-xs font-semibold" colSpan={2}>
+                           {temporalData[0].mes_3_header}
+                         </TableHead>
+                         <TableHead className="text-center text-xs font-semibold" colSpan={2}>
+                           {temporalData[0].mes_4_header}
+                         </TableHead>
+                         <TableHead className="text-center text-xs font-semibold" colSpan={2}>
+                           {temporalData[0].mes_5_header}
+                         </TableHead>
+                         <TableHead className="text-center text-xs font-semibold" colSpan={2}>
+                           {temporalData[0].mes_6_header}
+                         </TableHead>
+                         <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold">Total N</TableHead>
+                         <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold">Total %</TableHead>
+                       </>
+                     )}
                   </TableRow>
                   <TableRow className="hover:bg-transparent [&>th]:px-2.5">
                     <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold sticky left-0">
                       {/* Espaço vazio para alinhar com a linha de cima */}
                     </TableHead>
-                    {/* Sub-headers N e %N para cada mês */}
-                    {Array.from({ length: 6 }, (_, index) => (
-                      <React.Fragment key={index}>
-                        <TableHead className="text-center text-xs font-semibold">N</TableHead>
-                        <TableHead className="text-center text-xs font-semibold">%N</TableHead>
-                      </React.Fragment>
-                    ))}
+                     {/* Sub-headers N e %N para cada mês */}
+                     {Array.from({ length: 6 }, (_, index) => (
+                       <React.Fragment key={index}>
+                         <TableHead className="text-center text-xs font-semibold">N</TableHead>
+                         <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold">%N</TableHead>
+                       </React.Fragment>
+                     ))}
+                     <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold">Total N</TableHead>
+                     <TableHead className="text-center bg-[#FEC6A1] text-xs font-semibold">Total %</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -564,54 +570,64 @@ export function LossReasonsReport() {
                         {row.motivo_perda}
                       </TableCell>
                       
-                      {/* Mês 1 */}
-                      <TableCell className="text-center text-xs py-0">
-                        {row.mes_1_count > 0 ? row.mes_1_count : '-'}
-                      </TableCell>
-                      <TableCell className="text-center text-xs py-0">
-                        {row.mes_1_percent > 0 ? `${row.mes_1_percent}%` : '-'}
-                      </TableCell>
+                       {/* Mês 1 */}
+                       <TableCell className="text-center text-xs py-0">
+                         {row.mes_1_count > 0 ? row.mes_1_count : '-'}
+                       </TableCell>
+                       <TableCell className="text-center text-xs py-0 bg-[#FEC6A1]">
+                         {row.mes_1_percent > 0 ? `${row.mes_1_percent}%` : '-'}
+                       </TableCell>
+                       
+                       {/* Mês 2 */}
+                       <TableCell className="text-center text-xs py-0">
+                         {row.mes_2_count > 0 ? row.mes_2_count : '-'}
+                       </TableCell>
+                       <TableCell className="text-center text-xs py-0 bg-[#FEC6A1]">
+                         {row.mes_2_percent > 0 ? `${row.mes_2_percent}%` : '-'}
+                       </TableCell>
+                       
+                       {/* Mês 3 */}
+                       <TableCell className="text-center text-xs py-0">
+                         {row.mes_3_count > 0 ? row.mes_3_count : '-'}
+                       </TableCell>
+                       <TableCell className="text-center text-xs py-0 bg-[#FEC6A1]">
+                         {row.mes_3_percent > 0 ? `${row.mes_3_percent}%` : '-'}
+                       </TableCell>
+                       
+                       {/* Mês 4 */}
+                       <TableCell className="text-center text-xs py-0">
+                         {row.mes_4_count > 0 ? row.mes_4_count : '-'}
+                       </TableCell>
+                       <TableCell className="text-center text-xs py-0 bg-[#FEC6A1]">
+                         {row.mes_4_percent > 0 ? `${row.mes_4_percent}%` : '-'}
+                       </TableCell>
+                       
+                       {/* Mês 5 */}
+                       <TableCell className="text-center text-xs py-0">
+                         {row.mes_5_count > 0 ? row.mes_5_count : '-'}
+                       </TableCell>
+                       <TableCell className="text-center text-xs py-0 bg-[#FEC6A1]">
+                         {row.mes_5_percent > 0 ? `${row.mes_5_percent}%` : '-'}
+                       </TableCell>
                       
-                      {/* Mês 2 */}
-                      <TableCell className="text-center text-xs py-0">
-                        {row.mes_2_count > 0 ? row.mes_2_count : '-'}
-                      </TableCell>
-                      <TableCell className="text-center text-xs py-0">
-                        {row.mes_2_percent > 0 ? `${row.mes_2_percent}%` : '-'}
-                      </TableCell>
-                      
-                      {/* Mês 3 */}
-                      <TableCell className="text-center text-xs py-0">
-                        {row.mes_3_count > 0 ? row.mes_3_count : '-'}
-                      </TableCell>
-                      <TableCell className="text-center text-xs py-0">
-                        {row.mes_3_percent > 0 ? `${row.mes_3_percent}%` : '-'}
-                      </TableCell>
-                      
-                      {/* Mês 4 */}
-                      <TableCell className="text-center text-xs py-0">
-                        {row.mes_4_count > 0 ? row.mes_4_count : '-'}
-                      </TableCell>
-                      <TableCell className="text-center text-xs py-0">
-                        {row.mes_4_percent > 0 ? `${row.mes_4_percent}%` : '-'}
-                      </TableCell>
-                      
-                      {/* Mês 5 */}
-                      <TableCell className="text-center text-xs py-0">
-                        {row.mes_5_count > 0 ? row.mes_5_count : '-'}
-                      </TableCell>
-                      <TableCell className="text-center text-xs py-0">
-                        {row.mes_5_percent > 0 ? `${row.mes_5_percent}%` : '-'}
-                      </TableCell>
-                      
-                      {/* Mês 6 */}
-                      <TableCell className="text-center text-xs py-0">
-                        {row.mes_6_count > 0 ? row.mes_6_count : '-'}
-                      </TableCell>
-                      <TableCell className="text-center text-xs py-0">
-                        {row.mes_6_percent > 0 ? `${row.mes_6_percent}%` : '-'}
-                      </TableCell>
-                    </TableRow>
+                       {/* Mês 6 */}
+                       <TableCell className="text-center text-xs py-0">
+                         {row.mes_6_count > 0 ? row.mes_6_count : '-'}
+                       </TableCell>
+                       <TableCell className="text-center text-xs py-0 bg-[#FEC6A1]">
+                         {row.mes_6_percent > 0 ? `${row.mes_6_percent}%` : '-'}
+                       </TableCell>
+                       
+                       {/* Total N */}
+                       <TableCell className="text-center text-xs py-0 bg-[#FEC6A1] font-semibold">
+                         {row.total_n}
+                       </TableCell>
+                       
+                       {/* Total % */}
+                       <TableCell className="text-center text-xs py-0 bg-[#FEC6A1] font-semibold">
+                         {row.total_percent > 0 ? `${row.total_percent}%` : '0.0%'}
+                       </TableCell>
+                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
