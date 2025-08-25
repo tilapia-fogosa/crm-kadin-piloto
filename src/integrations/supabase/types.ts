@@ -1613,6 +1613,50 @@ export type Database = {
           },
         ]
       }
+      funcionalidades_unidade: {
+        Row: {
+          ativa: boolean
+          configuracao: Json | null
+          created_at: string | null
+          data_habilitacao: string | null
+          id: string
+          tipo_funcionalidade: Database["public"]["Enums"]["tipo_funcionalidade"]
+          unit_id: string
+          updated_at: string | null
+          usuario_habilitou: string | null
+        }
+        Insert: {
+          ativa?: boolean
+          configuracao?: Json | null
+          created_at?: string | null
+          data_habilitacao?: string | null
+          id?: string
+          tipo_funcionalidade: Database["public"]["Enums"]["tipo_funcionalidade"]
+          unit_id: string
+          updated_at?: string | null
+          usuario_habilitou?: string | null
+        }
+        Update: {
+          ativa?: boolean
+          configuracao?: Json | null
+          created_at?: string | null
+          data_habilitacao?: string | null
+          id?: string
+          tipo_funcionalidade?: Database["public"]["Enums"]["tipo_funcionalidade"]
+          unit_id?: string
+          updated_at?: string | null
+          usuario_habilitou?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcionalidades_unidade_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funcionarios: {
         Row: {
           active: boolean
@@ -4063,6 +4107,13 @@ export type Database = {
         Args: { telefone_raw: string }
         Returns: string
       }
+      obter_config_funcionalidade: {
+        Args: {
+          p_tipo_funcionalidade: Database["public"]["Enums"]["tipo_funcionalidade"]
+          p_unit_id: string
+        }
+        Returns: Json
+      }
       publish_update: {
         Args: { p_update_id: string }
         Returns: boolean
@@ -4084,6 +4135,13 @@ export type Database = {
           leads: number
           matriculas: number
         }[]
+      }
+      unidade_tem_funcionalidade: {
+        Args: {
+          p_tipo_funcionalidade: Database["public"]["Enums"]["tipo_funcionalidade"]
+          p_unit_id: string
+        }
+        Returns: boolean
       }
       unpublish_update: {
         Args: { p_update_id: string }
@@ -4153,6 +4211,11 @@ export type Database = {
       status_alerta: "pendente" | "em_andamento" | "resolvido" | "cancelado"
       student_status: "pre_matricula" | "matricula_completa"
       tipo_atendimento: "bot" | "humano"
+      tipo_funcionalidade:
+        | "assistente_whatsapp"
+        | "google_agenda"
+        | "relatorios_avancados"
+        | "integracao_telefonia_net2phone"
       user_role:
         | "consultor"
         | "franqueado"
@@ -4320,6 +4383,12 @@ export const Constants = {
       status_alerta: ["pendente", "em_andamento", "resolvido", "cancelado"],
       student_status: ["pre_matricula", "matricula_completa"],
       tipo_atendimento: ["bot", "humano"],
+      tipo_funcionalidade: [
+        "assistente_whatsapp",
+        "google_agenda",
+        "relatorios_avancados",
+        "integracao_telefonia_net2phone",
+      ],
       user_role: [
         "consultor",
         "franqueado",
