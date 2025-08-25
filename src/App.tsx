@@ -28,6 +28,7 @@ import CommercialStats from "@/pages/CommercialStats";
 import EditClientPage from "@/pages/clients/edit";
 import SchedulePage from "@/pages/Schedule";
 import UserManagementPage from "@/pages/admin/user-management";
+import FuncionalidadesUnidadePage from "@/pages/admin/funcionalidades-unidade";
 import UpdatesPage from "@/pages/updates/index";
 import UpdatesAdminPage from "@/pages/updates/admin";
 import ChangePassword from "@/pages/auth/ChangePassword";
@@ -97,6 +98,7 @@ function App() {
                     <Route path="/commercial-stats" element={<CommercialStats />} />
                     <Route path="/schedule" element={<SchedulePage />} />
                     <Route path="/admin/user-management" element={<UserManagementPage />} />
+                    <Route path="/admin/funcionalidades-unidade" element={<FuncionalidadesUnidadePage />} />
                     <Route path="/updates" element={<UpdatesPage />} />
                     <Route path="/updates/admin" element={<UpdatesAdminPage />} />
                     <Route path="/clients/sources" element={<LeadSourcesPage />} />
