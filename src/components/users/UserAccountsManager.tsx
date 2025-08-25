@@ -132,7 +132,7 @@ export function UserAccountsManager() {
       </CardHeader>
       <CardContent>
         <div className="mb-6">
-          <FormLabel>Tipo de Operação</FormLabel>
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Tipo de Operação</label>
           <Select onValueChange={handleOperationChange} value={operationType}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione uma operação" />
