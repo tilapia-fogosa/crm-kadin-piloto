@@ -4,11 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminRoute } from "@/components/auth/AdminRoute";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Plus, Loader2 } from "lucide-react";
+import { Settings, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { TipoFuncionalidade, FuncionalidadeUnidade } from "@/hooks/useFuncionalidadesUnidade";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 // Definir funcionalidades disponíveis
 const FUNCIONALIDADES_DISPONIVEIS: { tipo: TipoFuncionalidade; nome: string; descricao: string }[] = [
@@ -87,7 +87,7 @@ export default function FuncionalidadesUnidadePage() {
     },
   });
 
-  // Mutação para habilitar/desabilitar funcionalidade
+  // Mutação para habilitar/desabilitar funcionalidade (usando UPSERT)
   const toggleFuncionalidadeMutation = useMutation({
     mutationFn: async ({ 
       unitId, 
@@ -100,28 +100,25 @@ export default function FuncionalidadesUnidadePage() {
     }) => {
       console.log(`Alterando funcionalidade ${tipoFuncionalidade} para unidade ${unitId}: ${ativa ? 'ativar' : 'desativar'}`);
       
-      if (ativa) {
-        // Inserir nova funcionalidade
-        const { error } = await supabase
-          .from('funcionalidades_unidade')
-          .insert({
-            unit_id: unitId,
-            tipo_funcionalidade: tipoFuncionalidade,
-            ativa: true,
-            usuario_habilitou: (await supabase.auth.getUser()).data.user?.id,
-            configuracao: {}
-          });
+      const user = await supabase.auth.getUser();
+      
+      // Usar UPSERT para evitar conflitos de constraint duplicada
+      const { error } = await supabase
+        .from('funcionalidades_unidade')
+        .upsert({
+          unit_id: unitId,
+          tipo_funcionalidade: tipoFuncionalidade,
+          ativa: ativa,
+          usuario_habilitou: user.data.user?.id,
+          configuracao: {},
+          data_habilitacao: ativa ? new Date().toISOString() : null
+        }, {
+          onConflict: 'unit_id,tipo_funcionalidade'
+        });
 
-        if (error) throw error;
-      } else {
-        // Desativar funcionalidade existente
-        const { error } = await supabase
-          .from('funcionalidades_unidade')
-          .update({ ativa: false })
-          .eq('unit_id', unitId)
-          .eq('tipo_funcionalidade', tipoFuncionalidade);
-
-        if (error) throw error;
+      if (error) {
+        console.error('Erro no upsert:', error);
+        throw error;
       }
     },
     onSuccess: (_, variables) => {
@@ -179,82 +176,108 @@ export default function FuncionalidadesUnidadePage() {
                   Funcionalidades Disponíveis
                 </CardTitle>
                 <CardDescription>
-                  Lista de todas as funcionalidades que podem ser habilitadas por unidade
+                  Use a tabela abaixo para habilitar/desabilitar funcionalidades por unidade
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                   {FUNCIONALIDADES_DISPONIVEIS.map((func) => (
-                    <div key={func.tipo} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-medium">{func.nome}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">{func.descricao}</p>
-                        </div>
-                        <Badge variant="outline">{func.tipo}</Badge>
+                    <div key={func.tipo} className="flex items-center p-3 border rounded-lg bg-muted/20">
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{func.nome}</div>
+                        <div className="text-xs text-muted-foreground">{func.descricao}</div>
                       </div>
+                      <Badge variant="secondary" className="text-xs">{func.tipo}</Badge>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Matriz de funcionalidades por unidade */}
+            {/* Tabela de funcionalidades por unidade */}
             <Card>
               <CardHeader>
                 <CardTitle>Configuração por Unidade</CardTitle>
                 <CardDescription>
-                  Habilite ou desabilite funcionalidades específicas para cada unidade
+                  Matriz de funcionalidades - passe o mouse sobre as colunas para destacar
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {units?.map((unit) => (
-                    <div key={unit.id} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h3 className="font-medium">{unit.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Unidade #{unit.unit_number}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {FUNCIONALIDADES_DISPONIVEIS.map((func) => {
-                          const isAtiva = isFuncionalidadeAtiva(unit.id, func.tipo);
-                          return (
-                            <div key={func.tipo} className="flex items-center justify-between p-3 border rounded">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">{func.nome}</p>
-                                <p className="text-xs text-muted-foreground">{func.tipo}</p>
-                              </div>
-                              <Switch
-                                checked={isAtiva}
-                                onCheckedChange={(checked) => {
-                                  toggleFuncionalidadeMutation.mutate({
-                                    unitId: unit.id,
-                                    tipoFuncionalidade: func.tipo,
-                                    ativa: checked
-                                  });
-                                }}
-                                disabled={toggleFuncionalidadeMutation.isPending}
-                              />
+                <div className="rounded-md border overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-20 font-medium">Nº</TableHead>
+                        <TableHead className="min-w-[200px] font-medium">Unidade</TableHead>
+                        {FUNCIONALIDADES_DISPONIVEIS.map((func, index) => (
+                          <TableHead 
+                            key={func.tipo} 
+                            className={`w-32 text-center font-medium transition-colors hover:bg-muted/50 cursor-pointer
+                              ${index % 2 === 0 ? 'bg-muted/20' : 'bg-background'}
+                            `}
+                            title={func.descricao}
+                          >
+                            <div className="flex flex-col items-center gap-1">
+                              <span className="text-xs font-medium">{func.nome}</span>
+                              <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                {func.tipo}
+                              </Badge>
                             </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {units?.map((unit) => (
+                        <TableRow key={unit.id} className="hover:bg-muted/30">
+                          <TableCell className="font-medium text-muted-foreground">
+                            #{unit.unit_number}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            <div>
+                              <div className="text-sm">{unit.name}</div>
+                              <div className="text-xs text-muted-foreground">Unidade #{unit.unit_number}</div>
+                            </div>
+                          </TableCell>
+                          {FUNCIONALIDADES_DISPONIVEIS.map((func, index) => {
+                            const isAtiva = isFuncionalidadeAtiva(unit.id, func.tipo);
+                            return (
+                              <TableCell 
+                                key={func.tipo} 
+                                className={`text-center transition-colors hover:bg-muted/50
+                                  ${index % 2 === 0 ? 'bg-muted/20' : 'bg-background'}
+                                `}
+                              >
+                                <div className="flex justify-center">
+                                  <Switch
+                                    checked={isAtiva}
+                                    onCheckedChange={(checked) => {
+                                      toggleFuncionalidadeMutation.mutate({
+                                        unitId: unit.id,
+                                        tipoFuncionalidade: func.tipo,
+                                        ativa: checked
+                                      });
+                                    }}
+                                    disabled={toggleFuncionalidadeMutation.isPending}
+                                  />
+                                </div>
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Estatísticas */}
+            {/* Estatísticas resumidas */}
             {funcionalidades && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Estatísticas de Uso</CardTitle>
+                  <CardTitle>Resumo de Ativação</CardTitle>
+                  <CardDescription>Quantidade de unidades com cada funcionalidade habilitada</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -262,10 +285,15 @@ export default function FuncionalidadesUnidadePage() {
                       const count = funcionalidades.filter(
                         f => f.tipo_funcionalidade === func.tipo && f.ativa
                       ).length;
+                      const total = units?.length || 0;
+                      const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                      
                       return (
-                        <div key={func.tipo} className="text-center p-4 border rounded">
-                          <div className="text-2xl font-bold">{count}</div>
-                          <div className="text-sm text-muted-foreground">{func.nome}</div>
+                        <div key={func.tipo} className="text-center p-4 border rounded-lg">
+                          <div className="text-2xl font-bold text-primary">{count}</div>
+                          <div className="text-xs text-muted-foreground mb-1">de {total} unidades</div>
+                          <div className="text-sm font-medium">{func.nome}</div>
+                          <div className="text-xs text-muted-foreground">({percentage}%)</div>
                         </div>
                       );
                     })}
