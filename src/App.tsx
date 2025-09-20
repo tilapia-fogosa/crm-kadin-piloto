@@ -33,6 +33,7 @@ import UpdatesPage from "@/pages/updates/index";
 import UpdatesAdminPage from "@/pages/updates/admin";
 import ChangePassword from "@/pages/auth/ChangePassword";
 import RelatoriosAvancadosPage from "@/pages/relatorios-avancados";
+import AutomacoesWhatsAppPage from "@/pages/automacoes-whatsapp";
 
 // Componente App que contém o QueryClientProvider
 function App() {
@@ -102,6 +103,7 @@ function App() {
                     <Route path="/updates" element={<UpdatesPage />} />
                     <Route path="/updates/admin" element={<UpdatesAdminPage />} />
                     <Route path="/clients/sources" element={<LeadSourcesPage />} />
+                    <Route path="/automacoes-whatsapp" element={<AutomacoesWhatsAppPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Route>
                 </Routes>

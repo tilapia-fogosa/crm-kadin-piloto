@@ -129,7 +129,8 @@ function getFuncionalidadeDisplayName(tipo: TipoFuncionalidade): string {
     'assistente_whatsapp': 'Assistente WhatsApp',
     'google_agenda': 'Integração com Google Agenda',
     'relatorios_avancados': 'Relatórios Avançados',
-    'integracao_telefonia_net2phone': 'Integração de Telefonia Net2Phone'
+    'integracao_telefonia_net2phone': 'Integração de Telefonia Net2Phone',
+    'automacao_whatsapp': 'Automações de WhatsApp'
   };
 
   return nomes[tipo] || tipo;

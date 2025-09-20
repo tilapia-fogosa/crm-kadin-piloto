@@ -31,6 +31,11 @@ const FUNCIONALIDADES_DISPONIVEIS: { tipo: TipoFuncionalidade; nome: string; des
     tipo: 'integracao_telefonia_net2phone',
     nome: 'Integração Net2Phone',
     descricao: 'Sistema de telefonia integrado'
+  },
+  {
+    tipo: 'automacao_whatsapp',
+    nome: 'Automações de WhatsApp',
+    descricao: 'Fluxos automáticos de conversação no WhatsApp'
   }
 ];
 

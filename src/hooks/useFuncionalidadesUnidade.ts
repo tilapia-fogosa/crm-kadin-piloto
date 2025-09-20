@@ -8,7 +8,8 @@ export type TipoFuncionalidade =
   | 'assistente_whatsapp'
   | 'google_agenda'
   | 'relatorios_avancados'
-  | 'integracao_telefonia_net2phone';
+  | 'integracao_telefonia_net2phone'
+  | 'automacao_whatsapp';
 
 // Interface para a funcionalidade
 export interface FuncionalidadeUnidade {
