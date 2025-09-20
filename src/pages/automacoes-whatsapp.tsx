@@ -1,43 +1,55 @@
 import { RotaProtegidaPorFuncionalidade } from "@/components/features/RotaProtegidaPorFuncionalidade";
 import { ProtecaoFuncionalidade } from "@/components/features/ProtecaoFuncionalidade";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { WhatsAppSyncButton } from "@/components/automacoes/WhatsAppSyncButton";
+import { WhatsAppSyncModal } from "@/components/automacoes/WhatsAppSyncModal";
+import { ActivityAutomationGrid } from "@/components/automacoes/ActivityAutomationGrid";
+import { useWhatsAppSync } from "@/components/automacoes/hooks/useWhatsAppSync";
 
-// Log: Página de Automações de WhatsApp - Landing page inicial
+// Log: Página de Automações de WhatsApp - Interface completa
 export default function AutomacoesWhatsAppPage() {
-  console.log('AutomacoesWhatsAppPage: Renderizando página de Automações de WhatsApp');
+  console.log('AutomacoesWhatsAppPage: Renderizando página completa de Automações de WhatsApp');
   
+  const { isModalOpen, isConnected, openModal, closeModal } = useWhatsAppSync();
+
   return (
     <RotaProtegidaPorFuncionalidade funcionalidade="automacao_whatsapp">
-      <div className="container py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">Automações de WhatsApp</h1>
-          <p className="text-muted-foreground">
-            Configure e gerencie suas automações de WhatsApp para otimizar o atendimento aos clientes.
-          </p>
+      <div className="container py-8 space-y-8">
+        {/* Header com botão de sincronização */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Automações de WhatsApp</h1>
+            <p className="text-muted-foreground">
+              Configure e gerencie suas automações de WhatsApp para otimizar o atendimento aos clientes.
+            </p>
+          </div>
+          
+          <ProtecaoFuncionalidade funcionalidade="automacao_whatsapp">
+            <WhatsAppSyncButton 
+              onClick={openModal}
+              isConnected={isConnected}
+            />
+          </ProtecaoFuncionalidade>
         </div>
 
+        {/* Grid de automações por tipo de atividade */}
         <ProtecaoFuncionalidade funcionalidade="automacao_whatsapp">
-          <Card>
-            <CardHeader>
-              <CardTitle>Em Desenvolvimento</CardTitle>
-              <CardDescription>
-                Esta funcionalidade está sendo desenvolvida e estará disponível em breve.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
-                  <span className="text-4xl">🚧</span>
-                </div>
-                <h3 className="text-lg font-medium mb-2">Funcionalidade em Construção</h3>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  Estamos trabalhando para trazer as melhores ferramentas de automação de WhatsApp. 
-                  Em breve você poderá criar fluxos automatizados para melhorar seu atendimento.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold mb-2">Automações por Tipo de Atividade</h2>
+              <p className="text-sm text-muted-foreground">
+                Configure automações específicas para cada etapa do funil de vendas
+              </p>
+            </div>
+            
+            <ActivityAutomationGrid />
+          </div>
         </ProtecaoFuncionalidade>
+
+        {/* Modal de sincronização */}
+        <WhatsAppSyncModal 
+          open={isModalOpen}
+          onOpenChange={closeModal}
+        />
       </div>
     </RotaProtegidaPorFuncionalidade>
   );
