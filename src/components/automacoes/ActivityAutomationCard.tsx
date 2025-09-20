@@ -4,12 +4,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown } from "lucide-react";
 import { AutomationMetrics } from "./AutomationMetrics";
 import { AutomationActions } from "./AutomationActions";
+import { CreateAutomationModal } from "./CreateAutomationModal";
 import { cn } from "@/lib/utils";
 
 export interface ActivityType {
   id: string;
   name: string;
-  icon: React.ReactNode;
+  icon: React.ComponentType<any>;
   created: number;
   active: number;
   dispatches: number;
@@ -24,10 +25,11 @@ export function ActivityAutomationCard({ activity }: ActivityAutomationCardProps
   console.log('ActivityAutomationCard: Renderizando card', { activityId: activity.id });
   
   const [isOpen, setIsOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCreateNew = () => {
     console.log('ActivityAutomationCard: Criar nova automação', { activityId: activity.id });
-    // TODO: Implementar criação de automação
+    setIsModalOpen(true);
   };
 
   const handleManageExisting = () => {
@@ -50,7 +52,7 @@ export function ActivityAutomationCard({ activity }: ActivityAutomationCardProps
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
-                  {activity.icon}
+                  <activity.icon className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-medium">{activity.name}</h3>
@@ -92,7 +94,7 @@ export function ActivityAutomationCard({ activity }: ActivityAutomationCardProps
               <div className="space-y-3">
                 <div className="text-center py-6">
                   <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
-                    {activity.icon}
+                    <activity.icon className="w-6 h-6 text-muted-foreground" />
                   </div>
                   <h4 className="font-medium mb-1">Nenhuma automação criada</h4>
                   <p className="text-sm text-muted-foreground">
@@ -109,6 +111,13 @@ export function ActivityAutomationCard({ activity }: ActivityAutomationCardProps
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
+
+      {/* Modal de criação de automação */}
+      <CreateAutomationModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        activityType={activity}
+      />
     </Card>
   );
 }

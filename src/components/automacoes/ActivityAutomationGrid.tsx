@@ -12,7 +12,7 @@ export function ActivityAutomationGrid() {
     {
       id: 'tentativa_contato',
       name: 'Tentativa de Contato',
-      icon: <Phone className="w-5 h-5 text-primary" />,
+      icon: Phone,
       created: stats.tentativa_contato.created,
       active: stats.tentativa_contato.active,
       dispatches: stats.tentativa_contato.dispatches,
@@ -20,7 +20,7 @@ export function ActivityAutomationGrid() {
     {
       id: 'contato_efetivo',
       name: 'Contato Efetivo',
-      icon: <CheckCircle className="w-5 h-5 text-primary" />,
+      icon: CheckCircle,
       created: stats.contato_efetivo.created,
       active: stats.contato_efetivo.active,
       dispatches: stats.contato_efetivo.dispatches,
@@ -28,7 +28,7 @@ export function ActivityAutomationGrid() {
     {
       id: 'agendamento',
       name: 'Agendamento',
-      icon: <Calendar className="w-5 h-5 text-primary" />,
+      icon: Calendar,
       created: stats.agendamento.created,
       active: stats.agendamento.active,
       dispatches: stats.agendamento.dispatches,
@@ -36,7 +36,7 @@ export function ActivityAutomationGrid() {
     {
       id: 'atendimento',
       name: 'Atendimento',
-      icon: <Users className="w-5 h-5 text-primary" />,
+      icon: Users,
       created: stats.atendimento.created,
       active: stats.atendimento.active,
       dispatches: stats.atendimento.dispatches,
@@ -44,7 +44,7 @@ export function ActivityAutomationGrid() {
     {
       id: 'matricula',
       name: 'Matrícula',
-      icon: <GraduationCap className="w-5 h-5 text-primary" />,
+      icon: GraduationCap,
       created: stats.matricula.created,
       active: stats.matricula.active,
       dispatches: stats.matricula.dispatches,
@@ -52,7 +52,7 @@ export function ActivityAutomationGrid() {
     {
       id: 'perdido',
       name: 'Perdido',
-      icon: <XCircle className="w-5 h-5 text-primary" />,
+      icon: XCircle,
       created: stats.perdido.created,
       active: stats.perdido.active,
       dispatches: stats.perdido.dispatches,
