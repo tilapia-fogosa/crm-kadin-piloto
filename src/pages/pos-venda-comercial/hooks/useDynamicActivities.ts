@@ -118,7 +118,7 @@ export function useDynamicActivities() {
   });
 
   return {
-    dynamicActivities: dynamicActivities as DynamicActivity[],
+    dynamicActivities: (dynamicActivities || []) as DynamicActivity[],
     isLoading,
     createActivity: createActivityMutation.mutate,
     updateActivity: updateActivityMutation.mutate,
