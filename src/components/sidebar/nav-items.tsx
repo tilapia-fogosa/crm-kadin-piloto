@@ -39,6 +39,7 @@ export const generalNavigation = [
   { name: "Vendas", href: "/sales", icon: DollarSign },
   { name: "Indicadores Comerciais", href: "/commercial-stats", icon: LineChart },
   { name: "Automações de WhatsApp", href: "/automacoes-whatsapp", icon: Bot, requiresFeature: "automacao_whatsapp" },
+  { name: "Pós-venda Comercial", href: "/pos-venda-comercial", icon: BarChart3, requiresFeature: "pos_venda_comercial" },
 ];
 
 // Navegação administrativa (apenas para admins)

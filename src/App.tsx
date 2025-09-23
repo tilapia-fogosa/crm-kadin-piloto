@@ -34,6 +34,7 @@ import UpdatesAdminPage from "@/pages/updates/admin";
 import ChangePassword from "@/pages/auth/ChangePassword";
 import RelatoriosAvancadosPage from "@/pages/relatorios-avancados";
 import AutomacoesWhatsAppPage from "@/pages/automacoes-whatsapp";
+import PosVendaComercialPage from "@/pages/pos-venda-comercial";
 
 // Componente App que contém o QueryClientProvider
 function App() {
@@ -104,6 +105,7 @@ function App() {
                     <Route path="/updates/admin" element={<UpdatesAdminPage />} />
                     <Route path="/clients/sources" element={<LeadSourcesPage />} />
                     <Route path="/automacoes-whatsapp" element={<AutomacoesWhatsAppPage />} />
+                    <Route path="/pos-venda-comercial" element={<PosVendaComercialPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Route>
                 </Routes>

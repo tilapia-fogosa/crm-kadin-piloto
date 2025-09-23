@@ -36,6 +36,11 @@ const FUNCIONALIDADES_DISPONIVEIS: { tipo: TipoFuncionalidade; nome: string; des
     tipo: 'automacao_whatsapp',
     nome: 'Automações de WhatsApp',
     descricao: 'Fluxos automáticos de conversação no WhatsApp'
+  },
+  {
+    tipo: 'pos_venda_comercial',
+    nome: 'Pós-venda Comercial',
+    descricao: 'Ferramentas para gestão e acompanhamento pós-venda'
   }
 ];
 
