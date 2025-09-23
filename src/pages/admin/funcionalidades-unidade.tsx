@@ -117,7 +117,7 @@ export default function FuncionalidadesUnidadePage() {
         .from('funcionalidades_unidade')
         .upsert({
           unit_id: unitId,
-          tipo_funcionalidade: tipoFuncionalidade,
+          tipo_funcionalidade: tipoFuncionalidade as any, // Type assertion temporária até os tipos serem atualizados
           ativa: ativa,
           usuario_habilitou: user.data.user?.id,
           configuracao: {},

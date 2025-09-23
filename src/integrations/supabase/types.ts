@@ -5184,6 +5184,7 @@ export type Database = {
         | "gestao_estoque"
         | "gestao_eventos"
         | "automacao_whatsapp"
+        | "pos_venda_comercial"
       user_role:
         | "consultor"
         | "franqueado"
@@ -5374,6 +5375,7 @@ export const Constants = {
         "gestao_estoque",
         "gestao_eventos",
         "automacao_whatsapp",
+        "pos_venda_comercial",
       ],
       user_role: [
         "consultor",
