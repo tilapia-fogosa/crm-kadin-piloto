@@ -741,6 +741,78 @@ export type Database = {
         }
         Relationships: []
       }
+      atividade_pos_venda: {
+        Row: {
+          active: boolean
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_postal_code: string | null
+          address_state: string | null
+          address_street: string | null
+          birth_date: string | null
+          client_activity_id: string
+          client_id: string
+          client_name: string
+          cpf: string | null
+          created_at: string
+          created_by: string
+          full_name: string | null
+          id: string
+          photo_thumbnail_url: string | null
+          photo_url: string | null
+          rg: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          birth_date?: string | null
+          client_activity_id: string
+          client_id: string
+          client_name: string
+          cpf?: string | null
+          created_at?: string
+          created_by: string
+          full_name?: string | null
+          id?: string
+          photo_thumbnail_url?: string | null
+          photo_url?: string | null
+          rg?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          birth_date?: string | null
+          client_activity_id?: string
+          client_id?: string
+          client_name?: string
+          cpf?: string | null
+          created_at?: string
+          created_by?: string
+          full_name?: string | null
+          id?: string
+          photo_thumbnail_url?: string | null
+          photo_url?: string | null
+          rg?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       aulas: {
         Row: {
           conteudo: string | null
@@ -2700,6 +2772,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pos_venda_atividades_config: {
+        Row: {
+          ativa: boolean
+          created_at: string
+          created_by: string
+          descricao: string | null
+          id: string
+          nome: string
+          ordem: number
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativa?: boolean
+          created_at?: string
+          created_by: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativa?: boolean
+          created_at?: string
+          created_by?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pos_venda_atividades_realizadas: {
+        Row: {
+          atividade_config_id: string
+          atividade_pos_venda_id: string
+          created_at: string
+          data_realizacao: string | null
+          id: string
+          realizada: boolean
+          updated_at: string
+          usuario_realizou: string | null
+        }
+        Insert: {
+          atividade_config_id: string
+          atividade_pos_venda_id: string
+          created_at?: string
+          data_realizacao?: string | null
+          id?: string
+          realizada?: boolean
+          updated_at?: string
+          usuario_realizou?: string | null
+        }
+        Update: {
+          atividade_config_id?: string
+          atividade_pos_venda_id?: string
+          created_at?: string
+          data_realizacao?: string | null
+          id?: string
+          realizada?: boolean
+          updated_at?: string
+          usuario_realizou?: string | null
+        }
+        Relationships: []
       }
       posts: {
         Row: {
