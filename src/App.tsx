@@ -34,7 +34,7 @@ import UpdatesAdminPage from "@/pages/updates/admin";
 import ChangePassword from "@/pages/auth/ChangePassword";
 import RelatoriosAvancadosPage from "@/pages/relatorios-avancados";
 import AutomacoesWhatsAppPage from "@/pages/automacoes-whatsapp";
-import PosVendaComercialPage from "@/pages/pos-venda-comercial";
+import PosVendaComercialPage from "@/pages/pos-venda-comercial/index";
 
 // Componente App que contém o QueryClientProvider
 function App() {
