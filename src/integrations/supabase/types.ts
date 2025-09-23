@@ -813,6 +813,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_atividade_pos_venda_client_activity_id"
+            columns: ["client_activity_id"]
+            isOneToOne: true
+            referencedRelation: "client_activities"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fk_atividade_pos_venda_client_id"
             columns: ["client_id"]
             isOneToOne: false
@@ -824,6 +831,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "kanban_client_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_atividade_pos_venda_created_by"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5029,6 +5043,34 @@ export type Database = {
           telefone: string
           ultimo_registro_data: string
           ultimo_registro_id: string
+        }[]
+      }
+      get_pos_venda_activities: {
+        Args: { p_unit_ids?: string[] }
+        Returns: {
+          active: boolean
+          address_city: string
+          address_complement: string
+          address_neighborhood: string
+          address_number: string
+          address_postal_code: string
+          address_state: string
+          address_street: string
+          birth_date: string
+          client_activity_id: string
+          client_id: string
+          client_name: string
+          cpf: string
+          created_at: string
+          created_by: string
+          created_by_name: string
+          full_name: string
+          id: string
+          photo_thumbnail_url: string
+          photo_url: string
+          rg: string
+          unit_id: string
+          updated_at: string
         }[]
       }
       get_produtividade_abaco_limpa: {
