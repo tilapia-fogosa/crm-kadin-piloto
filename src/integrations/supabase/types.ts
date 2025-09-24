@@ -5046,7 +5046,7 @@ export type Database = {
         }[]
       }
       get_pos_venda_activities: {
-        Args: { p_unit_ids?: string[] }
+        Args: { p_unit_ids: string[] }
         Returns: {
           active: boolean
           address_city: string
