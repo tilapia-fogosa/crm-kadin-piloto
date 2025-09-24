@@ -475,10 +475,13 @@ export type Database = {
           dias_supera: number | null
           email: string | null
           faltas_consecutivas: number
+          foto_url: string | null
           id: string
           idade: number | null
           indice: string | null
           is_funcionario: boolean | null
+          kit_sugerido: string | null
+          material_entregue: boolean | null
           matricula: string | null
           motivo_procura: string | null
           niveldesafio: string | null
@@ -517,10 +520,13 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_url?: string | null
           id?: string
           idade?: number | null
           indice?: string | null
           is_funcionario?: boolean | null
+          kit_sugerido?: string | null
+          material_entregue?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
           niveldesafio?: string | null
@@ -559,10 +565,13 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_url?: string | null
           id?: string
           idade?: number | null
           indice?: string | null
           is_funcionario?: boolean | null
+          kit_sugerido?: string | null
+          material_entregue?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
           niveldesafio?: string | null
@@ -604,10 +613,13 @@ export type Database = {
           dias_supera: number | null
           email: string | null
           faltas_consecutivas: number
+          foto_url: string | null
           id: string
           idade: number | null
           indice: string | null
           is_funcionario: boolean | null
+          kit_sugerido: string | null
+          material_entregue: boolean | null
           matricula: string | null
           motivo_procura: string | null
           niveldesafio: string | null
@@ -646,10 +658,13 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_url?: string | null
           id?: string
           idade?: number | null
           indice?: string | null
           is_funcionario?: boolean | null
+          kit_sugerido?: string | null
+          material_entregue?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
           niveldesafio?: string | null
@@ -688,10 +703,13 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_url?: string | null
           id?: string
           idade?: number | null
           indice?: string | null
           is_funcionario?: boolean | null
+          kit_sugerido?: string | null
+          material_entregue?: boolean | null
           matricula?: string | null
           motivo_procura?: string | null
           niveldesafio?: string | null
@@ -1877,7 +1895,7 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string
-          created_by: string
+          created_by: string | null
           error_log: Json | null
           file_name: string
           id: string
@@ -1891,7 +1909,7 @@ export type Database = {
         Insert: {
           active?: boolean
           created_at?: string
-          created_by: string
+          created_by?: string | null
           error_log?: Json | null
           file_name: string
           id?: string
@@ -1905,7 +1923,7 @@ export type Database = {
         Update: {
           active?: boolean
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           error_log?: Json | null
           file_name?: string
           id?: string
@@ -2836,7 +2854,15 @@ export type Database = {
           unit_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_pos_venda_config_unit"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pos_venda_atividades_realizadas: {
         Row: {
@@ -2869,7 +2895,22 @@ export type Database = {
           updated_at?: string
           usuario_realizou?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_pos_venda_realizadas_config"
+            columns: ["atividade_config_id"]
+            isOneToOne: false
+            referencedRelation: "pos_venda_atividades_config"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_venda_atividades_realizadas_usuario_realizou_fkey"
+            columns: ["usuario_realizou"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       posts: {
         Row: {
