@@ -37,6 +37,7 @@ import RelatoriosAvancadosPage from "@/pages/relatorios-avancados";
 import AutomacoesWhatsAppPage from "@/pages/automacoes-whatsapp";
 import PosVendaComercialPage from "@/pages/pos-venda-comercial/index";
 import PoliticaPrivacidade from "@/pages/public/PoliticaPrivacidade";
+import TermosServico from "@/pages/public/TermosServico";
 
 // Componente App que contém o QueryClientProvider
 function App() {
@@ -70,6 +71,7 @@ function App() {
                   {/* Public routes - landing pages with public layout */}
                   <Route element={<PublicLayout />}>
                     <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
+                    <Route path="/termos-de-servico" element={<TermosServico />} />
                   </Route>
                   
                   {/* Root redirect */}
