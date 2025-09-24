@@ -5073,6 +5073,27 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_pos_venda_activities_config: {
+        Args: { p_unit_id: string }
+        Returns: {
+          ativa: boolean
+          created_at: string
+          created_by: string
+          created_by_name: string
+          descricao: string
+          id: string
+          nome: string
+          ordem: number
+          updated_at: string
+        }[]
+      }
+      get_pos_venda_activity_status: {
+        Args: {
+          p_atividade_config_id: string
+          p_atividade_pos_venda_id: string
+        }
+        Returns: Json
+      }
       get_produtividade_abaco_limpa: {
         Args: {
           p_data_final: string
@@ -5233,6 +5254,19 @@ export type Database = {
         Args: { p_client_id: string; p_limit?: number; p_offset?: number }
         Returns: Json
       }
+      manage_pos_venda_activity_config: {
+        Args: {
+          p_activity_id?: string
+          p_ativa?: boolean
+          p_descricao?: string
+          p_new_order?: number
+          p_nome?: string
+          p_operation: string
+          p_ordem?: number
+          p_unit_id?: string
+        }
+        Returns: Json
+      }
       manage_user_units: {
         Args: {
           p_creator_id: string
@@ -5282,6 +5316,14 @@ export type Database = {
           leads: number
           matriculas: number
         }[]
+      }
+      toggle_pos_venda_activity_status: {
+        Args: {
+          p_atividade_config_id: string
+          p_atividade_pos_venda_id: string
+          p_realizada: boolean
+        }
+        Returns: Json
       }
       unidade_tem_funcionalidade: {
         Args: {

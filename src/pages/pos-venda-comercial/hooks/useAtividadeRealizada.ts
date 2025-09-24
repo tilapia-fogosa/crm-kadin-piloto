@@ -9,6 +9,7 @@ export interface AtividadeRealizada {
   realizada: boolean;
   data_realizacao?: string;
   usuario_realizou?: string;
+  usuario_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -19,24 +20,22 @@ export function useAtividadeRealizada(
 ) {
   const queryClient = useQueryClient();
 
-  const { data: atividadeRealizada, isLoading } = useQuery({
+  const { data: atividadeRealizada, isLoading, error } = useQuery({
     queryKey: ['atividade-realizada', atividadePosVendaId, atividadeConfigId],
     queryFn: async () => {
-      console.log('LOG: Buscando atividade realizada:', { atividadePosVendaId, atividadeConfigId });
+      console.log('LOG: Chamando função backend get_pos_venda_activity_status:', { atividadePosVendaId, atividadeConfigId });
 
-      const { data, error } = await supabase
-        .from('pos_venda_atividades_realizadas')
-        .select('*')
-        .eq('atividade_pos_venda_id', atividadePosVendaId)
-        .eq('atividade_config_id', atividadeConfigId)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('get_pos_venda_activity_status', {
+        p_atividade_pos_venda_id: atividadePosVendaId,
+        p_atividade_config_id: atividadeConfigId
+      });
 
       if (error) {
-        console.error('LOG: Erro ao buscar atividade realizada:', error);
+        console.error('LOG: Erro ao chamar função backend get_pos_venda_activity_status:', error);
         throw error;
       }
 
-      console.log('LOG: Atividade realizada encontrada:', data ? 'Sim' : 'Não');
+      console.log('LOG: Status de atividade retornado pela função backend:', data ? 'Encontrado' : 'Não encontrado');
       return data;
     },
     enabled: !!(atividadePosVendaId && atividadeConfigId),
@@ -44,60 +43,34 @@ export function useAtividadeRealizada(
 
   const updateAtividadeMutation = useMutation({
     mutationFn: async (realizada: boolean) => {
-      console.log('LOG: Atualizando atividade realizada:', { 
+      console.log('LOG: Alterando status via função backend:', { 
         atividadePosVendaId, 
         atividadeConfigId, 
         realizada 
       });
 
-      if (atividadeRealizada) {
-        // Atualizar registro existente
-        const { data, error } = await supabase
-          .from('pos_venda_atividades_realizadas')
-          .update({
-            realizada,
-            data_realizacao: realizada ? new Date().toISOString() : null,
-            usuario_realizou: realizada ? 'Usuario Atual' : null, // TODO: Pegar usuário atual
-          })
-          .eq('id', atividadeRealizada.id)
-          .select()
-          .single();
+      const { data, error } = await supabase.rpc('toggle_pos_venda_activity_status', {
+        p_atividade_pos_venda_id: atividadePosVendaId,
+        p_atividade_config_id: atividadeConfigId,
+        p_realizada: realizada
+      });
 
-        if (error) {
-          console.error('LOG: Erro ao atualizar atividade realizada:', error);
-          throw error;
-        }
-
-        return data;
-      } else {
-        // Criar novo registro
-        const { data, error } = await supabase
-          .from('pos_venda_atividades_realizadas')
-          .insert({
-            atividade_pos_venda_id: atividadePosVendaId,
-            atividade_config_id: atividadeConfigId,
-            realizada,
-            data_realizacao: realizada ? new Date().toISOString() : null,
-            usuario_realizou: realizada ? 'Usuario Atual' : null, // TODO: Pegar usuário atual
-          })
-          .select()
-          .single();
-
-        if (error) {
-          console.error('LOG: Erro ao criar atividade realizada:', error);
-          throw error;
-        }
-
-        return data;
+      if (error) {
+        console.error('LOG: Erro ao alterar status via função backend:', error);
+        throw error;
       }
+
+      console.log('LOG: Status alterado com sucesso via backend:', data);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ 
         queryKey: ['atividade-realizada', atividadePosVendaId, atividadeConfigId] 
       });
+      // Não mostra toast de sucesso para melhor UX (ação muito frequente)
     },
     onError: (error) => {
-      console.error('LOG: Erro na atualização de atividade realizada:', error);
+      console.error('LOG: Erro na atualização de atividade realizada via backend:', error);
       toast({
         title: "Erro ao atualizar atividade",
         description: "Não foi possível atualizar o status da atividade. Tente novamente.",
@@ -107,8 +80,9 @@ export function useAtividadeRealizada(
   });
 
   return {
-    atividadeRealizada: atividadeRealizada as AtividadeRealizada | null,
+    atividadeRealizada: atividadeRealizada as unknown as AtividadeRealizada | null,
     isLoading,
+    error,
     updateAtividade: updateAtividadeMutation.mutate,
     isUpdating: updateAtividadeMutation.isPending,
   };
