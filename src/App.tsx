@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { UnitProvider } from "./contexts/UnitContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import ProtectedLayout from "./components/layouts/ProtectedLayout";
+import PublicLayout from "./components/layouts/PublicLayout";
 import LoginPage from "./pages/auth/LoginPage";
 import NotFound from "@/pages/NotFound";
 import { UpdatesProvider } from "./contexts/UpdatesContext";
@@ -35,6 +36,7 @@ import ChangePassword from "@/pages/auth/ChangePassword";
 import RelatoriosAvancadosPage from "@/pages/relatorios-avancados";
 import AutomacoesWhatsAppPage from "@/pages/automacoes-whatsapp";
 import PosVendaComercialPage from "@/pages/pos-venda-comercial/index";
+import PoliticaPrivacidade from "@/pages/public/PoliticaPrivacidade";
 
 // Componente App que contém o QueryClientProvider
 function App() {
@@ -61,9 +63,14 @@ function App() {
               <SidebarProvider>
               <div className="flex min-h-screen w-full">
                 <Routes>
-                  {/* Public routes - authentication */}
+                  {/* Public routes - authentication and landing pages */}
                   <Route path="/auth" element={<LoginPage />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  
+                  {/* Public routes - landing pages with public layout */}
+                  <Route element={<PublicLayout />}>
+                    <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
+                  </Route>
                   
                   {/* Root redirect */}
                   <Route path="/" element={
