@@ -94,7 +94,7 @@ export function ProcessTable() {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Vendedor</span>
+                    <span className="text-sm">{activity.created_by_name}</span>
                   </div>
                 </TableCell>
                 <TableCell className="text-center">

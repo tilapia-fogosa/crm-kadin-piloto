@@ -9,6 +9,7 @@ export interface AtividadeRealizada {
   realizada: boolean;
   data_realizacao?: string;
   usuario_realizou?: string;
+  usuario_nome?: string; // Nome do usuário que realizou a atividade
   usuario_id?: string;
   created_at: string;
   updated_at: string;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +7,7 @@ import { CheckCircle2, Clock, User } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAtividadeRealizada } from "../hooks/useAtividadeRealizada";
+import { useDebounce } from "@/components/kanban/utils/hooks/useDebounce";
 
 interface AtividadeDinamicaCellProps {
   atividadePosVendaId: string;
@@ -28,20 +29,10 @@ export function AtividadeDinamicaCell({
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [showUncheckDialog, setShowUncheckDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState<boolean | null>(null);
 
-  const handleToggle = async (checked: boolean) => {
-    // LOG: Iniciando alteração de status
-    console.log("📋 [AtividadeDinamicaCell] Alterando status para:", checked);
-    
-    // Se está desmarcando um item já marcado, mostrar confirmação
-    if (!checked && atividadeRealizada?.realizada) {
-      console.log("📋 [AtividadeDinamicaCell] Solicitando confirmação para desmarcar");
-      setShowUncheckDialog(true);
-      return;
-    }
-
-    await performToggle(checked);
-  };
+  // Debounce para evitar cliques múltiplos
+  const debouncedPendingAction = useDebounce(pendingAction, 300);
 
   const performToggle = async (checked: boolean) => {
     if (isUpdating) {
@@ -62,6 +53,34 @@ export function AtividadeDinamicaCell({
     }
   };
 
+  const handleToggle = useCallback(async (checked: boolean) => {
+    // LOG: Iniciando alteração de status
+    console.log("📋 [AtividadeDinamicaCell] Alterando status para:", checked);
+    
+    // Evitar múltiplos cliques
+    if (isUpdating) {
+      console.log("📋 [AtividadeDinamicaCell] Operação já em andamento, ignorando");
+      return;
+    }
+    
+    // Se está desmarcando um item já marcado, mostrar confirmação
+    if (!checked && atividadeRealizada?.realizada) {
+      console.log("📋 [AtividadeDinamicaCell] Solicitando confirmação para desmarcar");
+      setShowUncheckDialog(true);
+      return;
+    }
+
+    setPendingAction(checked);
+  }, [isUpdating, atividadeRealizada?.realizada]);
+
+  // Executar ação quando o debounce completar
+  useEffect(() => {
+    if (debouncedPendingAction !== null && !isUpdating) {
+      performToggle(debouncedPendingAction);
+      setPendingAction(null);
+    }
+  }, [debouncedPendingAction, isUpdating]);
+
   const handleConfirmUncheck = async () => {
     console.log("📋 [AtividadeDinamicaCell] Confirmado desmarcação");
     setShowUncheckDialog(false);
@@ -80,6 +99,7 @@ export function AtividadeDinamicaCell({
   const isRealizada = atividadeRealizada?.realizada || false;
   const dataRealizacao = atividadeRealizada?.data_realizacao;
   const usuarioRealizou = atividadeRealizada?.usuario_realizou;
+  const usuarioNome = atividadeRealizada?.usuario_nome;
 
   console.log("📋 [AtividadeDinamicaCell] Estado atual - Realizada:", isRealizada, "Data:", dataRealizacao, "Usuário:", usuarioRealizou);
 
@@ -111,10 +131,10 @@ export function AtividadeDinamicaCell({
                   {format(new Date(dataRealizacao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                 </div>
                 
-                {usuarioRealizou && (
+                {usuarioNome && (
                   <div className="flex items-center gap-2 text-sm">
                     <User className="h-3 w-3" />
-                    <span>Por: {usuarioRealizou}</span>
+                    <span>Por: {usuarioNome}</span>
                   </div>
                 )}
               </div>
@@ -129,10 +149,10 @@ export function AtividadeDinamicaCell({
             <AlertDialogTitle>Confirmar desmarcação</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja desmarcar esta atividade como não realizada?
-              {dataRealizacao && usuarioRealizou && (
+              {dataRealizacao && usuarioNome && (
                 <div className="mt-2 p-2 bg-muted rounded text-sm">
                   <p><strong>Concluída em:</strong> {format(new Date(dataRealizacao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
-                  <p><strong>Por:</strong> {usuarioRealizou}</p>
+                  <p><strong>Por:</strong> {usuarioNome}</p>
                 </div>
               )}
             </AlertDialogDescription>
