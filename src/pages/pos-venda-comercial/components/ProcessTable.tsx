@@ -66,7 +66,7 @@ export function ProcessTable() {
               <TableHead className="text-center">Dados Comerciais</TableHead>
               <TableHead className="text-center">Dados Pedagógicos</TableHead>
               {dynamicActivities.map(activity => (
-                <TableHead key={activity.id} className="text-center min-w-[120px]">
+                <TableHead key={activity.id} className="text-center min-w-[40px] max-w-[60px] px-1">
                   {activity.nome}
                 </TableHead>
               ))}
@@ -133,7 +133,7 @@ export function ProcessTable() {
                   </Button>
                 </TableCell>
                 {dynamicActivities.map(dynamicActivity => (
-                  <TableCell key={dynamicActivity.id} className="text-center">
+                  <TableCell key={dynamicActivity.id} className="text-center px-1 w-[50px]">
                     <AtividadeDinamicaCell
                       atividadePosVendaId={activity.id}
                       atividadeConfigId={dynamicActivity.id}
