@@ -1,15 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { CheckCircle2, Users } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 
 const cadastraisSchema = z.object({
   full_name: z.string().optional(),
@@ -36,6 +38,10 @@ interface DadosCadastraisModalProps {
 export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadastraisModalProps) {
   const queryClient = useQueryClient();
 
+  // LOG: Estado para controle dos accordions e seções completadas
+  const [openAccordions, setOpenAccordions] = useState<string[]>(["dados-pessoais"]);
+  const [completedSections, setCompletedSections] = useState<Set<string>>(new Set());
+
   const form = useForm<CadastraisFormData>({
     resolver: zodResolver(cadastraisSchema),
     defaultValues: {
@@ -52,6 +58,9 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
       address_state: "",
     },
   });
+
+  // LOG: Observar mudanças nos campos do formulário
+  const watchedValues = useWatch({ control: form.control });
 
   // Buscar dados atuais da atividade
   const { data: activity } = useQuery({
@@ -95,6 +104,72 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
       });
     }
   }, [activity, form]);
+
+  /**
+   * LOG: Funções para verificar completude de cada seção
+   */
+  const isPersonalDataComplete = () => {
+    return !!(
+      watchedValues.full_name &&
+      watchedValues.birth_date &&
+      watchedValues.cpf &&
+      watchedValues.rg
+    );
+  };
+
+  const isAddressComplete = () => {
+    return !!(
+      watchedValues.address_postal_code &&
+      watchedValues.address_street &&
+      watchedValues.address_number &&
+      watchedValues.address_neighborhood &&
+      watchedValues.address_city &&
+      watchedValues.address_state
+    );
+  };
+
+  /**
+   * LOG: Efeito para controle inteligente dos accordions
+   * Atualiza seções completadas e sugere próxima seção sem forçar fechamento
+   */
+  useEffect(() => {
+    console.log('LOG: Verificando completude das seções cadastrais:', {
+      personalData: isPersonalDataComplete(),
+      address: isAddressComplete()
+    });
+
+    const newCompletedSections = new Set<string>();
+    
+    // Marcar seções completadas
+    if (isPersonalDataComplete()) newCompletedSections.add("dados-pessoais");
+    if (isAddressComplete()) newCompletedSections.add("endereco");
+    
+    setCompletedSections(newCompletedSections);
+
+    // Lógica de sugestão automática (não forçada) - apenas na primeira completude
+    const prevCompleted = completedSections;
+    
+    // Se dados pessoais foi completado pela primeira vez, sugerir endereço
+    if (isPersonalDataComplete() && !prevCompleted.has("dados-pessoais") && openAccordions.includes("dados-pessoais")) {
+      setOpenAccordions(prev => {
+        const without = prev.filter(item => item !== "dados-pessoais");
+        return without.includes("endereco") ? without : [...without, "endereco"];
+      });
+    }
+
+    // Se endereço foi completado pela primeira vez, minimizar
+    if (isAddressComplete() && !prevCompleted.has("endereco") && openAccordions.includes("endereco")) {
+      setOpenAccordions(prev => prev.filter(item => item !== "endereco"));
+    }
+  }, [watchedValues]);
+
+  /**
+   * LOG: Componente para indicador de completude
+   */
+  const CompletionIndicator = ({ isComplete }: { isComplete: boolean }) => {
+    if (!isComplete) return null;
+    return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+  };
 
   // Mutation para salvar dados
   const saveMutation = useMutation({
@@ -140,189 +215,225 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Dados Cadastrais do Aluno</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Dados Cadastrais do Aluno
+          </DialogTitle>
           <DialogDescription>
             Preencha as informações pessoais e de endereço do aluno.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Dados Pessoais */}
-            <div className="space-y-4">
-              <h4 className="font-semibold text-sm">Dados Pessoais</h4>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <Accordion 
+              type="multiple" 
+              value={openAccordions} 
+              onValueChange={setOpenAccordions}
+              className="w-full space-y-2"
+            >
               
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="full_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome Completo</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Digite o nome completo" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* LOG: Accordion - Dados Pessoais */}
+              <AccordionItem 
+                value="dados-pessoais" 
+                className={cn(
+                  "border rounded-lg transition-colors",
+                  isPersonalDataComplete() && "bg-green-50/50 border-green-200"
+                )}
+              >
+                <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Dados Pessoais</span>
+                    <CompletionIndicator isComplete={isPersonalDataComplete()} />
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="full_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nome Completo *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Digite o nome completo" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="birth_date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data de Nascimento</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                    <FormField
+                      control={form.control}
+                      name="birth_date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data de Nascimento *</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="cpf"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CPF</FormLabel>
-                      <FormControl>
-                        <Input placeholder="000.000.000-00" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="cpf"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CPF *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="000.000.000-00" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="rg"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>RG</FormLabel>
-                      <FormControl>
-                        <Input placeholder="00.000.000-0" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+                    <FormField
+                      control={form.control}
+                      name="rg"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>RG *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="00.000.000-0" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
 
-            {/* Endereço */}
-            <div className="space-y-4">
-              <h4 className="font-semibold text-sm">Endereço</h4>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="address_postal_code"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CEP</FormLabel>
-                      <FormControl>
-                        <Input placeholder="00000-000" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* LOG: Accordion - Endereço */}
+              <AccordionItem 
+                value="endereco" 
+                className={cn(
+                  "border rounded-lg transition-colors",
+                  isAddressComplete() && "bg-green-50/50 border-green-200"
+                )}
+              >
+                <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Endereço</span>
+                    <CompletionIndicator isComplete={isAddressComplete()} />
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="address_postal_code"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CEP *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="00000-000" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="address_street"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel>Logradouro</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Rua, Avenida, etc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                    <FormField
+                      control={form.control}
+                      name="address_street"
+                      render={({ field }) => (
+                        <FormItem className="col-span-1 md:col-span-2">
+                          <FormLabel>Logradouro *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Rua, Avenida, etc." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="address_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número</FormLabel>
-                      <FormControl>
-                        <Input placeholder="123" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="address_number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Número *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="123" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="address_complement"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel>Complemento</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Apto, Bloco, etc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                    <FormField
+                      control={form.control}
+                      name="address_complement"
+                      render={({ field }) => (
+                        <FormItem className="col-span-1 md:col-span-2">
+                          <FormLabel>Complemento</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Apto, Bloco, etc." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="address_neighborhood"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bairro</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Bairro" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="address_neighborhood"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bairro *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Bairro" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="address_city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cidade</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Cidade" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormField
+                      control={form.control}
+                      name="address_city"  
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cidade *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Cidade" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="address_state"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estado</FormLabel>
-                      <FormControl>
-                        <Input placeholder="UF" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+                    <FormField
+                      control={form.control}
+                      name="address_state"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Estado *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="UF" maxLength={2} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
 
-            <div className="flex justify-end gap-4">
+            </Accordion>
+
+            <div className="flex justify-end gap-4 pt-4">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
