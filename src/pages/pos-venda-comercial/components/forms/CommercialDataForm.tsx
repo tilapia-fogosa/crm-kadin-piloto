@@ -6,7 +6,7 @@
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -104,8 +104,9 @@ const INSTALLMENT_OPTIONS = Array.from({ length: 12 }, (_, i) => ({
 export function CommercialDataForm({ initialData, onSubmit, isLoading }: CommercialDataFormProps) {
   console.log('LOG: Renderizando CommercialDataForm com kit types estáticos');
 
-  // LOG: Estado para controle dos accordions
+  // LOG: Estado para controle dos accordions e seções completadas
   const [openAccordions, setOpenAccordions] = useState<string[]>(["kit-type"]);
+  const [completedSections, setCompletedSections] = useState<Set<string>>(new Set());
 
   // LOG: Configuração do formulário com react-hook-form
   const form = useForm<FormData>({
@@ -164,8 +165,8 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
   };
 
   /**
-   * LOG: Efeito para controle automático dos accordions
-   * Minimiza seção completa e abre próxima na sequência
+   * LOG: Efeito para controle inteligente dos accordions
+   * Atualiza seções completadas e sugere próxima seção sem forçar fechamento
    */
   useEffect(() => {
     console.log('LOG: Verificando completude das seções:', {
@@ -175,35 +176,48 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
       material: isMaterialComplete()
     });
 
-    // Se kit foi selecionado, minimizar e abrir matrícula
-    if (isKitTypeComplete() && openAccordions.includes("kit-type")) {
+    const newCompletedSections = new Set<string>();
+    
+    // Marcar seções completadas
+    if (isKitTypeComplete()) newCompletedSections.add("kit-type");
+    if (isEnrollmentComplete()) newCompletedSections.add("enrollment");
+    if (isMonthlyFeeComplete()) newCompletedSections.add("monthly-fee");
+    if (isMaterialComplete()) newCompletedSections.add("material");
+    
+    setCompletedSections(newCompletedSections);
+
+    // Lógica de sugestão automática (não forçada) - apenas na primeira completude
+    const prevCompleted = completedSections;
+    
+    // Se kit foi completado pela primeira vez, sugerir matrícula
+    if (isKitTypeComplete() && !prevCompleted.has("kit-type") && openAccordions.includes("kit-type")) {
       setOpenAccordions(prev => {
         const without = prev.filter(item => item !== "kit-type");
         return without.includes("enrollment") ? without : [...without, "enrollment"];
       });
     }
 
-    // Se matrícula foi completada, minimizar e abrir mensalidade
-    if (isEnrollmentComplete() && openAccordions.includes("enrollment")) {
+    // Se matrícula foi completada pela primeira vez, sugerir mensalidade
+    if (isEnrollmentComplete() && !prevCompleted.has("enrollment") && openAccordions.includes("enrollment")) {
       setOpenAccordions(prev => {
         const without = prev.filter(item => item !== "enrollment");
         return without.includes("monthly-fee") ? without : [...without, "monthly-fee"];
       });
     }
 
-    // Se mensalidade foi completada, minimizar e abrir material
-    if (isMonthlyFeeComplete() && openAccordions.includes("monthly-fee")) {
+    // Se mensalidade foi completada pela primeira vez, sugerir material
+    if (isMonthlyFeeComplete() && !prevCompleted.has("monthly-fee") && openAccordions.includes("monthly-fee")) {
       setOpenAccordions(prev => {
         const without = prev.filter(item => item !== "monthly-fee");
         return without.includes("material") ? without : [...without, "material"];
       });
     }
 
-    // Se material foi completado, minimizar
-    if (isMaterialComplete() && openAccordions.includes("material")) {
+    // Se material foi completado pela primeira vez, minimizar
+    if (isMaterialComplete() && !prevCompleted.has("material") && openAccordions.includes("material")) {
       setOpenAccordions(prev => prev.filter(item => item !== "material"));
     }
-  }, [watchedValues, openAccordions]);
+  }, [watchedValues]);
 
   /**
    * LOG: Componente para indicador de completude
@@ -285,25 +299,55 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
 
   /**
    * LOG: Componente reutilizável para input monetário
-   * Formatação brasileira R$ com validação
+   * Formatação brasileira R$ sem perda de foco durante digitação
    */
-  const MoneyInput = ({ field, placeholder }: { field: any; placeholder: string }) => (
-    <div className="relative">
-      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">
-        R$
-      </span>
-      <Input
-        {...field}
-        type="number"
-        step="0.01"
-        min="0"
-        placeholder={placeholder}
-        className="pl-10"
-        value={field.value || ""}
-        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : "")}
-      />
-    </div>
-  );
+  const MoneyInput = useCallback(({ field, placeholder }: { field: any; placeholder: string }) => {
+    // Estado local para manter string durante digitação
+    const [localValue, setLocalValue] = useState(field.value?.toString() || "");
+    
+    // Sincronizar com campo do form quando valor externo mudar
+    useEffect(() => {
+      if (field.value !== undefined && field.value !== null) {
+        setLocalValue(field.value.toString());
+      } else {
+        setLocalValue("");
+      }
+    }, [field.value]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const inputValue = e.target.value;
+      setLocalValue(inputValue);
+      
+      // Converter para número apenas se não estiver vazio
+      if (inputValue === "" || inputValue === null) {
+        field.onChange("");
+      } else {
+        const numValue = parseFloat(inputValue);
+        if (!isNaN(numValue)) {
+          field.onChange(numValue);
+        }
+      }
+    };
+
+    return (
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">
+          R$
+        </span>
+        <Input
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder={placeholder}
+          className="pl-10"
+          value={localValue}
+          onChange={handleChange}
+          onBlur={field.onBlur}
+          name={field.name}
+        />
+      </div>
+    );
+  }, []);
 
   return (
     <Form {...form}>
