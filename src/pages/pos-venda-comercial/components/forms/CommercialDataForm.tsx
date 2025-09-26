@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -216,307 +217,308 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-        {/* LOG: Seção Kit Type */}
-        <div className="space-y-6">
-          <div className="border-b pb-4">
-            <h3 className="text-lg font-semibold text-foreground">Kit Type</h3>
-            <p className="text-sm text-muted-foreground">Selecione o kit comercializado</p>
-          </div>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <Accordion type="multiple" defaultValue={["kit-type"]} className="w-full space-y-2">
           
-          <div className="grid grid-cols-1 gap-4">
-            <FormField
-              control={form.control}
-              name="kit_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Kit Type *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+          {/* LOG: Accordion - Tipo de Kit */}
+          <AccordionItem value="kit-type" className="border rounded-lg">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <span className="font-semibold">Tipo de Kit</span>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <FormField
+                control={form.control}
+                name="kit_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Kit *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo de kit" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {KIT_TYPE_OPTIONS.map((kit) => (
+                          <SelectItem key={kit.value} value={kit.value}>
+                            {kit.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* LOG: Accordion - Matrícula */}
+          <AccordionItem value="enrollment" className="border rounded-lg">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <span className="font-semibold">Matrícula</span>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="enrollment_amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor *</FormLabel>
+                      <FormControl>
+                        <MoneyInput field={field} placeholder="0,00" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="enrollment_payment_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data Pagamento *</FormLabel>
+                      <DatePickerField field={field} placeholder="Selecione a data" />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="enrollment_payment_method"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Forma *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a forma" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {PAYMENT_METHODS.map((method) => (
+                            <SelectItem key={method.value} value={method.value}>
+                              {method.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="enrollment_installments"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parcelas</FormLabel>
+                      <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione parcelas" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {INSTALLMENT_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* LOG: Accordion - Mensalidade */}
+          <AccordionItem value="monthly-fee" className="border rounded-lg">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <span className="font-semibold">Mensalidade</span>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="monthly_fee_amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor *</FormLabel>
+                      <FormControl>
+                        <MoneyInput field={field} placeholder="0,00" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="monthly_fee_payment_method"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Forma de Pagamento *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a forma" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {PAYMENT_METHODS.map((method) => (
+                            <SelectItem key={method.value} value={method.value}>
+                              {method.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  control={form.control}
+                  name="first_monthly_fee_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>1ª Mensalidade *</FormLabel>
+                      <DatePickerField field={field} placeholder="Selecione a data" />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* LOG: Accordion - Material */}
+          <AccordionItem value="material" className="border rounded-lg">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <span className="font-semibold">Material</span>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="material_amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor *</FormLabel>
+                      <FormControl>
+                        <MoneyInput field={field} placeholder="0,00" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="material_payment_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data Pagamento *</FormLabel>
+                      <DatePickerField field={field} placeholder="Selecione a data" />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="material_payment_method"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Forma Pagamento *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a forma" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {PAYMENT_METHODS.map((method) => (
+                            <SelectItem key={method.value} value={method.value}>
+                              {method.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="material_installments"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parcelas</FormLabel>
+                      <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione parcelas" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {INSTALLMENT_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* LOG: Accordion - Observações */}
+          <AccordionItem value="observations" className="border rounded-lg">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <span className="font-semibold">Observações</span>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <FormField
+                control={form.control}
+                name="observations"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observações Comerciais</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o kit type" />
-                      </SelectTrigger>
+                      <Textarea
+                        {...field}
+                        placeholder="Observações, detalhes da negociação, condições especiais..."
+                        className="min-h-[100px] resize-none"
+                        value={field.value || ""}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {KIT_TYPE_OPTIONS.map((kit) => (
-                        <SelectItem key={kit.value} value={kit.value}>
-                          {kit.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        {/* LOG: Seção Matrícula */}
-        <div className="space-y-6">
-          <div className="border-b pb-4">
-            <h3 className="text-lg font-semibold text-foreground">Dados da Matrícula</h3>
-            <p className="text-sm text-muted-foreground">Informações sobre o valor e pagamento da matrícula</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="enrollment_amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor da Matrícula *</FormLabel>
-                  <FormControl>
-                    <MoneyInput field={field} placeholder="0,00" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="enrollment_payment_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data de Pagamento *</FormLabel>
-                  <DatePickerField field={field} placeholder="Selecione a data" />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="enrollment_payment_method"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Forma de Pagamento *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a forma" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {PAYMENT_METHODS.map((method) => (
-                        <SelectItem key={method.value} value={method.value}>
-                          {method.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="enrollment_installments"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Parcelas</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione parcelas" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {INSTALLMENT_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        {/* LOG: Seção Mensalidade */}
-        <div className="space-y-6">
-          <div className="border-b pb-4">
-            <h3 className="text-lg font-semibold text-foreground">Dados da Mensalidade</h3>
-            <p className="text-sm text-muted-foreground">Informações sobre valor e forma de pagamento mensal</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="monthly_fee_amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor da Mensalidade *</FormLabel>
-                  <FormControl>
-                    <MoneyInput field={field} placeholder="0,00" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="first_monthly_fee_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Primeira Cobrança *</FormLabel>
-                  <DatePickerField field={field} placeholder="Selecione a data" />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            <FormField
-              control={form.control}
-              name="monthly_fee_payment_method"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Forma de Pagamento *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a forma" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {PAYMENT_METHODS.map((method) => (
-                        <SelectItem key={method.value} value={method.value}>
-                          {method.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        {/* LOG: Seção Material */}
-        <div className="space-y-6">
-          <div className="border-b pb-4">
-            <h3 className="text-lg font-semibold text-foreground">Dados do Material</h3>
-            <p className="text-sm text-muted-foreground">Informações sobre valor e pagamento do material didático</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="material_amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor do Material *</FormLabel>
-                  <FormControl>
-                    <MoneyInput field={field} placeholder="0,00" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="material_payment_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data de Pagamento *</FormLabel>
-                  <DatePickerField field={field} placeholder="Selecione a data" />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="material_payment_method"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Forma de Pagamento *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a forma" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {PAYMENT_METHODS.map((method) => (
-                        <SelectItem key={method.value} value={method.value}>
-                          {method.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="material_installments"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Parcelas</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione parcelas" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {INSTALLMENT_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        {/* LOG: Seção Observações */}
-        <div className="space-y-6">
-          <div className="border-b pb-4">
-            <h3 className="text-lg font-semibold text-foreground">Observações</h3>
-            <p className="text-sm text-muted-foreground">Informações adicionais sobre a venda</p>
-          </div>
-          
-          <FormField
-            control={form.control}
-            name="observations"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Observações Comerciais</FormLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    placeholder="Observações, detalhes da negociação, condições especiais..."
-                    className="min-h-[100px] resize-none"
-                    value={field.value || ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         {/* LOG: Botão de submit */}
         <div className="flex justify-end pt-6 border-t">
