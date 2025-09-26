@@ -129,15 +129,50 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
   };
 
   /**
-   * LOG: Efeito para controle inteligente dos accordions
-   * Atualiza seções completadas e sugere próxima seção sem forçar fechamento
+   * LOG: Efeito para definir estado inicial dos accordions baseado na completude
+   * Seções INCOMPLETAS ficam ABERTAS, seções COMPLETAS ficam FECHADAS
    */
   useEffect(() => {
-    console.log('LOG: Verificando completude das seções cadastrais:', {
-      personalData: isPersonalDataComplete(),
-      address: isAddressComplete()
+    if (!isOpen || !activity) return;
+
+    const personalComplete = isPersonalDataComplete();
+    const addressComplete = isAddressComplete();
+    
+    console.log('LOG: Definindo estado inicial dos accordions:', {
+      personalComplete,
+      addressComplete,
+      modal: 'aberto'
     });
 
+    let initialAccordions: string[] = [];
+
+    // Lógica: seções incompletas ficam abertas
+    if (!personalComplete) {
+      initialAccordions.push("dados-pessoais");
+    }
+    
+    if (!addressComplete && personalComplete) {
+      initialAccordions.push("endereco");
+    }
+
+    // Se ambas incompletas, priorizar dados pessoais
+    if (!personalComplete && !addressComplete) {
+      initialAccordions = ["dados-pessoais"];
+    }
+
+    // Se ambas completas, nenhuma aberta
+    if (personalComplete && addressComplete) {
+      initialAccordions = [];
+    }
+
+    console.log('LOG: Accordions que devem ficar abertos:', initialAccordions);
+    setOpenAccordions(initialAccordions);
+  }, [isOpen, activity]);
+
+  /**
+   * LOG: Efeito para atualizar seções completadas e sugestões durante preenchimento
+   */
+  useEffect(() => {
     const newCompletedSections = new Set<string>();
     
     // Marcar seções completadas
@@ -146,7 +181,7 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
     
     setCompletedSections(newCompletedSections);
 
-    // Lógica de sugestão automática (não forçada) - apenas na primeira completude
+    // Lógica de sugestão automática durante preenchimento ativo
     const prevCompleted = completedSections;
     
     // Se dados pessoais foi completado pela primeira vez, sugerir endereço
