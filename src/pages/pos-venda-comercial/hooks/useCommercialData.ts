@@ -1,6 +1,7 @@
 /**
  * LOG: Hook customizado para gerenciar dados comerciais pós-venda
  * Implementa busca, salvamento e validação via funções do banco
+ * Atualizado para usar ENUM kit_type
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -72,7 +73,7 @@ export function useCommercialData(activityId: string) {
       
       const { data: result, error } = await supabase.rpc('save_pos_venda_commercial_data', {
         p_activity_id: activityId,
-        p_kit_type_id: data.kit_type_id || null,
+        p_kit_type: data.kit_type || null,
         p_enrollment_amount: data.enrollment_amount || null,
         p_enrollment_payment_date: data.enrollment_payment_date || null,
         p_enrollment_payment_method: data.enrollment_payment_method || null,
@@ -84,7 +85,7 @@ export function useCommercialData(activityId: string) {
         p_material_payment_date: data.material_payment_date || null,
         p_material_payment_method: data.material_payment_method || null,
         p_material_installments: data.material_installments || null,
-        p_observations: data.observations || null
+        p_commercial_observations: data.observations || null
       });
 
       if (error) {

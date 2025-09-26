@@ -21,7 +21,7 @@ interface DadosComercialModalProps {
 export function DadosComercialModal({ isOpen, onClose, activityId }: DadosComercialModalProps) {
   console.log('LOG: Renderizando DadosComercialModal para atividade:', activityId);
 
-  // LOG: Hook para gerenciar dados comerciais
+  // LOG: Hook simplificado para gerenciar dados comerciais (sem dependência de unitId)
   const {
     commercialData,
     isLoading: isLoadingCommercial,
@@ -29,32 +29,7 @@ export function DadosComercialModal({ isOpen, onClose, activityId }: DadosComerc
     isSaving
   } = useCommercialData(activityId);
 
-  // LOG: Buscar unidade da atividade para kit types
-  const { data: activity } = useQuery({
-    queryKey: ['pos-venda-activity', activityId],
-    queryFn: async () => {
-      console.log('LOG: Buscando dados da atividade para obter unit_id:', activityId);
-      
-      const { data, error } = await supabase
-        .from('atividade_pos_venda')
-        .select(`
-          id,
-          client_id,
-          clients!inner(unit_id)
-        `)
-        .eq('id', activityId)
-        .single();
-
-      if (error) {
-        console.error('LOG: Erro ao buscar atividade:', error);
-        throw error;
-      }
-
-      console.log('LOG: Dados da atividade obtidos:', data);
-      return data;
-    },
-    enabled: !!activityId && isOpen
-  });
+  console.log('LOG: Status de carregamento dos dados comerciais:', isLoadingCommercial);
 
   /**
    * LOG: Handler para salvamento dos dados comerciais
@@ -74,8 +49,7 @@ export function DadosComercialModal({ isOpen, onClose, activityId }: DadosComerc
     onClose();
   };
 
-  const unitId = activity?.clients?.unit_id;
-  const isLoading = isLoadingCommercial || !unitId;
+  const isLoading = isLoadingCommercial;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -108,7 +82,6 @@ export function DadosComercialModal({ isOpen, onClose, activityId }: DadosComerc
               </div>
             ) : (
               <CommercialDataForm
-                unitId={unitId}
                 initialData={commercialData}
                 onSubmit={handleSave}
                 isLoading={isSaving}

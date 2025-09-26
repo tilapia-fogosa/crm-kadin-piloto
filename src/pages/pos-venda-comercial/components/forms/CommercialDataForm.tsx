@@ -1,6 +1,6 @@
 /**
  * LOG: Formulário completo para dados comerciais pós-venda
- * Implementa todos os campos solicitados com validação robusta
+ * Implementa todos os campos com validação robusta usando ENUM kit_type
  */
 
 import { useForm } from "react-hook-form";
@@ -17,13 +17,12 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { CommercialData, PaymentMethod } from "../../types/commercial-data.types";
-import { useKitTypes } from "../../hooks/useKitTypes";
+import { CommercialData, PaymentMethod, KitType, KIT_TYPE_OPTIONS } from "../../types/commercial-data.types";
 
-// LOG: Schema de validação Zod para dados comerciais
+// LOG: Schema de validação Zod para dados comerciais usando ENUM
 const commercialDataSchema = z.object({
-  // Kit Type
-  kit_type_id: z.string().optional(),
+  // Kit Type - ENUM
+  kit_type: z.enum(['kit_1', 'kit_2', 'kit_3', 'kit_4', 'kit_5', 'kit_6', 'kit_7', 'kit_8']).optional(),
   
   // Matrícula
   enrollment_amount: z.coerce.number().positive("Valor deve ser positivo").optional().or(z.literal("")),
@@ -73,7 +72,6 @@ const commercialDataSchema = z.object({
 type FormData = z.infer<typeof commercialDataSchema>;
 
 interface CommercialDataFormProps {
-  unitId: string;
   initialData?: CommercialData;
   onSubmit: (data: CommercialData) => void;
   isLoading?: boolean;
@@ -101,17 +99,14 @@ const INSTALLMENT_OPTIONS = Array.from({ length: 12 }, (_, i) => ({
   label: i === 0 ? '1x (à vista)' : `${i + 1}x`
 }));
 
-export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }: CommercialDataFormProps) {
-  console.log('LOG: Renderizando CommercialDataForm com dados:', initialData);
-  
-  // LOG: Buscar kit types da unidade
-  const { kitTypes, isLoading: isLoadingKits } = useKitTypes(unitId);
+export function CommercialDataForm({ initialData, onSubmit, isLoading }: CommercialDataFormProps) {
+  console.log('LOG: Renderizando CommercialDataForm com kit types estáticos');
 
   // LOG: Configuração do formulário com react-hook-form
   const form = useForm<FormData>({
     resolver: zodResolver(commercialDataSchema),
     defaultValues: {
-      kit_type_id: initialData?.kit_type_id || "",
+      kit_type: initialData?.kit_type || undefined,
       enrollment_amount: initialData?.enrollment_amount || "",
       enrollment_payment_date: initialData?.enrollment_payment_date || "",
       enrollment_payment_method: initialData?.enrollment_payment_method || undefined,
@@ -135,7 +130,7 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
     console.log('LOG: Submetendo dados do formulário:', data);
     
     const commercialData: CommercialData = {
-      kit_type_id: data.kit_type_id || undefined,
+      kit_type: data.kit_type as KitType || undefined,
       enrollment_amount: typeof data.enrollment_amount === 'number' ? data.enrollment_amount : undefined,
       enrollment_payment_date: data.enrollment_payment_date || undefined,
       enrollment_payment_method: data.enrollment_payment_method as PaymentMethod || undefined,
@@ -150,53 +145,60 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
       observations: data.observations || undefined
     };
 
-    console.log('LOG: Dados convertidos para CommercialData:', commercialData);
+    console.log('LOG: Dados comerciais preparados para envio:', commercialData);
     onSubmit(commercialData);
   };
 
   /**
-   * LOG: Componente para seleção de data
-   * Reutilizable para todos os campos de data
+   * LOG: Componente reutilizável para DatePicker
+   * Integrado com react-hook-form e formatação brasileira
    */
-  const DatePickerField = ({ field, placeholder }: { field: any, placeholder: string }) => (
-    <Popover>
-      <PopoverTrigger asChild>
-        <FormControl>
-          <Button
-            variant="outline"
-            className={cn(
-              "w-full pl-3 text-left font-normal",
-              !field.value && "text-muted-foreground"
-            )}
-          >
-            {field.value ? (
-              format(new Date(field.value), "dd/MM/yyyy", { locale: ptBR })
-            ) : (
-              <span>{placeholder}</span>
-            )}
-            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-          </Button>
-        </FormControl>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={field.value ? new Date(field.value) : undefined}
-          onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-          initialFocus
-          className="pointer-events-auto"
-        />
-      </PopoverContent>
-    </Popover>
-  );
+  const DatePickerField = ({ field, placeholder }: { field: any; placeholder: string }) => {
+    const parsedDate = field.value ? new Date(field.value) : undefined;
+    
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <FormControl>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full pl-3 text-left font-normal",
+                !field.value && "text-muted-foreground"
+              )}
+            >
+              {field.value ? (
+                format(parsedDate!, "dd/MM/yyyy", { locale: ptBR })
+              ) : (
+                <span>{placeholder}</span>
+              )}
+              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+            </Button>
+          </FormControl>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={parsedDate}
+            onSelect={(date) => {
+              field.onChange(date ? date.toISOString().split('T')[0] : "");
+            }}
+            disabled={(date) => date < new Date("1900-01-01")}
+            initialFocus
+            className="pointer-events-auto"
+          />
+        </PopoverContent>
+      </Popover>
+    );
+  };
 
   /**
-   * LOG: Componente para input monetário
-   * Formata valores em R$ automaticamente
+   * LOG: Componente reutilizável para input monetário
+   * Formatação brasileira R$ com validação
    */
-  const MoneyInput = ({ field, placeholder }: { field: any, placeholder: string }) => (
+  const MoneyInput = ({ field, placeholder }: { field: any; placeholder: string }) => (
     <div className="relative">
-      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">
         R$
       </span>
       <Input
@@ -206,55 +208,56 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
         min="0"
         placeholder={placeholder}
         className="pl-10"
-        onChange={(e) => {
-          const value = e.target.value;
-          field.onChange(value === "" ? "" : parseFloat(value));
-        }}
+        value={field.value || ""}
+        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : "")}
       />
     </div>
   );
 
-  if (isLoadingKits) {
-    return <div className="p-4 text-center">Carregando tipos de kit...</div>;
-  }
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         {/* LOG: Seção Kit Type */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold border-b pb-2">Tipo do Kit</h3>
+        <div className="space-y-6">
+          <div className="border-b pb-4">
+            <h3 className="text-lg font-semibold text-foreground">Kit Type</h3>
+            <p className="text-sm text-muted-foreground">Selecione o kit comercializado</p>
+          </div>
           
-          <FormField
-            control={form.control}
-            name="kit_type_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tipo do Kit</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo do kit" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {kitTypes.map((kit) => (
-                      <SelectItem key={kit.id} value={kit.id}>
-                        {kit.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-1 gap-4">
+            <FormField
+              control={form.control}
+              name="kit_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kit Type *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o kit type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {KIT_TYPE_OPTIONS.map((kit) => (
+                        <SelectItem key={kit.value} value={kit.value}>
+                          {kit.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
         {/* LOG: Seção Matrícula */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold border-b pb-2">Dados da Matrícula</h3>
+        <div className="space-y-6">
+          <div className="border-b pb-4">
+            <h3 className="text-lg font-semibold text-foreground">Dados da Matrícula</h3>
+            <p className="text-sm text-muted-foreground">Informações sobre o valor e pagamento da matrícula</p>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
@@ -262,7 +265,7 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
               name="enrollment_amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Valor da Matrícula</FormLabel>
+                  <FormLabel>Valor da Matrícula *</FormLabel>
                   <FormControl>
                     <MoneyInput field={field} placeholder="0,00" />
                   </FormControl>
@@ -276,20 +279,22 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
               name="enrollment_payment_date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Data Pagamento Matrícula</FormLabel>
+                  <FormLabel>Data de Pagamento *</FormLabel>
                   <DatePickerField field={field} placeholder="Selecione a data" />
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="enrollment_payment_method"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Forma de Pagamento</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <FormLabel>Forma de Pagamento *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione a forma" />
@@ -313,11 +318,11 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
               name="enrollment_installments"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Número de Parcelas</FormLabel>
-                  <Select value={field.value?.toString()} onValueChange={(value) => field.onChange(parseInt(value))}>
+                  <FormLabel>Parcelas</FormLabel>
+                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Parcelas" />
+                        <SelectValue placeholder="Selecione parcelas" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -336,8 +341,11 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
         </div>
 
         {/* LOG: Seção Mensalidade */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold border-b pb-2">Dados da Mensalidade</h3>
+        <div className="space-y-6">
+          <div className="border-b pb-4">
+            <h3 className="text-lg font-semibold text-foreground">Dados da Mensalidade</h3>
+            <p className="text-sm text-muted-foreground">Informações sobre valor e forma de pagamento mensal</p>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
@@ -345,7 +353,7 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
               name="monthly_fee_amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Valor da Mensalidade</FormLabel>
+                  <FormLabel>Valor da Mensalidade *</FormLabel>
                   <FormControl>
                     <MoneyInput field={field} placeholder="0,00" />
                   </FormControl>
@@ -359,20 +367,22 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
               name="first_monthly_fee_date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Data 1ª Mensalidade</FormLabel>
+                  <FormLabel>Primeira Cobrança *</FormLabel>
                   <DatePickerField field={field} placeholder="Selecione a data" />
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </div>
 
+          <div className="grid grid-cols-1 gap-4">
             <FormField
               control={form.control}
               name="monthly_fee_payment_method"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Forma de Pagamento</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <FormLabel>Forma de Pagamento *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione a forma" />
@@ -394,8 +404,11 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
         </div>
 
         {/* LOG: Seção Material */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold border-b pb-2">Dados do Material</h3>
+        <div className="space-y-6">
+          <div className="border-b pb-4">
+            <h3 className="text-lg font-semibold text-foreground">Dados do Material</h3>
+            <p className="text-sm text-muted-foreground">Informações sobre valor e pagamento do material didático</p>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
@@ -403,7 +416,7 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
               name="material_amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Valor do Material</FormLabel>
+                  <FormLabel>Valor do Material *</FormLabel>
                   <FormControl>
                     <MoneyInput field={field} placeholder="0,00" />
                   </FormControl>
@@ -417,20 +430,22 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
               name="material_payment_date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Data Pagamento Material</FormLabel>
+                  <FormLabel>Data de Pagamento *</FormLabel>
                   <DatePickerField field={field} placeholder="Selecione a data" />
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="material_payment_method"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Forma de Pagamento Material</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <FormLabel>Forma de Pagamento *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione a forma" />
@@ -454,11 +469,11 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
               name="material_installments"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Número de Parcelas</FormLabel>
-                  <Select value={field.value?.toString()} onValueChange={(value) => field.onChange(parseInt(value))}>
+                  <FormLabel>Parcelas</FormLabel>
+                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Parcelas" />
+                        <SelectValue placeholder="Selecione parcelas" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -477,20 +492,24 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
         </div>
 
         {/* LOG: Seção Observações */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold border-b pb-2">Observações</h3>
+        <div className="space-y-6">
+          <div className="border-b pb-4">
+            <h3 className="text-lg font-semibold text-foreground">Observações</h3>
+            <p className="text-sm text-muted-foreground">Informações adicionais sobre a venda</p>
+          </div>
           
           <FormField
             control={form.control}
             name="observations"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Observações</FormLabel>
+                <FormLabel>Observações Comerciais</FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
-                    placeholder="Digite observações adicionais..."
+                    placeholder="Observações, detalhes da negociação, condições especiais..."
                     className="min-h-[100px] resize-none"
+                    value={field.value || ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -499,10 +518,21 @@ export function CommercialDataForm({ unitId, initialData, onSubmit, isLoading }:
           />
         </div>
 
-        {/* LOG: Botões de ação */}
-        <div className="flex justify-end space-x-2 pt-4 border-t">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Salvando..." : "Salvar Dados Comerciais"}
+        {/* LOG: Botão de submit */}
+        <div className="flex justify-end pt-6 border-t">
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="min-w-[120px]"
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Salvando...
+              </div>
+            ) : (
+              'Salvar Dados'
+            )}
           </Button>
         </div>
       </form>

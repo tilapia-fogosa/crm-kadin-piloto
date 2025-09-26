@@ -8,15 +8,17 @@ import { Database } from "@/integrations/supabase/types";
 // Alias para PaymentMethod do banco
 export type PaymentMethod = Database["public"]["Enums"]["payment_method"];
 
+// ENUM para Kit Type conforme especificação
+export type KitType = 'kit_1' | 'kit_2' | 'kit_3' | 'kit_4' | 'kit_5' | 'kit_6' | 'kit_7' | 'kit_8';
+
 /**
  * Interface para dados comerciais completos
  * Todos os campos são opcionais para permitir salvamento incremental
- * LOG: Estrutura espelhada das colunas adicionadas na migração
+ * LOG: Estrutura atualizada para usar ENUM kit_type
  */
 export interface CommercialData {
-  // Kit Type
-  kit_type_id?: string;
-  kit_type_name?: string;
+  // Kit Type (ENUM)
+  kit_type?: KitType;
 
   // Matrícula
   enrollment_amount?: number;
@@ -40,16 +42,19 @@ export interface CommercialData {
 }
 
 /**
- * Interface para Kit Types disponíveis
- * LOG: Estrutura baseada na tabela kit_types existente
+ * Constante com os kit types disponíveis
+ * LOG: Array estático dos kits 1-8 para uso no formulário
  */
-export interface KitType {
-  id: string;
-  name: string;
-  description?: string;
-  unit_id: string;
-  active: boolean;
-}
+export const KIT_TYPE_OPTIONS = [
+  { value: 'kit_1' as KitType, label: 'Kit 1' },
+  { value: 'kit_2' as KitType, label: 'Kit 2' },
+  { value: 'kit_3' as KitType, label: 'Kit 3' },
+  { value: 'kit_4' as KitType, label: 'Kit 4' },
+  { value: 'kit_5' as KitType, label: 'Kit 5' },
+  { value: 'kit_6' as KitType, label: 'Kit 6' },
+  { value: 'kit_7' as KitType, label: 'Kit 7' },
+  { value: 'kit_8' as KitType, label: 'Kit 8' }
+] as const;
 
 /**
  * Interface para dados do formulário de dados comerciais
