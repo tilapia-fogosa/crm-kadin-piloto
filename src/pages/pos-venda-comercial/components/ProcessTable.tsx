@@ -62,9 +62,9 @@ export function ProcessTable() {
               <TableHead>Cliente</TableHead>
               <TableHead>Data Matrícula</TableHead>
               <TableHead>Vendedor</TableHead>
-              <TableHead className="text-center">Dados Cadastrais</TableHead>
-              <TableHead className="text-center">Dados Comerciais</TableHead>
-              <TableHead className="text-center">Dados Pedagógicos</TableHead>
+              <TableHead className="text-center w-[120px]">Dados Cadastrais</TableHead>
+              <TableHead className="text-center w-[120px]">Dados Comerciais</TableHead>
+              <TableHead className="text-center w-[120px]">Dados Pedagógicos</TableHead>
               {dynamicActivities.map(activity => (
                 <TableHead key={activity.id} className="text-center min-w-[40px] max-w-[60px] px-1 text-xs">
                   {activity.nome}
@@ -97,35 +97,35 @@ export function ProcessTable() {
                     <span className="text-sm">{activity.created_by_name}</span>
                   </div>
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="text-center w-[120px]">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => openModal(activity.id, 'cadastrais')}
-                    className="gap-2"
+                    className="gap-1 px-2 py-1"
                   >
                     <User className="h-4 w-4" />
                     {activity.cpf ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Circle className="h-4 w-4" />}
                   </Button>
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="text-center w-[120px]">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => openModal(activity.id, 'comerciais')}
-                    className="gap-2"
+                    className="gap-1 px-2 py-1"
                   >
                     <DollarSign className="h-4 w-4" />
                     {/* Lógica para verificar se dados comerciais foram preenchidos */}
                     <Circle className="h-4 w-4" />
                   </Button>
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="text-center w-[120px]">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => openModal(activity.id, 'pedagogicos')}
-                    className="gap-2"
+                    className="gap-1 px-2 py-1"
                   >
                     <GraduationCap className="h-4 w-4" />
                     {/* Lógica para verificar se dados pedagógicos foram preenchidos */}
