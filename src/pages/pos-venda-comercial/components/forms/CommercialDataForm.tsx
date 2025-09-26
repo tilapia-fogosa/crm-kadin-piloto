@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { CommercialData, PaymentMethod, KitType, KIT_TYPE_OPTIONS } from "../../types/commercial-data.types";
+import { formatDateForInput } from "@/utils/date/formatting";
 
 // LOG: Schema de validação Zod para dados comerciais usando ENUM
 const commercialDataSchema = z.object({
@@ -165,8 +166,48 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
   };
 
   /**
-   * LOG: Efeito para controle inteligente dos accordions
-   * Atualiza seções completadas e sugere próxima seção sem forçar fechamento
+   * LOG: Efeito para definir estado inicial dos accordions baseado na completude
+   * Seções INCOMPLETAS ficam ABERTAS, seções COMPLETAS ficam FECHADAS
+   */
+  useEffect(() => {
+    if (!initialData) return;
+
+    const kitComplete = isKitTypeComplete();
+    const enrollmentComplete = isEnrollmentComplete();
+    const monthlyFeeComplete = isMonthlyFeeComplete();
+    const materialComplete = isMaterialComplete();
+    
+    console.log('LOG: Definindo estado inicial dos accordions comerciais:', {
+      kitComplete,
+      enrollmentComplete,
+      monthlyFeeComplete,
+      materialComplete
+    });
+
+    let initialAccordions: string[] = [];
+
+    // Seções incompletas ficam abertas
+    if (!kitComplete) {
+      initialAccordions.push("kit-type");
+    } else if (!enrollmentComplete) {
+      initialAccordions.push("enrollment");
+    } else if (!monthlyFeeComplete) {
+      initialAccordions.push("monthly-fee");
+    } else if (!materialComplete) {
+      initialAccordions.push("material");
+    }
+
+    // Se todas completas, nenhuma aberta
+    if (kitComplete && enrollmentComplete && monthlyFeeComplete && materialComplete) {
+      initialAccordions = [];
+    }
+
+    console.log('LOG: Accordions comerciais que devem ficar abertos:', initialAccordions);
+    setOpenAccordions(initialAccordions);
+  }, [initialData]);
+
+  /**
+   * LOG: Efeito para atualizar seções completadas e sugestões durante preenchimento
    */
   useEffect(() => {
     console.log('LOG: Verificando completude das seções:', {
@@ -286,7 +327,7 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
             mode="single"
             selected={parsedDate}
             onSelect={(date) => {
-              field.onChange(date ? date.toISOString().split('T')[0] : "");
+              field.onChange(date ? formatDateForInput(date) : "");
             }}
             disabled={(date) => date < new Date("1900-01-01")}
             initialFocus

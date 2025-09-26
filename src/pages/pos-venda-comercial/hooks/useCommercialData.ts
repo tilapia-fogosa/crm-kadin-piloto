@@ -13,7 +13,7 @@ import { CommercialData } from "../types/commercial-data.types";
  * Hook principal para gerenciar dados comerciais
  * LOG: Encapsula toda a lógica de backend para dados comerciais
  */
-export function useCommercialData(activityId: string) {
+export function useCommercialData(activityId: string, onSuccess?: () => void) {
   const queryClient = useQueryClient();
 
   // LOG: Query para buscar dados comerciais existentes
@@ -103,6 +103,12 @@ export function useCommercialData(activityId: string) {
       queryClient.invalidateQueries({ queryKey: ['commercial-data-complete', activityId] });
       
       toast.success('Dados comerciais salvos com sucesso!');
+      
+      // LOG: Executar callback de sucesso se fornecido
+      if (onSuccess) {
+        console.log('LOG: Executando callback de sucesso');
+        onSuccess();
+      }
     },
     onError: (error) => {
       console.error('LOG: Erro na mutation de salvamento:', error);

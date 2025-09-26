@@ -21,13 +21,22 @@ interface DadosComercialModalProps {
 export function DadosComercialModal({ isOpen, onClose, activityId }: DadosComercialModalProps) {
   console.log('LOG: Renderizando DadosComercialModal para atividade:', activityId);
 
-  // LOG: Hook simplificado para gerenciar dados comerciais (sem dependência de unitId)
+  /**
+   * LOG: Handler para fechamento do modal
+   * Limpa estado e fecha modal
+   */
+  const handleClose = () => {
+    console.log('LOG: Fechando modal de dados comerciais');
+    onClose();
+  };
+
+  // LOG: Hook para gerenciar dados comerciais com callback de fechamento do modal
   const {
     commercialData,
     isLoading: isLoadingCommercial,
     saveCommercialData,
     isSaving
-  } = useCommercialData(activityId);
+  } = useCommercialData(activityId, handleClose);
 
   console.log('LOG: Status de carregamento dos dados comerciais:', isLoadingCommercial);
 
@@ -38,15 +47,6 @@ export function DadosComercialModal({ isOpen, onClose, activityId }: DadosComerc
   const handleSave = (data: any) => {
     console.log('LOG: Salvando dados comerciais via modal:', data);
     saveCommercialData(data);
-  };
-
-  /**
-   * LOG: Handler para fechamento do modal
-   * Limpa estado e fecha modal
-   */
-  const handleClose = () => {
-    console.log('LOG: Fechando modal de dados comerciais');
-    onClose();
   };
 
   const isLoading = isLoadingCommercial;
