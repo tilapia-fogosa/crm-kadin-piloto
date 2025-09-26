@@ -12,6 +12,7 @@ import { DadosCadastraisModal } from "./DadosCadastraisModal";
 import { DadosComercialModal } from "./DadosComercialModal";
 import { DadosPedagogicosModal } from "./DadosPedagogicosModal";
 import { AtividadeDinamicaCell } from "./AtividadeDinamicaCell";
+import { CommercialDataButton } from "./CommercialDataButton";
 
 export function ProcessTable() {
   const { activities, isLoading } = usePosVendaActivities();
@@ -109,16 +110,7 @@ export function ProcessTable() {
                   </Button>
                 </TableCell>
                 <TableCell className="text-center w-[120px]">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openModal(activity.id, 'comerciais')}
-                    className="gap-1 px-2 py-1"
-                  >
-                    <DollarSign className="h-4 w-4" />
-                    {/* Lógica para verificar se dados comerciais foram preenchidos */}
-                    <Circle className="h-4 w-4" />
-                  </Button>
+                  <CommercialDataButton activityId={activity.id} onOpenModal={() => openModal(activity.id, 'comerciais')} />
                 </TableCell>
                 <TableCell className="text-center w-[120px]">
                   <Button

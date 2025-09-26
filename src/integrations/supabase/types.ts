@@ -773,11 +773,30 @@ export type Database = {
           client_activity_id: string
           client_id: string
           client_name: string
+          commercial_observations: string | null
           cpf: string | null
           created_at: string
           created_by: string
+          enrollment_amount: number | null
+          enrollment_installments: number | null
+          enrollment_payment_date: string | null
+          enrollment_payment_method:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
+          first_monthly_fee_date: string | null
           full_name: string | null
           id: string
+          kit_type_id: string | null
+          material_amount: number | null
+          material_installments: number | null
+          material_payment_date: string | null
+          material_payment_method:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
+          monthly_fee_amount: number | null
+          monthly_fee_payment_method:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
           photo_thumbnail_url: string | null
           photo_url: string | null
           rg: string | null
@@ -796,11 +815,30 @@ export type Database = {
           client_activity_id: string
           client_id: string
           client_name: string
+          commercial_observations?: string | null
           cpf?: string | null
           created_at?: string
           created_by: string
+          enrollment_amount?: number | null
+          enrollment_installments?: number | null
+          enrollment_payment_date?: string | null
+          enrollment_payment_method?:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
+          first_monthly_fee_date?: string | null
           full_name?: string | null
           id?: string
+          kit_type_id?: string | null
+          material_amount?: number | null
+          material_installments?: number | null
+          material_payment_date?: string | null
+          material_payment_method?:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
+          monthly_fee_amount?: number | null
+          monthly_fee_payment_method?:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
           rg?: string | null
@@ -819,17 +857,43 @@ export type Database = {
           client_activity_id?: string
           client_id?: string
           client_name?: string
+          commercial_observations?: string | null
           cpf?: string | null
           created_at?: string
           created_by?: string
+          enrollment_amount?: number | null
+          enrollment_installments?: number | null
+          enrollment_payment_date?: string | null
+          enrollment_payment_method?:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
+          first_monthly_fee_date?: string | null
           full_name?: string | null
           id?: string
+          kit_type_id?: string | null
+          material_amount?: number | null
+          material_installments?: number | null
+          material_payment_date?: string | null
+          material_payment_method?:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
+          monthly_fee_amount?: number | null
+          monthly_fee_payment_method?:
+            | Database["public"]["Enums"]["payment_method"]
+            | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
           rg?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "atividade_pos_venda_kit_type_id_fkey"
+            columns: ["kit_type_id"]
+            isOneToOne: false
+            referencedRelation: "kit_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_atividade_pos_venda_client_activity_id"
             columns: ["client_activity_id"]
@@ -4769,6 +4833,10 @@ export type Database = {
         Args: { new_password: string; user_id: string }
         Returns: boolean
       }
+      check_commercial_data_complete: {
+        Args: { p_activity_id: string }
+        Returns: boolean
+      }
       check_lancamentos_pendentes: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -5135,6 +5203,10 @@ export type Database = {
         }
         Returns: Json
       }
+      get_pos_venda_commercial_data: {
+        Args: { p_activity_id: string }
+        Returns: Json
+      }
       get_produtividade_abaco_limpa: {
         Args: {
           p_data_final: string
@@ -5357,6 +5429,25 @@ export type Database = {
           leads: number
           matriculas: number
         }[]
+      }
+      save_pos_venda_commercial_data: {
+        Args: {
+          p_activity_id: string
+          p_enrollment_amount?: number
+          p_enrollment_installments?: number
+          p_enrollment_payment_date?: string
+          p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+          p_first_monthly_fee_date?: string
+          p_kit_type_id?: string
+          p_material_amount?: number
+          p_material_installments?: number
+          p_material_payment_date?: string
+          p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
+          p_monthly_fee_amount?: number
+          p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+          p_observations?: string
+        }
+        Returns: boolean
       }
       toggle_pos_venda_activity_status: {
         Args: {
