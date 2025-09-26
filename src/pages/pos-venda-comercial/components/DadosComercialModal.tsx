@@ -6,7 +6,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DollarSign, X } from "lucide-react";
+import { DollarSign } from "lucide-react";
 import { useCommercialData } from "../hooks/useCommercialData";
 import { CommercialDataForm } from "./forms/CommercialDataForm";
 import { useQuery } from "@tanstack/react-query";
@@ -55,19 +55,9 @@ export function DadosComercialModal({ isOpen, onClose, activityId }: DadosComerc
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              <DialogTitle>Dados Comerciais</DialogTitle>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleClose}
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-green-600" />
+            <DialogTitle>Dados Comerciais</DialogTitle>
           </div>
         </DialogHeader>
 
