@@ -3,9 +3,10 @@
  * Implementa todos os campos com validação robusta usando ENUM kit_type
  */
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -103,6 +104,9 @@ const INSTALLMENT_OPTIONS = Array.from({ length: 12 }, (_, i) => ({
 export function CommercialDataForm({ initialData, onSubmit, isLoading }: CommercialDataFormProps) {
   console.log('LOG: Renderizando CommercialDataForm com kit types estáticos');
 
+  // LOG: Estado para controle dos accordions
+  const [openAccordions, setOpenAccordions] = useState<string[]>(["kit-type"]);
+
   // LOG: Configuração do formulário com react-hook-form
   const form = useForm<FormData>({
     resolver: zodResolver(commercialDataSchema),
@@ -122,6 +126,92 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
       observations: initialData?.observations || ""
     }
   });
+
+  // LOG: Observar mudanças nos campos do formulário
+  const watchedValues = useWatch({ control: form.control });
+
+  /**
+   * LOG: Funções para verificar completude de cada seção
+   */
+  const isKitTypeComplete = () => {
+    return !!watchedValues.kit_type;
+  };
+
+  const isEnrollmentComplete = () => {
+    return !!(
+      watchedValues.enrollment_amount &&
+      watchedValues.enrollment_payment_date &&
+      watchedValues.enrollment_payment_method &&
+      watchedValues.enrollment_installments
+    );
+  };
+
+  const isMonthlyFeeComplete = () => {
+    return !!(
+      watchedValues.monthly_fee_amount &&
+      watchedValues.monthly_fee_payment_method &&
+      watchedValues.first_monthly_fee_date
+    );
+  };
+
+  const isMaterialComplete = () => {
+    return !!(
+      watchedValues.material_amount &&
+      watchedValues.material_payment_date &&
+      watchedValues.material_payment_method &&
+      watchedValues.material_installments
+    );
+  };
+
+  /**
+   * LOG: Efeito para controle automático dos accordions
+   * Minimiza seção completa e abre próxima na sequência
+   */
+  useEffect(() => {
+    console.log('LOG: Verificando completude das seções:', {
+      kit: isKitTypeComplete(),
+      enrollment: isEnrollmentComplete(),
+      monthlyFee: isMonthlyFeeComplete(),
+      material: isMaterialComplete()
+    });
+
+    // Se kit foi selecionado, minimizar e abrir matrícula
+    if (isKitTypeComplete() && openAccordions.includes("kit-type")) {
+      setOpenAccordions(prev => {
+        const without = prev.filter(item => item !== "kit-type");
+        return without.includes("enrollment") ? without : [...without, "enrollment"];
+      });
+    }
+
+    // Se matrícula foi completada, minimizar e abrir mensalidade
+    if (isEnrollmentComplete() && openAccordions.includes("enrollment")) {
+      setOpenAccordions(prev => {
+        const without = prev.filter(item => item !== "enrollment");
+        return without.includes("monthly-fee") ? without : [...without, "monthly-fee"];
+      });
+    }
+
+    // Se mensalidade foi completada, minimizar e abrir material
+    if (isMonthlyFeeComplete() && openAccordions.includes("monthly-fee")) {
+      setOpenAccordions(prev => {
+        const without = prev.filter(item => item !== "monthly-fee");
+        return without.includes("material") ? without : [...without, "material"];
+      });
+    }
+
+    // Se material foi completado, minimizar
+    if (isMaterialComplete() && openAccordions.includes("material")) {
+      setOpenAccordions(prev => prev.filter(item => item !== "material"));
+    }
+  }, [watchedValues, openAccordions]);
+
+  /**
+   * LOG: Componente para indicador de completude
+   */
+  const CompletionIndicator = ({ isComplete }: { isComplete: boolean }) => {
+    if (!isComplete) return null;
+    return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+  };
 
   /**
    * LOG: Handler para submit do formulário
@@ -218,12 +308,26 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <Accordion type="multiple" defaultValue={["kit-type"]} className="w-full space-y-2">
+        <Accordion 
+          type="multiple" 
+          value={openAccordions} 
+          onValueChange={setOpenAccordions}
+          className="w-full space-y-2"
+        >
           
           {/* LOG: Accordion - Tipo de Kit */}
-          <AccordionItem value="kit-type" className="border rounded-lg">
+          <AccordionItem 
+            value="kit-type" 
+            className={cn(
+              "border rounded-lg transition-colors",
+              isKitTypeComplete() && "bg-green-50/50 border-green-200"
+            )}
+          >
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <span className="font-semibold">Tipo de Kit</span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Tipo de Kit</span>
+                <CompletionIndicator isComplete={isKitTypeComplete()} />
+              </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
               <FormField
@@ -254,9 +358,18 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
           </AccordionItem>
 
           {/* LOG: Accordion - Matrícula */}
-          <AccordionItem value="enrollment" className="border rounded-lg">
+          <AccordionItem 
+            value="enrollment" 
+            className={cn(
+              "border rounded-lg transition-colors",
+              isEnrollmentComplete() && "bg-green-50/50 border-green-200"
+            )}
+          >
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <span className="font-semibold">Matrícula</span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Matrícula</span>
+                <CompletionIndicator isComplete={isEnrollmentComplete()} />
+              </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -342,9 +455,18 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
           </AccordionItem>
 
           {/* LOG: Accordion - Mensalidade */}
-          <AccordionItem value="monthly-fee" className="border rounded-lg">
+          <AccordionItem 
+            value="monthly-fee" 
+            className={cn(
+              "border rounded-lg transition-colors",
+              isMonthlyFeeComplete() && "bg-green-50/50 border-green-200"
+            )}
+          >
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <span className="font-semibold">Mensalidade</span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Mensalidade</span>
+                <CompletionIndicator isComplete={isMonthlyFeeComplete()} />
+              </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -405,9 +527,18 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
           </AccordionItem>
 
           {/* LOG: Accordion - Material */}
-          <AccordionItem value="material" className="border rounded-lg">
+          <AccordionItem 
+            value="material" 
+            className={cn(
+              "border rounded-lg transition-colors",
+              isMaterialComplete() && "bg-green-50/50 border-green-200"
+            )}
+          >
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <span className="font-semibold">Material</span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Material</span>
+                <CompletionIndicator isComplete={isMaterialComplete()} />
+              </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
