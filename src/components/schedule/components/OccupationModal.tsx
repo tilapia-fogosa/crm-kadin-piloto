@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,15 +27,38 @@ export function OccupationModal({
 }: OccupationModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
-    title: occupation?.title || '',
-    description: occupation?.description || '',
-    date: occupation ? format(new Date(occupation.start_datetime), 'yyyy-MM-dd') : '',
-    time: occupation ? format(new Date(occupation.start_datetime), 'HH:mm') : '',
-    duration_minutes: occupation?.duration_minutes || 60
+    title: '',
+    description: '',
+    date: '',
+    time: '',
+    duration_minutes: 60
   })
 
   // Log: Modal de ocupação renderizado
   console.log('OccupationModal - Modo:', mode, 'Ocupação:', occupation?.id);
+
+  // Atualizar formData quando occupation ou mode mudar
+  useEffect(() => {
+    if (mode === 'edit' && occupation) {
+      console.log('OccupationModal - Preenchendo dados para edição:', occupation);
+      setFormData({
+        title: occupation.title || '',
+        description: occupation.description || '',
+        date: format(new Date(occupation.start_datetime), 'yyyy-MM-dd'),
+        time: format(new Date(occupation.start_datetime), 'HH:mm'),
+        duration_minutes: occupation.duration_minutes || 60
+      })
+    } else if (mode === 'create') {
+      console.log('OccupationModal - Resetando formulário para criação');
+      setFormData({
+        title: '',
+        description: '',
+        date: '',
+        time: '',
+        duration_minutes: 60
+      })
+    }
+  }, [occupation, mode])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

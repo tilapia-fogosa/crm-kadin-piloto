@@ -151,9 +151,9 @@ export function OccupationsList({
               </div>
 
               <div className="mt-3">
-                <Badge variant="secondary" className="text-xs">
-                  Ocupação Ativa
-                </Badge>
+              <Badge variant="outline" className="text-xs border-primary text-primary">
+                Ocupação Ativa
+              </Badge>
               </div>
             </div>
           ))}
