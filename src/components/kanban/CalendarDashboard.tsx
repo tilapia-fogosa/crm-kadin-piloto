@@ -7,7 +7,7 @@ import { CalendarHeader } from "./components/calendar/CalendarHeader"
 import { CalendarGrid } from "./components/calendar/CalendarGrid"
 import { CalendarFilters } from "./components/calendar/CalendarFilters"
 import { ReschedulingDialog } from "./components/scheduling/ReschedulingDialog"
-import { useAgendaLeads } from "./hooks/useAgendaLeads"
+import { useCalendarData } from "./hooks/useCalendarData"
 import { useState, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useToast } from "@/hooks/use-toast"
@@ -36,7 +36,9 @@ export function CalendarDashboard({ selectedUnitIds, onOpenClient }: CalendarDas
   const { toast } = useToast()
 
   const {
+    items: calendarItems,
     appointments,
+    occupations,
     isLoading,
     currentDate,
     userUnits,
@@ -44,10 +46,14 @@ export function CalendarDashboard({ selectedUnitIds, onOpenClient }: CalendarDas
     handlePreviousMonth,
     handleNextMonth,
     refetch
-  } = useAgendaLeads(selectedUnitIds)
+  } = useCalendarData(selectedUnitIds)
 
   console.log('📅 [CalendarDashboard] UserUnits disponíveis:', userUnits?.map(u => ({ id: u.unit_id, name: u.unit_name })))
-  console.log('📅 [CalendarDashboard] Agendamentos carregados:', appointments?.length || 0)
+  console.log('📅 [CalendarDashboard] Itens do calendário carregados:', {
+    total: calendarItems?.length || 0,
+    appointments: appointments?.length || 0,
+    occupations: occupations?.length || 0
+  })
 
   const handleReschedule = (clientId: string, clientName: string) => {
     console.log('📅 [CalendarDashboard] Abrindo dialog de reagendamento para:', clientName)
@@ -179,8 +185,8 @@ export function CalendarDashboard({ selectedUnitIds, onOpenClient }: CalendarDas
 
         <CalendarGrid
           currentDate={currentDate}
-          isLoadingAppointments={isLoading}
-          scheduledAppointments={appointments}
+          isLoadingItems={isLoading}
+          calendarItems={calendarItems}
           onReschedule={handleReschedule}
           userUnits={userUnits}
           onOpenClient={handleOpenClientClick}

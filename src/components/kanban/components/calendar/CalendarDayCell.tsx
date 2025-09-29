@@ -2,21 +2,15 @@
 import { format } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AppointmentItem } from "./AppointmentItem"
+import { OccupationItem } from "./OccupationItem"
 import { UserUnit } from "../../hooks/useUserUnit"
-
-interface AgendaLead {
-  id: string
-  name: string
-  scheduled_date: string
-  unit_id: string
-  unit_name?: string
-}
+import { CalendarItem, isAppointment, isOccupation } from "../../types/calendar"
 
 interface CalendarDayCellProps {
   day: number | null
   currentDate: Date
   isLoading: boolean
-  appointments: AgendaLead[]
+  calendarItems: CalendarItem[]
   onReschedule: (clientId: string, clientName: string) => void
   userUnits?: UserUnit[]
   onOpenClient?: (clientId: string) => void
@@ -26,15 +20,23 @@ export function CalendarDayCell({
   day,
   currentDate,
   isLoading,
-  appointments,
+  calendarItems,
   onReschedule,
   userUnits,
   onOpenClient
 }: CalendarDayCellProps) {
-  // Log específico para dias com agendamentos
-  if (day && appointments.length > 0) {
-    console.log(`📅 [CalendarDayCell] Dia ${day}: ${appointments.length} agendamento(s)`)
-    console.log(`📅 [CalendarDayCell] Detalhes do dia ${day}:`, appointments)
+  // Log específico para dias com itens
+  if (day && calendarItems.length > 0) {
+    console.log(`📅 [CalendarDayCell] Dia ${day}: ${calendarItems.length} item(s)`)
+    
+    // Detalhar por tipo
+    const appointments = calendarItems.filter(isAppointment)
+    const occupations = calendarItems.filter(isOccupation)
+    console.log(`📅 [CalendarDayCell] Dia ${day} detalhado:`, {
+      appointments: appointments.length,
+      occupations: occupations.length,
+      items: calendarItems.map(item => ({ id: item.id, name: item.name, type: item.type }))
+    })
   }
   
   const isCurrentDay = day === new Date().getDate() && 
@@ -75,22 +77,35 @@ export function CalendarDayCell({
               {day}
             </div>
             <div className="space-y-1">
-              {appointments?.map(appointment => (
-                <AppointmentItem
-                  key={appointment.id}
-                  appointment={{
-                    id: appointment.id,
-                    client_name: appointment.name,
-                    scheduled_date: appointment.scheduled_date,
-                    status: 'agendado',
-                    unit_id: appointment.unit_id,
-                    unit_name: appointment.unit_name
-                  }}
-                  onReschedule={onReschedule}
-                  unitIndex={getUnitIndex(appointment.unit_id)}
-                  onOpenClient={onOpenClient}
-                />
-              ))}
+              {calendarItems?.map(item => {
+                if (isAppointment(item)) {
+                  return (
+                    <AppointmentItem
+                      key={item.id}
+                      appointment={{
+                        id: item.id,
+                        client_name: item.name,
+                        scheduled_date: item.scheduled_date,
+                        status: 'agendado',
+                        unit_id: item.unit_id,
+                        unit_name: item.unit_name
+                      }}
+                      onReschedule={onReschedule}
+                      unitIndex={getUnitIndex(item.unit_id)}
+                      onOpenClient={onOpenClient}
+                    />
+                  )
+                } else if (isOccupation(item)) {
+                  return (
+                    <OccupationItem
+                      key={item.id}
+                      occupation={item}
+                      unitIndex={getUnitIndex(item.unit_id)}
+                    />
+                  )
+                }
+                return null
+              })}
             </div>
           </>
         )

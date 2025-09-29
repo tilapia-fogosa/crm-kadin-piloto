@@ -3,19 +3,12 @@ import { format, getDaysInMonth, startOfMonth, getDay } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CalendarDayCell } from "./CalendarDayCell"
 import { UserUnit } from "../../hooks/useUserUnit"
-
-interface AgendaLead {
-  id: string
-  name: string
-  scheduled_date: string
-  unit_id: string
-  unit_name?: string
-}
+import { CalendarItem } from "../../types/calendar"
 
 interface CalendarGridProps {
   currentDate: Date
-  isLoadingAppointments: boolean
-  scheduledAppointments?: AgendaLead[]
+  isLoadingItems: boolean
+  calendarItems?: CalendarItem[]
   onReschedule: (clientId: string, clientName: string) => void
   userUnits?: UserUnit[]
   onOpenClient?: (clientId: string) => void
@@ -23,14 +16,23 @@ interface CalendarGridProps {
 
 export function CalendarGrid({
   currentDate,
-  isLoadingAppointments,
-  scheduledAppointments = [],
+  isLoadingItems,
+  calendarItems = [],
   onReschedule,
   userUnits,
   onOpenClient
 }: CalendarGridProps) {
   console.log('📅 [CalendarGrid] Renderizando com unidades:', userUnits?.length)
-  console.log('📅 [CalendarGrid] Total de agendamentos recebidos:', scheduledAppointments.length)
+  console.log('📅 [CalendarGrid] Total de itens do calendário recebidos:', calendarItems.length)
+  
+  // Log detalhado de distribuição por tipo
+  const appointmentCount = calendarItems.filter(item => item.type === 'appointment').length
+  const occupationCount = calendarItems.filter(item => item.type === 'occupation').length
+  console.log('📊 [CalendarGrid] Distribuição por tipo:', { 
+    appointments: appointmentCount, 
+    occupations: occupationCount,
+    total: calendarItems.length 
+  })
 
   const daysInMonth = getDaysInMonth(currentDate)
   const firstDayOfMonth = startOfMonth(currentDate)
@@ -51,25 +53,26 @@ export function CalendarGrid({
     return days
   }
 
-  const getDayAppointments = (dayNumber: number) => {
-    if (dayNumber <= 0 || dayNumber > daysInMonth || !scheduledAppointments) return []
+  const getDayItems = (dayNumber: number) => {
+    if (dayNumber <= 0 || dayNumber > daysInMonth || !calendarItems) return []
     
-    return scheduledAppointments.filter(appointment => {
-      const appointmentDate = new Date(appointment.scheduled_date)
-      const appointmentDay = appointmentDate.getDate()
-      const appointmentMonth = appointmentDate.getMonth()
-      const appointmentYear = appointmentDate.getFullYear()
+    return calendarItems.filter(item => {
+      const itemDate = new Date(item.scheduled_date)
+      const itemDay = itemDate.getDate()
+      const itemMonth = itemDate.getMonth()
+      const itemYear = itemDate.getFullYear()
       
-      const isSameDay = appointmentDay === dayNumber &&
-                         appointmentMonth === currentDate.getMonth() &&
-                         appointmentYear === currentDate.getFullYear()
+      const isSameDay = itemDay === dayNumber &&
+                         itemMonth === currentDate.getMonth() &&
+                         itemYear === currentDate.getFullYear()
       
       if (isSameDay) {
-        console.log(`✅ [CalendarGrid] Agendamento encontrado para dia ${dayNumber}:`, {
-          id: appointment.id,
-          name: appointment.name,
-          scheduled_date: appointment.scheduled_date,
-          unit_name: appointment.unit_name
+        console.log(`✅ [CalendarGrid] Item encontrado para dia ${dayNumber}:`, {
+          id: item.id,
+          name: item.name,
+          type: item.type,
+          scheduled_date: item.scheduled_date,
+          unit_name: item.unit_name
         })
       }
       
@@ -79,20 +82,21 @@ export function CalendarGrid({
 
   const days = generateCalendarDays()
 
-  // Debug adicional - mostrar distribuição de agendamentos por dia
-  if (scheduledAppointments.length > 0) {
-    const appointmentsByDay = scheduledAppointments.reduce((acc, appointment) => {
-      const day = new Date(appointment.scheduled_date).getDate()
-      const month = new Date(appointment.scheduled_date).getMonth()
-      const year = new Date(appointment.scheduled_date).getFullYear()
+  // Debug adicional - mostrar distribuição de itens por dia
+  if (calendarItems.length > 0) {
+    const itemsByDay = calendarItems.reduce((acc, item) => {
+      const day = new Date(item.scheduled_date).getDate()
+      const month = new Date(item.scheduled_date).getMonth()
+      const year = new Date(item.scheduled_date).getFullYear()
       
       if (month === currentDate.getMonth() && year === currentDate.getFullYear()) {
-        acc[day] = (acc[day] || 0) + 1
+        const key = `${day}-${item.type}`
+        acc[key] = (acc[key] || 0) + 1
       }
       return acc
-    }, {} as Record<number, number>)
+    }, {} as Record<string, number>)
     
-    console.log('📅 [CalendarGrid] Distribuição de agendamentos por dia:', appointmentsByDay)
+    console.log('📅 [CalendarGrid] Distribuição de itens por dia e tipo:', itemsByDay)
   }
 
   return (
@@ -110,8 +114,8 @@ export function CalendarGrid({
           key={index}
           day={day}
           currentDate={currentDate}
-          isLoading={isLoadingAppointments}
-          appointments={day ? getDayAppointments(day) : []}
+          isLoading={isLoadingItems}
+          calendarItems={day ? getDayItems(day) : []}
           onReschedule={onReschedule}
           userUnits={userUnits}
           onOpenClient={onOpenClient}
