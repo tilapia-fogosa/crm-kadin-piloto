@@ -48,21 +48,39 @@ export function useAvailableSlots(selectedDate: Date | undefined, unitId?: strin
         const endOfDay = new Date(selectedDate)
         endOfDay.setHours(23, 59, 59, 999)
 
-        // Modificado para filtrar por unidade também
-        const query = supabase
+        // Buscar agendamentos
+        const clientsQuery = supabase
           .from('clients')
           .select('scheduled_date')
           .gte('scheduled_date', startOfDay.toISOString())
           .lte('scheduled_date', endOfDay.toISOString())
         
-        // Adiciona filtro de unidade se especificado
         if (unitId) {
-          query.eq('unit_id', unitId);
+          clientsQuery.eq('unit_id', unitId);
         }
 
-        const { data: scheduledSlots, error } = await query;
+        // Buscar ocupações
+        const occupationsQuery = supabase
+          .from('schedule_occupations')
+          .select('start_datetime, duration_minutes')
+          .gte('start_datetime', startOfDay.toISOString())
+          .lte('start_datetime', endOfDay.toISOString())
+          .eq('active', true)
+        
+        if (unitId) {
+          occupationsQuery.eq('unit_id', unitId);
+        }
 
-        if (error) throw error
+        const [clientsResult, occupationsResult] = await Promise.all([
+          clientsQuery,
+          occupationsQuery
+        ]);
+
+        if (clientsResult.error) throw clientsResult.error;
+        if (occupationsResult.error) throw occupationsResult.error;
+
+        const scheduledSlots = clientsResult.data;
+        const occupations = occupationsResult.data;
 
         // Determina o dia da semana (0 = domingo, 1 = segunda, ..., 6 = sábado)
         const dayOfWeek = getDay(selectedDate)
@@ -111,17 +129,24 @@ export function useAvailableSlots(selectedDate: Date | undefined, unitId?: strin
           return date.getHours() * 60 + date.getMinutes();
         });
 
-        console.log('useAvailableSlots - Horários agendados (em minutos):', scheduledTimesInMinutes);
+        // Converte ocupações para intervalos ocupados (considerando duração)
+        const occupationIntervals = occupations.map(occupation => {
+          const startDate = new Date(occupation.start_datetime);
+          const startMinutes = startDate.getHours() * 60 + startDate.getMinutes();
+          const endMinutes = startMinutes + occupation.duration_minutes;
+          return { start: startMinutes, end: endMinutes };
+        });
 
-        // Nova lógica: filtrar slots considerando 30 minutos antes e depois dos agendamentos
+        console.log('useAvailableSlots - Horários agendados (em minutos):', scheduledTimesInMinutes);
+        console.log('useAvailableSlots - Intervalos de ocupação:', occupationIntervals);
+
+        // Nova lógica: filtrar slots considerando agendamentos e ocupações
         const availableSlots = allSlots.filter(slot => {
           const [hour, minute] = slot.split(':').map(Number);
           const slotTimeInMinutes = hour * 60 + minute;
           
-          // Verifica se o slot atual ou +/- 30 minutos estão dentro de algum agendamento existente
-          const isBlocked = scheduledTimesInMinutes.some(scheduledTime => {
-            // Bloqueia o slot se ele estiver 30 minutos antes ou 30 minutos depois de um agendamento
-            // Ou se for o próprio horário do agendamento
+          // Verifica se o slot está bloqueado por agendamentos
+          const isBlockedByScheduled = scheduledTimesInMinutes.some(scheduledTime => {
             return (
               // É o próprio horário agendado
               slotTimeInMinutes === scheduledTime ||
@@ -131,10 +156,26 @@ export function useAvailableSlots(selectedDate: Date | undefined, unitId?: strin
               (slotTimeInMinutes < scheduledTime && slotTimeInMinutes + 60 > scheduledTime)
             );
           });
+
+          // Verifica se o slot está bloqueado por ocupações
+          const isBlockedByOccupation = occupationIntervals.some(interval => {
+            // O slot está dentro do intervalo da ocupação (com margem de 30 min antes/depois)
+            return (
+              // Slot está dentro da ocupação
+              (slotTimeInMinutes >= interval.start && slotTimeInMinutes < interval.end) ||
+              // Slot + 60 min (duração do agendamento) overlap com a ocupação
+              (slotTimeInMinutes < interval.start && slotTimeInMinutes + 60 > interval.start) ||
+              // Slot está 30 min antes da ocupação
+              (slotTimeInMinutes >= interval.start - 30 && slotTimeInMinutes < interval.start)
+            );
+          });
+
+          const isBlocked = isBlockedByScheduled || isBlockedByOccupation;
           
           // Log detalhado para depuração
           if (isBlocked) {
-            console.log(`useAvailableSlots - Slot ${slot} está bloqueado`);
+            const reason = isBlockedByScheduled ? 'agendamento' : 'ocupação';
+            console.log(`useAvailableSlots - Slot ${slot} está bloqueado por ${reason}`);
           }
           
           // Retorna true para slots não bloqueados

@@ -1136,6 +1136,51 @@ export type Database = {
           },
         ]
       }
+      camisetas: {
+        Row: {
+          aluno_id: string
+          camiseta_entregue: boolean
+          created_at: string
+          data_entrega: string | null
+          id: string
+          nao_tem_tamanho: boolean | null
+          observacoes: string | null
+          responsavel_entrega_id: string | null
+          responsavel_entrega_nome: string | null
+          responsavel_entrega_tipo: string | null
+          tamanho_camiseta: string | null
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          camiseta_entregue?: boolean
+          created_at?: string
+          data_entrega?: string | null
+          id?: string
+          nao_tem_tamanho?: boolean | null
+          observacoes?: string | null
+          responsavel_entrega_id?: string | null
+          responsavel_entrega_nome?: string | null
+          responsavel_entrega_tipo?: string | null
+          tamanho_camiseta?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          camiseta_entregue?: boolean
+          created_at?: string
+          data_entrega?: string | null
+          id?: string
+          nao_tem_tamanho?: boolean | null
+          observacoes?: string | null
+          responsavel_entrega_id?: string | null
+          responsavel_entrega_nome?: string | null
+          responsavel_entrega_tipo?: string | null
+          tamanho_camiseta?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       class_types: {
         Row: {
           active: boolean
@@ -3806,6 +3851,53 @@ export type Database = {
           },
         ]
       }
+      schedule_occupations: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          start_datetime: string
+          title: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          start_datetime: string
+          title: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          start_datetime?: string
+          title?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_occupations_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_logs: {
         Row: {
           created_at: string
@@ -4746,11 +4838,9 @@ export type Database = {
       }
       responsaveis_view: {
         Row: {
-          active: boolean | null
           id: string | null
           nome: string | null
           tipo: string | null
-          unit_id: string | null
         }
         Relationships: []
       }
