@@ -7,6 +7,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState, useEffect, useCallback } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -68,8 +69,9 @@ const commercialDataSchema = z.object({
   } as const).optional(),
   material_installments: z.coerce.number().min(1).max(12).optional().or(z.literal("")),
   
-  // Observações
-  observations: z.string().optional()
+  // Confirmações de Pagamento
+  enrollment_payment_confirmed: z.boolean().optional(),
+  material_payment_confirmed: z.boolean().optional()
 });
 
 type FormData = z.infer<typeof commercialDataSchema>;
@@ -125,7 +127,8 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
       material_payment_date: initialData?.material_payment_date || "",
       material_payment_method: initialData?.material_payment_method || undefined,
       material_installments: initialData?.material_installments || "",
-      observations: initialData?.observations || ""
+      enrollment_payment_confirmed: initialData?.enrollment_payment_confirmed || false,
+      material_payment_confirmed: initialData?.material_payment_confirmed || false
     }
   });
 
@@ -288,7 +291,8 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
       material_payment_date: data.material_payment_date || undefined,
       material_payment_method: data.material_payment_method as PaymentMethod || undefined,
       material_installments: typeof data.material_installments === 'number' ? data.material_installments : undefined,
-      observations: data.observations || undefined
+      enrollment_payment_confirmed: data.enrollment_payment_confirmed || false,
+      material_payment_confirmed: data.material_payment_confirmed || false
     };
 
     console.log('LOG: Dados comerciais preparados para envio:', commercialData);
@@ -708,30 +712,75 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
             </AccordionContent>
           </AccordionItem>
 
-          {/* LOG: Accordion - Observações */}
-          <AccordionItem value="observations" className="border rounded-lg">
+          {/* LOG: Accordion - Confirmações de Pagamentos */}
+          <AccordionItem value="payment-confirmations" className="border rounded-lg bg-blue-50/30">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <span className="font-semibold">Observações</span>
+              <span className="font-semibold text-blue-900">Confirmações de Pagamentos</span>
             </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <FormField
-                control={form.control}
-                name="observations"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Observações Comerciais</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="Observações, detalhes da negociação, condições especiais..."
-                        className="min-h-[100px] resize-none"
-                        value={field.value || ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <AccordionContent className="px-4 pb-4 space-y-4">
+              {/* Matrícula */}
+              <div className="space-y-2 p-3 bg-white rounded-lg border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Matrícula</p>
+                    <p className="text-lg font-semibold">
+                      {watchedValues.enrollment_amount 
+                        ? `R$ ${Number(watchedValues.enrollment_amount).toFixed(2).replace('.', ',')}` 
+                        : 'Valor não definido'}
+                    </p>
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="enrollment_payment_confirmed"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="h-5 w-5"
+                          />
+                        </FormControl>
+                        <FormLabel className="text-sm font-normal cursor-pointer">
+                          Já pago?
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Material Didático */}
+              <div className="space-y-2 p-3 bg-white rounded-lg border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Material Didático</p>
+                    <p className="text-lg font-semibold">
+                      {watchedValues.material_amount 
+                        ? `R$ ${Number(watchedValues.material_amount).toFixed(2).replace('.', ',')}` 
+                        : 'Valor não definido'}
+                    </p>
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="material_payment_confirmed"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="h-5 w-5"
+                          />
+                        </FormControl>
+                        <FormLabel className="text-sm font-normal cursor-pointer">
+                          Já pago?
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </AccordionContent>
           </AccordionItem>
         </Accordion>

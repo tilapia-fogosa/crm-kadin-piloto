@@ -37,8 +37,9 @@ export interface CommercialData {
   material_payment_method?: PaymentMethod;
   material_installments?: number;
 
-  // Observações
-  observations?: string;
+  // Confirmações de Pagamento
+  enrollment_payment_confirmed?: boolean;
+  material_payment_confirmed?: boolean;
 }
 
 /**

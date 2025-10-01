@@ -779,6 +779,7 @@ export type Database = {
           created_by: string
           enrollment_amount: number | null
           enrollment_installments: number | null
+          enrollment_payment_confirmed: boolean | null
           enrollment_payment_date: string | null
           enrollment_payment_method:
             | Database["public"]["Enums"]["payment_method"]
@@ -789,6 +790,7 @@ export type Database = {
           kit_type: Database["public"]["Enums"]["kit_type"] | null
           material_amount: number | null
           material_installments: number | null
+          material_payment_confirmed: boolean | null
           material_payment_date: string | null
           material_payment_method:
             | Database["public"]["Enums"]["payment_method"]
@@ -821,6 +823,7 @@ export type Database = {
           created_by: string
           enrollment_amount?: number | null
           enrollment_installments?: number | null
+          enrollment_payment_confirmed?: boolean | null
           enrollment_payment_date?: string | null
           enrollment_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
@@ -831,6 +834,7 @@ export type Database = {
           kit_type?: Database["public"]["Enums"]["kit_type"] | null
           material_amount?: number | null
           material_installments?: number | null
+          material_payment_confirmed?: boolean | null
           material_payment_date?: string | null
           material_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
@@ -863,6 +867,7 @@ export type Database = {
           created_by?: string
           enrollment_amount?: number | null
           enrollment_installments?: number | null
+          enrollment_payment_confirmed?: boolean | null
           enrollment_payment_date?: string | null
           enrollment_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
@@ -873,6 +878,7 @@ export type Database = {
           kit_type?: Database["public"]["Enums"]["kit_type"] | null
           material_amount?: number | null
           material_installments?: number | null
+          material_payment_confirmed?: boolean | null
           material_payment_date?: string | null
           material_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
@@ -4958,6 +4964,7 @@ export type Database = {
           educador: string
           id: string
           nome: string
+          oculto_retencoes: boolean
           status: string
           total_alertas: number
           total_retencoes: number
@@ -5481,6 +5488,23 @@ export type Database = {
               p_kit_type?: Database["public"]["Enums"]["kit_type"]
               p_material_amount?: number
               p_material_installments?: number
+              p_material_payment_date?: string
+              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_monthly_fee_amount?: number
+              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+            }
+          | {
+              p_activity_id: string
+              p_enrollment_amount?: number
+              p_enrollment_installments?: number
+              p_enrollment_payment_confirmed?: boolean
+              p_enrollment_payment_date?: string
+              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_first_monthly_fee_date?: string
+              p_kit_type?: Database["public"]["Enums"]["kit_type"]
+              p_material_amount?: number
+              p_material_installments?: number
+              p_material_payment_confirmed?: boolean
               p_material_payment_date?: string
               p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
               p_monthly_fee_amount?: number

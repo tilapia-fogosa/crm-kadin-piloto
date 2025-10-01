@@ -85,7 +85,8 @@ export function useCommercialData(activityId: string, onSuccess?: () => void) {
         p_material_payment_date: data.material_payment_date || null,
         p_material_payment_method: data.material_payment_method || null,
         p_material_installments: data.material_installments || null,
-        p_commercial_observations: data.observations || null
+        p_enrollment_payment_confirmed: data.enrollment_payment_confirmed || false,
+        p_material_payment_confirmed: data.material_payment_confirmed || false
       });
 
       if (error) {
