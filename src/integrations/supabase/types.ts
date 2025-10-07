@@ -1875,6 +1875,173 @@ export type Database = {
           },
         ]
       }
+      commission_calculations: {
+        Row: {
+          consolidated_at: string | null
+          consolidated_by: string | null
+          consultant_id: string
+          created_at: string
+          details: Json
+          formula_id: string | null
+          id: string
+          is_consolidated: boolean
+          month: string
+          total_commission: number
+          total_sales: number
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          consolidated_at?: string | null
+          consolidated_by?: string | null
+          consultant_id: string
+          created_at?: string
+          details?: Json
+          formula_id?: string | null
+          id?: string
+          is_consolidated?: boolean
+          month: string
+          total_commission?: number
+          total_sales?: number
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          consolidated_at?: string | null
+          consolidated_by?: string | null
+          consultant_id?: string
+          created_at?: string
+          details?: Json
+          formula_id?: string | null
+          id?: string
+          is_consolidated?: boolean
+          month?: string
+          total_commission?: number
+          total_sales?: number
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_calculations_formula_id_fkey"
+            columns: ["formula_id"]
+            isOneToOne: false
+            referencedRelation: "commission_formulas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_calculations_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_formulas: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          formula_expression: string
+          formula_name: string
+          id: string
+          unit_id: string
+          updated_at: string
+          valid_from: string
+          valid_until: string | null
+          variables_config: Json
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          formula_expression: string
+          formula_name: string
+          id?: string
+          unit_id: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+          variables_config?: Json
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          formula_expression?: string
+          formula_name?: string
+          id?: string
+          unit_id?: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+          variables_config?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_formulas_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_sale_details: {
+        Row: {
+          activity_id: string
+          calculation_id: string
+          client_name: string
+          created_at: string
+          enrollment_amount: number | null
+          id: string
+          material_amount: number | null
+          monthly_fee_amount: number | null
+          sale_commission: number
+          sale_date: string
+        }
+        Insert: {
+          activity_id: string
+          calculation_id: string
+          client_name: string
+          created_at?: string
+          enrollment_amount?: number | null
+          id?: string
+          material_amount?: number | null
+          monthly_fee_amount?: number | null
+          sale_commission?: number
+          sale_date: string
+        }
+        Update: {
+          activity_id?: string
+          calculation_id?: string
+          client_name?: string
+          created_at?: string
+          enrollment_amount?: number | null
+          id?: string
+          material_amount?: number | null
+          monthly_fee_amount?: number | null
+          sale_commission?: number
+          sale_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_sale_details_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "atividade_pos_venda"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_sale_details_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "commission_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       convidados: {
         Row: {
           created_at: string
@@ -4873,6 +5040,15 @@ export type Database = {
           total_exercicios: number
         }[]
       }
+      calculate_monthly_commission: {
+        Args: {
+          p_consultant_id: string
+          p_force_recalculate?: boolean
+          p_month: string
+          p_unit_id: string
+        }
+        Returns: Json
+      }
       change_initial_password: {
         Args: { new_password: string; user_id: string }
         Returns: boolean
@@ -4884,6 +5060,10 @@ export type Database = {
       check_lancamentos_pendentes: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      consolidate_monthly_commission: {
+        Args: { p_calculation_id: string }
+        Returns: boolean
       }
       count_draft_updates: {
         Args: Record<PropertyKey, never>
@@ -5065,6 +5245,27 @@ export type Database = {
           scheduled_visits: number
           user_id: string
           user_name: string
+        }[]
+      }
+      get_commission_summary: {
+        Args: {
+          p_consultant_id?: string
+          p_end_month?: string
+          p_start_month?: string
+          p_unit_id: string
+        }
+        Returns: {
+          calculation_id: string
+          consolidated_at: string
+          consultant_id: string
+          consultant_name: string
+          created_at: string
+          formula_name: string
+          is_consolidated: boolean
+          month: string
+          total_commission: number
+          total_sales: number
+          unit_id: string
         }[]
       }
       get_correcoes_ah_stats: {
