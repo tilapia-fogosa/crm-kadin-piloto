@@ -5,6 +5,7 @@
  */
 
 import { useState, useMemo } from "react";
+import { CommissionConfigModal } from "./CommissionConfigModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Settings, DollarSign, TrendingUp, Calendar, ChevronDown, ChevronUp } from "lucide-react";
@@ -39,6 +40,7 @@ export function Comissoes() {
   // Estados de filtros
   const [selectedConsultant, setSelectedConsultant] = useState<string | null>(null);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
   // Calcular últimos 6 meses
   const last6Months = useMemo(() => {
@@ -116,7 +118,7 @@ export function Comissoes() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       {/* Header com botão de configuração */}
       <div className="flex items-center justify-between">
         <div>
@@ -125,12 +127,16 @@ export function Comissoes() {
             Acompanhe suas comissões e resultados de vendas
           </p>
         </div>
-        {canConfigureCommissions && (
-          <Button variant="outline" size="sm">
-            <Settings className="h-4 w-4 mr-2" />
-            Configurar Fórmula
-          </Button>
-        )}
+            {canConfigureCommissions && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsConfigModalOpen(true)}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Configurar Fórmula
+              </Button>
+            )}
       </div>
 
       {/* Cards de resumo */}
@@ -196,14 +202,14 @@ export function Comissoes() {
       </div>
 
       {/* Tabela de resumo mensal */}
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Resumo Mensal</CardTitle>
           <CardDescription>
             Comissões dos últimos 6 meses
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           {isLoadingSummary ? (
             <div className="space-y-2">
               <Skeleton className="h-12 w-full" />
@@ -292,6 +298,12 @@ export function Comissoes() {
           )}
         </CardContent>
       </Card>
+
+      <CommissionConfigModal 
+        open={isConfigModalOpen}
+        onOpenChange={setIsConfigModalOpen}
+        unitId={unitId}
+      />
     </div>
   );
 }
