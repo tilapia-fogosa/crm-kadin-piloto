@@ -67,7 +67,15 @@ export function useSaveCommissionFormula(unitId: string) {
         .eq('unit_id', unitId)
         .eq('active', true);
 
-      // Inserir nova fórmula
+      // Inserir nova fórmula com data de vigência
+      // LOG: Se valid_from não for informado, usa primeiro dia do mês atual
+      const validFromDate = formula.valid_from || (() => {
+        const today = new Date();
+        return new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+      })();
+
+      console.log('LOG: Inserindo fórmula com valid_from', validFromDate);
+
       const { data, error } = await supabase
         .from('commission_formulas')
         .insert({
@@ -75,7 +83,7 @@ export function useSaveCommissionFormula(unitId: string) {
           formula_name: formula.formula_name!,
           formula_expression: formula.formula_expression!,
           variables_config: formula.variables_config || {},
-          valid_from: formula.valid_from || new Date().toISOString().split('T')[0],
+          valid_from: validFromDate,
           valid_until: formula.valid_until || null,
           created_by: user.id,
           active: true,

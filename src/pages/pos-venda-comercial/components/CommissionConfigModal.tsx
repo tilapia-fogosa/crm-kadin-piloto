@@ -21,7 +21,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Calculator, DollarSign, Hash, TrendingUp, AlertCircle, Check, Info } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface CommissionConfigModalProps {
   open: boolean;
@@ -94,6 +98,14 @@ export function CommissionConfigModal({
   const [formulaExpression, setFormulaExpression] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [previewResult, setPreviewResult] = useState<number | null>(null);
+  
+  // Estados de retroatividade
+  const [applyRetroactive, setApplyRetroactive] = useState(true);
+  const [validFrom, setValidFrom] = useState<string>(() => {
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    return firstDayOfMonth.toISOString().split('T')[0];
+  });
 
   // Hooks
   const { data: currentFormula, isLoading } = useCommissionFormula(unitId || undefined);
@@ -105,11 +117,28 @@ export function CommissionConfigModal({
     if (currentFormula) {
       setFormulaName(currentFormula.formula_name);
       setFormulaExpression(currentFormula.formula_expression);
+      setValidFrom(currentFormula.valid_from);
     } else {
       setFormulaName("");
       setFormulaExpression("");
+      // Reset para primeiro dia do mês atual
+      const today = new Date();
+      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      setValidFrom(firstDayOfMonth.toISOString().split('T')[0]);
     }
   }, [currentFormula, open]);
+
+  // Atualizar validFrom baseado no checkbox de retroatividade
+  useEffect(() => {
+    if (applyRetroactive) {
+      const today = new Date();
+      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      setValidFrom(firstDayOfMonth.toISOString().split('T')[0]);
+    } else {
+      const today = new Date();
+      setValidFrom(today.toISOString().split('T')[0]);
+    }
+  }, [applyRetroactive]);
 
   /**
    * Valida a sintaxe da fórmula
@@ -234,7 +263,12 @@ export function CommissionConfigModal({
    * Salvar fórmula
    */
   const handleSave = async () => {
-    console.log("LOG: Salvando fórmula", { formulaName, formulaExpression });
+    console.log("LOG: Salvando fórmula com retroatividade", { 
+      formulaName, 
+      formulaExpression, 
+      validFrom,
+      applyRetroactive 
+    });
 
     if (!formulaName.trim()) {
       setValidationError("Nome da fórmula é obrigatório");
@@ -248,7 +282,13 @@ export function CommissionConfigModal({
     await saveFormula.mutateAsync({
       formula_name: formulaName,
       formula_expression: formulaExpression,
-      variables_config: {}, // Configuração adicional pode ser adicionada aqui
+      variables_config: {},
+      valid_from: validFrom,
+    });
+
+    console.log("LOG: Fórmula salva com sucesso", {
+      valid_from: validFrom,
+      retroactive: applyRetroactive
     });
 
     onOpenChange(false);
@@ -328,6 +368,55 @@ export function CommissionConfigModal({
                     <span>Fórmula válida</span>
                   </div>
                 )}
+              </div>
+
+              {/* Configurações de Retroatividade */}
+              <div className="space-y-4">
+                <Separator />
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="apply-retroactive" 
+                      checked={applyRetroactive}
+                      onCheckedChange={(checked) => setApplyRetroactive(checked as boolean)}
+                    />
+                    <Label htmlFor="apply-retroactive" className="font-medium cursor-pointer">
+                      Aplicar retroativamente desde o início do mês
+                    </Label>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="valid-from">Data de Vigência</Label>
+                    <Input
+                      id="valid-from"
+                      type="date"
+                      value={validFrom}
+                      onChange={(e) => setValidFrom(e.target.value)}
+                      disabled={applyRetroactive}
+                    />
+                  </div>
+
+                  {applyRetroactive && (
+                    <Alert className="border-amber-200 bg-amber-50">
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                      <AlertTitle className="text-amber-900">Atenção: Aplicação Retroativa</AlertTitle>
+                      <AlertDescription className="text-amber-800">
+                        A fórmula será aplicada desde <strong>{format(new Date(validFrom), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</strong>.
+                        {" "}Todas as vendas a partir desta data serão incluídas no cálculo de comissão.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {!applyRetroactive && (
+                    <Alert>
+                      <Info className="h-4 w-4" />
+                      <AlertTitle>Aplicação Futura</AlertTitle>
+                      <AlertDescription>
+                        Apenas vendas a partir de <strong>{format(new Date(validFrom), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</strong> serão comissionadas.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
               </div>
 
               {/* Preview de Cálculo */}
