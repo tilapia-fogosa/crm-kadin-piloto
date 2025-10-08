@@ -12,7 +12,6 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { formatDateForInput } from "@/utils/date/formatting";
 
 const cadastraisSchema = z.object({
   full_name: z.string().optional(),
@@ -308,9 +307,9 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
                           <FormControl>
                             <Input 
                               type="date" 
+                              placeholder="dd/mm/aaaa"
                               {...field}
-                              value={field.value ? formatDateForInput(new Date(field.value)) : ""}
-                              onChange={(e) => field.onChange(e.target.value)}
+                              value={field.value || ""}
                             />
                           </FormControl>
                           <FormMessage />
