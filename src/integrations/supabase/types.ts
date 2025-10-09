@@ -5104,6 +5104,15 @@ export type Database = {
         Args: { p_reposicao_id: string }
         Returns: boolean
       }
+      evaluate_formula: {
+        Args: {
+          p_formula: string
+          p_material: number
+          p_matricula: number
+          p_mensalidade: number
+        }
+        Returns: number
+      }
       get_activity_funnel_stats: {
         Args: {
           p_end_date: string

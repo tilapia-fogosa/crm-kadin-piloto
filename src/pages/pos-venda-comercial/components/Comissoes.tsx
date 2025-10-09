@@ -74,11 +74,23 @@ export function Comissoes() {
   const monthlyData = useMemo(() => {
     if (!summary) return [];
 
+    // LOG: Debug dos dados retornados
+    console.log('🔍 [Comissoes] Summary retornado:', summary);
+    console.log('🔍 [Comissoes] Últimos 6 meses:', last6Months);
+
     const grouped = last6Months.map(month => {
       const monthData = summary.filter(s => s.month === month);
       const totalSales = monthData.reduce((acc, curr) => acc + curr.total_sales, 0);
       const totalCommission = monthData.reduce((acc, curr) => acc + curr.total_commission, 0);
       const isConsolidated = monthData.every(s => s.is_consolidated);
+
+      // LOG: Debug de cada mês
+      console.log(`🔍 [Comissoes] Mês ${month}:`, {
+        monthData,
+        totalSales,
+        totalCommission,
+        isConsolidated,
+      });
 
       return {
         month,
