@@ -128,17 +128,16 @@ export function CommissionConfigModal({
     }
   }, [currentFormula, open]);
 
-  // Atualizar validFrom baseado no checkbox de retroatividade
-  useEffect(() => {
-    if (applyRetroactive) {
+  // Handler específico para o checkbox de retroatividade
+  const handleRetroactiveChange = (checked: boolean) => {
+    setApplyRetroactive(checked);
+    if (checked) {
       const today = new Date();
       const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
       setValidFrom(firstDayOfMonth.toISOString().split('T')[0]);
-    } else {
-      const today = new Date();
-      setValidFrom(today.toISOString().split('T')[0]);
     }
-  }, [applyRetroactive]);
+    // Se desmarcar, não altera a data automaticamente
+  };
 
   /**
    * Valida a sintaxe da fórmula
@@ -378,7 +377,7 @@ export function CommissionConfigModal({
                     <Checkbox 
                       id="apply-retroactive" 
                       checked={applyRetroactive}
-                      onCheckedChange={(checked) => setApplyRetroactive(checked as boolean)}
+                      onCheckedChange={handleRetroactiveChange}
                     />
                     <Label htmlFor="apply-retroactive" className="font-medium cursor-pointer">
                       Aplicar retroativamente desde o início do mês
@@ -401,7 +400,7 @@ export function CommissionConfigModal({
                       <AlertCircle className="h-4 w-4 text-amber-600" />
                       <AlertTitle className="text-amber-900">Atenção: Aplicação Retroativa</AlertTitle>
                       <AlertDescription className="text-amber-800">
-                        A fórmula será aplicada desde <strong>{format(new Date(validFrom), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</strong>.
+                        A fórmula será aplicada desde <strong>{validFrom}</strong>.
                         {" "}Todas as vendas a partir desta data serão incluídas no cálculo de comissão.
                       </AlertDescription>
                     </Alert>
@@ -412,7 +411,7 @@ export function CommissionConfigModal({
                       <Info className="h-4 w-4" />
                       <AlertTitle>Aplicação Futura</AlertTitle>
                       <AlertDescription>
-                        Apenas vendas a partir de <strong>{format(new Date(validFrom), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</strong> serão comissionadas.
+                        Apenas vendas a partir de <strong>{validFrom}</strong> serão comissionadas.
                       </AlertDescription>
                     </Alert>
                   )}
