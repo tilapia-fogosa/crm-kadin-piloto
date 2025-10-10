@@ -75,12 +75,19 @@ export interface CommissionSaleDetail {
   sale_commission: number;
   sale_date: string;
   created_at: string;
+  atividade_pos_venda?: {
+    enrollment_payment_confirmed: boolean;
+    material_payment_confirmed: boolean;
+  };
 }
 
 // Interface para resumo de comissão (retornado pela RPC)
 export interface CommissionSummary extends CommissionCalculation {
+  calculation_id: string; // ID do cálculo (mesmo que 'id')
   consultant_name: string;
   formula_name: string | null;
+  sales_confirmed: number; // Vendas com ambos pagamentos confirmados
+  sales_pending: number; // Vendas com pelo menos um pagamento não confirmado
 }
 
 // Interface para filtros do dashboard

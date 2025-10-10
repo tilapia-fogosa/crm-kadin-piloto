@@ -54,7 +54,13 @@ export function useCommissionSaleDetails(calculationId: string | undefined) {
 
       const { data, error } = await supabase
         .from('commission_sale_details')
-        .select('*')
+        .select(`
+          *,
+          atividade_pos_venda!inner(
+            enrollment_payment_confirmed,
+            material_payment_confirmed
+          )
+        `)
         .eq('calculation_id', calculationId)
         .order('sale_date', { ascending: false });
 

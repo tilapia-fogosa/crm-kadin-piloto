@@ -5272,6 +5272,8 @@ export type Database = {
           formula_name: string
           is_consolidated: boolean
           month: string
+          sales_confirmed: number
+          sales_pending: number
           total_commission: number
           total_sales: number
           unit_id: string

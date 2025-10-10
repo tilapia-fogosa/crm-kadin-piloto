@@ -39,7 +39,7 @@ export function Comissoes() {
   
   // Estados de filtros
   const [selectedConsultant, setSelectedConsultant] = useState<string | null>(null);
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null); // Armazena calculation_id
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
   // Calcular últimos 6 meses
@@ -74,34 +74,24 @@ export function Comissoes() {
   const monthlyData = useMemo(() => {
     if (!summary) return [];
 
-    // LOG: Debug dos dados retornados
-    console.log('🔍 [Comissoes] Summary retornado:', summary);
-    console.log('🔍 [Comissoes] Últimos 6 meses:', last6Months);
-
-    const grouped = last6Months.map(month => {
+    return last6Months.map(month => {
       const monthData = summary.filter(s => s.month === month);
       const totalSales = monthData.reduce((acc, curr) => acc + curr.total_sales, 0);
-      const totalCommission = monthData.reduce((acc, curr) => acc + curr.total_commission, 0);
+      const totalCommission = monthData.reduce((acc, curr) => acc + Number(curr.total_commission), 0);
       const isConsolidated = monthData.every(s => s.is_consolidated);
-
-      // LOG: Debug de cada mês
-      console.log(`🔍 [Comissoes] Mês ${month}:`, {
-        monthData,
-        totalSales,
-        totalCommission,
-        isConsolidated,
-      });
+      const salesConfirmed = monthData.reduce((acc, curr) => acc + (curr.sales_confirmed || 0), 0);
+      const salesPending = monthData.reduce((acc, curr) => acc + (curr.sales_pending || 0), 0);
 
       return {
         month,
         totalSales,
         totalCommission,
         isConsolidated,
+        salesConfirmed,
+        salesPending,
         details: monthData,
       };
     });
-
-    return grouped;
   }, [summary, last6Months]);
 
   // Loading state
@@ -233,9 +223,9 @@ export function Comissoes() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Mês</TableHead>
-                  <TableHead className="text-right">Vendas</TableHead>
+                  <TableHead className="text-right">Vendas em Confirmação</TableHead>
+                  <TableHead className="text-right">Vendas Confirmadas</TableHead>
                   <TableHead className="text-right">Comissão</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -244,62 +234,84 @@ export function Comissoes() {
                   <>
                     <TableRow 
                       key={monthData.month}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => setExpandedRow(expandedRow === monthData.month ? null : monthData.month)}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => {
+                        const calcId = monthData.details[0]?.calculation_id || monthData.details[0]?.id || null;
+                        setExpandedRow(expandedRow === calcId ? null : calcId);
+                      }}
                     >
                       <TableCell className="font-medium">
-                        {format(new Date(monthData.month + '-01'), 'MMMM yyyy', { locale: ptBR })}
+                        {format(new Date(monthData.month + '-01'), "MMMM 'de' yyyy", { locale: ptBR })}
                       </TableCell>
-                      <TableCell className="text-right">
-                        {monthData.totalSales}
+                      <TableCell className="text-right text-muted-foreground">
+                        {monthData.salesPending}
                       </TableCell>
                       <TableCell className="text-right font-medium">
+                        {monthData.salesConfirmed}
+                      </TableCell>
+                      <TableCell className="text-right text-primary font-semibold">
                         R$ {monthData.totalCommission.toFixed(2)}
                       </TableCell>
-                      <TableCell className="text-center">
-                        {monthData.isConsolidated ? (
-                          <Badge variant="default">Pago ✓</Badge>
-                        ) : (
-                          <Badge variant="secondary">Aberto ⏳</Badge>
-                        )}
-                      </TableCell>
                       <TableCell>
-                        {expandedRow === monthData.month ? (
-                          <ChevronUp className="h-4 w-4" />
+                        {expandedRow === (monthData.details[0]?.calculation_id || monthData.details[0]?.id) ? (
+                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
                         ) : (
-                          <ChevronDown className="h-4 w-4" />
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
                         )}
                       </TableCell>
                     </TableRow>
                     
                     {/* Linha expansível com detalhes */}
-                    {expandedRow === monthData.month && (
+                    {expandedRow === (monthData.details[0]?.calculation_id || monthData.details[0]?.id) && (
                       <TableRow>
                         <TableCell colSpan={5} className="bg-muted/30 p-4">
-                          <div className="space-y-2">
-                            <h4 className="font-semibold text-sm">Detalhamento de Vendas</h4>
-                            {isLoadingDetails ? (
-                              <Skeleton className="h-24 w-full" />
-                            ) : saleDetails && saleDetails.length > 0 ? (
-                              <div className="text-sm space-y-1">
-                                {saleDetails.map((sale) => (
-                                  <div key={sale.id} className="flex justify-between py-1 border-b border-border/50">
-                                    <span>{sale.client_name}</span>
-                                    <span className="text-muted-foreground">
-                                      Matrícula: R$ {sale.enrollment_amount?.toFixed(2) || '0,00'} | 
-                                      Material: R$ {sale.material_amount?.toFixed(2) || '0,00'} | 
-                                      Mensalidade: R$ {sale.monthly_fee_amount?.toFixed(2) || '0,00'}
-                                    </span>
-                                    <span className="font-medium">
-                                      R$ {sale.sale_commission.toFixed(2)}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-sm text-muted-foreground">Nenhuma venda neste período</p>
-                            )}
-                          </div>
+                          {isLoadingDetails ? (
+                            <div className="text-center py-4">
+                              <p className="text-sm text-muted-foreground">Carregando detalhes...</p>
+                            </div>
+                          ) : saleDetails && saleDetails.length > 0 ? (
+                            <div className="space-y-2">
+                              <h4 className="text-sm font-semibold mb-3">Detalhes das Vendas</h4>
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>Cliente</TableHead>
+                                    <TableHead className="text-center">Matrícula Paga</TableHead>
+                                    <TableHead className="text-center">Material Pago</TableHead>
+                                    <TableHead className="text-right">Comissão Calculada</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {saleDetails.map((sale) => (
+                                    <TableRow key={sale.id}>
+                                      <TableCell>{sale.client_name}</TableCell>
+                                      <TableCell className="text-center">
+                                        {sale.atividade_pos_venda?.enrollment_payment_confirmed ? (
+                                          <Badge variant="default">Sim ✓</Badge>
+                                        ) : (
+                                          <Badge variant="secondary">Não ✗</Badge>
+                                        )}
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        {sale.atividade_pos_venda?.material_payment_confirmed ? (
+                                          <Badge variant="default">Sim ✓</Badge>
+                                        ) : (
+                                          <Badge variant="secondary">Não ✗</Badge>
+                                        )}
+                                      </TableCell>
+                                      <TableCell className="text-right font-medium">
+                                        R$ {sale.sale_commission.toFixed(2)}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          ) : (
+                            <div className="text-center py-4">
+                              <p className="text-sm text-muted-foreground">Nenhuma venda registrada neste mês.</p>
+                            </div>
+                          )}
                         </TableCell>
                       </TableRow>
                     )}
