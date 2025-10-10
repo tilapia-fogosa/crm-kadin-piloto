@@ -289,14 +289,14 @@ export function Comissoes() {
                                         {sale.atividade_pos_venda?.enrollment_payment_confirmed ? (
                                           <Badge variant="default">Sim ✓</Badge>
                                         ) : (
-                                          <Badge variant="secondary">Não ✗</Badge>
+                                          <Badge variant="secondary" className="text-white">Não ✗</Badge>
                                         )}
                                       </TableCell>
                                       <TableCell className="text-center">
                                         {sale.atividade_pos_venda?.material_payment_confirmed ? (
                                           <Badge variant="default">Sim ✓</Badge>
                                         ) : (
-                                          <Badge variant="secondary">Não ✗</Badge>
+                                          <Badge variant="secondary" className="text-white">Não ✗</Badge>
                                         )}
                                       </TableCell>
                                       <TableCell className="text-right font-medium">
