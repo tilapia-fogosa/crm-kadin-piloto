@@ -12,7 +12,7 @@ import { Settings, DollarSign, TrendingUp, Calendar, ChevronDown, ChevronUp } fr
 import { useUnit } from "@/contexts/UnitContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useCommissionSummary, useCommissionSaleDetails, useCalculateCommission, useConsolidateCommission } from "@/hooks/useCommissionCalculations";
-import { format, subMonths } from "date-fns";
+import { format, subMonths, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   Table,
@@ -240,7 +240,7 @@ export function Comissoes() {
                       }}
                     >
                       <TableCell className="font-medium">
-                        {format(new Date(monthData.month + '-01'), "MMMM 'de' yyyy", { locale: ptBR })}
+                        {format(parse(monthData.month, 'yyyy-MM', new Date()), "MMMM 'de' yyyy", { locale: ptBR })}
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground">
                         {monthData.salesPending}
