@@ -4,7 +4,7 @@
  * PERMISSÕES: Consultores veem apenas suas comissões, Franqueados/Admins veem todas
  */
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { CommissionConfigModal } from "./CommissionConfigModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -194,7 +194,7 @@ export function Comissoes() {
           </CardHeader>
           <CardContent>
             <div className="text-sm font-medium">
-              {format(new Date(startMonth + '-01'), 'MMM/yyyy', { locale: ptBR })} - {format(new Date(endMonth + '-01'), 'MMM/yyyy', { locale: ptBR })}
+              {format(new Date(endMonth + '-01'), 'MMM/yyyy', { locale: ptBR })} - {format(new Date(startMonth + '-01'), 'MMM/yyyy', { locale: ptBR })}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Últimos 6 meses
@@ -231,9 +231,8 @@ export function Comissoes() {
               </TableHeader>
               <TableBody>
                 {monthlyData.map((monthData) => (
-                  <>
+                  <React.Fragment key={monthData.month}>
                     <TableRow 
-                      key={monthData.month}
                       className="cursor-pointer hover:bg-muted/50 transition-colors"
                       onClick={() => {
                         const calcId = monthData.details[0]?.calculation_id || monthData.details[0]?.id || null;
@@ -300,7 +299,20 @@ export function Comissoes() {
                                         )}
                                       </TableCell>
                                       <TableCell className="text-right font-medium">
-                                        R$ {sale.sale_commission.toFixed(2)}
+                                        {sale.sale_commission > 0 ? (
+                                          <span className="text-green-600 dark:text-green-400">
+                                            R$ {sale.sale_commission.toFixed(2)}
+                                          </span>
+                                        ) : sale.atividade_pos_venda?.enrollment_payment_confirmed || 
+                                             sale.atividade_pos_venda?.material_payment_confirmed ? (
+                                          <Badge variant="outline" className="text-yellow-600">
+                                            ⏳ Calculando...
+                                          </Badge>
+                                        ) : (
+                                          <span className="text-muted-foreground">
+                                            R$ 0,00
+                                          </span>
+                                        )}
                                       </TableCell>
                                     </TableRow>
                                   ))}
@@ -315,7 +327,7 @@ export function Comissoes() {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </React.Fragment>
                 ))}
               </TableBody>
             </Table>

@@ -103,6 +103,11 @@ export function useCommercialData(activityId: string, onSuccess?: () => void) {
       queryClient.invalidateQueries({ queryKey: ['commercial-data', activityId] });
       queryClient.invalidateQueries({ queryKey: ['commercial-data-complete', activityId] });
       
+      // LOG: Invalidar queries de comissão para atualizar totais automaticamente
+      console.log('LOG: Invalidando queries de comissão');
+      queryClient.invalidateQueries({ queryKey: ['commission-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['commission-sale-details'] });
+      
       toast.success('Dados comerciais salvos com sucesso!');
       
       // LOG: Executar callback de sucesso se fornecido
