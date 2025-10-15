@@ -3,7 +3,7 @@
  * 
  * @description
  * Permite que franqueados e admins filtrem as estatísticas de produtividade
- * por múltiplos usuários. Apenas visível para usuários com permissão adequada.
+ * por múltiplos usuários. Seleção interna com checkmarks.
  */
 
 import { Label } from "@/components/ui/label";
@@ -14,8 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface UnitUser {
   id: string;
@@ -37,94 +36,79 @@ export function UserProductivityFilter({
   console.log('🎯 [UserProductivityFilter] Usuários selecionados:', selectedUserIds);
   console.log('🎯 [UserProductivityFilter] Usuários disponíveis:', availableUsers);
 
-  // Handler para adicionar usuário
-  const handleAddUser = (userId: string) => {
-    console.log('🎯 [UserProductivityFilter] Adicionando usuário:', userId);
+  /**
+   * Obtém o texto a ser exibido no SelectTrigger
+   */
+  const getDisplayText = () => {
+    if (selectedUserIds.length === 0) return 'Todos os usuários';
+    if (selectedUserIds.length === 1) {
+      const user = availableUsers.find(u => u.id === selectedUserIds[0]);
+      return user?.full_name || 'Usuário';
+    }
+    const firstUser = availableUsers.find(u => u.id === selectedUserIds[0]);
+    return `${firstUser?.full_name} +${selectedUserIds.length - 1}`;
+  };
+
+  /**
+   * Handler para toggle de seleção (adiciona ou remove)
+   */
+  const handleSelectChange = (value: string) => {
+    console.log('🎯 [UserProductivityFilter] Seleção alterada:', value);
     
-    if (userId === "all") {
+    if (value === "all") {
       console.log('🎯 [UserProductivityFilter] Selecionado "Todos" - limpando filtros');
       onUsersChange([]);
       return;
     }
 
-    if (!selectedUserIds.includes(userId)) {
-      const newSelection = [...selectedUserIds, userId];
-      console.log('🎯 [UserProductivityFilter] Nova seleção:', newSelection);
+    // Toggle: adiciona se não está, remove se já está
+    if (selectedUserIds.includes(value)) {
+      const newSelection = selectedUserIds.filter(id => id !== value);
+      console.log('🎯 [UserProductivityFilter] Removendo usuário - nova seleção:', newSelection);
+      onUsersChange(newSelection);
+    } else {
+      const newSelection = [...selectedUserIds, value];
+      console.log('🎯 [UserProductivityFilter] Adicionando usuário - nova seleção:', newSelection);
       onUsersChange(newSelection);
     }
   };
 
-  // Handler para remover usuário
-  const handleRemoveUser = (userId: string) => {
-    console.log('🎯 [UserProductivityFilter] Removendo usuário:', userId);
-    const newSelection = selectedUserIds.filter(id => id !== userId);
-    console.log('🎯 [UserProductivityFilter] Nova seleção:', newSelection);
-    onUsersChange(newSelection);
-  };
-
-  // Usuários não selecionados disponíveis para adicionar
-  const availableToAdd = availableUsers.filter(
-    user => !selectedUserIds.includes(user.id)
-  );
-
   return (
-    <div className="mb-4 space-y-2">
-      <Label className="text-white text-sm font-medium">
-        Filtrar por usuário
+    <div className="space-y-2">
+      <Label className="text-white text-xs font-medium">
+        Filtro
       </Label>
       
-      <div className="flex items-center gap-2 flex-wrap">
-        {/* Badges dos usuários selecionados */}
-        {selectedUserIds.length > 0 ? (
-          <>
-            {selectedUserIds.map(userId => {
-              const user = availableUsers.find(u => u.id === userId);
-              return (
-                <Badge
-                  key={userId}
-                  variant="secondary"
-                  className="bg-white/20 text-white hover:bg-white/30 transition-colors"
-                >
-                  {user?.full_name || 'Usuário desconhecido'}
-                  <button
-                    onClick={() => handleRemoveUser(userId)}
-                    className="ml-2 hover:text-red-300 transition-colors"
-                    aria-label="Remover filtro"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              );
-            })}
-          </>
-        ) : (
-          <Badge
-            variant="secondary"
-            className="bg-white/20 text-white"
-          >
-            Todos os usuários
-          </Badge>
-        )}
-
-        {/* Select para adicionar mais usuários */}
-        {availableToAdd.length > 0 && (
-          <Select onValueChange={handleAddUser}>
-            <SelectTrigger className="w-[200px] bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 transition-colors">
-              <SelectValue placeholder="Adicionar filtro..." />
-            </SelectTrigger>
-            <SelectContent>
-              {selectedUserIds.length > 0 && (
-                <SelectItem value="all">Todos os usuários</SelectItem>
+      <Select onValueChange={handleSelectChange}>
+        <SelectTrigger className="w-[200px] bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 transition-colors">
+          <SelectValue>
+            {getDisplayText()}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent className="bg-background border-border z-50">
+          {/* Opção "Todos perfis" */}
+          <SelectItem value="all" className="cursor-pointer">
+            <div className="flex items-center gap-2">
+              {selectedUserIds.length === 0 && (
+                <Check className="h-4 w-4 text-orange-500" />
               )}
-              {availableToAdd.map(user => (
-                <SelectItem key={user.id} value={user.id}>
-                  {user.full_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </div>
+              <span>Todos perfis</span>
+            </div>
+          </SelectItem>
+          
+          {/* Lista de usuários com checkmarks */}
+          {availableUsers.map(user => (
+            <SelectItem key={user.id} value={user.id} className="cursor-pointer">
+              <div className="flex items-center gap-2">
+                {selectedUserIds.includes(user.id) && (
+                  <Check className="h-4 w-4 text-orange-500" />
+                )}
+                <span>{user.full_name}</span>
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

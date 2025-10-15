@@ -65,53 +65,60 @@ export function UserProductivityPanel({
   return (
     <TooltipProvider>
       <div className="bg-white/5 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-        {/* Filtro de usuários (apenas para franqueados/admins) */}
-        {canFilterByUsers && (
-          <UserProductivityFilter
-            selectedUserIds={selectedUserIds}
-            onUsersChange={onUsersChange}
-            availableUsers={availableUsers}
-          />
-        )}
-        {/* Header da tabela */}
-        <div className="grid grid-cols-5 gap-2 mb-2">
-          <div className="text-xs font-medium text-white/70"></div>
-          {activityColumns.map((col) => (
-            <Tooltip key={col.key}>
-              <TooltipTrigger asChild>
-                <div className="text-center">
-                  <div className="text-xs font-semibold text-white bg-white/10 rounded px-2 py-1">
-                    {col.label}
-                  </div>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{col.tooltip}</p>
-              </TooltipContent>
-            </Tooltip>
-          ))}
-        </div>
+        <div className={canFilterByUsers ? "grid grid-cols-[200px_1fr] gap-4" : ""}>
+          {/* Coluna esquerda: Filtro (apenas para franqueados/admins) */}
+          {canFilterByUsers && (
+            <div className="flex flex-col">
+              <UserProductivityFilter
+                selectedUserIds={selectedUserIds}
+                onUsersChange={onUsersChange}
+                availableUsers={availableUsers}
+              />
+            </div>
+          )}
 
-        {/* Linhas de dados */}
-        <div className="space-y-1">
-          {periods.map((period) => (
-            <div key={period.key} className="grid grid-cols-5 gap-2">
-              {/* Coluna de label do período */}
-              <div className="text-xs font-medium text-white/90 flex items-center">
-                {period.label}
-              </div>
-
-              {/* Colunas de valores */}
+          {/* Coluna direita: Tabela */}
+          <div>
+            {/* Header da tabela */}
+            <div className="grid grid-cols-4 gap-2 mb-2">
               {activityColumns.map((col) => (
-                <div
-                  key={col.key}
-                  className="text-center bg-white/10 rounded px-2 py-1 text-xs font-medium text-white"
-                >
-                  {renderValue(stats?.[col.key]?.[period.key])}
+                <Tooltip key={col.key}>
+                  <TooltipTrigger asChild>
+                    <div className="text-center">
+                      <div className="text-xs font-semibold text-white bg-white/10 rounded px-2 py-1">
+                        {col.label}
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{col.tooltip}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+
+            {/* Linhas de dados */}
+            <div className="space-y-1">
+              {periods.map((period) => (
+                <div key={period.key} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2">
+                  {/* Colunas de valores TC, CE, AG, AT */}
+                  {activityColumns.map((col) => (
+                    <div
+                      key={col.key}
+                      className="text-center bg-white/10 rounded px-2 py-1 text-xs font-medium text-white"
+                    >
+                      {renderValue(stats?.[col.key]?.[period.key])}
+                    </div>
+                  ))}
+
+                  {/* Label do período à direita */}
+                  <div className="text-xs font-medium text-white/70 flex items-center ml-2">
+                    {period.label}
+                  </div>
                 </div>
               ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </TooltipProvider>
