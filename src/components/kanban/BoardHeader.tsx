@@ -11,6 +11,8 @@ import { useState, useCallback, memo, useEffect } from "react"
 import { useDebounce } from "./utils/hooks/useDebounce"
 import { UserUnit } from "./hooks/useUserUnit"
 import { useNotification } from "@/contexts/NotificationContext"
+import { UserProductivityPanel } from "./components/UserProductivityPanel"
+import { useUserProductivityStats } from "@/hooks/useUserProductivityStats"
 
 interface BoardHeaderProps {
   showPendingOnly: boolean
@@ -41,7 +43,12 @@ function BoardHeaderComponent({
 }: BoardHeaderProps) {
   // Hook para sistema global de notificações
   const { soundEnabled, setSoundEnabled, testSound, isAudioSupported } = useNotification();
+  
+  // Hook para estatísticas de produtividade
+  const { stats, isLoading: isLoadingStats } = useUserProductivityStats({ selectedUnitIds });
+  
   console.log('🔍 [BoardHeader] Renderizando com searchTerm:', searchTerm)
+  console.log('📊 [BoardHeader] Stats de produtividade:', stats)
   
   // Estado local apenas para o input (responsividade imediata)
   const [rawSearch, setRawSearch] = useState(searchTerm)
@@ -68,34 +75,32 @@ function BoardHeaderComponent({
   
   return (
     <div className="flex flex-col bg-[#311D64] p-4 gap-4">
-      <div className="grid grid-cols-4 items-center">
-        <div className="col-span-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-white">Painel do Consultor</h1>
-          
-          {/* Mostra o seletor de unidade apenas se o usuário tiver acesso a múltiplas unidades */}
+      {/* Linha 1: Controles + Painel de Produtividade */}
+      <div className="grid grid-cols-12 gap-4 items-start">
+        {/* 8 colunas: Controles à esquerda */}
+        <div className="col-span-8 flex flex-col gap-3">
+          {/* Seletor de unidades (se multi-unit) */}
           {isMultiUnit && (
-            <div className="mt-2">
-              <div className="flex items-center space-x-2">
-                <span className="text-white text-sm">Unidades:</span>
-                <MultiUnitSelector 
-                  units={availableUnits}
-                  selectedUnitIds={selectedUnitIds}
-                  onChange={setSelectedUnitIds}
-                />
-              </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-white text-sm">Unidades:</span>
+              <MultiUnitSelector 
+                units={availableUnits}
+                selectedUnitIds={selectedUnitIds}
+                onChange={setSelectedUnitIds}
+              />
             </div>
           )}
-        </div>
-        
-        <div className="col-span-2 flex items-center space-x-4">
-          <div className="flex flex-col space-y-2">
+
+          {/* Linha de switches e botões */}
+          <div className="flex items-center gap-4 flex-wrap">
+            {/* Switches */}
             <div className="flex items-center space-x-2">
               <Switch
                 id="pending-mode"
                 checked={showPendingOnly}
                 onCheckedChange={setShowPendingOnly}
               />
-              <Label htmlFor="pending-mode" className="text-white">Mostrar apenas pendentes</Label>
+              <Label htmlFor="pending-mode" className="text-white text-sm">Mostrar apenas pendentes</Label>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -104,7 +109,7 @@ function BoardHeaderComponent({
                 checked={soundEnabled}
                 onCheckedChange={setSoundEnabled}
               />
-              <Label htmlFor="sound-mode" className="text-white">Som para novos leads</Label>
+              <Label htmlFor="sound-mode" className="text-white text-sm">Som para novos leads</Label>
               {soundEnabled && (
                 <Button
                   variant="ghost"
@@ -120,20 +125,21 @@ function BoardHeaderComponent({
                 <span className="text-yellow-300 text-xs">⚠️</span>
               )}
             </div>
-          </div>
 
-          <div className="flex items-center space-x-2">
-            <ActivityDashboard />
-            <CalendarDashboard selectedUnitIds={selectedUnitIds} onOpenClient={onOpenClient} />
-            
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={onRefresh}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+            {/* Botões */}
+            <div className="flex items-center space-x-2">
+              <ActivityDashboard />
+              <CalendarDashboard selectedUnitIds={selectedUnitIds} onOpenClient={onOpenClient} />
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={onRefresh}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
-        <div className="col-span-1">
-          {/* Espaço reservado para futuros elementos */}
+        {/* 4 colunas: Painel de Produtividade à direita */}
+        <div className="col-span-4">
+          <UserProductivityPanel stats={stats} isLoading={isLoadingStats} />
         </div>
       </div>
       
