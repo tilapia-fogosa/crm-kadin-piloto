@@ -23,10 +23,12 @@ const ACTIVITY_TYPES = {
 
 interface UseUserProductivityStatsProps {
   selectedUnitIds: string[];
+  selectedUserIds?: string[]; // IDs dos usuários para filtrar (opcional)
 }
 
-export function useUserProductivityStats({ selectedUnitIds }: UseUserProductivityStatsProps) {
+export function useUserProductivityStats({ selectedUnitIds, selectedUserIds }: UseUserProductivityStatsProps) {
   console.log('📊 [useUserProductivityStats] Iniciando hook com unidades:', selectedUnitIds);
+  console.log('📊 [useUserProductivityStats] Filtro de usuários:', selectedUserIds);
   
   const queryClient = useQueryClient();
 
@@ -49,11 +51,18 @@ export function useUserProductivityStats({ selectedUnitIds }: UseUserProductivit
 
     console.log(`📊 [fetchActivitiesForPeriod] Data inicial: ${startDate.toISOString()}`);
 
+    // Determinar IDs de usuários para filtrar
+    const userIdsToFilter = selectedUserIds && selectedUserIds.length > 0 
+      ? selectedUserIds 
+      : [user.id];
+
+    console.log(`📊 [fetchActivitiesForPeriod] Filtrando por usuários:`, userIdsToFilter);
+
     // Query com filtros
     let query = supabase
       .from('client_activities')
       .select('id', { count: 'exact', head: true })
-      .eq('created_by', user.id)
+      .in('created_by', userIdsToFilter)
       .eq('tipo_atividade', activityType)
       .eq('active', true)
       .gte('created_at', startDate.toISOString());
@@ -118,7 +127,7 @@ export function useUserProductivityStats({ selectedUnitIds }: UseUserProductivit
 
   // Query principal
   const query = useQuery({
-    queryKey: ['user-productivity-stats', selectedUnitIds],
+    queryKey: ['user-productivity-stats', selectedUnitIds, selectedUserIds],
     queryFn: fetchProductivityStats,
     staleTime: 0, // Sempre considerar dados stale
     gcTime: 30000, // 30s de cache
@@ -143,8 +152,10 @@ export function useUserProductivityStats({ selectedUnitIds }: UseUserProductivit
         },
         (payload) => {
           console.log('📊 [Realtime] Atividade modificada:', payload);
-          console.log('📊 [Realtime] Invalidando cache de produtividade');
-          queryClient.invalidateQueries({ queryKey: ['user-productivity-stats'] });
+          console.log('📊 [Realtime] Invalidando cache de produtividade para unidades:', selectedUnitIds);
+          queryClient.invalidateQueries({ 
+            queryKey: ['user-productivity-stats', selectedUnitIds] 
+          });
         }
       )
       .subscribe();
@@ -153,7 +164,7 @@ export function useUserProductivityStats({ selectedUnitIds }: UseUserProductivit
       console.log('📊 [useUserProductivityStats] Removendo realtime subscription');
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, selectedUnitIds]);
 
   return {
     stats: query.data,

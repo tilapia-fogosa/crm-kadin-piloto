@@ -12,13 +12,31 @@
 
 import { ProductivityStats } from "@/types/productivity.types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { UserProductivityFilter } from "./UserProductivityFilter";
+
+interface UnitUser {
+  id: string;
+  full_name: string;
+}
 
 interface UserProductivityPanelProps {
   stats?: ProductivityStats;
   isLoading: boolean;
+  canFilterByUsers: boolean;
+  selectedUserIds: string[];
+  onUsersChange: (userIds: string[]) => void;
+  availableUsers: UnitUser[];
 }
 
-export function UserProductivityPanel({ stats, isLoading }: UserProductivityPanelProps) {
+export function UserProductivityPanel({ 
+  stats, 
+  isLoading, 
+  canFilterByUsers,
+  selectedUserIds,
+  onUsersChange,
+  availableUsers,
+}: UserProductivityPanelProps) {
+  console.log('📊 [UserProductivityPanel] canFilterByUsers:', canFilterByUsers);
   console.log('📊 [UserProductivityPanel] Renderizando com stats:', stats);
 
   const activityColumns = [
@@ -47,6 +65,14 @@ export function UserProductivityPanel({ stats, isLoading }: UserProductivityPane
   return (
     <TooltipProvider>
       <div className="bg-white/5 backdrop-blur-sm rounded-lg p-3 border border-white/10">
+        {/* Filtro de usuários (apenas para franqueados/admins) */}
+        {canFilterByUsers && (
+          <UserProductivityFilter
+            selectedUserIds={selectedUserIds}
+            onUsersChange={onUsersChange}
+            availableUsers={availableUsers}
+          />
+        )}
         {/* Header da tabela */}
         <div className="grid grid-cols-5 gap-2 mb-2">
           <div className="text-xs font-medium text-white/70"></div>

@@ -13,6 +13,8 @@ import { UserUnit } from "./hooks/useUserUnit"
 import { useNotification } from "@/contexts/NotificationContext"
 import { UserProductivityPanel } from "./components/UserProductivityPanel"
 import { useUserProductivityStats } from "@/hooks/useUserProductivityStats"
+import { useCanFilterByUsers } from "@/hooks/useCanFilterByUsers"
+import { useUnitUsers } from "@/hooks/useUnitUsers"
 
 interface BoardHeaderProps {
   showPendingOnly: boolean
@@ -44,11 +46,28 @@ function BoardHeaderComponent({
   // Hook para sistema global de notificações
   const { soundEnabled, setSoundEnabled, testSound, isAudioSupported } = useNotification();
   
-  // Hook para estatísticas de produtividade
-  const { stats, isLoading: isLoadingStats } = useUserProductivityStats({ selectedUnitIds });
+  // Estado para filtro de usuários
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  
+  // Verificar se pode filtrar por usuários
+  const { canFilterByUsers } = useCanFilterByUsers({ selectedUnitIds });
+  
+  // Buscar usuários disponíveis (só se tiver permissão)
+  const { data: availableUsers = [] } = useUnitUsers({ 
+    selectedUnitIds, 
+    enabled: canFilterByUsers 
+  });
+  
+  // Hook para estatísticas de produtividade com filtro de usuários
+  const { stats, isLoading: isLoadingStats } = useUserProductivityStats({ 
+    selectedUnitIds,
+    selectedUserIds: canFilterByUsers ? selectedUserIds : undefined
+  });
   
   console.log('🔍 [BoardHeader] Renderizando com searchTerm:', searchTerm)
   console.log('📊 [BoardHeader] Stats de produtividade:', stats)
+  console.log('🔐 [BoardHeader] canFilterByUsers:', canFilterByUsers)
+  console.log('👥 [BoardHeader] selectedUserIds:', selectedUserIds)
   
   // Estado local apenas para o input (responsividade imediata)
   const [rawSearch, setRawSearch] = useState(searchTerm)
@@ -155,7 +174,14 @@ function BoardHeaderComponent({
 
         {/* Painel de Produtividade (flex-1 para preencher resto) */}
         <div className="flex-1">
-          <UserProductivityPanel stats={stats} isLoading={isLoadingStats} />
+          <UserProductivityPanel 
+            stats={stats} 
+            isLoading={isLoadingStats}
+            canFilterByUsers={canFilterByUsers}
+            selectedUserIds={selectedUserIds}
+            onUsersChange={setSelectedUserIds}
+            availableUsers={availableUsers}
+          />
         </div>
       </div>
     </div>
