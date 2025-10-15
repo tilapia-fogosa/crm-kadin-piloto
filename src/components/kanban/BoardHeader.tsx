@@ -74,7 +74,7 @@ function BoardHeaderComponent({
   }, [])
   
   return (
-    <div className="flex flex-col bg-[#311D64] w-full">
+    <div className="flex flex-col bg-[#311D64] w-full -mt-6 -ml-6 -mr-6">
       <div className="flex items-start gap-6 p-4">
         {/* Área de Controles (largura fixa 448px) */}
         <div className="flex flex-col gap-3" style={{ width: '448px' }}>
