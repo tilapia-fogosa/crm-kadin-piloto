@@ -74,11 +74,10 @@ function BoardHeaderComponent({
   }, [])
   
   return (
-    <div className="flex flex-col bg-[#311D64] p-4 gap-4">
-      {/* Linha 1: Controles + Painel de Produtividade */}
-      <div className="grid grid-cols-12 gap-4 items-start">
-        {/* 8 colunas: Controles à esquerda */}
-        <div className="col-span-8 flex flex-col gap-3">
+    <div className="flex flex-col bg-[#311D64] w-full">
+      <div className="flex items-start gap-6 p-4">
+        {/* Área de Controles (largura fixa 448px) */}
+        <div className="flex flex-col gap-3" style={{ width: '448px' }}>
           {/* Seletor de unidades (se multi-unit) */}
           {isMultiUnit && (
             <div className="flex items-center space-x-2">
@@ -91,43 +90,45 @@ function BoardHeaderComponent({
             </div>
           )}
 
-          {/* Linha de switches e botões */}
-          <div className="flex items-center gap-4 flex-wrap">
-            {/* Switches */}
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="pending-mode"
-                checked={showPendingOnly}
-                onCheckedChange={setShowPendingOnly}
-              />
-              <Label htmlFor="pending-mode" className="text-white text-sm">Mostrar apenas pendentes</Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="sound-mode"
-                checked={soundEnabled}
-                onCheckedChange={setSoundEnabled}
-              />
-              <Label htmlFor="sound-mode" className="text-white text-sm">Som para novos leads</Label>
-              {soundEnabled && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-white hover:bg-white/20 p-1 h-6 w-6"
-                  onClick={testSound}
-                  title="Testar som"
-                >
-                  <Volume2 className="h-3 w-3" />
-                </Button>
-              )}
-              {!isAudioSupported && soundEnabled && (
-                <span className="text-yellow-300 text-xs">⚠️</span>
-              )}
+          {/* Linha 1: Switches verticais + Botões horizontais */}
+          <div className="flex items-start gap-4">
+            {/* Switches empilhados verticalmente */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="pending-mode"
+                  checked={showPendingOnly}
+                  onCheckedChange={setShowPendingOnly}
+                />
+                <Label htmlFor="pending-mode" className="text-white text-sm">Mostrar apenas pendentes</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="sound-mode"
+                  checked={soundEnabled}
+                  onCheckedChange={setSoundEnabled}
+                />
+                <Label htmlFor="sound-mode" className="text-white text-sm">Som para novos leads</Label>
+                {soundEnabled && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/20 p-1 h-6 w-6"
+                    onClick={testSound}
+                    title="Testar som"
+                  >
+                    <Volume2 className="h-3 w-3" />
+                  </Button>
+                )}
+                {!isAudioSupported && soundEnabled && (
+                  <span className="text-yellow-300 text-xs">⚠️</span>
+                )}
+              </div>
             </div>
 
-            {/* Botões */}
-            <div className="flex items-center space-x-2">
+            {/* Botões lado a lado */}
+            <div className="flex items-center gap-2">
               <ActivityDashboard />
               <CalendarDashboard selectedUnitIds={selectedUnitIds} onOpenClient={onOpenClient} />
               <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={onRefresh}>
@@ -135,27 +136,27 @@ function BoardHeaderComponent({
               </Button>
             </div>
           </div>
+          
+          {/* Campo de pesquisa (mesma largura 448px) */}
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            {isSearching && (
+              <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 animate-spin" />
+            )}
+            <Input
+              type="text"
+              placeholder="Pesquise o contato por nome ou telefone"
+              value={rawSearch}
+              onChange={handleInputChange}
+              className="pl-10 pr-10 bg-white/10 text-white placeholder:text-gray-400 border-gray-700 focus-visible:ring-primary/50"
+            />
+          </div>
         </div>
 
-        {/* 4 colunas: Painel de Produtividade à direita */}
-        <div className="col-span-4">
+        {/* Painel de Produtividade (flex-1 para preencher resto) */}
+        <div className="flex-1">
           <UserProductivityPanel stats={stats} isLoading={isLoadingStats} />
         </div>
-      </div>
-      
-      {/* Campo de pesquisa otimizado com debounce */}
-      <div className="relative w-full max-w-md">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-        {isSearching && (
-          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 animate-spin" />
-        )}
-        <Input
-          type="text"
-          placeholder="Pesquise o contato por nome ou telefone"
-          value={rawSearch}
-          onChange={handleInputChange}
-          className="pl-10 pr-10 bg-white/10 text-white placeholder:text-gray-400 border-gray-700 focus-visible:ring-primary/50"
-        />
       </div>
     </div>
   )
