@@ -51,21 +51,25 @@ export function useUserProductivityStats({ selectedUnitIds, selectedUserIds }: U
 
     console.log(`📊 [fetchActivitiesForPeriod] Data inicial: ${startDate.toISOString()}`);
 
-    // Determinar IDs de usuários para filtrar
-    const userIdsToFilter = selectedUserIds && selectedUserIds.length > 0 
-      ? selectedUserIds 
-      : [user.id];
-
-    console.log(`📊 [fetchActivitiesForPeriod] Filtrando por usuários:`, userIdsToFilter);
-
-    // Query com filtros
+    // Query base
     let query = supabase
       .from('client_activities')
       .select('id', { count: 'exact', head: true })
-      .in('created_by', userIdsToFilter)
       .eq('tipo_atividade', activityType)
       .eq('active', true)
       .gte('created_at', startDate.toISOString());
+
+    // LÓGICA REFINADA: Filtro de usuários
+    if (selectedUserIds && selectedUserIds.length > 0) {
+      // Se usuários específicos foram selecionados, filtrar por eles
+      console.log(`📊 [fetchActivitiesForPeriod] Filtrando por usuários específicos:`, selectedUserIds);
+      query = query.in('created_by', selectedUserIds);
+    } else {
+      // Se nenhum usuário selecionado ("Todos perfis"):
+      // NÃO adicionar filtro de created_by
+      // Isso inclui atividades de TODOS os usuários (inclusive bloqueados)
+      console.log(`📊 [fetchActivitiesForPeriod] "Todos perfis" selecionado - incluindo TODOS usuários (inclusive bloqueados)`);
+    }
 
     // Aplicar filtro de unidades se houver seleção específica
     if (selectedUnitIds.length > 0) {
@@ -82,7 +86,7 @@ export function useUserProductivityStats({ selectedUnitIds, selectedUserIds }: U
     const total = count || 0;
     const dailyAverage = Math.round(total / daysBack);
 
-    console.log(`📊 [fetchActivitiesForPeriod] ${activityType} - Total: ${total}, Média diária: ${dailyAverage}`);
+    console.log(`📊 [fetchActivitiesForPeriod] ${activityType} - Total: ${total}, Média diária: ${dailyAverage}, Incluiu bloqueados: ${!selectedUserIds || selectedUserIds.length === 0}`);
 
     return dailyAverage;
   };

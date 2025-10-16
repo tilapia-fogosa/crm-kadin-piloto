@@ -22,6 +22,7 @@ interface UseUnitUsersProps {
 interface UnitUser {
   id: string;
   full_name: string;
+  access_blocked?: boolean; // Para debug opcional
 }
 
 export function useUnitUsers({ selectedUnitIds, enabled = true }: UseUnitUsersProps) {
@@ -38,18 +39,23 @@ export function useUnitUsers({ selectedUnitIds, enabled = true }: UseUnitUsersPr
         return [];
       }
 
+      console.log('👥 [useUnitUsers] Filtrando: unit_users.active=true AND profiles.access_blocked=false');
+
       // Buscar usuários das unidades com join em profiles
+      // FILTRA usuários bloqueados E inativos na unidade
       const { data, error } = await supabase
         .from('unit_users')
         .select(`
           user_id,
           profiles!inner (
             id,
-            full_name
+            full_name,
+            access_blocked
           )
         `)
         .in('unit_id', selectedUnitIds)
-        .eq('active', true);
+        .eq('active', true)                        // Filtra unit_users.active
+        .eq('profiles.access_blocked', false);     // Filtra profiles.access_blocked
 
       if (error) {
         console.error('👥 [useUnitUsers] Erro ao buscar usuários:', error);

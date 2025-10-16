@@ -79,8 +79,8 @@ export function UserProductivityPanel({
 
           {/* Coluna direita: Tabela */}
           <div>
-            {/* Header da tabela */}
-            <div className="grid grid-cols-4 gap-2 mb-2">
+            {/* Header da tabela - colunas fixas de 60px */}
+            <div className="grid grid-cols-[60px_60px_60px_60px] gap-2 mb-2">
               {activityColumns.map((col) => (
                 <Tooltip key={col.key}>
                   <TooltipTrigger asChild>
@@ -100,7 +100,7 @@ export function UserProductivityPanel({
             {/* Linhas de dados */}
             <div className="space-y-1">
               {periods.map((period) => (
-                <div key={period.key} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2">
+                <div key={period.key} className="grid grid-cols-[60px_60px_60px_60px_auto] gap-2">
                   {/* Colunas de valores TC, CE, AG, AT */}
                   {activityColumns.map((col) => (
                     <div
