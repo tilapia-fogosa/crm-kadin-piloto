@@ -14,6 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      ah_ignorar_coleta: {
+        Row: {
+          active: boolean
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          dias: number
+          id: string
+          motivo: string
+          pessoa_id: string
+          pessoa_tipo: string
+          responsavel: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          data_fim: string
+          data_inicio?: string
+          dias: number
+          id?: string
+          motivo: string
+          pessoa_id: string
+          pessoa_tipo: string
+          responsavel: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          dias?: number
+          id?: string
+          motivo?: string
+          pessoa_id?: string
+          pessoa_tipo?: string
+          responsavel?: string
+        }
+        Relationships: []
+      }
+      ah_recolhidas: {
+        Row: {
+          apostila: string
+          correcao_iniciada: boolean | null
+          created_at: string
+          data_entrega_real: string | null
+          data_inicio_correcao: string | null
+          id: number
+          pessoa_id: string
+          professor_id: string | null
+          responsavel_correcao_id: string | null
+          responsavel_correcao_nome: string | null
+          responsavel_correcao_tipo: string | null
+          responsavel_entrega_id: string | null
+          responsavel_entrega_nome: string | null
+          responsavel_id: string | null
+        }
+        Insert: {
+          apostila: string
+          correcao_iniciada?: boolean | null
+          created_at?: string
+          data_entrega_real?: string | null
+          data_inicio_correcao?: string | null
+          id?: number
+          pessoa_id: string
+          professor_id?: string | null
+          responsavel_correcao_id?: string | null
+          responsavel_correcao_nome?: string | null
+          responsavel_correcao_tipo?: string | null
+          responsavel_entrega_id?: string | null
+          responsavel_entrega_nome?: string | null
+          responsavel_id?: string | null
+        }
+        Update: {
+          apostila?: string
+          correcao_iniciada?: boolean | null
+          created_at?: string
+          data_entrega_real?: string | null
+          data_inicio_correcao?: string | null
+          id?: number
+          pessoa_id?: string
+          professor_id?: string | null
+          responsavel_correcao_id?: string | null
+          responsavel_correcao_nome?: string | null
+          responsavel_correcao_tipo?: string | null
+          responsavel_entrega_id?: string | null
+          responsavel_entrega_nome?: string | null
+          responsavel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ah_recolhidas_responsavel_entrega_id_fkey"
+            columns: ["responsavel_entrega_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerta_evasao: {
         Row: {
           aluno_id: string
@@ -777,6 +875,7 @@ export type Database = {
           cpf: string | null
           created_at: string
           created_by: string
+          data_aula_inaugural: string | null
           enrollment_amount: number | null
           enrollment_installments: number | null
           enrollment_payment_confirmed: boolean | null
@@ -787,6 +886,7 @@ export type Database = {
           first_monthly_fee_date: string | null
           full_name: string | null
           id: string
+          informacoes_onboarding: string | null
           kit_type: Database["public"]["Enums"]["kit_type"] | null
           material_amount: number | null
           material_installments: number | null
@@ -802,6 +902,7 @@ export type Database = {
           photo_thumbnail_url: string | null
           photo_url: string | null
           rg: string | null
+          turma_id: string | null
           updated_at: string
         }
         Insert: {
@@ -821,6 +922,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           created_by: string
+          data_aula_inaugural?: string | null
           enrollment_amount?: number | null
           enrollment_installments?: number | null
           enrollment_payment_confirmed?: boolean | null
@@ -831,6 +933,7 @@ export type Database = {
           first_monthly_fee_date?: string | null
           full_name?: string | null
           id?: string
+          informacoes_onboarding?: string | null
           kit_type?: Database["public"]["Enums"]["kit_type"] | null
           material_amount?: number | null
           material_installments?: number | null
@@ -846,6 +949,7 @@ export type Database = {
           photo_thumbnail_url?: string | null
           photo_url?: string | null
           rg?: string | null
+          turma_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -865,6 +969,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           created_by?: string
+          data_aula_inaugural?: string | null
           enrollment_amount?: number | null
           enrollment_installments?: number | null
           enrollment_payment_confirmed?: boolean | null
@@ -875,6 +980,7 @@ export type Database = {
           first_monthly_fee_date?: string | null
           full_name?: string | null
           id?: string
+          informacoes_onboarding?: string | null
           kit_type?: Database["public"]["Enums"]["kit_type"] | null
           material_amount?: number | null
           material_installments?: number | null
@@ -890,9 +996,24 @@ export type Database = {
           photo_thumbnail_url?: string | null
           photo_url?: string | null
           rg?: string | null
+          turma_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "atividade_pos_venda_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "atividade_pos_venda_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_atividade_pos_venda_client_activity_id"
             columns: ["client_activity_id"]
@@ -3302,6 +3423,7 @@ export type Database = {
       }
       produtividade_ah: {
         Row: {
+          ah_recolhida_id: number | null
           aluno_nome: string | null
           apostila: string | null
           comentario: string | null
@@ -3316,6 +3438,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ah_recolhida_id?: number | null
           aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
@@ -3330,6 +3453,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ah_recolhida_id?: number | null
           aluno_nome?: string | null
           apostila?: string | null
           comentario?: string | null
@@ -3343,7 +3467,15 @@ export type Database = {
           tipo_pessoa?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "produtividade_ah_ah_recolhida_id_fkey"
+            columns: ["ah_recolhida_id"]
+            isOneToOne: false
+            referencedRelation: "ah_recolhidas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       produtividade_ah_backup: {
         Row: {
@@ -4370,6 +4502,7 @@ export type Database = {
           id: string
           nome: string
           professor_id: string
+          projeto: boolean | null
           sala: string | null
           ultima_sincronizacao: string | null
           unit_id: string
@@ -4381,6 +4514,7 @@ export type Database = {
           id?: string
           nome: string
           professor_id: string
+          projeto?: boolean | null
           sala?: string | null
           ultima_sincronizacao?: string | null
           unit_id: string
@@ -4392,6 +4526,7 @@ export type Database = {
           id?: string
           nome?: string
           professor_id?: string
+          projeto?: boolean | null
           sala?: string | null
           ultima_sincronizacao?: string | null
           unit_id?: string
@@ -5061,6 +5196,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      check_pedagogical_data_complete: {
+        Args: { p_activity_id: string }
+        Returns: boolean
+      }
       consolidate_monthly_commission: {
         Args: { p_calculation_id: string }
         Returns: boolean
@@ -5123,6 +5262,17 @@ export type Database = {
         }
         Returns: Json
       }
+      get_ah_tempo_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          tempo_medio_coleta_correcao: number
+          tempo_medio_coleta_entrega: number
+          tempo_medio_correcao_entrega: number
+          tempo_medio_inicio_fim_correcao: number
+          total_apostilas_corrigidas: number
+          total_apostilas_entregues: number
+        }[]
+      }
       get_aluno_desempenho: {
         Args: {
           p_aluno_id: string
@@ -5153,7 +5303,6 @@ export type Database = {
           educador: string
           id: string
           nome: string
-          oculto_retencoes: boolean
           status: string
           total_alertas: number
           total_retencoes: number
@@ -5464,6 +5613,10 @@ export type Database = {
         Args: { p_activity_id: string }
         Returns: Json
       }
+      get_pos_venda_pedagogical_data: {
+        Args: { p_activity_id: string }
+        Returns: Json
+      }
       get_produtividade_abaco_limpa: {
         Args: {
           p_data_final: string
@@ -5592,6 +5745,18 @@ export type Database = {
       get_turma_modal_data: {
         Args: { p_data_consulta?: string; p_turma_id: string }
         Returns: Json
+      }
+      get_turmas_with_professor: {
+        Args: { p_unit_id: string }
+        Returns: {
+          professor_id: string
+          professor_nome: string
+          turma_active: boolean
+          turma_dia_semana: Database["public"]["Enums"]["dia_semana"]
+          turma_id: string
+          turma_nome: string
+          turma_sala: string
+        }[]
       }
       get_user_access_info: {
         Args: { user_id: string }
@@ -5739,6 +5904,15 @@ export type Database = {
               p_observations?: string
             }
         Returns: boolean
+      }
+      save_pos_venda_pedagogical_data: {
+        Args: {
+          p_activity_id: string
+          p_data_aula_inaugural?: string
+          p_informacoes_onboarding?: string
+          p_turma_id?: string
+        }
+        Returns: Json
       }
       toggle_pos_venda_activity_status: {
         Args: {

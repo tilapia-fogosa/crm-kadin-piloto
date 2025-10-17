@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { User, DollarSign, GraduationCap, Phone, Calendar, CheckCircle2, Circle } from "lucide-react";
+import { PedagogicalDataButton } from "./PedagogicalDataButton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { usePosVendaActivities } from "../hooks/usePosVendaActivities";
@@ -113,16 +114,10 @@ export function ProcessTable() {
                   <CommercialDataButton activityId={activity.id} onOpenModal={() => openModal(activity.id, 'comerciais')} />
                 </TableCell>
                 <TableCell className="text-center w-[120px]">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openModal(activity.id, 'pedagogicos')}
-                    className="gap-1 px-2 py-1"
-                  >
-                    <GraduationCap className="h-4 w-4" />
-                    {/* Lógica para verificar se dados pedagógicos foram preenchidos */}
-                    <Circle className="h-4 w-4" />
-                  </Button>
+                  <PedagogicalDataButton 
+                    activityId={activity.id} 
+                    onOpenModal={() => openModal(activity.id, 'pedagogicos')} 
+                  />
                 </TableCell>
                 {dynamicActivities.map(dynamicActivity => (
                   <TableCell key={dynamicActivity.id} className="text-center px-1 w-[50px]">

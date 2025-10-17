@@ -1,7 +1,12 @@
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Construction } from "lucide-react";
+/**
+ * LOG: Modal completo para dados pedagógicos pós-venda
+ * Integra formulário robusto com backend via funções específicas
+ */
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { GraduationCap } from "lucide-react";
+import { usePedagogicalData } from "../hooks/usePedagogicalData";
+import { PedagogicalDataForm } from "./forms/PedagogicalDataForm";
 
 interface DadosPedagogicosModalProps {
   isOpen: boolean;
@@ -10,42 +15,55 @@ interface DadosPedagogicosModalProps {
 }
 
 export function DadosPedagogicosModal({ isOpen, onClose, activityId }: DadosPedagogicosModalProps) {
+  console.log('LOG: Renderizando DadosPedagogicosModal para atividade:', activityId);
+
+  const handleClose = () => {
+    console.log('LOG: Fechando modal de dados pedagógicos');
+    onClose();
+  };
+
+  const {
+    pedagogicalData,
+    isLoading: isLoadingPedagogical,
+    savePedagogicalData,
+    isSaving
+  } = usePedagogicalData(activityId, handleClose);
+
+  console.log('LOG: Status de carregamento dos dados pedagógicos:', isLoadingPedagogical);
+
+  const handleSave = (data: any) => {
+    console.log('LOG: Salvando dados pedagógicos via modal:', data);
+    savePedagogicalData(data);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Construction className="h-5 w-5 text-amber-500" />
-            Dados Pedagógicos
-            <Badge variant="outline" className="ml-2">Em Desenvolvimento</Badge>
-          </DialogTitle>
-          <DialogDescription>
-            Formulário para dados pedagógicos do aluno está sendo desenvolvido.
-          </DialogDescription>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="max-w-3xl h-[85vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="h-5 w-5 text-primary" />
+            <DialogTitle>Dados Pedagógicos</DialogTitle>
+          </div>
         </DialogHeader>
 
-        <div className="py-8 text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-            <Construction className="h-8 w-8 text-muted-foreground" />
+        <ScrollArea className="flex-1 pr-4">
+          <div className="space-y-6">
+            {isLoadingPedagogical ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center space-y-2">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  <p className="text-sm text-muted-foreground">Carregando dados pedagógicos...</p>
+                </div>
+              </div>
+            ) : (
+              <PedagogicalDataForm
+                initialData={pedagogicalData}
+                onSubmit={handleSave}
+                isLoading={isSaving}
+              />
+            )}
           </div>
-          
-          <div>
-            <h3 className="text-lg font-semibold">Funcionalidade em Desenvolvimento</h3>
-            <p className="text-muted-foreground mt-2">
-              O formulário de dados pedagógicos permitirá registrar:
-            </p>
-            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-              <li>• Informações acadêmicas</li>
-              <li>• Histórico escolar</li>
-              <li>• Necessidades especiais</li>
-              <li>• Objetivos educacionais</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="flex justify-end">
-          <Button onClick={onClose}>Fechar</Button>
-        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
