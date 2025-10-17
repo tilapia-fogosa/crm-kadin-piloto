@@ -78,14 +78,8 @@ export function MultiUserSelector({
   // Gerencia a seleção de "Todos perfis"
   const handleSelectAll = () => {
     console.log('👥 [MultiUserSelector] Toggle "Todos perfis"');
-    if (allSelected) {
-      // Se já está em "Todos perfis", não faz nada
-      // (ou poderia selecionar o primeiro usuário)
-      setTempSelectedIds([]);
-    } else {
-      // Limpa todas as seleções individuais
-      setTempSelectedIds([]);
-    }
+    // Sempre volta para "Todos perfis" (array vazio)
+    setTempSelectedIds([]);
   };
   
   // Gerencia a seleção individual de usuários
@@ -153,7 +147,7 @@ export function MultiUserSelector({
           <span className="truncate">{getButtonText()}</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[220px] p-0" align="start">
+      <PopoverContent className="w-[260px] p-0" align="start">
         <div className="p-2">
           <div className="space-y-2">
             {/* Opção "Todos perfis" separada por borda */}
@@ -181,7 +175,6 @@ export function MultiUserSelector({
                     id={`user-${user.id}`} 
                     checked={tempSelectedIds.includes(user.id)}
                     onCheckedChange={() => handleSelectUser(user.id)}
-                    disabled={allSelected}
                   />
                   <label
                     htmlFor={`user-${user.id}`}
