@@ -59,6 +59,10 @@ function BoardHeaderComponent({
   });
   
   // Hook para estatísticas de produtividade com filtro de usuários
+  // SEGURANÇA: A função RPC 'get_user_productivity_stats' garante que:
+  // - Consultores (canFilterByUsers=false) sempre veem apenas seus próprios dados
+  // - Franqueados/Admins (canFilterByUsers=true) podem filtrar ou ver todos
+  // - "Todos usuários" (selectedUserIds=undefined) inclui usuários bloqueados quando autorizado
   const { stats, isLoading: isLoadingStats } = useUserProductivityStats({ 
     selectedUnitIds,
     selectedUserIds: canFilterByUsers ? selectedUserIds : undefined

@@ -2,10 +2,16 @@
  * Hook para buscar estatísticas de produtividade do usuário
  * 
  * @description
- * Calcula médias diárias de atividades (TC, CE, AG, AT) para períodos de 1, 3, 7 e 15 dias.
- * Filtra por unidades selecionadas e atualiza automaticamente via realtime.
+ * Consome função RPC do backend que calcula médias diárias de atividades.
+ * A lógica de segurança e regras de negócio estão no banco de dados.
+ * 
+ * REGRAS DE SEGURANÇA (aplicadas no backend):
+ * - Consultores veem apenas seus próprios dados
+ * - Franqueados/Admins podem ver todos usuários ou filtrar específicos
+ * - "Todos usuários" inclui usuários bloqueados (quando autorizado)
  * 
  * @param selectedUnitIds - Array de IDs das unidades selecionadas
+ * @param selectedUserIds - Array de IDs dos usuários para filtrar (opcional)
  * @returns Estatísticas de produtividade e estado de loading
  */
 
@@ -14,119 +20,44 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { ProductivityStats } from "@/types/productivity.types";
 
-const ACTIVITY_TYPES = {
-  TC: 'Tentativa de Contato',
-  CE: 'Contato Efetivo',
-  AG: 'Agendamento',
-  AT: 'Atendimento'
-} as const;
-
 interface UseUserProductivityStatsProps {
   selectedUnitIds: string[];
-  selectedUserIds?: string[]; // IDs dos usuários para filtrar (opcional)
+  selectedUserIds?: string[];
 }
 
-export function useUserProductivityStats({ selectedUnitIds, selectedUserIds }: UseUserProductivityStatsProps) {
-  console.log('📊 [useUserProductivityStats] Iniciando hook com unidades:', selectedUnitIds);
-  console.log('📊 [useUserProductivityStats] Filtro de usuários:', selectedUserIds);
+export function useUserProductivityStats({ 
+  selectedUnitIds, 
+  selectedUserIds 
+}: UseUserProductivityStatsProps) {
+  console.log('📊 [useUserProductivityStats] Chamando RPC com:', {
+    unidades: selectedUnitIds,
+    usuarios: selectedUserIds
+  });
   
   const queryClient = useQueryClient();
 
   /**
-   * Busca atividades do usuário para um período específico
-   */
-  const fetchActivitiesForPeriod = async (daysBack: number, activityType: string) => {
-    console.log(`📊 [fetchActivitiesForPeriod] Buscando ${activityType} para ${daysBack} dias`);
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.warn('📊 [fetchActivitiesForPeriod] Usuário não autenticado');
-      return 0;
-    }
-
-    // Calcular data inicial (início do dia há N dias)
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - (daysBack - 1));
-    startDate.setHours(0, 0, 0, 0);
-
-    console.log(`📊 [fetchActivitiesForPeriod] Data inicial: ${startDate.toISOString()}`);
-
-    // Query base
-    let query = supabase
-      .from('client_activities')
-      .select('id', { count: 'exact', head: true })
-      .eq('tipo_atividade', activityType)
-      .eq('active', true)
-      .gte('created_at', startDate.toISOString());
-
-    // LÓGICA REFINADA: Filtro de usuários
-    if (selectedUserIds && selectedUserIds.length > 0) {
-      // Se usuários específicos foram selecionados, filtrar por eles
-      console.log(`📊 [fetchActivitiesForPeriod] Filtrando por usuários específicos:`, selectedUserIds);
-      query = query.in('created_by', selectedUserIds);
-    } else {
-      // Se nenhum usuário selecionado ("Todos perfis"):
-      // NÃO adicionar filtro de created_by
-      // Isso inclui atividades de TODOS os usuários (inclusive bloqueados)
-      console.log(`📊 [fetchActivitiesForPeriod] "Todos perfis" selecionado - incluindo TODOS usuários (inclusive bloqueados)`);
-    }
-
-    // Aplicar filtro de unidades se houver seleção específica
-    if (selectedUnitIds.length > 0) {
-      query = query.in('unit_id', selectedUnitIds);
-    }
-
-    const { count, error } = await query;
-
-    if (error) {
-      console.error(`📊 [fetchActivitiesForPeriod] Erro ao buscar ${activityType}:`, error);
-      return 0;
-    }
-
-    const total = count || 0;
-    const dailyAverage = Math.round(total / daysBack);
-
-    console.log(`📊 [fetchActivitiesForPeriod] ${activityType} - Total: ${total}, Média diária: ${dailyAverage}, Incluiu bloqueados: ${!selectedUserIds || selectedUserIds.length === 0}`);
-
-    return dailyAverage;
-  };
-
-  /**
-   * Busca todas as estatísticas de produtividade
+   * Busca estatísticas via função RPC do banco
+   * Toda lógica de segurança e cálculo é feita no backend
    */
   const fetchProductivityStats = async (): Promise<ProductivityStats> => {
-    console.log('📊 [fetchProductivityStats] Iniciando busca de estatísticas');
+    console.log('📊 [fetchProductivityStats] Iniciando chamada RPC');
+    
+    const { data, error } = await supabase.rpc('get_user_productivity_stats', {
+      p_unit_ids: selectedUnitIds.length > 0 ? selectedUnitIds : null,
+      p_user_ids: selectedUserIds && selectedUserIds.length > 0 ? selectedUserIds : null,
+      p_days_back: 15
+    });
 
-    const stats: ProductivityStats = {
-      tentativaContato: {
-        day1: await fetchActivitiesForPeriod(1, ACTIVITY_TYPES.TC),
-        day3: await fetchActivitiesForPeriod(3, ACTIVITY_TYPES.TC),
-        day7: await fetchActivitiesForPeriod(7, ACTIVITY_TYPES.TC),
-        day15: await fetchActivitiesForPeriod(15, ACTIVITY_TYPES.TC),
-      },
-      contatoEfetivo: {
-        day1: await fetchActivitiesForPeriod(1, ACTIVITY_TYPES.CE),
-        day3: await fetchActivitiesForPeriod(3, ACTIVITY_TYPES.CE),
-        day7: await fetchActivitiesForPeriod(7, ACTIVITY_TYPES.CE),
-        day15: await fetchActivitiesForPeriod(15, ACTIVITY_TYPES.CE),
-      },
-      agendamento: {
-        day1: await fetchActivitiesForPeriod(1, ACTIVITY_TYPES.AG),
-        day3: await fetchActivitiesForPeriod(3, ACTIVITY_TYPES.AG),
-        day7: await fetchActivitiesForPeriod(7, ACTIVITY_TYPES.AG),
-        day15: await fetchActivitiesForPeriod(15, ACTIVITY_TYPES.AG),
-      },
-      atendimento: {
-        day1: await fetchActivitiesForPeriod(1, ACTIVITY_TYPES.AT),
-        day3: await fetchActivitiesForPeriod(3, ACTIVITY_TYPES.AT),
-        day7: await fetchActivitiesForPeriod(7, ACTIVITY_TYPES.AT),
-        day15: await fetchActivitiesForPeriod(15, ACTIVITY_TYPES.AT),
-      },
-    };
+    if (error) {
+      console.error('📊 [fetchProductivityStats] Erro ao buscar estatísticas:', error);
+      throw error;
+    }
 
-    console.log('📊 [fetchProductivityStats] Estatísticas calculadas:', stats);
+    console.log('📊 [fetchProductivityStats] Estatísticas retornadas do RPC:', data);
 
-    return stats;
+    // RPC retorna jsonb que já está no formato correto ProductivityStats
+    return data as ProductivityStats;
   };
 
   // Query principal
