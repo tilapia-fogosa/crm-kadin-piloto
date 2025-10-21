@@ -41,23 +41,37 @@ export function useUserProductivityStats({
    * Toda lógica de segurança e cálculo é feita no backend
    */
   const fetchProductivityStats = async (): Promise<ProductivityStats> => {
-    console.log('📊 [fetchProductivityStats] Iniciando chamada RPC');
-    
-    const { data, error } = await supabase.rpc('get_user_productivity_stats', {
+    // LOG 1: Verificar sessão atual antes da chamada RPC
+    const { data: sessionData } = await supabase.auth.getSession();
+    console.log('🔍 [DIAGNOSTIC - FRONTEND] Sessão atual:', {
+      userId: sessionData?.session?.user?.id,
+      email: sessionData?.session?.user?.email,
+      expiresAt: sessionData?.session?.expires_at 
+        ? new Date(sessionData.session.expires_at * 1000).toISOString() 
+        : 'N/A'
+    });
+
+    // LOG 2: Parâmetros sendo enviados para o RPC
+    const params = {
       p_unit_ids: selectedUnitIds.length > 0 ? selectedUnitIds : null,
       p_user_ids: selectedUserIds && selectedUserIds.length > 0 ? selectedUserIds : null,
       p_days_back: 15
-    });
+    };
+    console.log('🔍 [DIAGNOSTIC - FRONTEND] Parâmetros RPC:', params);
+    console.log('🔍 [DIAGNOSTIC - FRONTEND] Iniciando chamada RPC get_user_productivity_stats');
+    
+    const { data, error } = await supabase.rpc('get_user_productivity_stats', params);
 
     if (error) {
-      console.error('📊 [fetchProductivityStats] Erro ao buscar estatísticas:', error);
+      console.error('🔍 [DIAGNOSTIC - FRONTEND] ❌ ERRO ao buscar estatísticas:', error);
       throw error;
     }
 
-    console.log('📊 [fetchProductivityStats] Estatísticas retornadas do RPC:', data);
+    // LOG 3: Resultado retornado pelo RPC
+    console.log('🔍 [DIAGNOSTIC - FRONTEND] ✅ Estatísticas retornadas do RPC:', data);
 
     // RPC retorna jsonb que já está no formato correto ProductivityStats
-    return data as ProductivityStats;
+    return data as unknown as ProductivityStats;
   };
 
   // Query principal

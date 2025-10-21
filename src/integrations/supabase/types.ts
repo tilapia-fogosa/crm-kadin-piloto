@@ -60,6 +60,7 @@ export type Database = {
           created_at: string
           data_entrega_real: string | null
           data_inicio_correcao: string | null
+          data_recolhida: string
           id: number
           pessoa_id: string
           professor_id: string | null
@@ -76,6 +77,7 @@ export type Database = {
           created_at?: string
           data_entrega_real?: string | null
           data_inicio_correcao?: string | null
+          data_recolhida: string
           id?: number
           pessoa_id: string
           professor_id?: string | null
@@ -92,6 +94,7 @@ export type Database = {
           created_at?: string
           data_entrega_real?: string | null
           data_inicio_correcao?: string | null
+          data_recolhida?: string
           id?: number
           pessoa_id?: string
           professor_id?: string | null
