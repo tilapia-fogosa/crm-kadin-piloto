@@ -324,6 +324,7 @@ export type Database = {
           dias_supera: number | null
           email: string | null
           faltas_consecutivas: number
+          foto_devolutiva_url: string | null
           foto_url: string | null
           id: string
           idade: number | null
@@ -365,6 +366,7 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_devolutiva_url?: string | null
           foto_url?: string | null
           id?: string
           idade?: number | null
@@ -406,6 +408,7 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_devolutiva_url?: string | null
           foto_url?: string | null
           id?: string
           idade?: number | null
@@ -2680,6 +2683,7 @@ export type Database = {
           dias_supera: number | null
           email: string | null
           faltas_consecutivas: number
+          foto_devolutiva_url: string | null
           foto_url: string | null
           id: string
           idade: number | null
@@ -2715,6 +2719,7 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_devolutiva_url?: string | null
           foto_url?: string | null
           id?: string
           idade?: number | null
@@ -2750,6 +2755,7 @@ export type Database = {
           dias_supera?: number | null
           email?: string | null
           faltas_consecutivas?: number
+          foto_devolutiva_url?: string | null
           foto_url?: string | null
           id?: string
           idade?: number | null
@@ -5764,6 +5770,14 @@ export type Database = {
           has_first_access: boolean
           last_sign_in_at: string
         }[]
+      }
+      get_user_productivity_stats: {
+        Args: {
+          p_days_back?: number
+          p_unit_ids?: string[]
+          p_user_ids?: string[]
+        }
+        Returns: Json
       }
       has_unread_updates: {
         Args: { p_user_id: string }
