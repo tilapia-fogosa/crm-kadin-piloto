@@ -5201,10 +5201,7 @@ export type Database = {
         Args: { p_activity_id: string }
         Returns: boolean
       }
-      check_lancamentos_pendentes: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      check_lancamentos_pendentes: { Args: never; Returns: undefined }
       check_pedagogical_data_complete: {
         Args: { p_activity_id: string }
         Returns: boolean
@@ -5213,10 +5210,7 @@ export type Database = {
         Args: { p_calculation_id: string }
         Returns: boolean
       }
-      count_draft_updates: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      count_draft_updates: { Args: never; Returns: number }
       create_unit_user: {
         Args: {
           p_email: string
@@ -5248,10 +5242,7 @@ export type Database = {
         Args: { p_aula_experimental_id: string }
         Returns: boolean
       }
-      delete_reposicao: {
-        Args: { p_reposicao_id: string }
-        Returns: boolean
-      }
+      delete_reposicao: { Args: { p_reposicao_id: string }; Returns: boolean }
       evaluate_formula: {
         Args: {
           p_formula: string
@@ -5272,7 +5263,7 @@ export type Database = {
         Returns: Json
       }
       get_ah_tempo_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           tempo_medio_coleta_correcao: number
           tempo_medio_coleta_entrega: number
@@ -5299,27 +5290,42 @@ export type Database = {
           turma: string
         }[]
       }
-      get_alunos_retencoes_historico: {
-        Args:
-          | {
+      get_alunos_retencoes_historico:
+        | {
+            Args: { p_search_term?: string; p_status_filter?: string }
+            Returns: {
+              alertas_ativos: number
+              educador: string
+              id: string
+              nome: string
+              status: string
+              total_alertas: number
+              total_retencoes: number
+              turma: string
+              ultima_retencao: string
+              ultimo_alerta: string
+            }[]
+          }
+        | {
+            Args: {
               p_incluir_ocultos?: boolean
               p_search_term?: string
               p_status_filter?: string
             }
-          | { p_search_term?: string; p_status_filter?: string }
-        Returns: {
-          alertas_ativos: number
-          educador: string
-          id: string
-          nome: string
-          status: string
-          total_alertas: number
-          total_retencoes: number
-          turma: string
-          ultima_retencao: string
-          ultimo_alerta: string
-        }[]
-      }
+            Returns: {
+              alertas_ativos: number
+              educador: string
+              id: string
+              nome: string
+              oculto_retencoes: boolean
+              status: string
+              total_alertas: number
+              total_retencoes: number
+              turma: string
+              ultima_retencao: string
+              ultimo_alerta: string
+            }[]
+          }
       get_attendance_rate_stats: {
         Args: {
           p_end_date: string
@@ -5438,7 +5444,7 @@ export type Database = {
         }[]
       }
       get_correcoes_ah_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           mes_anterior: number
           mes_atual: number
@@ -5495,12 +5501,9 @@ export type Database = {
           month_year: string
         }[]
       }
-      get_leads_stats: {
-        Args: { p_unit_ids: string[] }
-        Returns: Json
-      }
+      get_leads_stats: { Args: { p_unit_ids: string[] }; Returns: Json }
       get_lista_aulas_experimentais: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           aula_experimental_id: string
           cliente_nome: string
@@ -5515,7 +5518,7 @@ export type Database = {
         }[]
       }
       get_lista_completa_reposicoes: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           aluno_id: string
           aluno_nome: string
@@ -5550,10 +5553,7 @@ export type Database = {
           total_motivo: number
         }[]
       }
-      get_periodo_data: {
-        Args: { p_periodo: string }
-        Returns: string
-      }
+      get_periodo_data: { Args: { p_periodo: string }; Returns: string }
       get_pessoas_turma: {
         Args: { p_turma_id: string }
         Returns: {
@@ -5675,7 +5675,7 @@ export type Database = {
         }[]
       }
       get_resultados_mensais_retencao: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           aluno_ativo: boolean
           aluno_id: string
@@ -5691,7 +5691,7 @@ export type Database = {
         }[]
       }
       get_resultados_retencao_temporal: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           media_dias_retencao: number
           mesmo_periodo_ano_anterior_media_dias: number
@@ -5738,7 +5738,7 @@ export type Database = {
         }[]
       }
       get_todas_pessoas: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cargo: string
           email: string
@@ -5782,26 +5782,11 @@ export type Database = {
         }
         Returns: Json
       }
-      has_unread_updates: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
-      inactivate_activity: {
-        Args: { activity_id: string }
-        Returns: boolean
-      }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_admin_in_unit: {
-        Args: { unit_id: string }
-        Returns: boolean
-      }
-      is_admin_user: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      has_unread_updates: { Args: { p_user_id: string }; Returns: boolean }
+      inactivate_activity: { Args: { activity_id: string }; Returns: boolean }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_admin_in_unit: { Args: { unit_id: string }; Returns: boolean }
+      is_admin_user: { Args: { user_id: string }; Returns: boolean }
       kanban_client_activities: {
         Args: { p_client_id: string; p_limit?: number; p_offset?: number }
         Returns: Json
@@ -5828,14 +5813,8 @@ export type Database = {
         }
         Returns: string
       }
-      mark_all_updates_as_read: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      mark_update_as_read: {
-        Args: { p_update_id: string }
-        Returns: boolean
-      }
+      mark_all_updates_as_read: { Args: never; Returns: boolean }
+      mark_update_as_read: { Args: { p_update_id: string }; Returns: boolean }
       normalizar_telefone_brasil: {
         Args: { telefone_raw: string }
         Returns: string
@@ -5847,18 +5826,9 @@ export type Database = {
         }
         Returns: Json
       }
-      publish_update: {
-        Args: { p_update_id: string }
-        Returns: boolean
-      }
-      retry_failed_client_webhooks: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      retry_failed_webhooks: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      publish_update: { Args: { p_update_id: string }; Returns: boolean }
+      retry_failed_client_webhooks: { Args: never; Returns: undefined }
+      retry_failed_webhooks: { Args: never; Returns: undefined }
       rpc_funnel_conversion: {
         Args: { data_fim: string; data_inicio: string; unit_ids: string[] }
         Returns: {
@@ -5869,9 +5839,28 @@ export type Database = {
           matriculas: number
         }[]
       }
-      save_pos_venda_commercial_data: {
-        Args:
-          | {
+      save_pos_venda_commercial_data:
+        | {
+            Args: {
+              p_activity_id: string
+              p_enrollment_amount?: number
+              p_enrollment_installments?: number
+              p_enrollment_payment_date?: string
+              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_first_monthly_fee_date?: string
+              p_kit_type_id?: string
+              p_material_amount?: number
+              p_material_installments?: number
+              p_material_payment_date?: string
+              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_monthly_fee_amount?: number
+              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_observations?: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
               p_activity_id: string
               p_commercial_observations?: string
               p_enrollment_amount?: number
@@ -5887,7 +5876,10 @@ export type Database = {
               p_monthly_fee_amount?: number
               p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
             }
-          | {
+            Returns: Json
+          }
+        | {
+            Args: {
               p_activity_id: string
               p_enrollment_amount?: number
               p_enrollment_installments?: number
@@ -5904,24 +5896,8 @@ export type Database = {
               p_monthly_fee_amount?: number
               p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
             }
-          | {
-              p_activity_id: string
-              p_enrollment_amount?: number
-              p_enrollment_installments?: number
-              p_enrollment_payment_date?: string
-              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_first_monthly_fee_date?: string
-              p_kit_type_id?: string
-              p_material_amount?: number
-              p_material_installments?: number
-              p_material_payment_date?: string
-              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_monthly_fee_amount?: number
-              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_observations?: string
-            }
-        Returns: boolean
-      }
+            Returns: Json
+          }
       save_pos_venda_pedagogical_data: {
         Args: {
           p_activity_id: string
@@ -5946,22 +5922,10 @@ export type Database = {
         }
         Returns: boolean
       }
-      unpublish_update: {
-        Args: { p_update_id: string }
-        Returns: boolean
-      }
-      update_existing_kanban_cards_history: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      user_has_access_to_unit: {
-        Args: { unit_id: string }
-        Returns: boolean
-      }
-      user_has_unit_access: {
-        Args: { p_unit_id: string }
-        Returns: boolean
-      }
+      unpublish_update: { Args: { p_update_id: string }; Returns: boolean }
+      update_existing_kanban_cards_history: { Args: never; Returns: undefined }
+      user_has_access_to_unit: { Args: { unit_id: string }; Returns: boolean }
+      user_has_unit_access: { Args: { p_unit_id: string }; Returns: boolean }
       verificar_criterios_alerta_falta: {
         Args: { p_aluno_id: string }
         Returns: {
