@@ -8,10 +8,11 @@ import React, { useState, useMemo } from "react";
 import { CommissionConfigModal } from "./CommissionConfigModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Settings, DollarSign, TrendingUp, Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { Settings, DollarSign, TrendingUp, Calendar, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { useUnit } from "@/contexts/UnitContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useCommissionSummary, useCommissionSaleDetails, useCalculateCommission, useConsolidateCommission } from "@/hooks/useCommissionCalculations";
+import { useAutoRecalculateCommissions } from "@/hooks/useAutoRecalculateCommissions";
 import { format, subMonths, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -41,6 +42,13 @@ export function Comissoes() {
   const [selectedConsultant, setSelectedConsultant] = useState<string | null>(null);
   const [expandedRow, setExpandedRow] = useState<string | null>(null); // Armazena calculation_id
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+
+  // Auto-recálculo de comissões com debounce de 10 segundos
+  const { isRecalculating } = useAutoRecalculateCommissions({
+    unitId: unitId || '',
+    consultantId: selectedConsultant,
+    enabled: !!unitId && !!selectedConsultant
+  });
 
   // Calcular últimos 6 meses
   const last6Months = useMemo(() => {
@@ -212,6 +220,15 @@ export function Comissoes() {
           </CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
+          {/* Indicador de recálculo automático */}
+          {isRecalculating && (
+            <div className="flex items-center gap-2 px-4 py-2 mb-4 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
+              <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+              <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                Recalculando comissões automaticamente...
+              </span>
+            </div>
+          )}
           {isLoadingSummary ? (
             <div className="space-y-2">
               <Skeleton className="h-12 w-full" />
@@ -303,11 +320,6 @@ export function Comissoes() {
                                           <span className="text-green-600 dark:text-green-400">
                                             R$ {sale.sale_commission.toFixed(2)}
                                           </span>
-                                        ) : sale.atividade_pos_venda?.enrollment_payment_confirmed || 
-                                             sale.atividade_pos_venda?.material_payment_confirmed ? (
-                                          <Badge variant="outline" className="text-yellow-600">
-                                            ⏳ Calculando...
-                                          </Badge>
                                         ) : (
                                           <span className="text-muted-foreground">
                                             R$ 0,00
