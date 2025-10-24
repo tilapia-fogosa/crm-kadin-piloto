@@ -70,6 +70,17 @@ export function useUserProductivityStats({
     // LOG 3: Resultado retornado pelo RPC
     console.log('🔍 [DIAGNOSTIC - FRONTEND] ✅ Estatísticas retornadas do RPC:', data);
 
+    // Garantir que sempre retornamos um objeto válido para evitar erro no React Query
+    if (!data) {
+      console.warn('🔍 [DIAGNOSTIC - FRONTEND] ⚠️ RPC retornou null/undefined - retornando stats zeradas');
+      return {
+        tentativaContato: { day1: 0, day3: 0, day7: 0, day15: 0 },
+        contatoEfetivo: { day1: 0, day3: 0, day7: 0, day15: 0 },
+        agendamento: { day1: 0, day3: 0, day7: 0, day15: 0 },
+        atendimento: { day1: 0, day3: 0, day7: 0, day15: 0 },
+      };
+    }
+
     // RPC retorna jsonb que já está no formato correto ProductivityStats
     return data as unknown as ProductivityStats;
   };
