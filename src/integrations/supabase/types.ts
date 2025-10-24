@@ -5430,6 +5430,7 @@ export type Database = {
         Returns: {
           calculation_id: string
           consolidated_at: string
+          consolidated_by: string
           consultant_id: string
           consultant_name: string
           created_at: string
@@ -5440,7 +5441,6 @@ export type Database = {
           sales_pending: number
           total_commission: number
           total_sales: number
-          unit_id: string
         }[]
       }
       get_correcoes_ah_stats: {
