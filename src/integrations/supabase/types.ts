@@ -163,6 +163,13 @@ export type Database = {
             referencedRelation: "alunos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "alerta_evasao_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos_projeto_sao_rafael"
+            referencedColumns: ["id"]
+          },
         ]
       }
       alertas_falta: {
@@ -223,6 +230,13 @@ export type Database = {
             columns: ["aluno_id"]
             isOneToOne: false
             referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alertas_falta_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos_projeto_sao_rafael"
             referencedColumns: ["id"]
           },
           {
@@ -2240,6 +2254,13 @@ export type Database = {
             referencedRelation: "alunos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "convidados_viculado_a_aluno_fkey"
+            columns: ["viculado_a_aluno"]
+            isOneToOne: false
+            referencedRelation: "alunos_projeto_sao_rafael"
+            referencedColumns: ["id"]
+          },
         ]
       }
       course_enrollments: {
@@ -2425,6 +2446,13 @@ export type Database = {
             columns: ["aluno_id"]
             isOneToOne: false
             referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evento_participantes_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos_projeto_sao_rafael"
             referencedColumns: ["id"]
           },
           {
@@ -5045,6 +5073,32 @@ export type Database = {
       }
     }
     Views: {
+      alunos_projeto_sao_rafael: {
+        Row: {
+          active: boolean | null
+          id: string | null
+          nome: string | null
+          turma_id: string | null
+          turma_nome: string | null
+          ultima_correcao_ah: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_alunos_turma_id"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "fk_alunos_turma_id"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendario_turmas_view: {
         Row: {
           categoria: string | null
@@ -5155,9 +5209,11 @@ export type Database = {
       }
       responsaveis_view: {
         Row: {
+          created_at: string | null
           id: string | null
           nome: string | null
           tipo: string | null
+          unit_id: string | null
         }
         Relationships: []
       }
@@ -5372,6 +5428,22 @@ export type Database = {
           total_reposicoes: number
           turma_id: string
           unit_id: string
+        }[]
+      }
+      get_categorized_schedule_occupations: {
+        Args: { p_unit_id: string }
+        Returns: {
+          category: string
+          created_at: string
+          created_by: string
+          created_by_name: string
+          description: string
+          duration_minutes: number
+          id: string
+          start_datetime: string
+          title: string
+          unit_id: string
+          updated_at: string
         }[]
       }
       get_commercial_unit_stats: {

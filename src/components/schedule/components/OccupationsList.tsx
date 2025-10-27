@@ -1,165 +1,228 @@
+/**
+ * LOG: Lista de ocupações organizadas em accordion temporal
+ * DESCRIÇÃO: Próximos 7 dias (aberto), Futuras (fechado), Passadas (fechado)
+ * OTIMIZAÇÃO: Usa RPC function para categorização no banco de dados
+ */
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Edit, Trash2, Calendar, Clock, User } from "lucide-react"
-import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
-import { ScheduleOccupation } from "../hooks/useScheduleOccupations"
+import { Plus, Calendar } from "lucide-react"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { OccupationModal } from "./OccupationModal"
+import { OccupationCard } from "./OccupationCard"
+import { useCategorizedOccupations, CategorizedOccupation } from "../hooks/useCategorizedOccupations"
 
 interface OccupationsListProps {
-  occupations: ScheduleOccupation[]
-  onCreateOccupation: (data: any) => Promise<void>
-  onUpdateOccupation: (id: string, data: any) => Promise<void>
-  onDeleteOccupation: (id: string) => Promise<void>
   unitId: string
-  isLoading: boolean
 }
 
+/**
+ * LOG: Lista de ocupações com categorização automática
+ * Usa hook otimizado que busca dados já categorizados do banco
+ */
+
 export function OccupationsList({
-  occupations,
-  onCreateOccupation,
-  onUpdateOccupation,
-  onDeleteOccupation,
-  unitId,
-  isLoading
+  unitId
 }: OccupationsListProps) {
   const [modalOpen, setModalOpen] = useState(false)
-  const [selectedOccupation, setSelectedOccupation] = useState<ScheduleOccupation | null>(null)
+  const [selectedOccupation, setSelectedOccupation] = useState<CategorizedOccupation | null>(null)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
 
-  // Log: Lista de ocupações renderizada
-  console.log('OccupationsList - Ocupações:', occupations.length, 'Carregando:', isLoading);
+  // LOG: Buscar ocupações categorizadas via hook otimizado
+  const {
+    categorizedOccupations,
+    isLoading,
+    createOccupation,
+    updateOccupation,
+    deleteOccupation
+  } = useCategorizedOccupations(unitId)
 
+  console.log('📋 [OccupationsList] Renderizando com categorias:', {
+    next7Days: categorizedOccupations.next7Days.length,
+    future: categorizedOccupations.future.length,
+    past: categorizedOccupations.past.length
+  });
+
+  // LOG: Handlers para ações
   const handleCreateClick = () => {
-    console.log('OccupationsList - Abrindo modal para criar ocupação');
+    console.log('➕ [OccupationsList] Abrindo modal para criar ocupação')
     setSelectedOccupation(null)
     setModalMode('create')
     setModalOpen(true)
   }
 
-  const handleEditClick = (occupation: ScheduleOccupation) => {
-    console.log('OccupationsList - Abrindo modal para editar ocupação:', occupation.id);
+  const handleEditClick = (occupation: CategorizedOccupation) => {
+    console.log('✏️ [OccupationsList] Editando ocupação:', occupation.id)
     setSelectedOccupation(occupation)
     setModalMode('edit')
     setModalOpen(true)
   }
 
-  const handleDeleteClick = async (occupation: ScheduleOccupation) => {
+  const handleDeleteClick = async (occupation: CategorizedOccupation) => {
     if (window.confirm(`Tem certeza que deseja remover a ocupação "${occupation.title}"?`)) {
-      console.log('OccupationsList - Deletando ocupação:', occupation.id);
-      await onDeleteOccupation(occupation.id)
+      console.log('🗑️ [OccupationsList] Deletando ocupação:', occupation.id)
+      await deleteOccupation(occupation.id)
     }
   }
 
   const handleModalSubmit = async (data: any) => {
     if (modalMode === 'create') {
-      await onCreateOccupation(data)
+      console.log('➕ [OccupationsList] Criando nova ocupação')
+      await createOccupation(data)
     } else if (selectedOccupation) {
-      await onUpdateOccupation(selectedOccupation.id, data)
+      console.log('✏️ [OccupationsList] Atualizando ocupação:', selectedOccupation.id)
+      await updateOccupation(selectedOccupation.id, data)
     }
+    setModalOpen(false)
   }
 
-  const formatDateTime = (dateTime: string) => {
-    return format(new Date(dateTime), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })
+  // LOG: Calcular total de ocupações
+  const totalOccupations = 
+    categorizedOccupations.next7Days.length +
+    categorizedOccupations.future.length +
+    categorizedOccupations.past.length
+
+  // LOG: Renderizar estados vazios
+  if (isLoading) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Carregando ocupações...
+      </div>
+    )
   }
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    
-    if (hours > 0 && mins > 0) {
-      return `${hours}h ${mins}min`
-    } else if (hours > 0) {
-      return `${hours}h`
-    } else {
-      return `${mins}min`
-    }
+  if (totalOccupations === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-foreground">
+            Ocupações na Agenda
+          </h2>
+          <Button onClick={handleCreateClick} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Ocupação
+          </Button>
+        </div>
+        <div className="text-center py-8 text-muted-foreground">
+          <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>Nenhuma ocupação cadastrada</p>
+          <p className="text-sm">Clique em "Nova Ocupação" para começar</p>
+        </div>
+      </div>
+    )
   }
 
+  // LOG: Renderizar accordion com categorias
   return (
     <div className="space-y-4">
+      {/* Cabeçalho */}
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-foreground">Ocupações da Agenda</h2>
+        <h2 className="text-lg font-semibold text-foreground">
+          Ocupações na Agenda
+        </h2>
         <Button onClick={handleCreateClick} size="sm">
           <Plus className="h-4 w-4 mr-2" />
           Nova Ocupação
         </Button>
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-8 text-muted-foreground">
-          Carregando ocupações...
-        </div>
-      ) : occupations.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>Nenhuma ocupação cadastrada</p>
-          <p className="text-sm">Clique em "Nova Ocupação" para começar</p>
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          {occupations.map((occupation) => (
-            <div
-              key={occupation.id}
-              className="border border-border rounded-lg p-4 bg-card hover:bg-accent/50 transition-colors"
-            >
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                  <h3 className="font-medium text-foreground mb-1">
-                    {occupation.title}
-                  </h3>
-                  {occupation.description && (
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {occupation.description}
-                    </p>
-                  )}
-                </div>
-                <div className="flex gap-2 ml-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEditClick(occupation)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteClick(occupation)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+      {/* LOG: Accordion com 3 categorias */}
+      <Accordion 
+        type="multiple" 
+        defaultValue={["next7days"]} 
+        className="w-full"
+      >
+        {/* CATEGORIA 1: Próximos 7 dias (sempre aberto) */}
+        <AccordionItem value="next7days">
+          <AccordionTrigger className="text-base font-medium">
+            ⏭️ Ocupações Próximos 7 dias
+            <span className="ml-2 text-sm text-muted-foreground">
+              ({categorizedOccupations.next7Days.length})
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>
+            {categorizedOccupations.next7Days.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4">
+                Nenhuma ocupação nos próximos 7 dias
+              </p>
+            ) : (
+              <div className="space-y-3 pt-2">
+                {categorizedOccupations.next7Days.map(occupation => (
+                  <OccupationCard
+                    key={occupation.id}
+                    occupation={occupation}
+                    onEdit={handleEditClick}
+                    onDelete={handleDeleteClick}
+                  />
+                ))}
               </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  <span>{formatDateTime(occupation.start_datetime)}</span>
-                </div>
-                
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  <span>{formatDuration(occupation.duration_minutes)}</span>
-                </div>
-                
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <User className="h-4 w-4" />
-                  <span>{occupation.created_by_name}</span>
-                </div>
+        {/* CATEGORIA 2: Futuras (fechado por padrão) */}
+        <AccordionItem value="future">
+          <AccordionTrigger className="text-base font-medium">
+            ⏩ Ocupações Futuras (+7 dias)
+            <span className="ml-2 text-sm text-muted-foreground">
+              ({categorizedOccupations.future.length})
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>
+            {categorizedOccupations.future.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4">
+                Nenhuma ocupação futura agendada
+              </p>
+            ) : (
+              <div className="space-y-3 pt-2">
+                {categorizedOccupations.future.map(occupation => (
+                  <OccupationCard
+                    key={occupation.id}
+                    occupation={occupation}
+                    onEdit={handleEditClick}
+                    onDelete={handleDeleteClick}
+                  />
+                ))}
               </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
 
-              <div className="mt-3">
-              <Badge variant="outline" className="text-xs border-primary text-primary">
-                Ocupação Ativa
-              </Badge>
+        {/* CATEGORIA 3: Passadas (fechado por padrão) */}
+        <AccordionItem value="past">
+          <AccordionTrigger className="text-base font-medium">
+            ⏮️ Ocupações Passadas
+            <span className="ml-2 text-sm text-muted-foreground">
+              ({categorizedOccupations.past.length})
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>
+            {categorizedOccupations.past.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4">
+                Nenhuma ocupação passada registrada
+              </p>
+            ) : (
+              <div className="space-y-3 pt-2">
+                {categorizedOccupations.past.map(occupation => (
+                  <OccupationCard
+                    key={occupation.id}
+                    occupation={occupation}
+                    onEdit={handleEditClick}
+                    onDelete={handleDeleteClick}
+                  />
+                ))}
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
+      {/* Modal de criação/edição */}
       <OccupationModal
         open={modalOpen}
         onOpenChange={setModalOpen}
