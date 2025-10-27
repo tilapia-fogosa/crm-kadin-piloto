@@ -17,6 +17,7 @@ interface AppointmentSchedulerProps {
   onSelectSlot: (date: Date) => void
   simplified?: boolean
   unitId?: string
+  durationMinutes?: number
 }
 
 type ViewType = "list" | "horizontal"
@@ -24,17 +25,18 @@ type ViewType = "list" | "horizontal"
 export function AppointmentScheduler({ 
   onSelectSlot, 
   simplified = false, 
-  unitId 
+  unitId,
+  durationMinutes = 60
 }: AppointmentSchedulerProps) {
   // Log para depuração
-  console.log('AppointmentScheduler - Iniciando renderização', { simplified, unitId })
+  console.log('AppointmentScheduler - Iniciando renderização', { simplified, unitId, durationMinutes })
   
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [selectedTime, setSelectedTime] = useState<string>()
   const [viewType, setViewType] = useState<ViewType>("list")
   
-  // Passa o unitId para o hook useAvailableSlots
-  const { availableSlots, isLoading } = useAvailableSlots(selectedDate, unitId)
+  // Passa o unitId e durationMinutes para o hook useAvailableSlots
+  const { availableSlots, isLoading } = useAvailableSlots(selectedDate, unitId, durationMinutes)
   console.log('AppointmentScheduler - Slots disponíveis:', availableSlots)
 
   const handleDateSelect = (date: Date | undefined) => {

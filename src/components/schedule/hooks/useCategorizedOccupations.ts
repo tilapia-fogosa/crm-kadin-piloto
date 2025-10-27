@@ -113,6 +113,36 @@ export function useCategorizedOccupations(unitId: string | undefined) {
         throw new Error('Usuário não autenticado');
       }
 
+      // ETAPA 1: Validar conflitos ANTES de inserir
+      console.log('🔍 [useCategorizedOccupations] Validando conflitos...');
+      const { data: conflicts, error: conflictError } = await supabase.rpc(
+        'check_schedule_occupation_conflict',
+        {
+          p_unit_id: unitId,
+          p_start_datetime: newOccupation.start_datetime,
+          p_duration_minutes: newOccupation.duration_minutes
+        }
+      );
+
+      if (conflictError) {
+        console.error('❌ [useCategorizedOccupations] Erro ao validar conflito:', conflictError);
+        throw new Error('Erro ao validar disponibilidade do horário');
+      }
+
+      console.log('📋 [useCategorizedOccupations] Resultado da validação:', conflicts);
+
+      // Se há conflito, lançar erro específico
+      if (conflicts && conflicts.length > 0 && conflicts[0].has_conflict) {
+        const conflict = conflicts[0];
+        const conflictType = conflict.conflict_type === 'occupation' ? 'ocupação' : 'agendamento de cliente';
+        const errorMsg = `Conflito de horário detectado com ${conflictType}: "${conflict.conflicting_title}"`;
+        console.error('❌ [useCategorizedOccupations]', errorMsg);
+        throw new Error(errorMsg);
+      }
+
+      console.log('✅ [useCategorizedOccupations] Horário validado - sem conflitos');
+
+      // ETAPA 2: Se não há conflito, inserir normalmente
       const { data, error } = await supabase
         .from('schedule_occupations')
         .insert([{
@@ -144,6 +174,47 @@ export function useCategorizedOccupations(unitId: string | undefined) {
   const updateMutation = useMutation({
     mutationFn: async ({ id, data: updateData }: { id: string; data: Partial<CreateOccupationData> }) => {
       console.log('✏️ [useCategorizedOccupations] Atualizando ocupação:', id);
+
+      // Se está atualizando horário ou duração, validar conflito
+      if (updateData.start_datetime || updateData.duration_minutes) {
+        console.log('🔍 [useCategorizedOccupations] Mudança de horário/duração detectada - validando conflitos...');
+
+        // Buscar dados atuais da ocupação
+        const { data: currentOccupation } = await supabase
+          .from('schedule_occupations')
+          .select('start_datetime, duration_minutes')
+          .eq('id', id)
+          .single();
+
+        const finalStartDatetime = updateData.start_datetime || currentOccupation?.start_datetime;
+        const finalDuration = updateData.duration_minutes || currentOccupation?.duration_minutes || 60;
+
+        // Validar conflito ignorando a própria ocupação
+        const { data: conflicts, error: conflictError } = await supabase.rpc(
+          'check_schedule_occupation_conflict',
+          {
+            p_unit_id: unitId!,
+            p_start_datetime: finalStartDatetime,
+            p_duration_minutes: finalDuration,
+            p_occupation_id: id
+          }
+        );
+
+        if (conflictError) {
+          console.error('❌ [useCategorizedOccupations] Erro ao validar conflito:', conflictError);
+          throw new Error('Erro ao validar disponibilidade do horário');
+        }
+
+        if (conflicts && conflicts.length > 0 && conflicts[0].has_conflict) {
+          const conflict = conflicts[0];
+          const conflictType = conflict.conflict_type === 'occupation' ? 'ocupação' : 'agendamento de cliente';
+          const errorMsg = `Conflito de horário detectado com ${conflictType}: "${conflict.conflicting_title}"`;
+          console.error('❌ [useCategorizedOccupations]', errorMsg);
+          throw new Error(errorMsg);
+        }
+
+        console.log('✅ [useCategorizedOccupations] Horário validado - sem conflitos');
+      }
 
       const { data, error } = await supabase
         .from('schedule_occupations')

@@ -19,7 +19,11 @@ const BUSINESS_HOURS = {
   }
 }
 
-export function useAvailableSlots(selectedDate: Date | undefined, unitId?: string) {
+export function useAvailableSlots(
+  selectedDate: Date | undefined, 
+  unitId?: string,
+  durationMinutes: number = 60
+) {
   const [availableSlots, setAvailableSlots] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
@@ -158,9 +162,9 @@ export function useAvailableSlots(selectedDate: Date | undefined, unitId?: strin
           });
 
           // Verifica se o slot está bloqueado por ocupações
-          // Considera que agendamentos de clientes são SEMPRE 60 minutos
+          // Considera a duração configurável (60 min padrão para agendamentos)
           const isBlockedByOccupation = occupationIntervals.some(interval => {
-            const appointmentEnd = slotTimeInMinutes + 60; // Agendamento SEMPRE dura 60 min
+            const appointmentEnd = slotTimeInMinutes + durationMinutes; // Usa duração configurável
             
             // Verifica overlap real entre [slotTimeInMinutes, appointmentEnd] e [interval.start, interval.end]
             const hasOverlap = (

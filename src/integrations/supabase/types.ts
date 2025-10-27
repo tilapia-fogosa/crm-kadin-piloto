@@ -5262,6 +5262,22 @@ export type Database = {
         Args: { p_activity_id: string }
         Returns: boolean
       }
+      check_schedule_occupation_conflict: {
+        Args: {
+          p_duration_minutes: number
+          p_occupation_id?: string
+          p_start_datetime: string
+          p_unit_id: string
+        }
+        Returns: {
+          conflict_type: string
+          conflicting_end: string
+          conflicting_id: string
+          conflicting_start: string
+          conflicting_title: string
+          has_conflict: boolean
+        }[]
+      }
       consolidate_monthly_commission: {
         Args: { p_calculation_id: string }
         Returns: boolean
