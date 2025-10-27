@@ -210,12 +210,12 @@ export function OccupationModal({
             <p className="text-sm text-muted-foreground mb-4">
               Selecione uma data e depois escolha um horário disponível considerando a duração de {durationMinutes} minutos
             </p>
-            <AppointmentScheduler
-              onSelectSlot={setSelectedDateTime}
-              simplified={true}
-              unitId={unitId}
-              durationMinutes={durationMinutes}
-            />
+              <AppointmentScheduler
+                onSelectSlot={setSelectedDateTime}
+                simplified={false}
+                unitId={unitId}
+                durationMinutes={durationMinutes}
+              />
             {selectedDateTime && (
               <p className="text-sm text-green-600 mt-2">
                 ✓ Selecionado: {selectedDateTime.toLocaleString('pt-BR', {
