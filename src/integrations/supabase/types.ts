@@ -2717,6 +2717,7 @@ export type Database = {
           descricao: string | null
           dia_mes: number | null
           dia_semana: string | null
+          duracao_minutos: number | null
           horario_fim: string
           horario_inicio: string
           id: string
@@ -2737,6 +2738,7 @@ export type Database = {
           descricao?: string | null
           dia_mes?: number | null
           dia_semana?: string | null
+          duracao_minutos?: number | null
           horario_fim: string
           horario_inicio: string
           id?: string
@@ -2757,6 +2759,7 @@ export type Database = {
           descricao?: string | null
           dia_mes?: number | null
           dia_semana?: string | null
+          duracao_minutos?: number | null
           horario_fim?: string
           horario_inicio?: string
           id?: string
@@ -6319,12 +6322,13 @@ export type Database = {
       get_horarios_aula_inaugural: {
         Args: { p_data: string; p_unit_id: string }
         Returns: {
-          horario_fim: string
-          horario_inicio: string
+          prioridade: number
           professor_id: string
           professor_nome: string
           sala_id: string
           sala_nome: string
+          slot_fim: string
+          slot_inicio: string
         }[]
       }
       get_horarios_disponiveis_salas: {
