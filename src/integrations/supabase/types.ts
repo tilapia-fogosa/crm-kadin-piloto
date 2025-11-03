@@ -5678,6 +5678,20 @@ export type Database = {
         }
         Relationships: []
       }
+      horarios_ocupados: {
+        Row: {
+          data_especifica: string | null
+          descricao: string | null
+          dia_semana: string | null
+          horario_fim: string | null
+          horario_inicio: string | null
+          professor_id: string | null
+          sala_id: string | null
+          tipo_ocupacao: string | null
+          unit_id: string | null
+        }
+        Relationships: []
+      }
       kanban_client_summary: {
         Row: {
           created_at: string | null
