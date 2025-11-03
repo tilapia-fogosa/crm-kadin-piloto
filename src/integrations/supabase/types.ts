@@ -6265,7 +6265,7 @@ export type Database = {
         Returns: Json
       }
       get_horarios_aula_inaugural: {
-        Args: { p_data: string; p_unit_id: string }
+        Args: { p_data: string; p_unit_id?: string }
         Returns: {
           horario_fim: string
           horario_inicio: string
