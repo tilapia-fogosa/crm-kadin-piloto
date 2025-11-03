@@ -5683,6 +5683,7 @@ export type Database = {
           data_especifica: string | null
           descricao: string | null
           dia_semana: string | null
+          evento_id: string | null
           horario_fim: string | null
           horario_inicio: string | null
           professor_id: string | null
