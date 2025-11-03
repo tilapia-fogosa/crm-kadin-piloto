@@ -10,22 +10,22 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
 import { useTurmas } from "../../hooks/useTurmas";
+import { useUnit } from "@/contexts/UnitContext";
 import { PedagogicalData, PedagogicalFormData } from "../../types/pedagogical-data.types";
+import { AulaInauguralScheduler } from "../AulaInauguralScheduler";
 
-// LOG: Schema de validação Zod
+// LOG: Schema de validação Zod (com campos de aula inaugural)
 const pedagogicalDataSchema = z.object({
   turma_id: z.string().min(1, "Selecione uma turma"),
   data_aula_inaugural: z.date({
-    required_error: "Selecione a data da aula inaugural",
+    required_error: "Selecione a data e horário da aula inaugural",
   }),
   informacoes_onboarding: z.string().min(10, "Informe pelo menos 10 caracteres sobre o atendimento"),
+  aula_inaugural_professor_id: z.string().optional(),
+  aula_inaugural_sala_id: z.string().optional(),
+  aula_inaugural_horario_inicio: z.string().optional(),
+  aula_inaugural_horario_fim: z.string().optional(),
 });
 
 interface PedagogicalDataFormProps {
@@ -38,6 +38,7 @@ export function PedagogicalDataForm({ initialData, onSubmit, isLoading }: Pedago
   console.log('LOG: Renderizando PedagogicalDataForm com dados iniciais:', initialData);
   
   const { data: turmas, isLoading: isLoadingTurmas } = useTurmas();
+  const { selectedUnitId } = useUnit();
   const [selectedTurmaId, setSelectedTurmaId] = useState<string | undefined>(initialData?.turma_id);
 
   // LOG: Encontrar turma selecionada para exibir professor
@@ -64,12 +65,23 @@ export function PedagogicalDataForm({ initialData, onSubmit, isLoading }: Pedago
   }, [form]);
 
   const handleSubmit = (data: PedagogicalFormData) => {
-    console.log('LOG: Submetendo dados pedagógicos:', data);
+    console.log('LOG: Submetendo dados pedagógicos com aula inaugural:', data);
     
-    const formattedData: PedagogicalData = {
+    // Validar se horário da aula inaugural foi selecionado
+    if (!data.aula_inaugural_horario_inicio || !data.aula_inaugural_professor_id || !data.aula_inaugural_sala_id) {
+      console.error('LOG: Dados de aula inaugural incompletos');
+      return;
+    }
+    
+    const formattedData: any = {
       turma_id: data.turma_id,
       data_aula_inaugural: data.data_aula_inaugural.toISOString().split('T')[0],
       informacoes_onboarding: data.informacoes_onboarding,
+      // Incluir dados da aula inaugural para processamento
+      aula_inaugural_professor_id: data.aula_inaugural_professor_id,
+      aula_inaugural_sala_id: data.aula_inaugural_sala_id,
+      aula_inaugural_horario_inicio: data.aula_inaugural_horario_inicio,
+      aula_inaugural_horario_fim: data.aula_inaugural_horario_fim,
     };
     
     onSubmit(formattedData);
@@ -120,49 +132,34 @@ export function PedagogicalDataForm({ initialData, onSubmit, isLoading }: Pedago
           )}
         />
 
-        {/* LOG: Campo de data da aula inaugural */}
-        <FormField
-          control={form.control}
-          name="data_aula_inaugural"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Data da Aula Inaugural *</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP", { locale: ptBR })
-                      ) : (
-                        <span>Selecione a data</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormDescription>
-                Data em que o aluno terá sua primeira aula
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
+        {/* LOG: Agendamento de aula inaugural com professor e sala */}
+        <div className="space-y-2">
+          <FormLabel>Data e Horário da Aula Inaugural *</FormLabel>
+          <FormDescription className="text-xs mb-3">
+            Selecione uma data e horário disponível. O sistema encontrará automaticamente um professor e sala disponíveis.
+          </FormDescription>
+          
+          {selectedUnitId ? (
+            <AulaInauguralScheduler
+              unitId={selectedUnitId}
+              initialDate={form.getValues('data_aula_inaugural')}
+              onSelectSlot={(slot) => {
+                console.log('LOG: Slot de aula inaugural selecionado:', slot);
+                form.setValue('data_aula_inaugural', slot.data);
+                form.setValue('aula_inaugural_professor_id', slot.professor_id);
+                form.setValue('aula_inaugural_sala_id', slot.sala_id);
+                form.setValue('aula_inaugural_horario_inicio', slot.horario_inicio);
+                form.setValue('aula_inaugural_horario_fim', slot.horario_fim);
+              }}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">Selecione uma unidade para ver os horários disponíveis</p>
           )}
-        />
+          
+          {form.formState.errors.data_aula_inaugural && (
+            <p className="text-sm text-destructive">{form.formState.errors.data_aula_inaugural.message}</p>
+          )}
+        </div>
 
         {/* LOG: Campo de informações de onboarding */}
         <FormField

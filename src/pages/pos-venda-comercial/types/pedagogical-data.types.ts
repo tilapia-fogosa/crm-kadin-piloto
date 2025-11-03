@@ -21,9 +21,35 @@ export interface PedagogicalData {
   informacoes_onboarding?: string;
 }
 
-// LOG: Interface para formulário (com validação)
+// LOG: Interface para slot de aula inaugural (retorno da RPC)
+export interface AulaInauguralSlot {
+  horario_inicio: string;
+  horario_fim: string;
+  professor_id: string;
+  professor_nome: string;
+  professor_prioridade: number;
+  sala_id: string;
+  sala_nome: string;
+}
+
+// LOG: Interface para dados completos de aula inaugural selecionada
+export interface AulaInauguralCompleta {
+  data: Date;
+  horario_inicio: string;
+  horario_fim: string;
+  professor_id: string;
+  sala_id: string;
+}
+
+// LOG: Interface para formulário (com validação e aula inaugural)
 export interface PedagogicalFormData {
   turma_id: string;
   data_aula_inaugural: Date;
   informacoes_onboarding: string;
+  
+  // Dados da aula inaugural (preenchidos pelo scheduler)
+  aula_inaugural_professor_id?: string;
+  aula_inaugural_sala_id?: string;
+  aula_inaugural_horario_inicio?: string;
+  aula_inaugural_horario_fim?: string;
 }
