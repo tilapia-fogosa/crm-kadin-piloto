@@ -1,6 +1,6 @@
 export type StudentStatus = 'pre_matricula' | 'matricula_completa';
 
-export type Gender = 'masculino' | 'feminino';
+export type Gender = 'masculino' | 'feminino' | 'outro';
 
 export type MaritalStatus = 'solteiro' | 'casado' | 'divorciado' | 'viuvo' | 'outro';
 
