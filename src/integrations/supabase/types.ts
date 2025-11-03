@@ -5751,6 +5751,28 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_calendario_eventos_unificados: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          data_especifica: string | null
+          descricao: string | null
+          dia_semana: Database["public"]["Enums"]["dia_semana"] | null
+          evento_id: string | null
+          horario_fim: string | null
+          horario_inicio: string | null
+          professor_id: string | null
+          professor_nome: string | null
+          professor_slack: string | null
+          sala_cor: string | null
+          sala_id: string | null
+          sala_nome: string | null
+          tipo_evento: string | null
+          titulo: string | null
+          unit_id: string | null
+        }
+        Relationships: []
+      }
       vw_eventos_sala_expandidos: {
         Row: {
           created_at: string | null
@@ -5953,6 +5975,10 @@ export type Database = {
         Returns: boolean
       }
       delete_reposicao: { Args: { p_reposicao_id: string }; Returns: boolean }
+      dow_to_dia_semana: {
+        Args: { dow: number }
+        Returns: Database["public"]["Enums"]["dia_semana"]
+      }
       evaluate_formula: {
         Args: {
           p_formula: string
@@ -6076,6 +6102,32 @@ export type Database = {
           p_unit_ids: string[]
         }
         Returns: Json
+      }
+      get_calendario_eventos_unificados: {
+        Args: { p_data_fim: string; p_data_inicio: string; p_unit_id?: string }
+        Returns: {
+          categoria: string
+          created_at: string
+          data_especifica: string
+          descricao: string
+          dia_semana: Database["public"]["Enums"]["dia_semana"]
+          evento_id: string
+          horario_fim: string
+          horario_inicio: string
+          professor_id: string
+          professor_nome: string
+          professor_slack: string
+          sala_cor: string
+          sala_id: string
+          sala_nome: string
+          tipo_evento: string
+          titulo: string
+          total_alunos_ativos: number
+          total_aulas_experimentais: number
+          total_faltas_futuras: number
+          total_reposicoes: number
+          unit_id: string
+        }[]
       }
       get_calendario_turmas_com_reposicoes: {
         Args: { p_data_consulta: string }
