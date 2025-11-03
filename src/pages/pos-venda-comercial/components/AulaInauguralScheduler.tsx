@@ -44,8 +44,8 @@ export function AulaInauguralScheduler({
     const slot = slots[index];
     const slotCompleto: AulaInauguralCompleta = {
       data: selectedDate,
-      horario_inicio: slot.horario_inicio,
-      horario_fim: slot.horario_fim,
+      horario_inicio: slot.slot_inicio,
+      horario_fim: slot.slot_fim,
       professor_id: slot.professor_id,
       sala_id: slot.sala_id,
     };
@@ -105,7 +105,7 @@ export function AulaInauguralScheduler({
                 <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
                 <div className="flex flex-col">
                   <span className="font-medium">
-                    {slot.horario_inicio.slice(0, 5)} - {slot.horario_fim.slice(0, 5)}
+                    {slot.slot_inicio.slice(0, 5)} - {slot.slot_fim.slice(0, 5)}
                   </span>
                   <span className="text-xs text-muted-foreground mt-1">
                     Duração: 1 hora

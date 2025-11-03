@@ -22,12 +22,13 @@ export interface PedagogicalData {
 }
 
 // LOG: Interface para slot de aula inaugural (retorno da RPC)
+// CORREÇÃO: Campos atualizados para corresponder ao retorno da função SQL
 export interface AulaInauguralSlot {
-  horario_inicio: string;
-  horario_fim: string;
+  slot_inicio: string;
+  slot_fim: string;
   professor_id: string;
   professor_nome: string;
-  professor_prioridade: number;
+  prioridade: number;
   sala_id: string;
   sala_nome: string;
 }
