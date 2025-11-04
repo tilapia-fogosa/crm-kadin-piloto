@@ -11,3 +11,7 @@ verify_jwt = false
 
 # Nota: O processamento de webhooks de venda foi desativado
 # e está sendo tratado pelos webhooks de clientes com status "matriculado"
+
+# Edge function para agendamento de aula inaugural
+# Autenticação JWT habilitada (padrão) - chamada via supabase.functions.invoke
+# Envia dados para webhook N8N: https://webhookn8n.agenciakadin.com.br/webhook/agenda-aula-inaugural

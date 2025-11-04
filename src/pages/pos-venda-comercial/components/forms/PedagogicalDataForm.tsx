@@ -14,6 +14,7 @@ import { useTurmas } from "../../hooks/useTurmas";
 import { useUnit } from "@/contexts/UnitContext";
 import { PedagogicalData, PedagogicalFormData } from "../../types/pedagogical-data.types";
 import { AulaInauguralScheduler } from "../AulaInauguralScheduler";
+import { useAgendarAulaInaugural } from "../../hooks/useAgendarAulaInaugural";
 
 // LOG: Schema de validação Zod (com campos de aula inaugural)
 const pedagogicalDataSchema = z.object({
@@ -29,17 +30,23 @@ const pedagogicalDataSchema = z.object({
 });
 
 interface PedagogicalDataFormProps {
+  activityId: string;
+  fullName: string;
   initialData?: PedagogicalData;
   onSubmit: (data: PedagogicalData) => void;
   isLoading?: boolean;
 }
 
-export function PedagogicalDataForm({ initialData, onSubmit, isLoading }: PedagogicalDataFormProps) {
+export function PedagogicalDataForm({ activityId, fullName, initialData, onSubmit, isLoading }: PedagogicalDataFormProps) {
   console.log('LOG: Renderizando PedagogicalDataForm com dados iniciais:', initialData);
   
   const { data: turmas, isLoading: isLoadingTurmas } = useTurmas();
   const { selectedUnitId } = useUnit();
   const [selectedTurmaId, setSelectedTurmaId] = useState<string | undefined>(initialData?.turma_id);
+  const [professorNome, setProfessorNome] = useState<string>('');
+  
+  // LOG: Hook para agendar aula inaugural
+  const { mutate: agendarAulaInaugural, isPending: isAgendandoAula } = useAgendarAulaInaugural();
 
   // LOG: Encontrar turma selecionada para exibir professor
   const selectedTurma = turmas?.find(t => t.turma_id === selectedTurmaId);
@@ -64,27 +71,37 @@ export function PedagogicalDataForm({ initialData, onSubmit, isLoading }: Pedago
     return () => subscription.unsubscribe();
   }, [form]);
 
-  const handleSubmit = (data: PedagogicalFormData) => {
+  const handleSubmit = async (data: PedagogicalFormData) => {
     console.log('LOG: Submetendo dados pedagógicos com aula inaugural:', data);
     
-    // Validar se horário da aula inaugural foi selecionado
-    if (!data.aula_inaugural_horario_inicio || !data.aula_inaugural_professor_id || !data.aula_inaugural_sala_id) {
+    // LOG: Validar se horário da aula inaugural foi selecionado
+    if (!data.aula_inaugural_horario_inicio || !data.aula_inaugural_professor_id || 
+        !data.aula_inaugural_sala_id || !data.aula_inaugural_horario_fim) {
       console.error('LOG: Dados de aula inaugural incompletos');
       return;
     }
-    
-    const formattedData: any = {
-      turma_id: data.turma_id,
+
+    // LOG: 1. Primeiro agendar aula inaugural via edge function
+    console.log('LOG: Agendando aula inaugural via webhook');
+    agendarAulaInaugural({
+      activity_id: activityId,
+      full_name: fullName,
       data_aula_inaugural: data.data_aula_inaugural.toISOString().split('T')[0],
-      informacoes_onboarding: data.informacoes_onboarding,
-      // Incluir dados da aula inaugural para processamento
-      aula_inaugural_professor_id: data.aula_inaugural_professor_id,
-      aula_inaugural_sala_id: data.aula_inaugural_sala_id,
-      aula_inaugural_horario_inicio: data.aula_inaugural_horario_inicio,
-      aula_inaugural_horario_fim: data.aula_inaugural_horario_fim,
-    };
-    
-    onSubmit(formattedData);
+      horario_inicio: data.aula_inaugural_horario_inicio,
+      professor_id: data.aula_inaugural_professor_id,
+      professor_nome: professorNome,
+    }, {
+      onSuccess: () => {
+        // LOG: 2. Depois salvar dados pedagógicos básicos
+        console.log('LOG: Aula inaugural agendada, salvando dados pedagógicos');
+        const formattedData: PedagogicalData = {
+          turma_id: data.turma_id,
+          data_aula_inaugural: data.data_aula_inaugural.toISOString().split('T')[0],
+          informacoes_onboarding: data.informacoes_onboarding,
+        };
+        onSubmit(formattedData);
+      }
+    });
   };
 
   return (
@@ -150,6 +167,7 @@ export function PedagogicalDataForm({ initialData, onSubmit, isLoading }: Pedago
                 form.setValue('aula_inaugural_sala_id', slot.sala_id);
                 form.setValue('aula_inaugural_horario_inicio', slot.horario_inicio);
                 form.setValue('aula_inaugural_horario_fim', slot.horario_fim);
+                setProfessorNome(slot.professor_nome); // Capturar nome do professor
               }}
             />
           ) : (
@@ -185,8 +203,8 @@ export function PedagogicalDataForm({ initialData, onSubmit, isLoading }: Pedago
 
         {/* LOG: Botão de submissão */}
         <div className="flex justify-end gap-2">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Salvando..." : "Salvar Dados Pedagógicos"}
+          <Button type="submit" disabled={isLoading || isAgendandoAula}>
+            {isAgendandoAula ? "Agendando aula..." : isLoading ? "Salvando..." : "Salvar Dados Pedagógicos"}
           </Button>
         </div>
       </form>

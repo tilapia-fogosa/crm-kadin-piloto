@@ -5880,19 +5880,6 @@ export type Database = {
       }
     }
     Functions: {
-      bloquear_aula_inaugural: {
-        Args: {
-          p_activity_id: string
-          p_client_name: string
-          p_data: string
-          p_horario_fim: string
-          p_horario_inicio: string
-          p_professor_id: string
-          p_sala_id: string
-          p_unit_id: string
-        }
-        Returns: Json
-      }
       buscar_dados_abaco_projeto_sao_rafael: {
         Args: { p_mes_ano: string; p_professor_id: string }
         Returns: {
@@ -6334,18 +6321,6 @@ export type Database = {
         Args: { p_data_inicial: string; p_funcionario_id: string }
         Returns: Json
       }
-      get_horarios_aula_inaugural: {
-        Args: { p_data: string; p_unit_id: string }
-        Returns: {
-          prioridade: number
-          professor_id: string
-          professor_nome: string
-          sala_id: string
-          sala_nome: string
-          slot_fim: string
-          slot_inicio: string
-        }[]
-      }
       get_horarios_disponiveis_salas: {
         Args: { p_data: string; p_unit_id?: string }
         Returns: {
@@ -6565,6 +6540,18 @@ export type Database = {
           total_casos: number
           variacao_percentual_ano_anterior: number
           variacao_percentual_anterior: number
+        }[]
+      }
+      get_slots_disponiveis_aula_inaugural: {
+        Args: { p_data: string; p_unit_id: string }
+        Returns: {
+          prioridade: number
+          professor_id: string
+          professor_nome: string
+          sala_id: string
+          sala_nome: string
+          slot_fim: string
+          slot_inicio: string
         }[]
       }
       get_temporal_loss_reasons_report: {

@@ -21,7 +21,7 @@ export function useAulaInauguralSlots(selectedDate: Date | undefined, unitId: st
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       console.log('LOG: Buscando slots para data formatada:', formattedDate);
 
-      const { data, error } = await supabase.rpc('get_horarios_aula_inaugural', {
+      const { data, error } = await supabase.rpc('get_slots_disponiveis_aula_inaugural', {
         p_data: formattedDate,
         p_unit_id: unitId
       });

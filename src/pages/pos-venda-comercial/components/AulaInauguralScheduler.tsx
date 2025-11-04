@@ -12,7 +12,7 @@ import { Clock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AulaInauguralSchedulerProps {
-  onSelectSlot: (slot: AulaInauguralCompleta) => void;
+  onSelectSlot: (slot: AulaInauguralCompleta & { professor_nome: string; sala_nome: string }) => void;
   unitId: string;
   initialDate?: Date;
 }
@@ -42,12 +42,14 @@ export function AulaInauguralScheduler({
     setSelectedSlotIndex(index);
 
     const slot = slots[index];
-    const slotCompleto: AulaInauguralCompleta = {
+    const slotCompleto = {
       data: selectedDate,
       horario_inicio: slot.slot_inicio,
       horario_fim: slot.slot_fim,
       professor_id: slot.professor_id,
       sala_id: slot.sala_id,
+      professor_nome: slot.professor_nome,
+      sala_nome: slot.sala_nome,
     };
 
     onSelectSlot(slotCompleto);
