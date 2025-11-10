@@ -287,7 +287,7 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
       console.log('LOG: Material completo e usuário saiu da seção - minimizando');
       setOpenAccordions(prev => prev.filter(item => item !== "material"));
     }
-  }, [watchedValues]);
+  }, [watchedValues, activeFocusSection]);
 
   /**
    * LOG: Componente para indicador de completude

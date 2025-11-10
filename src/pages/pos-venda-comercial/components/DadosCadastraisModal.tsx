@@ -214,7 +214,7 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
       console.log('LOG: Endereço completo e usuário saiu da seção - minimizando');
       setOpenAccordions(prev => prev.filter(item => item !== "endereco"));
     }
-  }, [watchedValues]);
+  }, [watchedValues, activeFocusSection]);
 
   /**
    * LOG: Componente para indicador de completude
