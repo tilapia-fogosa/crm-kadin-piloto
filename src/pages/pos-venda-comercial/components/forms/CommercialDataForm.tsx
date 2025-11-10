@@ -13,12 +13,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CalendarIcon, CheckCircle2 } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommercialData, PaymentMethod, KitType, KIT_TYPE_OPTIONS } from "../../types/commercial-data.types";
 import { formatDateForInput } from "@/utils/date/formatting";
@@ -342,48 +338,6 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
     onSubmit(commercialData);
   };
 
-  /**
-   * LOG: Componente reutilizável para DatePicker
-   * Integrado com react-hook-form e formatação brasileira
-   */
-  const DatePickerField = ({ field, placeholder }: { field: any; placeholder: string }) => {
-    const parsedDate = field.value ? new Date(field.value) : undefined;
-    
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <FormControl>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full pl-3 text-left font-normal",
-                !field.value && "text-muted-foreground"
-              )}
-            >
-              {field.value ? (
-                format(parsedDate!, "dd/MM/yyyy", { locale: ptBR })
-              ) : (
-                <span>{placeholder}</span>
-              )}
-              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-            </Button>
-          </FormControl>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={parsedDate}
-            onSelect={(date) => {
-              field.onChange(date ? formatDateForInput(date) : "");
-            }}
-            disabled={(date) => date < new Date("1900-01-01")}
-            initialFocus
-            className="pointer-events-auto"
-          />
-        </PopoverContent>
-      </Popover>
-    );
-  };
 
   /**
    * LOG: Componente reutilizável para input monetário
@@ -534,7 +488,13 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Data Pagamento *</FormLabel>
-                      <DatePickerField field={field} placeholder="Selecione a data" />
+                      <FormControl>
+                        <Input 
+                          type="date"
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -663,7 +623,13 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>1ª Mensalidade *</FormLabel>
-                      <DatePickerField field={field} placeholder="Selecione a data" />
+                      <FormControl>
+                        <Input 
+                          type="date"
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -713,7 +679,13 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Data Pagamento *</FormLabel>
-                      <DatePickerField field={field} placeholder="Selecione a data" />
+                      <FormControl>
+                        <Input 
+                          type="date"
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
