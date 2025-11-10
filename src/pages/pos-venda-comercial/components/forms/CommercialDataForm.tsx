@@ -110,6 +110,8 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
   // LOG: Estado para controle dos accordions e seções completadas
   const [openAccordions, setOpenAccordions] = useState<string[]>(["kit-type"]);
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set());
+  // LOG: Estado para rastrear qual seção está com foco ativo (previne minimização durante digitação)
+  const [activeFocusSection, setActiveFocusSection] = useState<string | null>(null);
 
   // LOG: Configuração do formulário com react-hook-form
   const form = useForm<FormData>({
@@ -233,32 +235,56 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
     // Lógica de sugestão automática (não forçada) - apenas na primeira completude
     const prevCompleted = completedSections;
     
-    // Se kit foi completado pela primeira vez, sugerir matrícula
-    if (isKitTypeComplete() && !prevCompleted.has("kit-type") && openAccordions.includes("kit-type")) {
+    // Se kit foi completado pela primeira vez E usuário não está digitando, sugerir matrícula
+    if (
+      isKitTypeComplete() && 
+      !prevCompleted.has("kit-type") && 
+      openAccordions.includes("kit-type") &&
+      activeFocusSection !== "kit-type"
+    ) {
+      console.log('LOG: Kit completo e usuário saiu da seção - sugerindo matrícula');
       setOpenAccordions(prev => {
         const without = prev.filter(item => item !== "kit-type");
         return without.includes("enrollment") ? without : [...without, "enrollment"];
       });
     }
 
-    // Se matrícula foi completada pela primeira vez, sugerir mensalidade
-    if (isEnrollmentComplete() && !prevCompleted.has("enrollment") && openAccordions.includes("enrollment")) {
+    // Se matrícula foi completada pela primeira vez E usuário não está digitando, sugerir mensalidade
+    if (
+      isEnrollmentComplete() && 
+      !prevCompleted.has("enrollment") && 
+      openAccordions.includes("enrollment") &&
+      activeFocusSection !== "enrollment"
+    ) {
+      console.log('LOG: Matrícula completa e usuário saiu da seção - sugerindo mensalidade');
       setOpenAccordions(prev => {
         const without = prev.filter(item => item !== "enrollment");
         return without.includes("monthly-fee") ? without : [...without, "monthly-fee"];
       });
     }
 
-    // Se mensalidade foi completada pela primeira vez, sugerir material
-    if (isMonthlyFeeComplete() && !prevCompleted.has("monthly-fee") && openAccordions.includes("monthly-fee")) {
+    // Se mensalidade foi completada pela primeira vez E usuário não está digitando, sugerir material
+    if (
+      isMonthlyFeeComplete() && 
+      !prevCompleted.has("monthly-fee") && 
+      openAccordions.includes("monthly-fee") &&
+      activeFocusSection !== "monthly-fee"
+    ) {
+      console.log('LOG: Mensalidade completa e usuário saiu da seção - sugerindo material');
       setOpenAccordions(prev => {
         const without = prev.filter(item => item !== "monthly-fee");
         return without.includes("material") ? without : [...without, "material"];
       });
     }
 
-    // Se material foi completado pela primeira vez, minimizar
-    if (isMaterialComplete() && !prevCompleted.has("material") && openAccordions.includes("material")) {
+    // Se material foi completado pela primeira vez E usuário não está digitando, minimizar
+    if (
+      isMaterialComplete() && 
+      !prevCompleted.has("material") && 
+      openAccordions.includes("material") &&
+      activeFocusSection !== "material"
+    ) {
+      console.log('LOG: Material completo e usuário saiu da seção - minimizando');
       setOpenAccordions(prev => prev.filter(item => item !== "material"));
     }
   }, [watchedValues]);
@@ -269,6 +295,23 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
   const CompletionIndicator = ({ isComplete }: { isComplete: boolean }) => {
     if (!isComplete) return null;
     return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+  };
+
+  /**
+   * LOG: Handlers para rastrear foco em cada seção
+   * Previne minimização prematura durante digitação
+   */
+  const handleSectionFocus = (section: string) => {
+    console.log('LOG: Usuário está editando seção:', section);
+    setActiveFocusSection(section);
+  };
+
+  const handleSectionBlur = (section: string) => {
+    console.log('LOG: Usuário saiu da seção:', section);
+    // Delay para permitir mudança de foco entre campos da mesma seção
+    setTimeout(() => {
+      setActiveFocusSection(null);
+    }, 100);
   };
 
   /**
@@ -419,9 +462,13 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
-              <FormField
-                control={form.control}
-                name="kit_type"
+              <div 
+                onFocus={() => handleSectionFocus("kit-type")}
+                onBlur={() => handleSectionBlur("kit-type")}
+              >
+                <FormField
+                  control={form.control}
+                  name="kit_type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo de Kit *</FormLabel>
@@ -441,8 +488,9 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
                     </Select>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
+                  )}
+                />
+              </div>
             </AccordionContent>
           </AccordionItem>
 
@@ -461,8 +509,12 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
+              <div 
+                onFocus={() => handleSectionFocus("enrollment")}
+                onBlur={() => handleSectionBlur("enrollment")}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
                   control={form.control}
                   name="enrollment_amount"
                   render={({ field }) => (
@@ -539,6 +591,7 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
                     </FormItem>
                   )}
                 />
+                </div>
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -558,8 +611,12 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
+              <div 
+                onFocus={() => handleSectionFocus("monthly-fee")}
+                onBlur={() => handleSectionBlur("monthly-fee")}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
                   control={form.control}
                   name="monthly_fee_amount"
                   render={({ field }) => (
@@ -611,6 +668,7 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
                     </FormItem>
                   )}
                 />
+                </div>
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -630,8 +688,12 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
+              <div 
+                onFocus={() => handleSectionFocus("material")}
+                onBlur={() => handleSectionBlur("material")}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
                   control={form.control}
                   name="material_amount"
                   render={({ field }) => (
@@ -708,6 +770,7 @@ export function CommercialDataForm({ initialData, onSubmit, isLoading }: Commerc
                     </FormItem>
                   )}
                 />
+                </div>
               </div>
             </AccordionContent>
           </AccordionItem>

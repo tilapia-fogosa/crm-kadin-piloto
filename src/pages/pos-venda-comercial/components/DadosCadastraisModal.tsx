@@ -42,6 +42,8 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
   // LOG: Estado para controle dos accordions e seções completadas
   const [openAccordions, setOpenAccordions] = useState<string[]>(["dados-pessoais"]);
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set());
+  // LOG: Estado para rastrear qual seção está com foco ativo (previne minimização durante digitação)
+  const [activeFocusSection, setActiveFocusSection] = useState<string | null>(null);
 
   // LOG: Hook para busca de CEP
   const { fetchAddressByCEP, isLoadingCEP } = useCEPSearch();
@@ -185,19 +187,31 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
     
     setCompletedSections(newCompletedSections);
 
-    // Lógica de sugestão automática durante preenchimento ativo
+    // Lógica de sugestão automática (não forçada) - apenas na primeira completude
     const prevCompleted = completedSections;
     
-    // Se dados pessoais foi completado pela primeira vez, sugerir endereço
-    if (isPersonalDataComplete() && !prevCompleted.has("dados-pessoais") && openAccordions.includes("dados-pessoais")) {
+    // Se dados pessoais foram completados pela primeira vez E usuário não está digitando, sugerir endereço
+    if (
+      isPersonalDataComplete() && 
+      !prevCompleted.has("dados-pessoais") && 
+      openAccordions.includes("dados-pessoais") &&
+      activeFocusSection !== "dados-pessoais"
+    ) {
+      console.log('LOG: Dados pessoais completos e usuário saiu da seção - sugerindo endereço');
       setOpenAccordions(prev => {
         const without = prev.filter(item => item !== "dados-pessoais");
         return without.includes("endereco") ? without : [...without, "endereco"];
       });
     }
 
-    // Se endereço foi completado pela primeira vez, minimizar
-    if (isAddressComplete() && !prevCompleted.has("endereco") && openAccordions.includes("endereco")) {
+    // Se endereço foi completado pela primeira vez E usuário não está digitando, minimizar
+    if (
+      isAddressComplete() && 
+      !prevCompleted.has("endereco") && 
+      openAccordions.includes("endereco") &&
+      activeFocusSection !== "endereco"
+    ) {
+      console.log('LOG: Endereço completo e usuário saiu da seção - minimizando');
       setOpenAccordions(prev => prev.filter(item => item !== "endereco"));
     }
   }, [watchedValues]);
@@ -285,6 +299,23 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
     }
   };
 
+  /**
+   * LOG: Handlers para rastrear foco em cada seção
+   * Previne minimização prematura durante digitação
+   */
+  const handleSectionFocus = (section: string) => {
+    console.log('LOG: Usuário está editando seção:', section);
+    setActiveFocusSection(section);
+  };
+
+  const handleSectionBlur = (section: string) => {
+    console.log('LOG: Usuário saiu da seção:', section);
+    // Delay para permitir mudança de foco entre campos da mesma seção
+    setTimeout(() => {
+      setActiveFocusSection(null);
+    }, 100);
+  };
+
   const onSubmit = (data: CadastraisFormData) => {
     console.log('LOG: Submetendo formulário de dados cadastrais:', data);
     saveMutation.mutate(data);
@@ -327,8 +358,12 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
+                  <div 
+                    onFocus={() => handleSectionFocus("dados-pessoais")}
+                    onBlur={() => handleSectionBlur("dados-pessoais")}
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
                       control={form.control}
                       name="full_name"
                       render={({ field }) => (
@@ -390,6 +425,7 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
                         </FormItem>
                       )}
                     />
+                    </div>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -409,8 +445,12 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField
+                  <div 
+                    onFocus={() => handleSectionFocus("endereco")}
+                    onBlur={() => handleSectionBlur("endereco")}
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
                       control={form.control}
                       name="address_postal_code"
                       render={({ field }) => (
@@ -524,6 +564,7 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
                         </FormItem>
                       )}
                     />
+                    </div>
                   </div>
                 </AccordionContent>
               </AccordionItem>
