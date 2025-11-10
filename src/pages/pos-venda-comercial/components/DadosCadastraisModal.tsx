@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { useCEPSearch } from "@/hooks/useCEPSearch";
 
 const cadastraisSchema = z.object({
   full_name: z.string().optional(),
@@ -41,6 +42,9 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
   // LOG: Estado para controle dos accordions e seções completadas
   const [openAccordions, setOpenAccordions] = useState<string[]>(["dados-pessoais"]);
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set());
+
+  // LOG: Hook para busca de CEP
+  const { fetchAddressByCEP, isLoadingCEP } = useCEPSearch();
 
   const form = useForm<CadastraisFormData>({
     resolver: zodResolver(cadastraisSchema),
@@ -241,6 +245,46 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
     },
   });
 
+  /**
+   * LOG: Função para buscar CEP e preencher campos de endereço
+   * Disparada quando o usuário sai do campo CEP (onBlur)
+   */
+  const handleCEPBlur = async () => {
+    const cep = form.getValues('address_postal_code');
+    
+    console.log('LOG: Campo CEP perdeu foco. Valor atual:', cep);
+    
+    // Validar se CEP foi preenchido
+    if (!cep || cep.trim() === '') {
+      console.log('LOG: CEP vazio, busca não será realizada');
+      return;
+    }
+
+    // Buscar endereço pela API
+    const addressData = await fetchAddressByCEP(cep);
+    
+    // Se encontrou dados, preencher formulário
+    if (addressData) {
+      console.log('LOG: Preenchendo campos de endereço automaticamente');
+      
+      form.setValue('address_street', addressData.logradouro || '');
+      form.setValue('address_neighborhood', addressData.bairro || '');
+      form.setValue('address_city', addressData.localidade || '');
+      form.setValue('address_state', addressData.uf || '');
+      
+      // Limpar complemento se houver
+      if (addressData.complemento) {
+        form.setValue('address_complement', addressData.complemento);
+      }
+
+      // Dar foco no campo número (próximo campo a ser preenchido)
+      setTimeout(() => {
+        const numberInput = document.querySelector<HTMLInputElement>('input[name="address_number"]');
+        numberInput?.focus();
+      }, 100);
+    }
+  };
+
   const onSubmit = (data: CadastraisFormData) => {
     console.log('LOG: Submetendo formulário de dados cadastrais:', data);
     saveMutation.mutate(data);
@@ -373,7 +417,20 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
                         <FormItem>
                           <FormLabel>CEP *</FormLabel>
                           <FormControl>
-                            <Input placeholder="00000-000" {...field} />
+                            <div className="relative">
+                              <Input 
+                                placeholder="00000-000" 
+                                {...field}
+                                onBlur={handleCEPBlur}
+                                disabled={isLoadingCEP}
+                                maxLength={9}
+                              />
+                              {isLoadingCEP && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                                </div>
+                              )}
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -387,7 +444,7 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
                         <FormItem className="col-span-1 md:col-span-2">
                           <FormLabel>Logradouro *</FormLabel>
                           <FormControl>
-                            <Input placeholder="Rua, Avenida, etc." {...field} />
+                            <Input placeholder="Rua, Avenida, etc." {...field} disabled={isLoadingCEP} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -433,7 +490,7 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
                         <FormItem>
                           <FormLabel>Bairro *</FormLabel>
                           <FormControl>
-                            <Input placeholder="Bairro" {...field} />
+                            <Input placeholder="Bairro" {...field} disabled={isLoadingCEP} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -447,7 +504,7 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
                         <FormItem>
                           <FormLabel>Cidade *</FormLabel>
                           <FormControl>
-                            <Input placeholder="Cidade" {...field} />
+                            <Input placeholder="Cidade" {...field} disabled={isLoadingCEP} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -461,7 +518,7 @@ export function DadosCadastraisModal({ isOpen, onClose, activityId }: DadosCadas
                         <FormItem>
                           <FormLabel>Estado *</FormLabel>
                           <FormControl>
-                            <Input placeholder="UF" maxLength={2} {...field} />
+                            <Input placeholder="UF" maxLength={2} {...field} disabled={isLoadingCEP} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
