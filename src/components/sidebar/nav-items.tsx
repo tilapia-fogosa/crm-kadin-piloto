@@ -36,7 +36,7 @@ export const generalNavigation = [
       { name: "Origens", href: "/clients/sources", icon: Link2 }
     ]
   },
-  { name: "Vendas", href: "/sales", icon: DollarSign },
+  // { name: "Vendas", href: "/sales", icon: DollarSign }, // Oculto do sidebar - acessível apenas via URL direta
   { name: "Indicadores Comerciais", href: "/commercial-stats", icon: LineChart },
   { name: "Automações de WhatsApp", href: "/automacoes-whatsapp", icon: Bot, requiresFeature: "automacao_whatsapp" },
   { name: "Pós-venda Comercial", href: "/pos-venda-comercial", icon: BarChart3, requiresFeature: "pos_venda_comercial" },
