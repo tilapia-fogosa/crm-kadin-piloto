@@ -89,10 +89,8 @@ export function useUserProductivityStats({
   const query = useQuery({
     queryKey: ['user-productivity-stats', selectedUnitIds, selectedUserIds],
     queryFn: fetchProductivityStats,
-    staleTime: 0, // Sempre considerar dados stale
-    gcTime: 30000, // 30s de cache
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   /**

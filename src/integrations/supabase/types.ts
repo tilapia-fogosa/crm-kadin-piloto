@@ -14,6 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts_payable: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string | null
+          description: string
+          due_date: string
+          id: string
+          notes: string | null
+          paid: boolean | null
+          paid_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          created_at?: string | null
+          description: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid?: boolean | null
+          paid_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid?: boolean | null
+          paid_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      accounts_receivable: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string | null
+          description: string
+          due_date: string
+          id: string
+          notes: string | null
+          received: boolean | null
+          received_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          created_at?: string | null
+          description: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          received?: boolean | null
+          received_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          received?: boolean | null
+          received_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ah_ignorar_coleta: {
         Row: {
           active: boolean
@@ -183,6 +267,9 @@ export type Database = {
           professor_id: string
           resolvido_em: string | null
           resolvido_por: string | null
+          slack_enviado: boolean | null
+          slack_enviado_em: string | null
+          slack_erro: string | null
           slack_mensagem_id: string | null
           status: string
           tipo_criterio: string
@@ -200,6 +287,9 @@ export type Database = {
           professor_id: string
           resolvido_em?: string | null
           resolvido_por?: string | null
+          slack_enviado?: boolean | null
+          slack_enviado_em?: string | null
+          slack_erro?: string | null
           slack_mensagem_id?: string | null
           status?: string
           tipo_criterio: string
@@ -217,6 +307,9 @@ export type Database = {
           professor_id?: string
           resolvido_em?: string | null
           resolvido_por?: string | null
+          slack_enviado?: boolean | null
+          slack_enviado_em?: string | null
+          slack_erro?: string | null
           slack_mensagem_id?: string | null
           status?: string
           tipo_criterio?: string
@@ -973,6 +1066,7 @@ export type Database = {
           photo_url: string | null
           responsavel: string
           rg: string | null
+          sincronizar_agenda_google: boolean
           status_sincronizacao: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id: string | null
           updated_at: string
@@ -1023,6 +1117,7 @@ export type Database = {
           photo_url?: string | null
           responsavel?: string
           rg?: string | null
+          sincronizar_agenda_google?: boolean
           status_sincronizacao?: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id?: string | null
           updated_at?: string
@@ -1073,6 +1168,7 @@ export type Database = {
           photo_url?: string | null
           responsavel?: string
           rg?: string | null
+          sincronizar_agenda_google?: boolean
           status_sincronizacao?: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id?: string | null
           updated_at?: string
@@ -1391,6 +1487,39 @@ export type Database = {
           responsavel_entrega_tipo?: string | null
           tamanho_camiseta?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      cash_accounts: {
+        Row: {
+          balance: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -2524,6 +2653,62 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      devolutivas_controle: {
+        Row: {
+          created_at: string | null
+          entregue: boolean | null
+          entregue_em: string | null
+          entregue_por: string | null
+          foto_escolhida: boolean | null
+          id: string
+          impresso: boolean | null
+          impresso_em: string | null
+          impresso_por: string | null
+          pessoa_id: string
+          tipo_pessoa: string
+          unit_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          entregue?: boolean | null
+          entregue_em?: string | null
+          entregue_por?: string | null
+          foto_escolhida?: boolean | null
+          id?: string
+          impresso?: boolean | null
+          impresso_em?: string | null
+          impresso_por?: string | null
+          pessoa_id: string
+          tipo_pessoa: string
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          entregue?: boolean | null
+          entregue_em?: string | null
+          entregue_por?: string | null
+          foto_escolhida?: boolean | null
+          id?: string
+          impresso?: boolean | null
+          impresso_em?: string | null
+          impresso_por?: string | null
+          pessoa_id?: string
+          tipo_pessoa?: string
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devolutivas_controle_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       disponibilidade_professores: {
         Row: {
@@ -4991,6 +5176,53 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          amount: number
+          cash_account_id: string | null
+          category: string | null
+          created_at: string | null
+          description: string
+          id: string
+          transaction_date: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          cash_account_id?: string | null
+          category?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          transaction_date?: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          cash_account_id?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          transaction_date?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_cash_account_id_fkey"
+            columns: ["cash_account_id"]
+            isOneToOne: false
+            referencedRelation: "cash_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trofeus_1000_dias: {
         Row: {
           aluno_id: string
@@ -5030,6 +5262,7 @@ export type Database = {
           horario_inicio: string | null
           id: string
           nome: string
+          perfil: string | null
           professor_id: string
           projeto: boolean | null
           sala: string | null
@@ -5046,6 +5279,7 @@ export type Database = {
           horario_inicio?: string | null
           id?: string
           nome: string
+          perfil?: string | null
           professor_id: string
           projeto?: boolean | null
           sala?: string | null
@@ -5062,6 +5296,7 @@ export type Database = {
           horario_inicio?: string | null
           id?: string
           nome?: string
+          perfil?: string | null
           professor_id?: string
           projeto?: boolean | null
           sala?: string | null
@@ -5641,6 +5876,7 @@ export type Database = {
           professor_slack: string | null
           sala: string | null
           total_alunos_ativos: number | null
+          total_funcionarios_ativos: number | null
           turma_id: string | null
           unit_id: string | null
         }
@@ -5771,7 +6007,6 @@ export type Database = {
       }
       vw_calendario_eventos_unificados: {
         Row: {
-          categoria: string | null
           created_at: string | null
           data_especifica: string | null
           descricao: string | null
@@ -5779,6 +6014,7 @@ export type Database = {
           evento_id: string | null
           horario_fim: string | null
           horario_inicio: string | null
+          perfil: string | null
           professor_id: string | null
           professor_nome: string | null
           professor_slack: string | null
@@ -5787,6 +6023,11 @@ export type Database = {
           sala_nome: string | null
           tipo_evento: string | null
           titulo: string | null
+          total_alunos_ativos: number | null
+          total_aulas_experimentais: number | null
+          total_faltas_futuras: number | null
+          total_funcionarios_ativos: number | null
+          total_reposicoes: number | null
           unit_id: string | null
         }
         Relationships: []
@@ -6111,7 +6352,6 @@ export type Database = {
       get_calendario_eventos_unificados: {
         Args: { p_data_fim: string; p_data_inicio: string; p_unit_id?: string }
         Returns: {
-          categoria: string
           created_at: string
           data_especifica: string
           descricao: string
@@ -6119,6 +6359,7 @@ export type Database = {
           evento_id: string
           horario_fim: string
           horario_inicio: string
+          perfil: string
           professor_id: string
           professor_nome: string
           professor_slack: string
@@ -6130,6 +6371,7 @@ export type Database = {
           total_alunos_ativos: number
           total_aulas_experimentais: number
           total_faltas_futuras: number
+          total_funcionarios_ativos: number
           total_reposicoes: number
           unit_id: string
         }[]
@@ -6167,6 +6409,7 @@ export type Database = {
           total_alunos_ativos: number
           total_aulas_experimentais: number
           total_faltas_futuras: number
+          total_funcionarios_ativos: number
           total_reposicoes: number
           turma_id: string
           unit_id: string
@@ -6756,6 +6999,7 @@ export type Database = {
         }
         Returns: Json
       }
+      sync_devolutivas_foto_escolhida: { Args: never; Returns: undefined }
       toggle_pos_venda_activity_status: {
         Args: {
           p_atividade_config_id: string
