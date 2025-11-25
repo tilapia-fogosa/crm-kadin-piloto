@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.activity-webhook]
 verify_jwt = false
 
+[functions.send-whatsapp-message]
+verify_jwt = false
+
 # Nota: O processamento de webhooks de venda foi desativado
 # e está sendo tratado pelos webhooks de clientes com status "matriculado"
 
