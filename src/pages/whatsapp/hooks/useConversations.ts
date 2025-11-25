@@ -13,19 +13,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUnit } from "@/contexts/UnitContext";
 import { Conversation } from "../types/whatsapp.types";
 
 export function useConversations() {
   const { session } = useAuth();
+  const { selectedUnitId } = useUnit();
   
   console.log('useConversations: Iniciando busca de conversas', {
     hasSession: !!session,
-    userId: session?.user?.id
+    userId: session?.user?.id,
+    selectedUnitId
   });
   
   return useQuery({
-    queryKey: ['whatsapp-conversations', session?.user?.id],
-    enabled: !!session,
+    queryKey: ['whatsapp-conversations', session?.user?.id, selectedUnitId],
+    enabled: !!session && !!selectedUnitId,
     queryFn: async () => {
       console.log('useConversations: Executando query no Supabase');
       
@@ -61,6 +64,7 @@ export function useConversations() {
           )
         `)
         .eq('active', true)
+        .eq('unit_id', selectedUnitId)
         .order('created_at', { 
           referencedTable: 'historico_comercial', 
           ascending: false 
