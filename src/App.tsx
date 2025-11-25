@@ -40,21 +40,22 @@ import PoliticaPrivacidade from "@/pages/public/PoliticaPrivacidade";
 import TermosServico from "@/pages/public/TermosServico";
 import WhatsAppPage from "@/pages/whatsapp";
 
+// Log: Criar QueryClient FORA do componente para evitar recriação
+// Isso resolve o erro "Cannot read properties of null (reading 'useEffect')"
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 4 * 60 * 60 * 1000, // 4 horas
+      gcTime: 5 * 60 * 60 * 1000, // 5 horas
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 // Componente App que contém o QueryClientProvider
 function App() {
   console.log('Renderizando componente App');
-  
-  // Criar QueryClient dentro do componente (não fora dele)
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 4 * 60 * 60 * 1000, // 4 horas
-        gcTime: 5 * 60 * 60 * 1000, // 5 horas
-        retry: 1,
-        refetchOnWindowFocus: false,
-      },
-    },
-  });
   
   return (
     <QueryClientProvider client={queryClient}>
