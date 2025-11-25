@@ -52,7 +52,7 @@ export function ConversationItem({ conversation, isSelected, onClick }: Conversa
     <button
       onClick={onClick}
       className={cn(
-        "w-full p-3 flex items-start gap-3 hover:bg-muted/50 transition-colors border-b border-border h-20",
+        "w-full p-3 flex items-start gap-3 hover:bg-muted/50 transition-colors border-b border-border",
         isSelected && "bg-muted"
       )}
     >
@@ -79,7 +79,7 @@ export function ConversationItem({ conversation, isSelected, onClick }: Conversa
           {conversation.lastMessageFromMe && (
             <CheckCheck className="h-3 w-3 flex-shrink-0" />
           )}
-          <span className="truncate line-clamp-1">
+          <span className="truncate">
             {conversation.lastMessage}
           </span>
         </div>
