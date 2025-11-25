@@ -46,58 +46,81 @@ export function useConversations() {
         return [];
       }
 
-      // Buscar clientes que têm mensagens, com última mensagem
-      const { data, error } = await supabase
-        .from('clients')
+      // Buscar mensagens diretamente com JOIN para evitar problemas com RLS em nested selects
+      const { data: messages, error: messagesError } = await supabase
+        .from('historico_comercial')
         .select(`
           id,
-          name,
-          phone_number,
-          primeiro_nome,
-          status,
-          unit_id,
-          historico_comercial (
+          mensagem,
+          created_at,
+          from_me,
+          client_id,
+          clients (
             id,
-            mensagem,
-            created_at,
-            from_me
+            name,
+            phone_number,
+            primeiro_nome,
+            status,
+            unit_id
           )
         `)
-        .eq('active', true)
-        .eq('unit_id', selectedUnitId)
-        .order('created_at', { 
-          referencedTable: 'historico_comercial', 
-          ascending: false 
-        });
+        .eq('clients.unit_id', selectedUnitId)
+        .eq('clients.active', true)
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('useConversations: Erro ao buscar conversas:', error);
-        throw error;
+      if (messagesError) {
+        console.error('useConversations: Erro ao buscar mensagens:', messagesError);
+        throw messagesError;
       }
 
-      console.log('useConversations: Dados recebidos:', data?.length, 'clientes');
+      console.log('useConversations: Mensagens recebidas:', messages?.length);
 
-      // Filtrar apenas clientes que têm mensagens
-      const clientsWithMessages = data?.filter(
-        client => client.historico_comercial && client.historico_comercial.length > 0
-      ) || [];
+      // Agrupar mensagens por cliente
+      const clientsMap = new Map<string, {
+        client: any;
+        messages: any[];
+      }>();
 
-      console.log('useConversations: Clientes com mensagens:', clientsWithMessages.length);
+      messages?.forEach(msg => {
+        if (msg.clients) {
+          const clientId = msg.clients.id;
+          if (!clientsMap.has(clientId)) {
+            clientsMap.set(clientId, {
+              client: msg.clients,
+              messages: []
+            });
+          }
+          clientsMap.get(clientId)!.messages.push({
+            id: msg.id,
+            mensagem: msg.mensagem,
+            created_at: msg.created_at,
+            from_me: msg.from_me
+          });
+        }
+      });
+
+      console.log('useConversations: Clientes com mensagens:', clientsMap.size);
 
       // Mapear para o formato de conversa
-      const conversations: Conversation[] = clientsWithMessages.map(client => ({
-        clientId: client.id,
-        clientName: client.name,
-        phoneNumber: client.phone_number,
-        primeiroNome: client.primeiro_nome || client.name.split(' ')[0],
-        status: client.status,
-        unitId: client.unit_id || '',
-        // Pegar última mensagem
-        lastMessage: client.historico_comercial?.[0]?.mensagem || '',
-        lastMessageTime: client.historico_comercial?.[0]?.created_at || '',
-        lastMessageFromMe: client.historico_comercial?.[0]?.from_me || false,
-        totalMessages: client.historico_comercial?.length || 0
-      })).sort((a, b) => 
+      const conversations: Conversation[] = Array.from(clientsMap.values()).map(({ client, messages }) => {
+        // Ordenar mensagens por data (mais recente primeiro)
+        const sortedMessages = messages.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        return {
+          clientId: client.id,
+          clientName: client.name,
+          phoneNumber: client.phone_number,
+          primeiroNome: client.primeiro_nome || client.name.split(' ')[0],
+          status: client.status,
+          unitId: client.unit_id || '',
+          lastMessage: sortedMessages[0]?.mensagem || '',
+          lastMessageTime: sortedMessages[0]?.created_at || '',
+          lastMessageFromMe: sortedMessages[0]?.from_me || false,
+          totalMessages: messages.length
+        };
+      }).sort((a, b) => 
         new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
       );
 
