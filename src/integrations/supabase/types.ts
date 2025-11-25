@@ -478,6 +478,7 @@ export type Database = {
           niveldesafio: string | null
           nome: string
           oculto_retencoes: boolean
+          pdf_devolutiva_url: string | null
           percepcao_coordenador: string | null
           pontos_atencao: string | null
           responsavel: string
@@ -525,6 +526,7 @@ export type Database = {
           niveldesafio?: string | null
           nome: string
           oculto_retencoes?: boolean
+          pdf_devolutiva_url?: string | null
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
@@ -572,6 +574,7 @@ export type Database = {
           niveldesafio?: string | null
           nome?: string
           oculto_retencoes?: boolean
+          pdf_devolutiva_url?: string | null
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           responsavel?: string
@@ -2467,11 +2470,13 @@ export type Database = {
       convidados_eventos: {
         Row: {
           active: boolean
+          compareceu: boolean | null
           created_at: string
           evento_id: string
           forma_pagamento: string
           id: string
           nome_completo: string
+          pago: boolean | null
           quem_convidou_id: string
           quem_convidou_nome: string
           quem_convidou_tipo: string
@@ -2482,14 +2487,17 @@ export type Database = {
           responsavel_nome: string
           telefone_contato: string
           valor_pago: number | null
+          valorizado: boolean | null
         }
         Insert: {
           active?: boolean
+          compareceu?: boolean | null
           created_at?: string
           evento_id: string
           forma_pagamento: string
           id?: string
           nome_completo: string
+          pago?: boolean | null
           quem_convidou_id: string
           quem_convidou_nome: string
           quem_convidou_tipo: string
@@ -2500,14 +2508,17 @@ export type Database = {
           responsavel_nome: string
           telefone_contato: string
           valor_pago?: number | null
+          valorizado?: boolean | null
         }
         Update: {
           active?: boolean
+          compareceu?: boolean | null
           created_at?: string
           evento_id?: string
           forma_pagamento?: string
           id?: string
           nome_completo?: string
+          pago?: boolean | null
           quem_convidou_id?: string
           quem_convidou_nome?: string
           quem_convidou_tipo?: string
@@ -2518,6 +2529,7 @@ export type Database = {
           responsavel_nome?: string
           telefone_contato?: string
           valor_pago?: number | null
+          valorizado?: boolean | null
         }
         Relationships: [
           {
@@ -2794,30 +2806,39 @@ export type Database = {
       evento_participantes: {
         Row: {
           aluno_id: string
+          compareceu: boolean | null
           created_at: string
           evento_id: string
           forma_pagamento: string
           id: string
+          pago: boolean | null
           responsavel_id: string | null
           valor_pago: number | null
+          valorizado: boolean | null
         }
         Insert: {
           aluno_id: string
+          compareceu?: boolean | null
           created_at?: string
           evento_id: string
           forma_pagamento: string
           id?: string
+          pago?: boolean | null
           responsavel_id?: string | null
           valor_pago?: number | null
+          valorizado?: boolean | null
         }
         Update: {
           aluno_id?: string
+          compareceu?: boolean | null
           created_at?: string
           evento_id?: string
           forma_pagamento?: string
           id?: string
+          pago?: boolean | null
           responsavel_id?: string | null
           valor_pago?: number | null
+          valorizado?: boolean | null
         }
         Relationships: [
           {
@@ -3310,6 +3331,7 @@ export type Database = {
           motivo_procura: string | null
           niveldesafio: string | null
           nome: string
+          pdf_devolutiva_url: string | null
           percepcao_coordenador: string | null
           pontos_atencao: string | null
           telefone: string | null
@@ -3348,6 +3370,7 @@ export type Database = {
           motivo_procura?: string | null
           niveldesafio?: string | null
           nome: string
+          pdf_devolutiva_url?: string | null
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           telefone?: string | null
@@ -3386,6 +3409,7 @@ export type Database = {
           motivo_procura?: string | null
           niveldesafio?: string | null
           nome?: string
+          pdf_devolutiva_url?: string | null
           percepcao_coordenador?: string | null
           pontos_atencao?: string | null
           telefone?: string | null
@@ -3445,6 +3469,45 @@ export type Database = {
           turma_id?: string | null
         }
         Relationships: []
+      }
+      historico_comercial: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          from_me: boolean | null
+          id: number
+          mensagem: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          from_me?: boolean | null
+          id?: number
+          mensagem?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          from_me?: boolean | null
+          id?: number
+          mensagem?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_comercial_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_comercial_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kanban_cards: {
         Row: {

@@ -38,6 +38,7 @@ import AutomacoesWhatsAppPage from "@/pages/automacoes-whatsapp";
 import PosVendaComercialPage from "@/pages/pos-venda-comercial/index";
 import PoliticaPrivacidade from "@/pages/public/PoliticaPrivacidade";
 import TermosServico from "@/pages/public/TermosServico";
+import WhatsAppPage from "@/pages/whatsapp";
 
 // Componente App que contém o QueryClientProvider
 function App() {
@@ -115,6 +116,7 @@ function App() {
                     <Route path="/clients/sources" element={<LeadSourcesPage />} />
                     <Route path="/automacoes-whatsapp" element={<AutomacoesWhatsAppPage />} />
                     <Route path="/pos-venda-comercial" element={<PosVendaComercialPage />} />
+                    <Route path="/whatsapp" element={<WhatsAppPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Route>
                 </Routes>
