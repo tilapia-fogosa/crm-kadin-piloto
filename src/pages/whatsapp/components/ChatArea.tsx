@@ -42,10 +42,14 @@ export function ChatArea({ selectedClientId, conversations }: ChatAreaProps) {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col overflow-hidden">
       <ChatHeader conversation={selectedConversation} />
-      <ChatMessages clientId={selectedConversation.clientId} />
-      <ChatInput conversation={selectedConversation} />
+      <div className="flex-1 overflow-hidden">
+        <ChatMessages clientId={selectedConversation.clientId} />
+      </div>
+      <div className="flex-shrink-0">
+        <ChatInput conversation={selectedConversation} />
+      </div>
     </div>
   );
 }

@@ -1,19 +1,19 @@
 /**
  * Lista de mensagens do chat
  * 
- * Log: Componente que renderiza todas as mensagens de uma conversa
+ * Log: Componente que renderiza todas as mensagens de uma conversa com scroll
  * Etapas:
  * 1. Busca mensagens usando useMessages hook
  * 2. Implementa auto-scroll para a última mensagem
  * 3. Agrupa mensagens por data
  * 4. Renderiza separadores de data
  * 5. Exibe ChatMessage para cada mensagem
+ * 6. Usa overflow-y-auto para scroll suave
  * 
  * Utiliza cores do sistema: muted, muted-foreground
  */
 
 import { useEffect, useRef } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { format, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChatMessage } from "./ChatMessage";
@@ -39,7 +39,7 @@ export function ChatMessages({ clientId }: ChatMessagesProps) {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-muted/30">
+      <div className="h-full flex items-center justify-center bg-muted/30">
         <p className="text-muted-foreground">Carregando mensagens...</p>
       </div>
     );
@@ -47,7 +47,7 @@ export function ChatMessages({ clientId }: ChatMessagesProps) {
 
   if (!messages || messages.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-muted/30">
+      <div className="h-full flex items-center justify-center bg-muted/30">
         <p className="text-muted-foreground">Nenhuma mensagem ainda</p>
       </div>
     );
@@ -67,7 +67,7 @@ export function ChatMessages({ clientId }: ChatMessagesProps) {
   });
 
   return (
-    <ScrollArea className="flex-1 bg-muted/30" ref={scrollRef}>
+    <div className="h-full overflow-y-auto bg-muted/30" ref={scrollRef}>
       <div className="p-4 space-y-4">
         {groupedMessages.map((group, groupIndex) => (
           <div key={groupIndex}>
@@ -85,6 +85,6 @@ export function ChatMessages({ clientId }: ChatMessagesProps) {
           </div>
         ))}
       </div>
-    </ScrollArea>
+    </div>
   );
 }
