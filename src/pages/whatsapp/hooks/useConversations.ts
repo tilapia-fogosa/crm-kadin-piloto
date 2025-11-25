@@ -3,24 +3,46 @@
  * 
  * Log: Hook personalizado que busca clientes com mensagens
  * Etapas:
- * 1. Busca clientes que possuem histórico comercial (mensagens)
- * 2. Faz JOIN com historico_comercial para pegar última mensagem
- * 3. Ordena por data da última mensagem (mais recente primeiro)
- * 4. Mapeia para o formato Conversation
+ * 1. Verifica se há sessão ativa antes de executar query
+ * 2. Busca clientes que possuem histórico comercial (mensagens)
+ * 3. Faz JOIN com historico_comercial para pegar última mensagem
+ * 4. Ordena por data da última mensagem (mais recente primeiro)
+ * 5. Mapeia para o formato Conversation
  */
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Conversation } from "../types/whatsapp.types";
 
 export function useConversations() {
-  console.log('useConversations: Iniciando busca de conversas');
+  const { session } = useAuth();
+  
+  console.log('useConversations: Iniciando busca de conversas', {
+    hasSession: !!session,
+    userId: session?.user?.id
+  });
   
   return useQuery({
-    queryKey: ['whatsapp-conversations'],
+    queryKey: ['whatsapp-conversations', session?.user?.id],
+    enabled: !!session,
     queryFn: async () => {
       console.log('useConversations: Executando query no Supabase');
       
+      // Verificar usuário autenticado
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      console.log('useConversations: Usuário autenticado:', {
+        userId: user?.id,
+        email: user?.email,
+        hasAuthError: !!authError
+      });
+      
+      if (authError || !user) {
+        console.error('useConversations: Erro de autenticação ou usuário não encontrado:', authError);
+        return [];
+      }
+
       // Buscar clientes que têm mensagens, com última mensagem
       const { data, error } = await supabase
         .from('clients')
