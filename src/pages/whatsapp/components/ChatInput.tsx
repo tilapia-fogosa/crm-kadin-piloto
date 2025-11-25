@@ -16,6 +16,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Smile, Paperclip, Mic, Send } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Conversation } from "../types/whatsapp.types";
@@ -29,6 +30,7 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   console.log('ChatInput: Renderizando input de mensagem para cliente:', conversation.clientId);
 
@@ -72,6 +74,11 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
 
       // Limpar input
       setMessage("");
+
+      // Invalida cache para atualizar mensagens e conversas
+      console.log('ChatInput: Invalidando cache de mensagens e conversas');
+      queryClient.invalidateQueries({ queryKey: ['whatsapp-messages', conversation.clientId] });
+      queryClient.invalidateQueries({ queryKey: ['whatsapp-conversations'] });
 
       // Exibir toast de sucesso
       toast({
