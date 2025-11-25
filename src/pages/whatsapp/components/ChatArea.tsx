@@ -45,7 +45,7 @@ export function ChatArea({ selectedClientId, conversations }: ChatAreaProps) {
     <div className="flex-1 flex flex-col">
       <ChatHeader conversation={selectedConversation} />
       <ChatMessages clientId={selectedConversation.clientId} />
-      <ChatInput />
+      <ChatInput conversation={selectedConversation} />
     </div>
   );
 }
