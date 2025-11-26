@@ -18,6 +18,7 @@ interface SendMessagePayload {
   user_name: string;
   message: string;
   client_id: string;
+  profile_id: string;
 }
 
 Deno.serve(async (req) => {
@@ -38,11 +39,11 @@ Deno.serve(async (req) => {
     });
 
     // Validar campos obrigatórios
-    if (!payload.phone_number || !payload.user_name || !payload.message || !payload.client_id) {
+    if (!payload.phone_number || !payload.user_name || !payload.message || !payload.client_id || !payload.profile_id) {
       console.error('send-whatsapp-message: Campos obrigatórios faltando');
       return new Response(
         JSON.stringify({ 
-          error: 'Campos obrigatórios: phone_number, user_name, message, client_id' 
+          error: 'Campos obrigatórios: phone_number, user_name, message, client_id, profile_id' 
         }),
         { 
           status: 400, 
@@ -69,6 +70,7 @@ Deno.serve(async (req) => {
       user_name: payload.user_name,
       message: payload.message,
       client_id: payload.client_id,
+      profile_id: payload.profile_id,
       sent_at: new Date().toISOString()
     };
 
