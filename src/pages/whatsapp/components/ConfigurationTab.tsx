@@ -27,6 +27,8 @@ import { Plus } from "lucide-react";
 import { useWhatsAppStatus } from "../hooks/useWhatsAppStatus";
 import { AutoMessageModal } from "./AutoMessageModal";
 import { AutoMessagesList } from "./AutoMessagesList";
+import { MensagemAutomaticaModal } from "./MensagemAutomaticaModal";
+import { MensagensAutomaticasList } from "./MensagensAutomaticasList";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function ConfigurationTab() {
@@ -34,6 +36,9 @@ export function ConfigurationTab() {
   const [isActive, setIsActive] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState<{ id: string; nome: string; mensagem: string } | null>(null);
+  
+  const [autoModalOpen, setAutoModalOpen] = useState(false);
+  const [autoEditData, setAutoEditData] = useState<{ id: string; tipo: string; mensagem: string } | null>(null);
   
   const {
     data: whatsappStatus,
@@ -55,6 +60,12 @@ export function ConfigurationTab() {
     console.log('ConfigurationTab: Abrindo modal para editar mensagem');
     setEditData({ id, nome, mensagem });
     setModalOpen(true);
+  };
+
+  const handleEditAuto = (id: string, tipo: string, mensagem: string) => {
+    console.log('ConfigurationTab: Abrindo modal para editar mensagem automática');
+    setAutoEditData({ id, tipo, mensagem });
+    setAutoModalOpen(true);
   };
   return <ScrollArea className="h-full pr-4">
       <div className="space-y-6 pb-4">
@@ -105,13 +116,33 @@ export function ConfigurationTab() {
           <AutoMessagesList onEdit={handleEdit} />
         </CardContent>
       </Card>
+
+      {/* Seção de Mensagens Automáticas */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Mensagens Automáticas</CardTitle>
+          <CardDescription>
+            Configure as mensagens automáticas de boas-vindas e valorização
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <MensagensAutomaticasList onEdit={handleEditAuto} />
+        </CardContent>
+      </Card>
       </div>
 
-      {/* Modal de criação/edição */}
+      {/* Modal de criação/edição de mensagens padronizadas */}
       <AutoMessageModal
         open={modalOpen}
         onOpenChange={setModalOpen}
         editData={editData}
+      />
+
+      {/* Modal de edição de mensagens automáticas */}
+      <MensagemAutomaticaModal
+        open={autoModalOpen}
+        onOpenChange={setAutoModalOpen}
+        editData={autoEditData}
       />
     </ScrollArea>;
 }

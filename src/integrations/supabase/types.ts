@@ -5946,6 +5946,36 @@ export type Database = {
           },
         ]
       }
+      whatsapp_mensagens_automaticas: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          mensagem: string
+          profile_id: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          mensagem: string
+          profile_id: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          mensagem?: string
+          profile_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       alunos_projeto_sao_rafael: {
