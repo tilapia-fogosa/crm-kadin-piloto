@@ -45,9 +45,14 @@ export function ChatMessage({ message }: ChatMessageProps) {
         <p className="text-sm whitespace-pre-wrap break-words">
           {message.content}
         </p>
-        <span className="text-xs opacity-70 mt-1 block text-right">
-          {time}
-        </span>
+        <div className="flex items-center justify-between mt-1 text-xs opacity-70 gap-2">
+          {message.fromMe && message.createdByName && (
+            <span>{message.createdByName}</span>
+          )}
+          <span className={!message.fromMe || !message.createdByName ? "ml-auto" : ""}>
+            {time}
+          </span>
+        </div>
       </div>
     </div>
   );

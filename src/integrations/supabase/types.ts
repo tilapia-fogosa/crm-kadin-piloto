@@ -3474,6 +3474,7 @@ export type Database = {
         Row: {
           client_id: string | null
           created_at: string
+          created_by: string | null
           from_me: boolean | null
           id: number
           mensagem: string | null
@@ -3481,6 +3482,7 @@ export type Database = {
         Insert: {
           client_id?: string | null
           created_at?: string
+          created_by?: string | null
           from_me?: boolean | null
           id?: number
           mensagem?: string | null
@@ -3488,6 +3490,7 @@ export type Database = {
         Update: {
           client_id?: string | null
           created_at?: string
+          created_by?: string | null
           from_me?: boolean | null
           id?: number
           mensagem?: string | null
@@ -3505,6 +3508,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "kanban_client_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_comercial_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
