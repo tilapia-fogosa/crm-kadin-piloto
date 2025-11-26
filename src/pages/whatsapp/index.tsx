@@ -48,7 +48,7 @@ export default function WhatsAppPage() {
           <ConversationsTab />
         </TabsContent>
 
-        <TabsContent value="configuracao" className="mt-4 data-[state=inactive]:hidden">
+        <TabsContent value="configuracao" className="flex-1 mt-4 overflow-hidden data-[state=inactive]:hidden">
           <ConfigurationTab />
         </TabsContent>
       </Tabs>
