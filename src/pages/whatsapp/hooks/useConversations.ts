@@ -48,7 +48,7 @@ export function useConversations() {
       }
 
       // Buscar mensagens diretamente com JOIN para evitar problemas com RLS em nested selects
-      // Log: Removido filtro .eq('clients.active', true) para incluir histórico de clientes inativos
+      // Log: Filtrando apenas clientes ativos para exibir conversas relevantes
       const { data: messages, error: messagesError } = await supabase
         .from('historico_comercial')
         .select(`
@@ -65,11 +65,11 @@ export function useConversations() {
             primeiro_nome,
             status,
             unit_id,
-            tipo_atendimento,
-            active
+            tipo_atendimento
           )
         `)
         .eq('clients.unit_id', selectedUnitId)
+        .eq('clients.active', true)
         .order('created_at', { ascending: false });
 
       if (messagesError) {
