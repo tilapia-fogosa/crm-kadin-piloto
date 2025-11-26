@@ -13,9 +13,10 @@
  */
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search } from "lucide-react";
+import { MessageCircle, Search } from "lucide-react";
 import { ConversationItem } from "./ConversationItem";
 import { useConversations } from "../hooks/useConversations";
 
@@ -30,20 +31,29 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
   console.log('ConversationList: Renderizando lista de conversas');
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const { data: conversations, isLoading } = useConversations();
 
   // Filtrar conversas pela busca
-  const filteredConversations = conversations?.filter(conv =>
+  let filteredConversations = conversations?.filter(conv =>
     conv.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     conv.phoneNumber.includes(searchQuery)
   );
 
-  console.log('ConversationList: Conversas filtradas:', filteredConversations?.length);
+  // Filtrar apenas não lidas se toggle estiver ativo
+  if (showUnreadOnly) {
+    filteredConversations = filteredConversations?.filter(conv => conv.unreadCount > 0);
+  }
+
+  // Calcular total de não lidas
+  const totalUnread = conversations?.reduce((sum, conv) => sum + conv.unreadCount, 0) || 0;
+
+  console.log('ConversationList: Conversas filtradas:', filteredConversations?.length, 'Total não lidas:', totalUnread);
 
   return (
     <div className="w-full md:w-[350px] flex flex-col border-r border-border bg-card h-full">
-      {/* Header com busca */}
-      <div className="p-3 border-b border-border bg-card">
+      {/* Header com busca e filtro */}
+      <div className="p-3 border-b border-border bg-card space-y-2">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -54,6 +64,17 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
             className="pl-9"
           />
         </div>
+        
+        {/* Botão de filtro de não lidas */}
+        <Button
+          variant={showUnreadOnly ? "default" : "outline"}
+          size="sm"
+          className="w-full"
+          onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+        >
+          <MessageCircle className="h-4 w-4 mr-2" />
+          Não lidas {totalUnread > 0 && `(${totalUnread})`}
+        </Button>
       </div>
 
       {/* Lista de conversas */}

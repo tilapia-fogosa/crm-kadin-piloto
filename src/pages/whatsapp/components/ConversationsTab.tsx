@@ -13,11 +13,12 @@
  * Utiliza cores do sistema: background, card
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { ConversationList } from "./ConversationList";
 import { ChatArea } from "./ChatArea";
 import { useConversations } from "../hooks/useConversations";
+import { useMarkAsRead } from "../hooks/useMarkAsRead";
 import { useToggleTipoAtendimento } from "../hooks/useToggleTipoAtendimento";
 import { CardSheet } from "@/components/kanban/components/sheet/CardSheet";
 import { useActivityOperations } from "@/components/kanban/hooks/useActivityOperations";
@@ -51,11 +52,20 @@ export function ConversationsTab() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [activityModalClientId, setActivityModalClientId] = useState<string | null>(null);
   const { data: conversations = [] } = useConversations();
+  const markAsRead = useMarkAsRead();
 
   // Hooks para operações de atividades e tipo de atendimento
   const { registerAttempt, registerEffectiveContact, registerScheduling, submitAttendance } = useActivityOperations();
   const { handleWhatsAppClick } = useWhatsApp();
   const toggleTipoAtendimento = useToggleTipoAtendimento();
+
+  // Marcar mensagens como lidas quando selecionar uma conversa
+  useEffect(() => {
+    if (selectedClientId) {
+      console.log('ConversationsTab: Marcando mensagens como lidas para cliente:', selectedClientId);
+      markAsRead.mutate(selectedClientId);
+    }
+  }, [selectedClientId]);
 
   // Encontrar a conversa para o modal de atividades
   const activityModalConversation = conversations.find(c => c.clientId === activityModalClientId);
