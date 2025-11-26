@@ -43,35 +43,35 @@ export function useMarkAsRead() {
     onMutate: async (clientId: string) => {
       console.log('useMarkAsRead: Iniciando atualização otimista para cliente:', clientId);
       
-      // Cancelar queries em andamento para evitar conflitos
+      // Cancelar queries em andamento que começam com 'whatsapp-conversations'
       await queryClient.cancelQueries({ queryKey: ['whatsapp-conversations'] });
       
-      // Pegar dados atuais do cache
-      const previousData = queryClient.getQueryData(['whatsapp-conversations']);
-      console.log('useMarkAsRead: Dados atuais no cache:', previousData);
-      
-      // Atualizar cache otimisticamente - zerar unreadCount imediatamente
-      queryClient.setQueryData(['whatsapp-conversations'], (oldData: any) => {
-        if (!oldData) {
-          console.log('useMarkAsRead: Nenhum dado no cache para atualizar');
-          return oldData;
-        }
-        
-        console.log('useMarkAsRead: Atualizando cache otimisticamente', oldData);
-        const newData = oldData.map((conversation: any) => {
-          if (conversation.clientId === clientId) {
-            console.log(`useMarkAsRead: Zerando unreadCount para cliente ${clientId}`, {
-              clientName: conversation.clientName,
-              unreadCountAntes: conversation.unreadCount,
-              unreadCountDepois: 0
-            });
-            return { ...conversation, unreadCount: 0 };
+      // Atualizar TODAS as queries que começam com 'whatsapp-conversations'
+      // usando setQueriesData com match parcial
+      queryClient.setQueriesData(
+        { queryKey: ['whatsapp-conversations'] },
+        (oldData: any) => {
+          if (!oldData) {
+            console.log('useMarkAsRead: Nenhum dado no cache para atualizar');
+            return oldData;
           }
-          return conversation;
-        });
-        console.log('useMarkAsRead: Novo estado do cache:', newData);
-        return newData;
-      });
+          
+          console.log('useMarkAsRead: Atualizando cache otimisticamente', oldData);
+          const newData = oldData.map((conversation: any) => {
+            if (conversation.clientId === clientId) {
+              console.log(`useMarkAsRead: Zerando unreadCount para cliente ${clientId}`, {
+                clientName: conversation.clientName,
+                unreadCountAntes: conversation.unreadCount,
+                unreadCountDepois: 0
+              });
+              return { ...conversation, unreadCount: 0 };
+            }
+            return conversation;
+          });
+          console.log('useMarkAsRead: Novo estado do cache:', newData);
+          return newData;
+        }
+      );
     },
     onSuccess: () => {
       console.log('useMarkAsRead: Mutation bem-sucedida, invalidando query de conversas');
