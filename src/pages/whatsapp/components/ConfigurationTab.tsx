@@ -24,6 +24,8 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useWhatsAppStatus } from "../hooks/useWhatsAppStatus";
 import { AutoMessageForm } from "./AutoMessageForm";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
 export function ConfigurationTab() {
   console.log('ConfigurationTab: Renderizando aba de configuração');
   const [isActive, setIsActive] = useState(true);
@@ -35,8 +37,9 @@ export function ConfigurationTab() {
     console.log('ConfigurationTab: Alterando status para:', checked ? 'Ativo' : 'Inativo');
     setIsActive(checked);
   };
-  return <div className="space-y-6">
-      <Card>
+  return <ScrollArea className="h-full pr-4">
+      <div className="space-y-6 pb-4">
+        <Card>
         <CardHeader>
           <CardTitle>Configurações do WhatsApp</CardTitle>
           <CardDescription>
@@ -65,5 +68,6 @@ export function ConfigurationTab() {
 
       {/* Seção de Mensagens Automáticas */}
       <AutoMessageForm />
-    </div>;
+      </div>
+    </ScrollArea>;
 }
