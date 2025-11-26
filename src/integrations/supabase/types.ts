@@ -5902,6 +5902,44 @@ export type Database = {
           },
         ]
       }
+      whatsapp_auto_messages: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          id: string
+          mensagem: string
+          nome: string
+          profile_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          id?: string
+          mensagem: string
+          nome: string
+          profile_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          id?: string
+          mensagem?: string
+          nome?: string
+          profile_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_auto_messages_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       alunos_projeto_sao_rafael: {

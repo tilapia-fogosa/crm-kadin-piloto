@@ -35,3 +35,14 @@ export interface Message {
 export interface WhatsAppConfig {
   isActive: boolean;
 }
+
+// Mensagem automática
+export interface AutoMessage {
+  id: string;
+  profileId: string;
+  nome: string;
+  mensagem: string;
+  ativo: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
