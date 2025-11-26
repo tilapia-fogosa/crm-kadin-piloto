@@ -29,7 +29,7 @@ export function useConversations() {
   return useQuery({
     queryKey: ['whatsapp-conversations', session?.user?.id, selectedUnitId],
     enabled: !!session && !!selectedUnitId,
-    refetchInterval: 60000, // Atualiza a cada 1 minuto
+    // Removido refetchInterval: agora usamos realtime subscription
     queryFn: async () => {
       console.log('useConversations: Executando query no Supabase');
 

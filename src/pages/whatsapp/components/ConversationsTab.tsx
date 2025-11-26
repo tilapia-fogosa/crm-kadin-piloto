@@ -20,11 +20,13 @@ import { ChatArea } from "./ChatArea";
 import { useConversations } from "../hooks/useConversations";
 import { useMarkAsRead } from "../hooks/useMarkAsRead";
 import { useToggleTipoAtendimento } from "../hooks/useToggleTipoAtendimento";
+import { useMessagesRealtime } from "../hooks/useMessagesRealtime";
 import { CardSheet } from "@/components/kanban/components/sheet/CardSheet";
 import { useActivityOperations } from "@/components/kanban/hooks/useActivityOperations";
 import { useWhatsApp } from "@/components/kanban/hooks/useWhatsApp";
 import { KanbanCard } from "@/components/kanban/types";
 import { Conversation } from "../types/whatsapp.types";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Adaptador para transformar Conversation em KanbanCard
 function conversationToKanbanCard(conversation: Conversation): KanbanCard {
@@ -54,6 +56,10 @@ export function ConversationsTab() {
   const [activityModalClientId, setActivityModalClientId] = useState<string | null>(null);
   const { data: conversations = [] } = useConversations();
   const markAsRead = useMarkAsRead();
+  const queryClient = useQueryClient();
+
+  // Ativar realtime subscription para mensagens WhatsApp
+  useMessagesRealtime();
 
   // Hooks para operações de atividades e tipo de atendimento
   const { registerAttempt, registerEffectiveContact, registerScheduling, submitAttendance } = useActivityOperations();
@@ -92,6 +98,17 @@ export function ConversationsTab() {
     toggleTipoAtendimento.mutate({ clientId, newTipo });
   };
 
+  const handleSelectClient = (clientId: string) => {
+    console.log('ConversationsTab: Selecionando cliente e invalidando cache:', clientId);
+    
+    // Invalida cache de mensagens do cliente selecionado para garantir dados mais recentes
+    queryClient.invalidateQueries({ 
+      queryKey: ['whatsapp-messages', clientId] 
+    });
+    
+    setSelectedClientId(clientId);
+  };
+
   return (
     <>
       <Card className="h-full overflow-hidden border-0 shadow-none md:border">
@@ -100,7 +117,7 @@ export function ConversationsTab() {
           <div className={selectedClientId ? "hidden md:block h-full md:w-[350px] md:flex-shrink-0" : "w-full md:w-[350px] md:flex-shrink-0 h-full"}>
             <ConversationList
               selectedClientId={selectedClientId}
-              onSelectClient={setSelectedClientId}
+              onSelectClient={handleSelectClient}
               onActivityClick={handleActivityClick}
               onToggleTipoAtendimento={handleToggleTipoAtendimento}
             />
