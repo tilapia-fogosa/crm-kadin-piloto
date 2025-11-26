@@ -15,12 +15,13 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Smile, Mic, Send } from "lucide-react";
+import { Smile, MessageSquare, Send } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Conversation } from "../types/whatsapp.types";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
+import { SelectAutoMessageModal } from "./SelectAutoMessageModal";
 
 interface ChatInputProps {
   conversation: Conversation;
@@ -31,6 +32,7 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAutoMessagesModal, setShowAutoMessagesModal] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -135,6 +137,12 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
     }
   };
 
+  const handleSelectAutoMessage = (autoMessage: string) => {
+    console.log('ChatInput: Mensagem automática selecionada');
+    setMessage(autoMessage);
+    setShowAutoMessagesModal(false);
+  };
+
   return (
     <div className="p-3 border-t border-border bg-muted/50 flex items-center gap-2 relative">
       {/* Emoji Picker Popover */}
@@ -188,10 +196,22 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
         <Send className="h-5 w-5" />
       </Button>
 
-      {/* Botão Áudio */}
-      <Button variant="ghost" size="icon" disabled>
-        <Mic className="h-5 w-5" />
+      {/* Botão Mensagens Automáticas */}
+      <Button 
+        variant="ghost" 
+        size="icon"
+        onClick={() => setShowAutoMessagesModal(true)}
+        className="text-muted-foreground"
+      >
+        <MessageSquare className="h-5 w-5" />
       </Button>
+
+      {/* Modal de Mensagens Automáticas */}
+      <SelectAutoMessageModal
+        open={showAutoMessagesModal}
+        onOpenChange={setShowAutoMessagesModal}
+        onSelect={handleSelectAutoMessage}
+      />
     </div>
   );
 }
