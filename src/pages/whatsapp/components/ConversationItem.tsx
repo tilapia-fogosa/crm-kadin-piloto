@@ -14,6 +14,7 @@
  */
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format, isToday, isYesterday } from "date-fns";
@@ -109,9 +110,23 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
       {/* Conteúdo */}
       <div className="flex-1 min-w-0 text-left">
         <div className="flex items-baseline justify-between mb-1">
-          <span className="font-medium text-foreground truncate">
-            {conversation.clientName}
-          </span>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <span className={cn(
+              "truncate",
+              conversation.unreadCount > 0 ? "font-bold text-foreground" : "font-medium text-foreground"
+            )}>
+              {conversation.clientName}
+            </span>
+            {/* Badge de mensagens não lidas */}
+            {conversation.unreadCount > 0 && (
+              <Badge 
+                variant="default" 
+                className="h-5 min-w-[20px] px-1.5 flex items-center justify-center bg-primary text-primary-foreground text-xs font-medium"
+              >
+                {conversation.unreadCount}
+              </Badge>
+            )}
+          </div>
           <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
             {formatTime(conversation.lastMessageTime)}
           </span>

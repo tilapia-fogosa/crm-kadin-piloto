@@ -20,6 +20,7 @@ export interface Conversation {
   totalMessages: number;
   unitId: string;
   tipoAtendimento: 'bot' | 'humano';
+  unreadCount: number; // Quantidade de mensagens não lidas pela equipe
 }
 
 // Mensagem individual

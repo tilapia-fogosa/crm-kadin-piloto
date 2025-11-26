@@ -3477,6 +3477,8 @@ export type Database = {
           created_by: string | null
           from_me: boolean | null
           id: number
+          lida: boolean | null
+          lida_em: string | null
           mensagem: string | null
         }
         Insert: {
@@ -3485,6 +3487,8 @@ export type Database = {
           created_by?: string | null
           from_me?: boolean | null
           id?: number
+          lida?: boolean | null
+          lida_em?: string | null
           mensagem?: string | null
         }
         Update: {
@@ -3493,6 +3497,8 @@ export type Database = {
           created_by?: string | null
           from_me?: boolean | null
           id?: number
+          lida?: boolean | null
+          lida_em?: string | null
           mensagem?: string | null
         }
         Relationships: [

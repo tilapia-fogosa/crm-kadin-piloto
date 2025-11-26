@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
 
     console.log('send-whatsapp-message: Salvando mensagem no historico_comercial com created_by');
 
-    // Salvar mensagem no historico_comercial
+    // Salvar mensagem no historico_comercial (mensagens enviadas já são marcadas como lidas)
     const { error: insertError } = await supabase
       .from('historico_comercial')
       .insert({
@@ -111,7 +111,9 @@ Deno.serve(async (req) => {
         mensagem: payload.message,
         from_me: true,
         created_by: payload.profile_id,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        lida: true, // Mensagens enviadas pela equipe já são consideradas lidas
+        lida_em: new Date().toISOString()
       });
 
     if (insertError) {
