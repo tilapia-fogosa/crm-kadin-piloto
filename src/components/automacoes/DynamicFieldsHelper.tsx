@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, MapPin, Calendar, Tag } from "lucide-react";
+import { User, MapPin, Calendar, Clock, Tag } from "lucide-react";
 
 interface DynamicField {
   key: string;
@@ -41,10 +41,16 @@ const DYNAMIC_FIELDS: DynamicField[] = [
     icon: Tag,
   },
   {
-    key: "{{data_agendamento}}",
-    label: "Data Agendamento",
-    description: "Data e hora do agendamento",
+    key: "{{dia_agendamento}}",
+    label: "Dia do Agendamento",
+    description: "Data do agendamento (dia/mês/ano)",
     icon: Calendar,
+  },
+  {
+    key: "{{horario_agendamento}}",
+    label: "Horário do Agendamento",
+    description: "Horário do agendamento (hora:minuto)",
+    icon: Clock,
   },
   {
     key: "{{endereco}}",
@@ -109,7 +115,7 @@ export function DynamicFieldsHelper({ onInsertField }: DynamicFieldsHelperProps)
         <div className="mt-4 p-3 bg-muted rounded-md">
           <div className="text-xs font-medium mb-1">Exemplo de uso:</div>
           <div className="text-xs text-muted-foreground">
-            "Olá {'{{primeiro_nome}}'}, sua consulta está marcada para {'{{data_agendamento}}'}. Unidade: {'{{endereco}}'}"
+            "Olá {'{{primeiro_nome}}'}, sua consulta está marcada para {'{{dia_agendamento}}'} às {'{{horario_agendamento}}'}. Unidade: {'{{endereco}}'}"
           </div>
         </div>
       </CardContent>

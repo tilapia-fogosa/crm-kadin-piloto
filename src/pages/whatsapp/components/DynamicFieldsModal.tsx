@@ -12,7 +12,7 @@
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User, Phone, Mail, CalendarDays, Tag, Building } from "lucide-react";
+import { User, Phone, Mail, CalendarDays, Clock, Tag, Building } from "lucide-react";
 
 interface DynamicField {
   key: string;
@@ -54,10 +54,16 @@ const DYNAMIC_FIELDS: DynamicField[] = [
     icon: <Tag className="h-4 w-4" />,
   },
   {
-    key: "{{data_agendamento}}",
-    label: "Data Agendada",
-    description: "Data do agendamento",
+    key: "{{dia_agendamento}}",
+    label: "Dia do Agendamento",
+    description: "Data do agendamento (dia/mês/ano)",
     icon: <CalendarDays className="h-4 w-4" />,
+  },
+  {
+    key: "{{horario_agendamento}}",
+    label: "Horário do Agendamento",
+    description: "Horário do agendamento (hora:minuto)",
+    icon: <Clock className="h-4 w-4" />,
   },
   {
     key: "{{unidade}}",
@@ -124,7 +130,7 @@ export function DynamicFieldsModal({ open, onOpenChange, onInsertField }: Dynami
           <p className="text-sm font-semibold mb-2">Exemplo de uso:</p>
           <code className="text-xs block bg-background p-3 rounded">
             Olá {`{{primeiro_nome}}`}, tudo bem?<br />
-            Sua consulta está marcada para {`{{data_agendamento}}`}.<br />
+            Sua consulta está marcada para o dia {`{{dia_agendamento}}`} às {`{{horario_agendamento}}`}.<br />
             Estamos na unidade {`{{unidade}}`}.
           </code>
         </div>

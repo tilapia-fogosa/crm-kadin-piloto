@@ -9,7 +9,8 @@
  * - {{telefone}} -> clients.phone_number
  * - {{email}} -> clients.email
  * - {{origem}} -> clients.lead_source
- * - {{data_agendamento}} -> clients.scheduled_date
+ * - {{dia_agendamento}} -> Data do agendamento (dd/MM/yyyy)
+ * - {{horario_agendamento}} -> Horário do agendamento (HH:mm)
  * - {{unidade}} -> units.name
  * - {{endereco}} -> Concatenação de units: street, number, complement, neighborhood, postal_code
  */
@@ -47,10 +48,10 @@ function formatAddress(unit: any): string {
 }
 
 /**
- * Formata data para formato brasileiro
- * Log: Converte data ISO para dd/MM/yyyy HH:mm
+ * Formata apenas a data (dia/mês/ano)
+ * Log: Converte data ISO para dd/MM/yyyy
  */
-function formatDate(dateString: string | null): string {
+function formatDateOnly(dateString: string | null): string {
   if (!dateString) return 'Não informado';
   
   try {
@@ -58,12 +59,29 @@ function formatDate(dateString: string | null): string {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
+  } catch (error) {
+    console.error('formatDateOnly: Erro ao formatar data:', error);
+    return 'Não informado';
+  }
+}
+
+/**
+ * Formata apenas o horário (hora:minuto)
+ * Log: Converte data ISO para HH:mm
+ */
+function formatTimeOnly(dateString: string | null): string {
+  if (!dateString) return 'Não informado';
+  
+  try {
+    const date = new Date(dateString);
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
+    return `${hours}:${minutes}`;
   } catch (error) {
-    console.error('formatDate: Erro ao formatar data:', error);
+    console.error('formatTimeOnly: Erro ao formatar horário:', error);
     return 'Não informado';
   }
 }
@@ -112,7 +130,8 @@ async function replaceVariables(message: string, clientId: string): Promise<stri
     '{{telefone}}': client.phone_number || 'Não informado',
     '{{email}}': client.email || 'Não informado',
     '{{origem}}': client.lead_source || 'Não informado',
-    '{{data_agendamento}}': formatDate(client.scheduled_date),
+    '{{dia_agendamento}}': formatDateOnly(client.scheduled_date),
+    '{{horario_agendamento}}': formatTimeOnly(client.scheduled_date),
     '{{unidade}}': client.unit?.name || 'Não informado',
     '{{endereco}}': client.unit ? formatAddress(client.unit) : 'Não informado',
   };
