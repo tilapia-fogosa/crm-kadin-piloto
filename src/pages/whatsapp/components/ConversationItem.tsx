@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Bot, CheckCheck, ClipboardList } from "lucide-react";
+import { Bot, CheckCheck, ClipboardList, X } from "lucide-react";
 import { Conversation } from "../types/whatsapp.types";
 
 interface ConversationItemProps {
@@ -81,7 +81,7 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
           variant="ghost"
           size="icon"
           className={cn(
-            "h-8 w-8 transition-colors",
+            "h-8 w-8 transition-colors relative",
             conversation.tipoAtendimento === 'bot'
               ? "bg-orange-500 hover:bg-orange-600 text-white"
               : "hover:bg-muted text-muted-foreground"
@@ -93,6 +93,9 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
           title={`Atendimento: ${conversation.tipoAtendimento === 'bot' ? 'Bot' : 'Humano'} (clique para alternar)`}
         >
           <Bot className="h-4 w-4" />
+          {conversation.tipoAtendimento === 'humano' && (
+            <X className="h-3 w-3 absolute top-0 right-0 text-destructive bg-background rounded-full" strokeWidth={3} />
+          )}
         </Button>
       </div>
 
