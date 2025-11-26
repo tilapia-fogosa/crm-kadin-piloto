@@ -21,7 +21,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Conversation } from "../types/whatsapp.types";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
-import { SelectAutoMessageModal } from "./SelectAutoMessageModal";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAutoMessages } from "../hooks/useAutoMessages";
 
 interface ChatInputProps {
   conversation: Conversation;
@@ -32,10 +34,11 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showAutoMessagesModal, setShowAutoMessagesModal] = useState(false);
+  const [showAutoMessages, setShowAutoMessages] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: autoMessages, isLoading: isLoadingAutoMessages } = useAutoMessages();
 
   console.log('ChatInput: Renderizando input de mensagem para cliente:', conversation.clientId);
 
@@ -140,8 +143,11 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
   const handleSelectAutoMessage = (autoMessage: string) => {
     console.log('ChatInput: Mensagem automática selecionada');
     setMessage(autoMessage);
-    setShowAutoMessagesModal(false);
+    setShowAutoMessages(false);
   };
+
+  // Filtrar apenas mensagens ativas
+  const activeAutoMessages = autoMessages?.filter(m => m.ativo) || [];
 
   return (
     <div className="p-3 border-t border-border bg-muted/50 flex items-center gap-2 relative">
@@ -196,22 +202,55 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
         <Send className="h-5 w-5" />
       </Button>
 
-      {/* Botão Mensagens Automáticas */}
-      <Button 
-        variant="ghost" 
-        size="icon"
-        onClick={() => setShowAutoMessagesModal(true)}
-        className="text-muted-foreground"
-      >
-        <MessageSquare className="h-5 w-5" />
-      </Button>
-
-      {/* Modal de Mensagens Automáticas */}
-      <SelectAutoMessageModal
-        open={showAutoMessagesModal}
-        onOpenChange={setShowAutoMessagesModal}
-        onSelect={handleSelectAutoMessage}
-      />
+      {/* Popover de Mensagens Automáticas */}
+      <Popover open={showAutoMessages} onOpenChange={setShowAutoMessages}>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className={showAutoMessages ? "text-primary" : "text-muted-foreground"}
+          >
+            <MessageSquare className="h-5 w-5" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent 
+          side="top" 
+          align="end"
+          className="w-80 p-3"
+        >
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm text-foreground mb-3">Mensagens Automáticas</h4>
+            
+            {isLoadingAutoMessages ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">Carregando...</p>
+            ) : activeAutoMessages.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                Nenhuma mensagem ativa encontrada
+              </p>
+            ) : (
+              <ScrollArea className="max-h-[300px]">
+                <div className="space-y-1.5">
+                  {activeAutoMessages.map((msg) => (
+                    <Button
+                      key={msg.id}
+                      variant="ghost"
+                      className="w-full justify-start text-left h-auto py-2 px-3"
+                      onClick={() => handleSelectAutoMessage(msg.mensagem)}
+                    >
+                      <div className="flex flex-col gap-0.5 w-full">
+                        <span className="font-medium text-sm text-foreground">{msg.nome}</span>
+                        <span className="text-xs text-muted-foreground line-clamp-2">
+                          {msg.mensagem}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
