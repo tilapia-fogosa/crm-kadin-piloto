@@ -65,7 +65,8 @@ export function ConversationsTab() {
       console.log('ConversationsTab: Conversa selecionada, marcando como lida:', selectedClientId);
       markAsRead.mutate(selectedClientId);
     }
-  }, [selectedClientId, markAsRead]);
+    // markAsRead não deve estar nas dependências pois é estável
+  }, [selectedClientId]);
 
   // Encontrar a conversa para o modal de atividades
   const activityModalConversation = conversations.find(c => c.clientId === activityModalClientId);
