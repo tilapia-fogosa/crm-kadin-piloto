@@ -19,7 +19,7 @@ export function useMessages(clientId: string | null) {
 
   return useQuery({
     queryKey: ['whatsapp-messages', clientId],
-    // Removido refetchInterval: agora usamos realtime subscription
+    refetchInterval: 10000, // Atualiza a cada 10 segundos quando chat está aberto
     queryFn: async () => {
       if (!clientId) {
         console.log('useMessages: ClientId é null, retornando array vazio');
