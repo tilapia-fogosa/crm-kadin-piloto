@@ -46,6 +46,10 @@ export function useMarkAsRead() {
       // Cancelar queries em andamento para evitar conflitos
       await queryClient.cancelQueries({ queryKey: ['whatsapp-conversations'] });
       
+      // Pegar dados atuais do cache
+      const previousData = queryClient.getQueryData(['whatsapp-conversations']);
+      console.log('useMarkAsRead: Dados atuais no cache:', previousData);
+      
       // Atualizar cache otimisticamente - zerar unreadCount imediatamente
       queryClient.setQueryData(['whatsapp-conversations'], (oldData: any) => {
         if (!oldData) {
@@ -53,14 +57,20 @@ export function useMarkAsRead() {
           return oldData;
         }
         
-        console.log('useMarkAsRead: Atualizando cache otimisticamente');
-        return oldData.map((conversation: any) => {
+        console.log('useMarkAsRead: Atualizando cache otimisticamente', oldData);
+        const newData = oldData.map((conversation: any) => {
           if (conversation.clientId === clientId) {
-            console.log(`useMarkAsRead: Zerando unreadCount para cliente ${clientId} (era ${conversation.unreadCount})`);
+            console.log(`useMarkAsRead: Zerando unreadCount para cliente ${clientId}`, {
+              clientName: conversation.clientName,
+              unreadCountAntes: conversation.unreadCount,
+              unreadCountDepois: 0
+            });
             return { ...conversation, unreadCount: 0 };
           }
           return conversation;
         });
+        console.log('useMarkAsRead: Novo estado do cache:', newData);
+        return newData;
       });
     },
     onSuccess: () => {

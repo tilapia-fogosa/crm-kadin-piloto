@@ -57,8 +57,8 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
     <button
       onClick={onClick}
       className={cn(
-        "w-full p-3 flex items-start gap-2 hover:bg-muted/50 transition-colors border-b border-border h-20",
-        isSelected && "bg-muted"
+        "w-full p-3 flex items-start gap-2 hover:bg-muted/50 transition-colors border-b border-border h-20 relative",
+        isSelected && "bg-primary/10 border-l-4 border-l-primary shadow-sm"
       )}
     >
       {/* Coluna de botões */}
