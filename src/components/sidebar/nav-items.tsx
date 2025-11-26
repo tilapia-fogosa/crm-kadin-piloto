@@ -16,7 +16,8 @@ import {
   BarChart3,
   Settings,
   Shield,
-  Bot
+  Bot,
+  MessageCircle
 } from "lucide-react";
 import { UpdatesButton } from "./updates-button";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -26,6 +27,7 @@ import { useFuncionalidadesUnidade } from "@/hooks/useFuncionalidadesUnidade";
 export const generalNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Painel do Consultor", href: "/kanban", icon: KanbanSquare },
+  { name: "WhatsApp", href: "/whatsapp", icon: MessageCircle },
   { name: "Agenda", href: "/schedule", icon: Calendar },
   { 
     name: "Clientes", 
@@ -38,7 +40,6 @@ export const generalNavigation = [
   },
   // { name: "Vendas", href: "/sales", icon: DollarSign }, // Oculto do sidebar - acessível apenas via URL direta
   { name: "Indicadores Comerciais", href: "/commercial-stats", icon: LineChart },
-  { name: "Automações de WhatsApp", href: "/automacoes-whatsapp", icon: Bot, requiresFeature: "automacao_whatsapp" },
   { name: "Pós-venda Comercial", href: "/pos-venda-comercial", icon: BarChart3, requiresFeature: "pos_venda_comercial" },
 ];
 
