@@ -71,7 +71,27 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
     setShowEmojiPicker(false); // Fecha o picker ao enviar
 
     try {
-      // Buscar nome do usuário logado
+      // Etapa 1: Substituir variáveis dinâmicas na mensagem
+      console.log('ChatInput: Substituindo variáveis dinâmicas na mensagem');
+      const { data: replaceData, error: replaceError } = await supabase.functions.invoke(
+        'replace-message-variables',
+        {
+          body: {
+            message: message.trim(),
+            clientId: conversation.clientId,
+          },
+        }
+      );
+
+      if (replaceError) {
+        console.error('ChatInput: Erro ao substituir variáveis:', replaceError);
+        throw new Error('Erro ao processar variáveis da mensagem');
+      }
+
+      const processedMessage = replaceData?.processed || message.trim();
+      console.log('ChatInput: Mensagem processada:', processedMessage);
+
+      // Etapa 2: Buscar nome do usuário logado
       const { data: { user } } = await supabase.auth.getUser();
       const { data: profile } = await supabase
         .from('profiles')
@@ -83,11 +103,12 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
 
       console.log('ChatInput: Chamando edge function send-whatsapp-message');
 
+      // Etapa 3: Enviar mensagem processada
       const { data, error } = await supabase.functions.invoke('send-whatsapp-message', {
         body: {
           phone_number: conversation.phoneNumber,
           user_name: userName,
-          message: message.trim(),
+          message: processedMessage,
           client_id: conversation.clientId
         }
       });

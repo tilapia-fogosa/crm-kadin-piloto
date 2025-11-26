@@ -12,6 +12,11 @@ verify_jwt = false
 [functions.send-whatsapp-message]
 verify_jwt = false
 
+[functions.replace-message-variables]
+# Função para substituir variáveis dinâmicas nas mensagens
+# Chamada pelo frontend antes de enviar mensagens WhatsApp
+# Requer autenticação JWT (padrão)
+
 # Nota: O processamento de webhooks de venda foi desativado
 # e está sendo tratado pelos webhooks de clientes com status "matriculado"
 
