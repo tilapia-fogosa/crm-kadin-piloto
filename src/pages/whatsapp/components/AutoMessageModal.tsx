@@ -21,8 +21,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, Smile } from "lucide-react";
 import { toast } from "sonner";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { useCreateAutoMessage, useUpdateAutoMessage } from "../hooks/useAutoMessages";
 import { DynamicFieldsModal } from "./DynamicFieldsModal";
 
@@ -42,10 +43,24 @@ export function AutoMessageModal({ open, onOpenChange, editData }: AutoMessageMo
   const [nome, setNome] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [fieldsModalOpen, setFieldsModalOpen] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   const createMutation = useCreateAutoMessage();
   const updateMutation = useUpdateAutoMessage();
+
+  // Fechar emoji picker ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Preencher campos quando editando
   useEffect(() => {
@@ -75,6 +90,25 @@ export function AutoMessageModal({ open, onOpenChange, editData }: AutoMessageMo
     setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(start + field.length, start + field.length);
+    }, 0);
+  };
+
+  const onEmojiClick = (emojiData: EmojiClickData) => {
+    console.log('AutoMessageModal: Inserindo emoji:', emojiData.emoji);
+    
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = mensagem;
+    
+    const newText = text.substring(0, start) + emojiData.emoji + text.substring(end);
+    setMensagem(newText);
+    
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + emojiData.emoji.length, start + emojiData.emoji.length);
     }, 0);
   };
 
@@ -143,15 +177,32 @@ export function AutoMessageModal({ open, onOpenChange, editData }: AutoMessageMo
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="mensagem">Mensagem *</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setFieldsModalOpen(true)}
-                >
-                  <FileText className="h-3 w-3 mr-1" />
-                  Inserir Variáveis
-                </Button>
+                <div className="flex gap-2">
+                  <div className="relative" ref={emojiPickerRef}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    >
+                      <Smile className="h-3 w-3" />
+                    </Button>
+                    {showEmojiPicker && (
+                      <div className="absolute right-0 top-10 z-50">
+                        <EmojiPicker onEmojiClick={onEmojiClick} />
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFieldsModalOpen(true)}
+                  >
+                    <FileText className="h-3 w-3 mr-1" />
+                    Inserir Variáveis
+                  </Button>
+                </div>
               </div>
               <Textarea
                 ref={textareaRef}
