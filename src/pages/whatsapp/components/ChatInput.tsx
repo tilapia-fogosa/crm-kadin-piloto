@@ -12,13 +12,15 @@
  * Utiliza cores do sistema: muted, muted-foreground, primary
  */
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Smile, Paperclip, Mic, Send } from "lucide-react";
+import { Smile, Mic, Send } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Conversation } from "../types/whatsapp.types";
+import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 
 interface ChatInputProps {
   conversation: Conversation;
@@ -28,9 +30,30 @@ interface ChatInputProps {
 export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   console.log('ChatInput: Renderizando input de mensagem para cliente:', conversation.clientId);
+
+  // Fechar emoji picker ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const onEmojiClick = (emojiData: EmojiClickData) => {
+    setMessage((prev) => prev + emojiData.emoji);
+    // Não fecha o picker para permitir selecionar múltiplos emojis
+  };
 
   const handleSendMessage = async () => {
     if (!message.trim()) {
@@ -40,6 +63,7 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
 
     console.log('ChatInput: Enviando mensagem para cliente:', conversation.clientId);
     setIsSending(true);
+    setShowEmojiPicker(false); // Fecha o picker ao enviar
 
     try {
       // Buscar nome do usuário logado
@@ -73,6 +97,14 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
       // Limpar input
       setMessage("");
 
+      // Invalida cache para atualizar mensagens e conversas com delay de 1s
+      // Isso garante que o backend teve tempo de processar a mensagem
+      setTimeout(() => {
+        console.log('ChatInput: Invalidando cache de mensagens e conversas após 1s');
+        queryClient.invalidateQueries({ queryKey: ['whatsapp-messages', conversation.clientId] });
+        queryClient.invalidateQueries({ queryKey: ['whatsapp-conversations'] });
+      }, 1000);
+
       // Exibir toast de sucesso
       toast({
         title: "Mensagem enviada",
@@ -104,16 +136,35 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
   };
 
   return (
-    <div className="p-3 border-t border-border bg-muted/50 flex items-center gap-2">
+    <div className="p-3 border-t border-border bg-muted/50 flex items-center gap-2 relative">
+      {/* Emoji Picker Popover */}
+      {showEmojiPicker && (
+        <div
+          ref={emojiPickerRef}
+          className="absolute bottom-16 left-4 z-50 shadow-xl rounded-lg"
+        >
+          <EmojiPicker
+            onEmojiClick={onEmojiClick}
+            theme={Theme.LIGHT}
+            searchDisabled={false}
+            width={300}
+            height={400}
+            previewConfig={{ showPreview: false }}
+          />
+        </div>
+      )}
+
       {/* Botão Emoji */}
-      <Button variant="ghost" size="icon" disabled>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+        className={showEmojiPicker ? "text-primary" : "text-muted-foreground"}
+      >
         <Smile className="h-5 w-5" />
       </Button>
 
-      {/* Botão Anexo */}
-      <Button variant="ghost" size="icon" disabled>
-        <Paperclip className="h-5 w-5" />
-      </Button>
+      {/* Botão Anexo REMOVIDO conforme solicitado */}
 
       {/* Input de texto */}
       <Input
@@ -124,12 +175,13 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
         onKeyPress={handleKeyPress}
         disabled={isSending}
         className="flex-1"
+        onClick={() => setShowEmojiPicker(false)} // Fecha picker ao focar no input
       />
 
       {/* Botão Enviar */}
-      <Button 
-        variant="default" 
-        size="icon" 
+      <Button
+        variant="default"
+        size="icon"
         onClick={handleSendMessage}
         disabled={isSending || !message.trim()}
       >

@@ -3,31 +3,34 @@
  * 
  * Log: Componente que renderiza uma conversa na lista lateral
  * Etapas de renderização:
- * 1. Exibe avatar com iniciais do cliente
- * 2. Mostra nome do cliente e última mensagem (truncada)
- * 3. Formata horário da última mensagem (HH:mm, "Ontem", DD/MM)
- * 4. Indica se a última mensagem foi enviada ou recebida
- * 5. Aplica highlight quando a conversa está selecionada
+ * 1. Exibe botão de atividades ao lado esquerdo
+ * 2. Exibe avatar com iniciais do cliente
+ * 3. Mostra nome do cliente e última mensagem (truncada)
+ * 4. Formata horário da última mensagem (HH:mm, "Ontem", DD/MM)
+ * 5. Indica se a última mensagem foi enviada ou recebida
+ * 6. Aplica highlight quando a conversa está selecionada
  * 
  * Utiliza cores do sistema: background, foreground, muted, primary
  */
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Check, CheckCheck } from "lucide-react";
+import { CheckCheck, ClipboardList } from "lucide-react";
 import { Conversation } from "../types/whatsapp.types";
 
 interface ConversationItemProps {
   conversation: Conversation;
   isSelected: boolean;
   onClick: () => void;
+  onActivityClick: (e: React.MouseEvent) => void;
 }
 
-export function ConversationItem({ conversation, isSelected, onClick }: ConversationItemProps) {
+export function ConversationItem({ conversation, isSelected, onClick, onActivityClick }: ConversationItemProps) {
   console.log('ConversationItem: Renderizando conversa:', conversation.clientName);
-  
+
   // Formatar horário da última mensagem
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -52,10 +55,23 @@ export function ConversationItem({ conversation, isSelected, onClick }: Conversa
     <button
       onClick={onClick}
       className={cn(
-        "w-full p-3 flex items-start gap-3 hover:bg-muted/50 transition-colors border-b border-border",
+        "w-full p-3 flex items-start gap-2 hover:bg-muted/50 transition-colors border-b border-border h-20",
         isSelected && "bg-muted"
       )}
     >
+      {/* Botão de Atividades */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 flex-shrink-0 hover:bg-primary/10"
+        onClick={(e) => {
+          e.stopPropagation();
+          onActivityClick(e);
+        }}
+      >
+        <ClipboardList className="h-4 w-4 text-primary" />
+      </Button>
+
       {/* Avatar */}
       <Avatar className="h-12 w-12 flex-shrink-0">
         <AvatarFallback className="bg-primary text-primary-foreground">
@@ -73,13 +89,13 @@ export function ConversationItem({ conversation, isSelected, onClick }: Conversa
             {formatTime(conversation.lastMessageTime)}
           </span>
         </div>
-        
+
         <div className="flex items-center gap-1 text-sm text-muted-foreground">
           {/* Indicador de mensagem enviada */}
           {conversation.lastMessageFromMe && (
             <CheckCheck className="h-3 w-3 flex-shrink-0" />
           )}
-          <span className="truncate">
+          <span className="truncate line-clamp-1">
             {conversation.lastMessage}
           </span>
         </div>

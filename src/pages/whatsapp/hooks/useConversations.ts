@@ -19,28 +19,29 @@ import { Conversation } from "../types/whatsapp.types";
 export function useConversations() {
   const { session } = useAuth();
   const { selectedUnitId } = useUnit();
-  
+
   console.log('useConversations: Iniciando busca de conversas', {
     hasSession: !!session,
     userId: session?.user?.id,
     selectedUnitId
   });
-  
+
   return useQuery({
     queryKey: ['whatsapp-conversations', session?.user?.id, selectedUnitId],
     enabled: !!session && !!selectedUnitId,
+    refetchInterval: 60000, // Atualiza a cada 1 minuto
     queryFn: async () => {
       console.log('useConversations: Executando query no Supabase');
-      
+
       // Verificar usuário autenticado
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
+
       console.log('useConversations: Usuário autenticado:', {
         userId: user?.id,
         email: user?.email,
         hasAuthError: !!authError
       });
-      
+
       if (authError || !user) {
         console.error('useConversations: Erro de autenticação ou usuário não encontrado:', authError);
         return [];
@@ -104,7 +105,7 @@ export function useConversations() {
       // Mapear para o formato de conversa
       const conversations: Conversation[] = Array.from(clientsMap.values()).map(({ client, messages }) => {
         // Ordenar mensagens por data (mais recente primeiro)
-        const sortedMessages = messages.sort((a, b) => 
+        const sortedMessages = messages.sort((a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
 
@@ -120,7 +121,7 @@ export function useConversations() {
           lastMessageFromMe: sortedMessages[0]?.from_me || false,
           totalMessages: messages.length
         };
-      }).sort((a, b) => 
+      }).sort((a, b) =>
         new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
       );
 

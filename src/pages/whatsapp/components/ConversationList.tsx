@@ -22,11 +22,12 @@ import { useConversations } from "../hooks/useConversations";
 interface ConversationListProps {
   selectedClientId: string | null;
   onSelectClient: (clientId: string) => void;
+  onActivityClick: (clientId: string) => void;
 }
 
-export function ConversationList({ selectedClientId, onSelectClient }: ConversationListProps) {
+export function ConversationList({ selectedClientId, onSelectClient, onActivityClick }: ConversationListProps) {
   console.log('ConversationList: Renderizando lista de conversas');
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const { data: conversations, isLoading } = useConversations();
 
@@ -39,7 +40,7 @@ export function ConversationList({ selectedClientId, onSelectClient }: Conversat
   console.log('ConversationList: Conversas filtradas:', filteredConversations?.length);
 
   return (
-    <div className="w-full md:w-[350px] flex flex-col border-r border-border bg-card">
+    <div className="w-full md:w-[350px] flex flex-col border-r border-border bg-card h-full">
       {/* Header com busca */}
       <div className="p-3 border-b border-border bg-card">
         <div className="relative">
@@ -74,6 +75,7 @@ export function ConversationList({ selectedClientId, onSelectClient }: Conversat
             conversation={conversation}
             isSelected={selectedClientId === conversation.clientId}
             onClick={() => onSelectClient(conversation.clientId)}
+            onActivityClick={() => onActivityClick(conversation.clientId)}
           />
         ))}
       </ScrollArea>
