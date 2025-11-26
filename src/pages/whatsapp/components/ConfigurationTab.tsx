@@ -30,6 +30,7 @@ import { AutoMessagesList } from "./AutoMessagesList";
 import { MensagemAutomaticaModal } from "./MensagemAutomaticaModal";
 import { MensagensAutomaticasList } from "./MensagensAutomaticasList";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useUnit } from "@/contexts/UnitContext";
 
 export function ConfigurationTab() {
   console.log('ConfigurationTab: Renderizando aba de configuração');
@@ -39,6 +40,8 @@ export function ConfigurationTab() {
   
   const [autoModalOpen, setAutoModalOpen] = useState(false);
   const [autoEditData, setAutoEditData] = useState<{ id: string; tipo: string; mensagem: string } | null>(null);
+  
+  const { selectedUnitId } = useUnit();
   
   const {
     data: whatsappStatus,
@@ -126,7 +129,7 @@ export function ConfigurationTab() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <MensagensAutomaticasList onEdit={handleEditAuto} />
+          <MensagensAutomaticasList selectedUnitId={selectedUnitId} onEdit={handleEditAuto} />
         </CardContent>
       </Card>
       </div>

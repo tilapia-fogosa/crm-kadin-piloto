@@ -16,7 +16,7 @@ import { toast } from "sonner";
 // Tipos
 export interface MensagemAutomatica {
   id: string;
-  profileId: string;
+  unitId: string;
   tipo: 'boas_vindas' | 'valorizacao';
   mensagem: string;
   ativo: boolean;
@@ -34,28 +34,26 @@ export const getTipoLabel = (tipo: string): string => {
 };
 
 /**
- * Hook para buscar mensagens automáticas
- * Log: Busca as 2 mensagens automáticas do usuário logado
+ * Hook para buscar mensagens automáticas da unidade selecionada
+ * Log: Busca as 2 mensagens automáticas da unidade
  */
-export function useMensagensAutomaticas() {
-  console.log('useMensagensAutomaticas: Iniciando busca de mensagens automáticas');
+export function useMensagensAutomaticas(selectedUnitId: string | null) {
+  console.log('useMensagensAutomaticas: Iniciando busca de mensagens automáticas', { selectedUnitId });
 
   return useQuery({
-    queryKey: ['whatsapp-mensagens-automaticas'],
+    queryKey: ['whatsapp-mensagens-automaticas', selectedUnitId],
+    enabled: !!selectedUnitId,
     queryFn: async () => {
       console.log('useMensagensAutomaticas: Buscando mensagens no Supabase');
 
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        console.error('useMensagensAutomaticas: Usuário não autenticado');
-        throw new Error('Usuário não autenticado');
+      if (!selectedUnitId) {
+        throw new Error('Unidade não selecionada');
       }
 
       const { data, error } = await supabase
         .from('whatsapp_mensagens_automaticas')
         .select('*')
-        .eq('profile_id', session.user.id)
+        .eq('unit_id', selectedUnitId)
         .order('tipo', { ascending: true });
 
       if (error) {
@@ -67,7 +65,7 @@ export function useMensagensAutomaticas() {
 
       return (data || []).map((msg: any) => ({
         id: msg.id,
-        profileId: msg.profile_id,
+        unitId: msg.unit_id,
         tipo: msg.tipo,
         mensagem: msg.mensagem,
         ativo: msg.ativo,
