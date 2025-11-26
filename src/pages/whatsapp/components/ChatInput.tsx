@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Smile, MessageSquare, Send } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+
 import { Conversation } from "../types/whatsapp.types";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -36,7 +36,6 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAutoMessages, setShowAutoMessages] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: autoMessages, isLoading: isLoadingAutoMessages } = useAutoMessages();
 
@@ -131,12 +130,6 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
         queryClient.invalidateQueries({ queryKey: ['whatsapp-conversations'] });
       }, 1000);
 
-      // Exibir toast de sucesso
-      toast({
-        title: "Mensagem enviada",
-        description: "Sua mensagem foi enviada com sucesso",
-      });
-
       // Callback para atualizar lista de mensagens
       if (onMessageSent) {
         onMessageSent();
@@ -144,11 +137,6 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
 
     } catch (error: any) {
       console.error('ChatInput: Erro ao enviar mensagem:', error);
-      toast({
-        title: "Erro ao enviar mensagem",
-        description: error.message || "Ocorreu um erro ao enviar a mensagem",
-        variant: "destructive",
-      });
     } finally {
       setIsSending(false);
     }
