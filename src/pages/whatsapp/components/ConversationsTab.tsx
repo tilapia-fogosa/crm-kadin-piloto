@@ -36,7 +36,6 @@ function conversationToKanbanCard(conversation: Conversation): KanbanCard {
     nextContactDate: null,
     scheduledDate: null,
     valorizationConfirmed: false,
-    status: conversation.status,
     activities: [], // Será carregado pelo CardSheet
     labels: [],
     registrationName: null,
@@ -110,7 +109,9 @@ export function ConversationsTab() {
           onRegisterAttempt={registerAttempt}
           onRegisterEffectiveContact={registerEffectiveContact}
           onRegisterScheduling={registerScheduling}
-          onRegisterAttendance={submitAttendance}
+          onRegisterAttendance={async (attendance) => {
+            await submitAttendance(attendance);
+          }}
         />
       )}
     </>
