@@ -1,7 +1,7 @@
 /**
- * Lista de mensagens automáticas criadas pelo usuário
+ * Lista de mensagens padronizadas criadas pelo usuário
  * 
- * Log: Componente para exibir e gerenciar mensagens automáticas existentes
+ * Log: Componente para exibir e gerenciar mensagens padronizadas existentes
  * Etapas:
  * 1. Buscar mensagens do hook useAutoMessages
  * 2. Exibir cada mensagem com nome, preview e ações
@@ -33,7 +33,7 @@ interface AutoMessagesListProps {
 }
 
 export function AutoMessagesList({ onEdit }: AutoMessagesListProps) {
-  console.log('AutoMessagesList: Renderizando lista de mensagens automáticas');
+  console.log('AutoMessagesList: Renderizando lista de mensagens padronizadas');
 
   const { data: messages, isLoading } = useAutoMessages();
   const updateMutation = useUpdateAutoMessage();
@@ -57,7 +57,7 @@ export function AutoMessagesList({ onEdit }: AutoMessagesListProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Suas Mensagens Automáticas</CardTitle>
+          <CardTitle>Suas Mensagens Padronizadas</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">Carregando mensagens...</p>
@@ -70,11 +70,11 @@ export function AutoMessagesList({ onEdit }: AutoMessagesListProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Suas Mensagens Automáticas</CardTitle>
+          <CardTitle>Suas Mensagens Padronizadas</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Nenhuma mensagem criada ainda. Crie sua primeira mensagem automática acima.
+            Nenhuma mensagem criada ainda. Crie sua primeira mensagem padronizada acima.
           </p>
         </CardContent>
       </Card>
@@ -85,7 +85,7 @@ export function AutoMessagesList({ onEdit }: AutoMessagesListProps) {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Suas Mensagens Automáticas ({messages.length})</CardTitle>
+          <CardTitle>Suas Mensagens Padronizadas ({messages.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -154,7 +154,7 @@ export function AutoMessagesList({ onEdit }: AutoMessagesListProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir esta mensagem automática? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir esta mensagem padronizada? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
