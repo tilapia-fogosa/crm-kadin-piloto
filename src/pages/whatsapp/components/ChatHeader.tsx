@@ -21,7 +21,7 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ conversation }: ChatHeaderProps) {
   console.log('ChatHeader: Renderizando header para:', conversation.clientName);
-  
+
   const initials = conversation.primeiroNome
     .split(' ')
     .map(n => n[0])
@@ -49,7 +49,10 @@ export function ChatHeader({ conversation }: ChatHeaderProps) {
       </div>
 
       {/* Status Badge */}
-      <Badge variant="secondary" className="flex-shrink-0">
+      <Badge
+        variant="outline"
+        className="flex-shrink-0 bg-secondary text-white border-secondary hover:bg-secondary/90"
+      >
         {conversation.status}
       </Badge>
     </div>

@@ -16,9 +16,10 @@ import { Message } from "../types/whatsapp.types";
 
 export function useMessages(clientId: string | null) {
   console.log('useMessages: Iniciando busca de mensagens para cliente:', clientId);
-  
+
   return useQuery({
     queryKey: ['whatsapp-messages', clientId],
+    refetchInterval: 60000, // Atualiza a cada 1 minuto
     queryFn: async () => {
       if (!clientId) {
         console.log('useMessages: ClientId é null, retornando array vazio');

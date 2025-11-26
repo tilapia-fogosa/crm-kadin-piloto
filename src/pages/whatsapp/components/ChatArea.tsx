@@ -24,7 +24,7 @@ interface ChatAreaProps {
 
 export function ChatArea({ selectedClientId, conversations }: ChatAreaProps) {
   console.log('ChatArea: Renderizando área do chat, cliente selecionado:', selectedClientId);
-  
+
   const selectedConversation = conversations.find(
     conv => conv.clientId === selectedClientId
   );
@@ -42,10 +42,23 @@ export function ChatArea({ selectedClientId, conversations }: ChatAreaProps) {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
-      <ChatHeader conversation={selectedConversation} />
-      <ChatMessages clientId={selectedConversation.clientId} />
-      <ChatInput conversation={selectedConversation} />
+    <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-background">
+      {/* Header Fixo */}
+      <div className="flex-shrink-0 z-10">
+        <ChatHeader conversation={selectedConversation} />
+      </div>
+
+      {/* Área de Mensagens com Scroll Independente */}
+      <div className="flex-1 relative min-h-0">
+        <div className="absolute inset-0 overflow-y-auto">
+          <ChatMessages clientId={selectedConversation.clientId} />
+        </div>
+      </div>
+
+      {/* Input Fixo no Rodapé */}
+      <div className="flex-shrink-0 z-10 bg-background">
+        <ChatInput conversation={selectedConversation} />
+      </div>
     </div>
   );
 }

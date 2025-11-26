@@ -20,20 +20,20 @@ import { ConfigurationTab } from "./components/ConfigurationTab";
 
 export default function WhatsAppPage() {
   console.log('WhatsAppPage: Renderizando página de WhatsApp');
-  
+
   return (
-    <div className="container py-6 space-y-6">
+    <div className="h-[calc(100vh-2rem)] flex flex-col gap-4 p-4">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold mb-2">WhatsApp</h1>
-        <p className="text-muted-foreground">
+      <div className="flex-shrink-0">
+        <h1 className="text-2xl font-bold">WhatsApp</h1>
+        <p className="text-muted-foreground text-sm">
           Gerencie suas conversas e configurações do WhatsApp
         </p>
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="conversas" className="space-y-4">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+      <Tabs defaultValue="conversas" className="flex-1 flex flex-col overflow-hidden">
+        <TabsList className="grid w-full max-w-md grid-cols-2 flex-shrink-0">
           <TabsTrigger value="conversas" className="gap-2">
             <MessageCircle className="h-4 w-4" />
             Conversas
@@ -44,11 +44,11 @@ export default function WhatsAppPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="conversas">
+        <TabsContent value="conversas" className="flex-1 mt-4 overflow-hidden data-[state=inactive]:hidden">
           <ConversationsTab />
         </TabsContent>
 
-        <TabsContent value="configuracao">
+        <TabsContent value="configuracao" className="mt-4 data-[state=inactive]:hidden">
           <ConfigurationTab />
         </TabsContent>
       </Tabs>
