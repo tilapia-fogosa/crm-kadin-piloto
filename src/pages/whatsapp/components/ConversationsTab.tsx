@@ -20,7 +20,6 @@ import { ChatArea } from "./ChatArea";
 import { useConversations } from "../hooks/useConversations";
 import { useMarkAsRead } from "../hooks/useMarkAsRead";
 import { useToggleTipoAtendimento } from "../hooks/useToggleTipoAtendimento";
-import { useMessageNotification } from "../hooks/useMessageNotification";
 import { CardSheet } from "@/components/kanban/components/sheet/CardSheet";
 import { useActivityOperations } from "@/components/kanban/hooks/useActivityOperations";
 import { useWhatsApp } from "@/components/kanban/hooks/useWhatsApp";
@@ -54,9 +53,6 @@ export function ConversationsTab() {
   const [activityModalClientId, setActivityModalClientId] = useState<string | null>(null);
   const { data: conversations = [] } = useConversations();
   const markAsRead = useMarkAsRead();
-  
-  // Hook para notificação sonora de novas mensagens
-  useMessageNotification(conversations);
 
   // Hooks para operações de atividades e tipo de atendimento
   const { registerAttempt, registerEffectiveContact, registerScheduling, submitAttendance } = useActivityOperations();
