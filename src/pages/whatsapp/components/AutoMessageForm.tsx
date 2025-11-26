@@ -1,7 +1,7 @@
 /**
- * Formulário para criar mensagens automáticas vinculadas ao usuário
+ * Formulário para criar mensagens padronizadas vinculadas ao usuário
  * 
- * Log: Componente para criar/editar mensagens automáticas do WhatsApp
+ * Log: Componente para criar/editar mensagens padronizadas do WhatsApp
  * Etapas:
  * 1. Formulário com campos: nome, mensagem
  * 2. Botão para abrir modal de variáveis dinâmicas
@@ -25,7 +25,7 @@ import { DynamicFieldsModal } from "./DynamicFieldsModal";
 import { AutoMessagesList } from "./AutoMessagesList";
 
 export function AutoMessageForm() {
-  console.log('AutoMessageForm: Renderizando formulário de mensagem automática');
+  console.log('AutoMessageForm: Renderizando formulário de mensagem padronizada');
 
   const [nome, setNome] = useState("");
   const [mensagem, setMensagem] = useState("");
@@ -118,10 +118,10 @@ export function AutoMessageForm() {
       <Card>
         <CardHeader>
           <CardTitle>
-            {editingId ? "Editar Mensagem Automática" : "Nova Mensagem Automática"}
+            {editingId ? "Editar Mensagem Padronizada" : "Nova Mensagem Padronizada"}
           </CardTitle>
           <CardDescription>
-            Crie mensagens automáticas personalizadas com variáveis dinâmicas
+            Crie mensagens padronizadas personalizadas com variáveis dinâmicas
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -156,7 +156,7 @@ export function AutoMessageForm() {
               <Textarea
                 ref={textareaRef}
                 id="mensagem"
-                placeholder="Digite a mensagem que será enviada automaticamente..."
+                placeholder="Digite a mensagem padronizada..."
                 value={mensagem}
                 onChange={(e) => setMensagem(e.target.value)}
                 rows={6}
