@@ -22,20 +22,39 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { useWhatsAppStatus } from "../hooks/useWhatsAppStatus";
-import { AutoMessageForm } from "./AutoMessageForm";
+import { AutoMessageModal } from "./AutoMessageModal";
+import { AutoMessagesList } from "./AutoMessagesList";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function ConfigurationTab() {
   console.log('ConfigurationTab: Renderizando aba de configuração');
   const [isActive, setIsActive] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editData, setEditData] = useState<{ id: string; nome: string; mensagem: string } | null>(null);
+  
   const {
     data: whatsappStatus,
     isLoading
   } = useWhatsAppStatus();
+  
   const handleToggle = (checked: boolean) => {
     console.log('ConfigurationTab: Alterando status para:', checked ? 'Ativo' : 'Inativo');
     setIsActive(checked);
+  };
+
+  const handleCreateNew = () => {
+    console.log('ConfigurationTab: Abrindo modal para criar nova mensagem');
+    setEditData(null);
+    setModalOpen(true);
+  };
+
+  const handleEdit = (id: string, nome: string, mensagem: string) => {
+    console.log('ConfigurationTab: Abrindo modal para editar mensagem');
+    setEditData({ id, nome, mensagem });
+    setModalOpen(true);
   };
   return <ScrollArea className="h-full pr-4">
       <div className="space-y-6 pb-4">
@@ -66,8 +85,33 @@ export function ConfigurationTab() {
         </CardContent>
       </Card>
 
-      {/* Seção de Mensagens Automáticas */}
-      <AutoMessageForm />
+      {/* Seção de Mensagens Padronizadas */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Mensagens Padronizadas</CardTitle>
+              <CardDescription>
+                Gerencie suas mensagens padronizadas do WhatsApp
+              </CardDescription>
+            </div>
+            <Button onClick={handleCreateNew}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Mensagem
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <AutoMessagesList onEdit={handleEdit} />
+        </CardContent>
+      </Card>
       </div>
+
+      {/* Modal de criação/edição */}
+      <AutoMessageModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        editData={editData}
+      />
     </ScrollArea>;
 }

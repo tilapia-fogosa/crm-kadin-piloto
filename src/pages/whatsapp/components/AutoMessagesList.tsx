@@ -11,7 +11,6 @@
  * Utiliza cores do sistema: card, badge, button
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, Power, PowerOff } from "lucide-react";
@@ -54,42 +53,21 @@ export function AutoMessagesList({ onEdit }: AutoMessagesListProps) {
   };
 
   if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Suas Mensagens Padronizadas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Carregando mensagens...</p>
-        </CardContent>
-      </Card>
-    );
+    return <p className="text-sm text-muted-foreground">Carregando mensagens...</p>;
   }
 
   if (!messages || messages.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Suas Mensagens Padronizadas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Nenhuma mensagem criada ainda. Crie sua primeira mensagem padronizada acima.
-          </p>
-        </CardContent>
-      </Card>
+      <p className="text-sm text-muted-foreground">
+        Nenhuma mensagem criada ainda. Clique em "Nova Mensagem" para criar sua primeira mensagem padronizada.
+      </p>
     );
   }
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Suas Mensagens Padronizadas ({messages.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {messages.map((message) => (
+      <div className="space-y-3">
+        {messages.map((message) => (
               <div
                 key={message.id}
                 className="flex items-start gap-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors"
@@ -143,11 +121,9 @@ export function AutoMessagesList({ onEdit }: AutoMessagesListProps) {
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          ))}
+      </div>
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
