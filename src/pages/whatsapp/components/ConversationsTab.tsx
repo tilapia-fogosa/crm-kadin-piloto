@@ -21,6 +21,8 @@ import { useConversations } from "../hooks/useConversations";
 import { useMarkAsRead } from "../hooks/useMarkAsRead";
 import { useToggleTipoAtendimento } from "../hooks/useToggleTipoAtendimento";
 import { useMessagesRealtime } from "../hooks/useMessagesRealtime";
+import { useWhatsappStatus } from "../hooks/useWhatsappStatus";
+import { WhatsappDisconnectedAlert } from "./WhatsappDisconnectedAlert";
 import { CardSheet } from "@/components/kanban/components/sheet/CardSheet";
 import { useActivityOperations } from "@/components/kanban/hooks/useActivityOperations";
 import { useWhatsApp } from "@/components/kanban/hooks/useWhatsApp";
@@ -55,6 +57,7 @@ export function ConversationsTab() {
   const [lastMarkedClientId, setLastMarkedClientId] = useState<string | null>(null);
   const [activityModalClientId, setActivityModalClientId] = useState<string | null>(null);
   const { data: conversations = [] } = useConversations();
+  const { data: whatsappStatus } = useWhatsappStatus();
   const markAsRead = useMarkAsRead();
   const queryClient = useQueryClient();
 
@@ -111,7 +114,10 @@ export function ConversationsTab() {
 
   return (
     <>
-      <Card className="h-full overflow-hidden border-0 shadow-none md:border">
+      <Card className="h-full overflow-hidden border-0 shadow-none md:border relative">
+        {/* Alerta de WhatsApp desconectado */}
+        <WhatsappDisconnectedAlert isDisconnected={whatsappStatus?.isDisconnected || false} />
+        
         <div className="flex h-full">
           {/* Lista de conversas (esconde em mobile quando há conversa selecionada) */}
           <div className={selectedClientId ? "hidden md:block h-full md:w-[350px] md:flex-shrink-0" : "w-full md:w-[350px] md:flex-shrink-0 h-full"}>
