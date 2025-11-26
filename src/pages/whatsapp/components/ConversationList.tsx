@@ -45,8 +45,8 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
     filteredConversations = filteredConversations?.filter(conv => conv.unreadCount > 0);
   }
 
-  // Calcular total de não lidas
-  const totalUnread = conversations?.reduce((sum, conv) => sum + conv.unreadCount, 0) || 0;
+  // Calcular total de conversas não lidas
+  const totalUnread = conversations?.filter(conv => conv.unreadCount > 0).length || 0;
 
   console.log('ConversationList: Conversas filtradas:', filteredConversations?.length, 'Total não lidas:', totalUnread);
 
