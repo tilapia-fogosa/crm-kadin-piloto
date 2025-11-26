@@ -74,9 +74,9 @@ export function useMarkAsRead() {
       );
     },
     onSuccess: () => {
-      console.log('useMarkAsRead: Mutation bem-sucedida, invalidando query de conversas');
-      // Invalidar query para sincronizar com dados do servidor
-      queryClient.invalidateQueries({ queryKey: ['whatsapp-conversations'] });
+      console.log('useMarkAsRead: Mutation bem-sucedida - cache já atualizado otimisticamente');
+      // Não invalida imediatamente para evitar sobrescrever atualização otimista
+      // A sincronização eventual acontecerá via refetchInterval do useConversations
     },
     onError: (error, clientId) => {
       console.error('useMarkAsRead: Erro na mutation:', error);
