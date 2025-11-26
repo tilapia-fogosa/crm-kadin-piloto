@@ -3,14 +3,14 @@
  * 
  * Log: Função para enviar mensagens WhatsApp via webhook externo
  * Etapas:
- * 1. Recebe payload com telefone, nome do usuário e mensagem
+ * 1. Recebe payload com telefone, nome do usuário, mensagem e profile_id
  * 2. Valida campos obrigatórios
  * 3. Envia dados para webhook configurado (WHATSAPP_WEBHOOK_URL)
- * 4. Retorna sucesso ou erro com logs detalhados
- * 
- * Nota: O salvamento no historico_comercial é feito pelo webhook externo
+ * 4. Salva mensagem no historico_comercial com from_me = true e created_by
+ * 5. Retorna sucesso ou erro com logs detalhados
  */
 
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.48.1'
 import { corsHeaders } from '../_shared/cors.ts'
 
 interface SendMessagePayload {
@@ -95,6 +95,31 @@ Deno.serve(async (req) => {
     }
 
     console.log('send-whatsapp-message: Webhook respondeu com sucesso');
+
+    // Inicializar cliente Supabase para salvar no histórico
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    console.log('send-whatsapp-message: Salvando mensagem no historico_comercial com created_by');
+
+    // Salvar mensagem no historico_comercial
+    const { error: insertError } = await supabase
+      .from('historico_comercial')
+      .insert({
+        client_id: payload.client_id,
+        mensagem: payload.message,
+        from_me: true,
+        created_by: payload.profile_id,
+        created_at: new Date().toISOString()
+      });
+
+    if (insertError) {
+      console.error('send-whatsapp-message: Erro ao salvar no histórico:', insertError);
+      throw insertError;
+    }
+
+    console.log('send-whatsapp-message: Mensagem salva com sucesso no histórico');
 
     return new Response(
       JSON.stringify({ 
