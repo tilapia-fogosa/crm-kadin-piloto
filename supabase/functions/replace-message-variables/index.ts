@@ -48,19 +48,25 @@ function formatAddress(unit: any): string {
 }
 
 /**
- * Formata apenas a data (dia/mês/ano)
- * Log: Converte data ISO para dd/MM/yyyy
+ * Formata apenas a data (dia/mês/ano) no fuso horário de São Paulo
+ * Log: Converte data ISO para dd/MM/yyyy usando America/Sao_Paulo
  */
 function formatDateOnly(dateString: string | null): string {
   if (!dateString) return 'Não informado';
   
   try {
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
     
-    return `${day}/${month}/${year}`;
+    // Formatar usando fuso horário de São Paulo
+    const formatted = date.toLocaleString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    
+    console.log(`formatDateOnly: ${dateString} -> ${formatted}`);
+    return formatted;
   } catch (error) {
     console.error('formatDateOnly: Erro ao formatar data:', error);
     return 'Não informado';
@@ -68,18 +74,25 @@ function formatDateOnly(dateString: string | null): string {
 }
 
 /**
- * Formata apenas o horário (hora:minuto)
- * Log: Converte data ISO para HH:mm
+ * Formata apenas o horário (hora:minuto) no fuso horário de São Paulo
+ * Log: Converte data ISO para HH:mm usando America/Sao_Paulo
  */
 function formatTimeOnly(dateString: string | null): string {
   if (!dateString) return 'Não informado';
   
   try {
     const date = new Date(dateString);
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
     
-    return `${hours}:${minutes}`;
+    // Formatar usando fuso horário de São Paulo
+    const formatted = date.toLocaleString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    
+    console.log(`formatTimeOnly: ${dateString} -> ${formatted}`);
+    return formatted;
   } catch (error) {
     console.error('formatTimeOnly: Erro ao formatar horário:', error);
     return 'Não informado';
