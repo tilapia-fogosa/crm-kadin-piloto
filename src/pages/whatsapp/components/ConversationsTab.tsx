@@ -50,6 +50,7 @@ export function ConversationsTab() {
   console.log('ConversationsTab: Renderizando aba de conversas');
 
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [lastMarkedClientId, setLastMarkedClientId] = useState<string | null>(null);
   const [activityModalClientId, setActivityModalClientId] = useState<string | null>(null);
   const { data: conversations = [] } = useConversations();
   const markAsRead = useMarkAsRead();
@@ -61,14 +62,13 @@ export function ConversationsTab() {
 
   // Marcar mensagens como lidas quando selecionar uma conversa
   useEffect(() => {
-    console.log('ConversationsTab: useEffect executado, selectedClientId:', selectedClientId);
-    if (selectedClientId) {
-      console.log('ConversationsTab: Conversa selecionada, marcando como lida:', selectedClientId);
-      console.log('ConversationsTab: Chamando markAsRead.mutate com clientId:', selectedClientId);
+    console.log('ConversationsTab: useEffect executado, selectedClientId:', selectedClientId, 'lastMarkedClientId:', lastMarkedClientId);
+    if (selectedClientId && selectedClientId !== lastMarkedClientId) {
+      console.log('ConversationsTab: Marcando como lida (nova conversa):', selectedClientId);
       markAsRead.mutate(selectedClientId);
-      console.log('ConversationsTab: markAsRead.mutate chamado');
+      setLastMarkedClientId(selectedClientId);
     }
-  }, [selectedClientId, markAsRead]);
+  }, [selectedClientId, lastMarkedClientId]);
 
   // Encontrar a conversa para o modal de atividades
   const activityModalConversation = conversations.find(c => c.clientId === activityModalClientId);
