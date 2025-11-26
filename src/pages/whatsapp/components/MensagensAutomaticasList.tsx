@@ -19,13 +19,14 @@ import {
 } from "../hooks/useMensagensAutomaticas";
 
 interface MensagensAutomaticasListProps {
+  selectedUnitId: string | null;
   onEdit?: (id: string, tipo: string, mensagem: string) => void;
 }
 
-export function MensagensAutomaticasList({ onEdit }: MensagensAutomaticasListProps) {
+export function MensagensAutomaticasList({ selectedUnitId, onEdit }: MensagensAutomaticasListProps) {
   console.log('MensagensAutomaticasList: Renderizando lista de mensagens automáticas');
 
-  const { data: messages, isLoading } = useMensagensAutomaticas();
+  const { data: messages, isLoading } = useMensagensAutomaticas(selectedUnitId);
   const updateMutation = useUpdateMensagemAutomatica();
 
   const handleToggleActive = (id: string, currentStatus: boolean) => {

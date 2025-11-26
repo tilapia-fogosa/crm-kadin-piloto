@@ -5952,8 +5952,8 @@ export type Database = {
           created_at: string
           id: string
           mensagem: string
-          profile_id: string
           tipo: string
+          unit_id: string
           updated_at: string
         }
         Insert: {
@@ -5961,8 +5961,8 @@ export type Database = {
           created_at?: string
           id?: string
           mensagem: string
-          profile_id: string
           tipo: string
+          unit_id: string
           updated_at?: string
         }
         Update: {
@@ -5970,11 +5970,19 @@ export type Database = {
           created_at?: string
           id?: string
           mensagem?: string
-          profile_id?: string
           tipo?: string
+          unit_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_mensagens_automaticas_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
