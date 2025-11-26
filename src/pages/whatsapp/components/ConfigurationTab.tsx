@@ -24,20 +24,18 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useWhatsAppStatus } from "../hooks/useWhatsAppStatus";
 import { AutoMessageForm } from "./AutoMessageForm";
-
 export function ConfigurationTab() {
   console.log('ConfigurationTab: Renderizando aba de configuração');
-  
   const [isActive, setIsActive] = useState(true);
-  const { data: whatsappStatus, isLoading } = useWhatsAppStatus();
-  
+  const {
+    data: whatsappStatus,
+    isLoading
+  } = useWhatsAppStatus();
   const handleToggle = (checked: boolean) => {
     console.log('ConfigurationTab: Alterando status para:', checked ? 'Ativo' : 'Inativo');
     setIsActive(checked);
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Configurações do WhatsApp</CardTitle>
@@ -58,11 +56,7 @@ export function ConfigurationTab() {
               <Badge variant={isActive ? "default" : "secondary"}>
                 {isActive ? "Ativo" : "Inativo"}
               </Badge>
-              <Switch
-                id="status"
-                checked={isActive}
-                onCheckedChange={handleToggle}
-              />
+              <Switch id="status" checked={isActive} onCheckedChange={handleToggle} />
             </div>
           </div>
 
@@ -72,30 +66,17 @@ export function ConfigurationTab() {
           <div className="space-y-2">
             <Label>Status da Conexão</Label>
             <div className="flex items-center gap-3">
-              <Input
-                value={isLoading ? "Carregando..." : whatsappStatus?.label || "Desconectado"}
-                readOnly
-                className="max-w-xs bg-muted cursor-not-allowed"
-              />
-              <Badge 
-                variant={
-                  whatsappStatus?.color === 'success' ? 'default' : 
-                  whatsappStatus?.color === 'warning' ? 'secondary' : 
-                  'destructive'
-                }
-              >
+              <Input value={isLoading ? "Carregando..." : whatsappStatus?.label || "Desconectado"} readOnly className="max-w-xs bg-muted cursor-not-allowed" />
+              <Badge variant={whatsappStatus?.color === 'success' ? 'default' : whatsappStatus?.color === 'warning' ? 'secondary' : 'destructive'}>
                 {isLoading ? "..." : whatsappStatus?.label || "Desconectado"}
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Status em tempo real da conexão com WhatsApp (atualiza a cada 10 segundos)
-            </p>
+            <p className="text-xs text-muted-foreground">Status em tempo real da conexão com WhatsApp</p>
           </div>
         </CardContent>
       </Card>
 
       {/* Seção de Mensagens Automáticas */}
       <AutoMessageForm />
-    </div>
-  );
+    </div>;
 }
