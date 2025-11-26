@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCheck, ClipboardList } from "lucide-react";
+import { Bot, CheckCheck, ClipboardList } from "lucide-react";
 import { Conversation } from "../types/whatsapp.types";
 
 interface ConversationItemProps {
@@ -26,9 +26,10 @@ interface ConversationItemProps {
   isSelected: boolean;
   onClick: () => void;
   onActivityClick: (e: React.MouseEvent) => void;
+  onToggleTipoAtendimento: (e: React.MouseEvent) => void;
 }
 
-export function ConversationItem({ conversation, isSelected, onClick, onActivityClick }: ConversationItemProps) {
+export function ConversationItem({ conversation, isSelected, onClick, onActivityClick, onToggleTipoAtendimento }: ConversationItemProps) {
   console.log('ConversationItem: Renderizando conversa:', conversation.clientName);
 
   // Formatar horário da última mensagem
@@ -59,18 +60,41 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
         isSelected && "bg-muted"
       )}
     >
-      {/* Botão de Atividades */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 flex-shrink-0 hover:bg-primary/10"
-        onClick={(e) => {
-          e.stopPropagation();
-          onActivityClick(e);
-        }}
-      >
-        <ClipboardList className="h-4 w-4 text-primary" />
-      </Button>
+      {/* Coluna de botões */}
+      <div className="flex flex-col gap-1 flex-shrink-0">
+        {/* Botão de Atividades */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 hover:bg-primary/10"
+          onClick={(e) => {
+            e.stopPropagation();
+            onActivityClick(e);
+          }}
+          title="Gerenciar atividades"
+        >
+          <ClipboardList className="h-4 w-4 text-primary" />
+        </Button>
+
+        {/* Botão de Toggle Bot/Humano */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-8 w-8 transition-colors",
+            conversation.tipoAtendimento === 'bot'
+              ? "bg-orange-500 hover:bg-orange-600 text-white"
+              : "hover:bg-muted text-muted-foreground"
+          )}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleTipoAtendimento(e);
+          }}
+          title={`Atendimento: ${conversation.tipoAtendimento === 'bot' ? 'Bot' : 'Humano'} (clique para alternar)`}
+        >
+          <Bot className="h-4 w-4" />
+        </Button>
+      </div>
 
       {/* Avatar */}
       <Avatar className="h-12 w-12 flex-shrink-0">

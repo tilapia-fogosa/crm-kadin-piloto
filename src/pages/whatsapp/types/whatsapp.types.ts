@@ -19,6 +19,7 @@ export interface Conversation {
   lastMessageFromMe: boolean;
   totalMessages: number;
   unitId: string;
+  tipoAtendimento: 'bot' | 'humano';
 }
 
 // Mensagem individual

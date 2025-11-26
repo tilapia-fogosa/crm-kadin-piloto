@@ -62,7 +62,8 @@ export function useConversations() {
             phone_number,
             primeiro_nome,
             status,
-            unit_id
+            unit_id,
+            tipo_atendimento
           )
         `)
         .eq('clients.unit_id', selectedUnitId)
@@ -119,7 +120,8 @@ export function useConversations() {
           lastMessage: sortedMessages[0]?.mensagem || '',
           lastMessageTime: sortedMessages[0]?.created_at || '',
           lastMessageFromMe: sortedMessages[0]?.from_me || false,
-          totalMessages: messages.length
+          totalMessages: messages.length,
+          tipoAtendimento: client.tipo_atendimento || 'humano'
         };
       }).sort((a, b) =>
         new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()

@@ -23,9 +23,10 @@ interface ConversationListProps {
   selectedClientId: string | null;
   onSelectClient: (clientId: string) => void;
   onActivityClick: (clientId: string) => void;
+  onToggleTipoAtendimento: (clientId: string, currentTipo: 'bot' | 'humano') => void;
 }
 
-export function ConversationList({ selectedClientId, onSelectClient, onActivityClick }: ConversationListProps) {
+export function ConversationList({ selectedClientId, onSelectClient, onActivityClick, onToggleTipoAtendimento }: ConversationListProps) {
   console.log('ConversationList: Renderizando lista de conversas');
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,6 +77,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
             isSelected={selectedClientId === conversation.clientId}
             onClick={() => onSelectClient(conversation.clientId)}
             onActivityClick={() => onActivityClick(conversation.clientId)}
+            onToggleTipoAtendimento={() => onToggleTipoAtendimento(conversation.clientId, conversation.tipoAtendimento)}
           />
         ))}
       </ScrollArea>
