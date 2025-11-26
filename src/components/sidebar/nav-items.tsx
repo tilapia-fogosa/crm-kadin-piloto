@@ -1,6 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -22,6 +23,7 @@ import {
 import { UpdatesButton } from "./updates-button";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useFuncionalidadesUnidade } from "@/hooks/useFuncionalidadesUnidade";
+import { useUnreadCount } from "@/pages/whatsapp/hooks/useUnreadCount";
 
 // Navegação geral (sempre visível)
 export const generalNavigation = [
@@ -61,8 +63,10 @@ export function NavItems({ currentPath }: NavItemsProps) {
   
   const { isAdmin, isLoading } = useIsAdmin();
   const { temFuncionalidade } = useFuncionalidadesUnidade();
+  const { unreadCount } = useUnreadCount();
   
   console.log('NavItems: Status admin:', { isAdmin, isLoading });
+  console.log('NavItems: Conversas não lidas:', unreadCount);
 
   // Renderizar função para um item de navegação
   const renderNavItem = (item: any) => {
@@ -70,6 +74,9 @@ export function NavItems({ currentPath }: NavItemsProps) {
     if (item.requiresFeature && !temFuncionalidade(item.requiresFeature)) {
       return null;
     }
+
+    const isWhatsApp = item.name === "WhatsApp";
+    const showBadge = isWhatsApp && unreadCount > 0;
 
     return (
       <div key={item.name}>
@@ -82,9 +89,19 @@ export function NavItems({ currentPath }: NavItemsProps) {
           )}
           asChild
         >
-          <Link to={item.href}>
-            <item.icon className="mr-2 h-5 w-5" />
-            {item.name}
+          <Link to={item.href} className="flex items-center justify-between w-full">
+            <div className="flex items-center">
+              <item.icon className="mr-2 h-5 w-5" />
+              {item.name}
+            </div>
+            {showBadge && (
+              <Badge 
+                variant="destructive" 
+                className="ml-auto bg-red-500 text-white hover:bg-red-600"
+              >
+                {unreadCount}
+              </Badge>
+            )}
           </Link>
         </Button>
         
