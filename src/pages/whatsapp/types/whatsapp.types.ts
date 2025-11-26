@@ -28,6 +28,7 @@ export interface Message {
   content: string;
   createdAt: string;
   fromMe: boolean;
+  createdByName?: string | null;
 }
 
 // Configuração

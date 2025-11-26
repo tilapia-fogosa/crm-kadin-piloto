@@ -30,7 +30,15 @@ export function useMessages(clientId: string | null) {
 
       const { data, error } = await supabase
         .from('historico_comercial')
-        .select('id, client_id, mensagem, created_at, from_me')
+        .select(`
+          id, 
+          client_id, 
+          mensagem, 
+          created_at, 
+          from_me,
+          created_by,
+          profiles:created_by (full_name)
+        `)
         .eq('client_id', clientId)
         .order('created_at', { ascending: true });
 
@@ -46,7 +54,10 @@ export function useMessages(clientId: string | null) {
         clientId: msg.client_id,
         content: msg.mensagem,
         createdAt: msg.created_at,
-        fromMe: msg.from_me
+        fromMe: msg.from_me,
+        createdByName: msg.profiles?.full_name 
+          ? msg.profiles.full_name.split(' ')[0] 
+          : null
       })) || [];
 
       return messages;
