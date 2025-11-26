@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/card";
 import { ConversationList } from "./ConversationList";
 import { ChatArea } from "./ChatArea";
 import { useConversations } from "../hooks/useConversations";
+import { useToggleTipoAtendimento } from "../hooks/useToggleTipoAtendimento";
 import { CardSheet } from "@/components/kanban/components/sheet/CardSheet";
 import { useActivityOperations } from "@/components/kanban/hooks/useActivityOperations";
 import { useWhatsApp } from "@/components/kanban/hooks/useWhatsApp";
@@ -51,9 +52,10 @@ export function ConversationsTab() {
   const [activityModalClientId, setActivityModalClientId] = useState<string | null>(null);
   const { data: conversations = [] } = useConversations();
 
-  // Hooks para operações de atividades
+  // Hooks para operações de atividades e tipo de atendimento
   const { registerAttempt, registerEffectiveContact, registerScheduling, submitAttendance } = useActivityOperations();
   const { handleWhatsAppClick } = useWhatsApp();
+  const toggleTipoAtendimento = useToggleTipoAtendimento();
 
   // Encontrar a conversa para o modal de atividades
   const activityModalConversation = conversations.find(c => c.clientId === activityModalClientId);
@@ -71,6 +73,12 @@ export function ConversationsTab() {
     // TODO: Implementar se necessário
   };
 
+  const handleToggleTipoAtendimento = (clientId: string, currentTipo: 'bot' | 'humano') => {
+    console.log('ConversationsTab: Alternando tipo de atendimento', { clientId, currentTipo });
+    const newTipo = currentTipo === 'bot' ? 'humano' : 'bot';
+    toggleTipoAtendimento.mutate({ clientId, newTipo });
+  };
+
   return (
     <>
       <Card className="h-full overflow-hidden border-0 shadow-none md:border">
@@ -81,6 +89,7 @@ export function ConversationsTab() {
               selectedClientId={selectedClientId}
               onSelectClient={setSelectedClientId}
               onActivityClick={handleActivityClick}
+              onToggleTipoAtendimento={handleToggleTipoAtendimento}
             />
           </div>
 
