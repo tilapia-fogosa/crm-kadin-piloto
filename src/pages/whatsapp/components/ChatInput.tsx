@@ -108,7 +108,8 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
           phone_number: conversation.phoneNumber,
           user_name: userName,
           message: processedMessage,
-          client_id: conversation.clientId
+          client_id: conversation.clientId,
+          profile_id: user?.id
         }
       });
 
