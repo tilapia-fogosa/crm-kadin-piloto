@@ -33,10 +33,19 @@ export function useWhatsAppStatus() {
         .from('dados_importantes')
         .select('data')
         .eq('key', 'status_whatapp_comercial')
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('useWhatsAppStatus: Erro ao buscar status:', error);
+        return {
+          raw: null,
+          label: 'Desconectado',
+          color: 'destructive'
+        };
+      }
+
+      if (!data) {
+        console.warn('useWhatsAppStatus: Registro status_whatapp_comercial não encontrado na tabela dados_importantes');
         return {
           raw: null,
           label: 'Desconectado',
