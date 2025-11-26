@@ -40,13 +40,39 @@ export function useMarkAsRead() {
 
       console.log('useMarkAsRead: Mensagens marcadas como lidas com sucesso');
     },
+    onMutate: async (clientId: string) => {
+      console.log('useMarkAsRead: Iniciando atualização otimista para cliente:', clientId);
+      
+      // Cancelar queries em andamento para evitar conflitos
+      await queryClient.cancelQueries({ queryKey: ['whatsapp-conversations'] });
+      
+      // Atualizar cache otimisticamente - zerar unreadCount imediatamente
+      queryClient.setQueryData(['whatsapp-conversations'], (oldData: any) => {
+        if (!oldData) {
+          console.log('useMarkAsRead: Nenhum dado no cache para atualizar');
+          return oldData;
+        }
+        
+        console.log('useMarkAsRead: Atualizando cache otimisticamente');
+        return oldData.map((conversation: any) => {
+          if (conversation.clientId === clientId) {
+            console.log(`useMarkAsRead: Zerando unreadCount para cliente ${clientId} (era ${conversation.unreadCount})`);
+            return { ...conversation, unreadCount: 0 };
+          }
+          return conversation;
+        });
+      });
+    },
     onSuccess: () => {
-      console.log('useMarkAsRead: Invalidando query de conversas');
-      // Invalidar query para atualizar a lista
+      console.log('useMarkAsRead: Mutation bem-sucedida, invalidando query de conversas');
+      // Invalidar query para sincronizar com dados do servidor
       queryClient.invalidateQueries({ queryKey: ['whatsapp-conversations'] });
     },
-    onError: (error) => {
+    onError: (error, clientId) => {
       console.error('useMarkAsRead: Erro na mutation:', error);
+      // Em caso de erro, invalidar para reverter ao estado do servidor
+      console.log('useMarkAsRead: Revertendo cache devido ao erro');
+      queryClient.invalidateQueries({ queryKey: ['whatsapp-conversations'] });
     }
   });
 }
