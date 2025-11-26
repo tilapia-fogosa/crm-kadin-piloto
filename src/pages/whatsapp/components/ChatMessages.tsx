@@ -27,13 +27,13 @@ export function ChatMessages({ clientId }: ChatMessagesProps) {
   console.log('ChatMessages: Renderizando mensagens para cliente:', clientId);
   
   const { data: messages, isLoading } = useMessages(clientId);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll para a última mensagem
   useEffect(() => {
-    if (scrollRef.current && messages && messages.length > 0) {
+    if (bottomRef.current && messages && messages.length > 0) {
       console.log('ChatMessages: Auto-scroll para última mensagem');
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      bottomRef.current.scrollIntoView({ behavior: 'auto' });
     }
   }, [messages]);
 
@@ -67,7 +67,7 @@ export function ChatMessages({ clientId }: ChatMessagesProps) {
   });
 
   return (
-    <ScrollArea className="flex-1 bg-muted/30" ref={scrollRef}>
+    <ScrollArea className="flex-1 bg-muted/30">
       <div className="p-4 space-y-4">
         {groupedMessages.map((group, groupIndex) => (
           <div key={groupIndex}>
@@ -84,6 +84,9 @@ export function ChatMessages({ clientId }: ChatMessagesProps) {
             ))}
           </div>
         ))}
+        
+        {/* Elemento âncora para scroll automático */}
+        <div ref={bottomRef} />
       </div>
     </ScrollArea>
   );
