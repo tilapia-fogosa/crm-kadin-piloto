@@ -65,6 +65,12 @@ const DYNAMIC_FIELDS: DynamicField[] = [
     description: "Nome da unidade",
     icon: <Building className="h-4 w-4" />,
   },
+  {
+    key: "{{endereco}}",
+    label: "Endereço da Unidade",
+    description: "Endereço completo da unidade",
+    icon: <Building className="h-4 w-4" />,
+  },
 ];
 
 interface DynamicFieldsModalProps {

@@ -11,28 +11,52 @@ interface DynamicField {
 
 const DYNAMIC_FIELDS: DynamicField[] = [
   {
-    key: "{nome}",
+    key: "{{nome}}",
     label: "Nome Completo",
     description: "Nome completo do cliente",
     icon: User,
   },
   {
-    key: "{primeiro_nome}",
+    key: "{{primeiro_nome}}",
     label: "Primeiro Nome",
     description: "Apenas o primeiro nome do cliente",
     icon: User,
   },
   {
-    key: "{lead_source}",
+    key: "{{telefone}}",
+    label: "Telefone",
+    description: "Número de telefone do cliente",
+    icon: User,
+  },
+  {
+    key: "{{email}}",
+    label: "E-mail",
+    description: "Endereço de e-mail do cliente",
+    icon: User,
+  },
+  {
+    key: "{{origem}}",
     label: "Origem do Lead",
     description: "De onde veio o lead (ex: Facebook, Google)",
     icon: Tag,
   },
   {
-    key: "{scheduled_date}",
+    key: "{{data_agendamento}}",
     label: "Data Agendamento",
     description: "Data e hora do agendamento",
     icon: Calendar,
+  },
+  {
+    key: "{{endereco}}",
+    label: "Endereço da Unidade",
+    description: "Endereço completo da unidade",
+    icon: MapPin,
+  },
+  {
+    key: "{{unidade}}",
+    label: "Nome da Unidade",
+    description: "Nome da unidade",
+    icon: MapPin,
   },
 ];
 
@@ -85,7 +109,7 @@ export function DynamicFieldsHelper({ onInsertField }: DynamicFieldsHelperProps)
         <div className="mt-4 p-3 bg-muted rounded-md">
           <div className="text-xs font-medium mb-1">Exemplo de uso:</div>
           <div className="text-xs text-muted-foreground">
-            "Olá {'{primeiro_nome}'}, sua consulta está marcada para {'{scheduled_date}'}. Origem: {'{lead_source}'}"
+            "Olá {'{{primeiro_nome}}'}, sua consulta está marcada para {'{{data_agendamento}}'}. Unidade: {'{{endereco}}'}"
           </div>
         </div>
       </CardContent>
