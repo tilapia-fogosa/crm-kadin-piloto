@@ -62,10 +62,10 @@ export function ConversationsTab() {
   // Marcar mensagens como lidas quando selecionar uma conversa
   useEffect(() => {
     if (selectedClientId) {
-      console.log('ConversationsTab: Marcando mensagens como lidas para cliente:', selectedClientId);
+      console.log('ConversationsTab: Conversa selecionada, marcando como lida:', selectedClientId);
       markAsRead.mutate(selectedClientId);
     }
-  }, [selectedClientId]);
+  }, [selectedClientId, markAsRead]);
 
   // Encontrar a conversa para o modal de atividades
   const activityModalConversation = conversations.find(c => c.clientId === activityModalClientId);
