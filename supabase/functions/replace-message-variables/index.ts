@@ -82,7 +82,7 @@ async function replaceVariables(message: string, clientId: string): Promise<stri
     .from('clients')
     .select(`
       *,
-      unit:unit_id (
+      unit:units!clients_unit_id_fkey (
         id,
         name,
         street,
