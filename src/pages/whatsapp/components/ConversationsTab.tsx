@@ -69,10 +69,14 @@ export function ConversationsTab() {
   const { handleWhatsAppClick } = useWhatsApp();
   const toggleTipoAtendimento = useToggleTipoAtendimento();
 
-  // Marcar mensagens como lidas quando selecionar uma conversa
+  // Marcar mensagens como lidas quando selecionar uma conversa (apenas para cadastrados)
   useEffect(() => {
     console.log('ConversationsTab: useEffect executado, selectedClientId:', selectedClientId, 'lastMarkedClientId:', lastMarkedClientId);
-    if (selectedClientId && selectedClientId !== lastMarkedClientId) {
+    
+    // Não marcar como lida se for número não cadastrado
+    const isUnregistered = selectedClientId?.startsWith('phone_');
+    
+    if (selectedClientId && selectedClientId !== lastMarkedClientId && !isUnregistered) {
       console.log('ConversationsTab: Marcando como lida (nova conversa):', selectedClientId);
       markAsRead.mutate(selectedClientId);
       setLastMarkedClientId(selectedClientId);
@@ -101,8 +105,13 @@ export function ConversationsTab() {
     toggleTipoAtendimento.mutate({ clientId, newTipo });
   };
 
-  const handleSelectClient = (clientId: string) => {
-    console.log('ConversationsTab: Selecionando cliente e invalidando cache:', clientId);
+  const handleSelectClient = (clientId: string, isUnregistered: boolean = false) => {
+    console.log('ConversationsTab: Selecionando cliente:', clientId, 'não cadastrado:', isUnregistered);
+    
+    // Permite visualização de mensagens não cadastradas
+    if (isUnregistered) {
+      console.log('ConversationsTab: Permitindo visualização de mensagens não cadastradas');
+    }
     
     // Invalida cache de mensagens do cliente selecionado para garantir dados mais recentes
     queryClient.invalidateQueries({ 

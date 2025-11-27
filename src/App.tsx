@@ -17,6 +17,7 @@ import Index from "@/pages/Index";
 import Kanban from "@/pages/Kanban";
 import AuthCallback from "@/pages/auth/callback";
 import NewClient from "@/pages/clients/new";
+import NewClientFromWhatsApp from "@/pages/clients/new-from-whatsapp";
 import ClientsPage from "@/pages/clients/index";
 import LeadSourcesPage from "@/pages/clients/sources";
 import UsersPage from "@/pages/users/index";
@@ -98,6 +99,7 @@ function App() {
                     <Route path="/dashboard" element={<Index />} />
                     <Route path="/kanban" element={<Kanban />} />
                     <Route path="/clients/new" element={<NewClient />} />
+                    <Route path="/clients/new-from-whatsapp" element={<NewClientFromWhatsApp />} />
                     <Route path="/clients" element={<ClientsPage />} />
                     <Route path="/clients/:id/edit" element={<EditClientPage />} />
                     <Route path="/users" element={<UsersPage />} />

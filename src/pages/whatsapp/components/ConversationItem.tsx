@@ -19,18 +19,20 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Bot, CheckCheck, ClipboardList, X } from "lucide-react";
+import { Bot, CheckCheck, ClipboardList, X, Phone } from "lucide-react";
 import { Conversation } from "../types/whatsapp.types";
+import { useNavigate } from "react-router-dom";
 
 interface ConversationItemProps {
   conversation: Conversation;
   isSelected: boolean;
   onClick: () => void;
-  onActivityClick: (e: React.MouseEvent) => void;
-  onToggleTipoAtendimento: (e: React.MouseEvent) => void;
+  onActivityClick?: (e: React.MouseEvent) => void;
+  onToggleTipoAtendimento?: (e: React.MouseEvent) => void;
 }
 
 export function ConversationItem({ conversation, isSelected, onClick, onActivityClick, onToggleTipoAtendimento }: ConversationItemProps) {
+  const navigate = useNavigate();
   console.log('ConversationItem: Renderizando conversa:', conversation.clientName);
 
   // Formatar horário da última mensagem
@@ -45,13 +47,22 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
     return format(date, 'dd/MM', { locale: ptBR });
   };
 
-  // Pegar iniciais para o avatar
-  const initials = conversation.primeiroNome
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .substring(0, 2);
+  // Iniciais ou ícone para não cadastrados
+  const initials = conversation.isUnregistered 
+    ? '??' 
+    : conversation.primeiroNome
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+
+  // Handler para o badge Cadastrar
+  const handleCadastrarClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Não seleciona a conversa
+    console.log('ConversationItem: Clicando em Cadastrar para telefone:', conversation.phoneNumber);
+    navigate(`/clients/new-from-whatsapp?phone=${conversation.phoneNumber}`);
+  };
 
   return (
     <button
@@ -61,49 +72,66 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
         isSelected && "bg-primary/10 border-l-4 border-l-primary shadow-sm"
       )}
     >
-      {/* Coluna de botões */}
-      <div className="flex flex-col gap-1 flex-shrink-0">
-        {/* Botão de Atividades */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 hover:bg-primary/10"
-          onClick={(e) => {
-            e.stopPropagation();
-            onActivityClick(e);
-          }}
-          title="Gerenciar atividades"
-        >
-          <ClipboardList className="h-4 w-4 text-primary" />
-        </Button>
+      {/* Coluna de botões - apenas para cadastrados */}
+      {!conversation.isUnregistered && (
+        <div className="flex flex-col gap-1 flex-shrink-0">
+          {/* Botão de Atividades */}
+          {onActivityClick && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:bg-primary/10"
+              onClick={(e) => {
+                e.stopPropagation();
+                onActivityClick(e);
+              }}
+              title="Gerenciar atividades"
+            >
+              <ClipboardList className="h-4 w-4 text-primary" />
+            </Button>
+          )}
 
-        {/* Botão de Toggle Bot/Humano */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "h-8 w-8 transition-colors relative",
-            conversation.tipoAtendimento === 'bot'
-              ? "bg-orange-500 hover:bg-orange-600 text-white"
-              : "hover:bg-muted text-muted-foreground"
+          {/* Botão de Toggle Bot/Humano */}
+          {onToggleTipoAtendimento && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-8 w-8 transition-colors relative",
+                conversation.tipoAtendimento === 'bot'
+                  ? "bg-orange-500 hover:bg-orange-600 text-white"
+                  : "hover:bg-muted text-muted-foreground"
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleTipoAtendimento(e);
+              }}
+              title={`Atendimento: ${conversation.tipoAtendimento === 'bot' ? 'Bot' : 'Humano'} (clique para alternar)`}
+            >
+              <Bot className="h-4 w-4" />
+              {conversation.tipoAtendimento === 'humano' && (
+                <X className="h-3 w-3 absolute top-0 right-0 text-destructive bg-background rounded-full" strokeWidth={3} />
+              )}
+            </Button>
           )}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleTipoAtendimento(e);
-          }}
-          title={`Atendimento: ${conversation.tipoAtendimento === 'bot' ? 'Bot' : 'Humano'} (clique para alternar)`}
-        >
-          <Bot className="h-4 w-4" />
-          {conversation.tipoAtendimento === 'humano' && (
-            <X className="h-3 w-3 absolute top-0 right-0 text-destructive bg-background rounded-full" strokeWidth={3} />
-          )}
-        </Button>
-      </div>
+        </div>
+      )}
 
       {/* Avatar */}
       <Avatar className="h-12 w-12 flex-shrink-0">
-        <AvatarFallback className="bg-primary text-primary-foreground">
-          {initials}
+        <AvatarFallback className={cn(
+          "text-sm font-medium",
+          conversation.isUnregistered 
+            ? "bg-gray-400 text-white" 
+            : conversation.unreadCount > 0 
+              ? "bg-primary text-primary-foreground" 
+              : "bg-muted"
+        )}>
+          {conversation.isUnregistered ? (
+            <Phone className="h-5 w-5" />
+          ) : (
+            initials
+          )}
         </AvatarFallback>
       </Avatar>
 
@@ -117,8 +145,18 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
             )}>
               {conversation.clientName}
             </span>
-            {/* Badge de Novo Lead */}
-            {conversation.isNewLead && (
+            {/* Badge de Cadastrar (para não cadastrados) */}
+            {conversation.isUnregistered && (
+              <Badge 
+                className="h-5 px-2 flex items-center justify-center bg-purple-600 text-white text-xs font-medium border-purple-600 hover:bg-purple-700 cursor-pointer transition-colors"
+                onClick={handleCadastrarClick}
+              >
+                Cadastrar
+              </Badge>
+            )}
+            
+            {/* Badge de Novo Lead (para cadastrados) */}
+            {!conversation.isUnregistered && conversation.isNewLead && (
               <Badge 
                 className="h-5 px-2 flex items-center justify-center bg-purple-600 text-white text-xs font-medium border-purple-600 hover:bg-purple-700"
               >

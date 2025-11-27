@@ -22,7 +22,7 @@ import { useConversations } from "../hooks/useConversations";
 
 interface ConversationListProps {
   selectedClientId: string | null;
-  onSelectClient: (clientId: string) => void;
+  onSelectClient: (clientId: string, isUnregistered?: boolean) => void;
   onActivityClick: (clientId: string) => void;
   onToggleTipoAtendimento: (clientId: string, currentTipo: 'bot' | 'humano') => void;
 }
@@ -96,9 +96,9 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
             key={conversation.clientId}
             conversation={conversation}
             isSelected={selectedClientId === conversation.clientId}
-            onClick={() => onSelectClient(conversation.clientId)}
-            onActivityClick={() => onActivityClick(conversation.clientId)}
-            onToggleTipoAtendimento={() => onToggleTipoAtendimento(conversation.clientId, conversation.tipoAtendimento)}
+            onClick={() => onSelectClient(conversation.clientId, conversation.isUnregistered)}
+            onActivityClick={conversation.isUnregistered ? undefined : () => onActivityClick(conversation.clientId)}
+            onToggleTipoAtendimento={conversation.isUnregistered ? undefined : () => onToggleTipoAtendimento(conversation.clientId, conversation.tipoAtendimento)}
           />
         ))}
       </ScrollArea>

@@ -137,13 +137,108 @@ export function useConversations() {
           totalMessages: messages.length,
           tipoAtendimento: client.tipo_atendimento || 'humano',
           unreadCount,
-          isNewLead
+          isNewLead,
+          isUnregistered: false
         };
       }).sort((a, b) =>
         new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
       );
 
-      console.log('useConversations: Conversas formatadas:', conversations.length);
+      console.log('useConversations: Conversas de clientes cadastrados:', conversations.length);
+
+      // Etapa 2: Buscar mensagens de números não cadastrados (client_id IS NULL)
+      console.log('useConversations: Buscando mensagens de números não cadastrados');
+      
+      const { data: unregisteredMessages, error: unregisteredError } = await supabase
+        .from('historico_comercial')
+        .select('id, telefone, mensagem, created_at, from_me, lida, created_by')
+        .is('client_id', null)
+        .not('telefone', 'is', null)
+        .order('created_at', { ascending: false });
+
+      if (unregisteredError) {
+        console.error('useConversations: Erro ao buscar mensagens não cadastradas:', unregisteredError);
+        // Continua com apenas as conversas cadastradas
+      } else {
+        console.log('useConversations: Mensagens não cadastradas recebidas:', unregisteredMessages?.length);
+
+        // Agrupar mensagens por telefone
+        const unregisteredByPhone = new Map<string, any[]>();
+        
+        unregisteredMessages?.forEach(msg => {
+          if (!unregisteredByPhone.has(msg.telefone)) {
+            unregisteredByPhone.set(msg.telefone, []);
+          }
+          unregisteredByPhone.get(msg.telefone)!.push({
+            id: msg.id,
+            mensagem: msg.mensagem,
+            created_at: msg.created_at,
+            from_me: msg.from_me,
+            lida: msg.lida,
+            created_by: msg.created_by
+          });
+        });
+
+        console.log('useConversations: Números únicos não cadastrados:', unregisteredByPhone.size);
+
+        // Converter para formato Conversation
+        const unregisteredConversations: Conversation[] = Array.from(unregisteredByPhone.entries()).map(([phone, msgs]) => {
+          // Ordenar mensagens por data
+          const sortedMsgs = msgs.sort((a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+
+          // Contar não lidas
+          const unreadCount = msgs.filter(msg => !msg.from_me && msg.lida === false).length;
+
+          // Formatar número de telefone para exibição
+          const formatPhone = (tel: string) => {
+            // Remove caracteres não numéricos
+            const clean = tel.replace(/\D/g, '');
+            
+            // Formata como +55 XX XXXXX-XXXX ou +55 XX XXXX-XXXX
+            if (clean.length === 13) {
+              return `+${clean.slice(0, 2)} ${clean.slice(2, 4)} ${clean.slice(4, 9)}-${clean.slice(9)}`;
+            } else if (clean.length === 12) {
+              return `+${clean.slice(0, 2)} ${clean.slice(2, 4)} ${clean.slice(4, 8)}-${clean.slice(8)}`;
+            } else if (clean.length === 11) {
+              return `${clean.slice(0, 2)} ${clean.slice(2, 7)}-${clean.slice(7)}`;
+            } else if (clean.length === 10) {
+              return `${clean.slice(0, 2)} ${clean.slice(2, 6)}-${clean.slice(6)}`;
+            }
+            return tel;
+          };
+
+          return {
+            clientId: `phone_${phone}`, // Prefixo para identificar números não cadastrados
+            clientName: formatPhone(phone),
+            phoneNumber: phone,
+            primeiroNome: '??',
+            status: 'não-cadastrado',
+            unitId: selectedUnitId || '',
+            lastMessage: sortedMsgs[0]?.mensagem || '',
+            lastMessageTime: sortedMsgs[0]?.created_at || '',
+            lastMessageFromMe: sortedMsgs[0]?.from_me || false,
+            totalMessages: msgs.length,
+            tipoAtendimento: 'humano' as const,
+            unreadCount,
+            isNewLead: false,
+            isUnregistered: true
+          };
+        });
+
+        console.log('useConversations: Conversas não cadastradas formatadas:', unregisteredConversations.length);
+
+        // Mesclar conversas cadastradas e não cadastradas
+        const allConversations = [...conversations, ...unregisteredConversations]
+          .sort((a, b) => 
+            new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
+          );
+
+        console.log('useConversations: Total de conversas (cadastradas + não cadastradas):', allConversations.length);
+        return allConversations;
+      }
+
       return conversations;
     }
   });
