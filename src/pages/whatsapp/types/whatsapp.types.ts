@@ -9,7 +9,7 @@
 
 // Conversa na lista (JOIN clients + historico_comercial)
 export interface Conversation {
-  clientId: string;
+  clientId: string; // UUID do cliente ou "phone_NUMERO" para não cadastrados
   clientName: string;
   phoneNumber: string;
   primeiroNome: string;
@@ -22,6 +22,7 @@ export interface Conversation {
   tipoAtendimento: 'bot' | 'humano';
   unreadCount: number; // Quantidade de mensagens não lidas pela equipe
   isNewLead: boolean; // Indica se o cliente tem apenas a mensagem automática do Sistema-Kadin
+  isUnregistered: boolean; // Indica se é um número não cadastrado no sistema
 }
 
 // Mensagem individual

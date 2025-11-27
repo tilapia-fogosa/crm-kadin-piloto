@@ -15,7 +15,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Message } from "../types/whatsapp.types";
 
 export function useMessages(clientId: string | null) {
-  console.log('useMessages: Iniciando busca de mensagens para cliente:', clientId);
+  console.log('useMessages: Iniciando busca de mensagens para:', clientId);
+
+  // Verificar se é um número não cadastrado (prefixo "phone_")
+  const isPhoneQuery = clientId?.startsWith('phone_');
+  const phoneNumber = isPhoneQuery ? clientId.replace('phone_', '') : null;
 
   return useQuery({
     queryKey: ['whatsapp-messages', clientId],
@@ -26,7 +30,50 @@ export function useMessages(clientId: string | null) {
         return [];
       }
 
-      console.log('useMessages: Executando query no Supabase para cliente:', clientId);
+      if (isPhoneQuery && phoneNumber) {
+        console.log('useMessages: Buscando mensagens por telefone (não cadastrado):', phoneNumber);
+
+        // Query para mensagens sem client_id, filtrando por telefone
+        const { data, error } = await supabase
+          .from('historico_comercial')
+          .select(`
+            id, 
+            telefone,
+            mensagem, 
+            created_at, 
+            from_me,
+            created_by,
+            tipo_mensagem,
+            profiles:created_by (full_name)
+          `)
+          .eq('telefone', phoneNumber)
+          .is('client_id', null)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('useMessages: Erro ao buscar mensagens por telefone:', error);
+          throw error;
+        }
+
+        console.log('useMessages: Mensagens recebidas (não cadastrado):', data?.length);
+
+        const messages: Message[] = data?.map(msg => ({
+          id: msg.id,
+          clientId: `phone_${phoneNumber}`,
+          content: msg.mensagem,
+          createdAt: msg.created_at,
+          fromMe: msg.from_me,
+          createdByName: msg.profiles?.full_name 
+            ? msg.profiles.full_name.split(' ')[0] 
+            : null,
+          tipoMensagem: msg.tipo_mensagem
+        })) || [];
+
+        return messages;
+      }
+
+      // Query normal para clientes cadastrados
+      console.log('useMessages: Executando query no Supabase para cliente cadastrado:', clientId);
 
       const { data, error } = await supabase
         .from('historico_comercial')
