@@ -31,6 +31,7 @@ export interface Message {
   createdAt: string;
   fromMe: boolean;
   createdByName?: string | null;
+  tipoMensagem?: string | null;
 }
 
 // Configuração

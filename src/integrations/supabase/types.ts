@@ -3480,6 +3480,7 @@ export type Database = {
           lida: boolean | null
           lida_em: string | null
           mensagem: string | null
+          tipo_mensagem: string | null
         }
         Insert: {
           client_id?: string | null
@@ -3490,6 +3491,7 @@ export type Database = {
           lida?: boolean | null
           lida_em?: string | null
           mensagem?: string | null
+          tipo_mensagem?: string | null
         }
         Update: {
           client_id?: string | null
@@ -3500,6 +3502,7 @@ export type Database = {
           lida?: boolean | null
           lida_em?: string | null
           mensagem?: string | null
+          tipo_mensagem?: string | null
         }
         Relationships: [
           {
