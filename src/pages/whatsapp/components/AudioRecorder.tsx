@@ -196,6 +196,8 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
     setRecordingState(newState);
     onStateChange?.(newState);
 
+    let success = false;
+
     try {
       console.log('AudioRecorder: Áudio blob:', blobToSend.size, 'bytes');
 
@@ -239,6 +241,7 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
       console.log('AudioRecorder: Áudio enviado com sucesso:', result);
 
       toast.success('Áudio enviado com sucesso!');
+      success = true;
 
       // Invalida cache para atualizar mensagens
       setTimeout(() => {
@@ -256,8 +259,9 @@ export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }:
       setRecordingState(newState);
       onStateChange?.(newState);
     } finally {
-      if (recordingState === 'processing') {
-        // Limpa apenas se o envio foi bem-sucedido
+      // Limpa apenas se o envio foi bem-sucedido
+      if (success) {
+        console.log('AudioRecorder: Limpando estado após envio bem-sucedido');
         if (audioRef.current) {
           audioRef.current.pause();
           audioRef.current = null;

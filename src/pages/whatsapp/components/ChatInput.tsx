@@ -162,6 +162,10 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
   const handleAudioStateChange = (state: 'idle' | 'recording' | 'preview' | 'processing') => {
     console.log('ChatInput: Estado do áudio mudou para:', state);
     setAudioRecordingState(state);
+    // Limpa a função de envio quando volta para idle
+    if (state === 'idle') {
+      setSendAudioFn(null);
+    }
   };
 
   const handleSendAudioReady = (sendFn: () => Promise<void>) => {
