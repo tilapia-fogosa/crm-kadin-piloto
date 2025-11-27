@@ -117,6 +117,14 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
             )}>
               {conversation.clientName}
             </span>
+            {/* Badge de Novo Lead */}
+            {conversation.isNewLead && (
+              <Badge 
+                className="h-5 px-2 flex items-center justify-center bg-purple-600 text-white text-xs font-medium border-purple-600 hover:bg-purple-700"
+              >
+                Novo-Lead
+              </Badge>
+            )}
             {/* Badge de mensagens não lidas */}
             {conversation.unreadCount > 0 && (
               <Badge 
