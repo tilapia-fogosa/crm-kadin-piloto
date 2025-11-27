@@ -137,14 +137,33 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
 
       {/* Conteúdo */}
       <div className="flex-1 min-w-0 text-left">
+        {/* Primeira linha: Nome e Horário */}
         <div className="flex items-baseline justify-between mb-1">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <span className={cn(
-              "truncate",
-              conversation.unreadCount > 0 ? "font-bold text-foreground" : "font-medium text-foreground"
-            )}>
-              {conversation.clientName}
+          <span className={cn(
+            "truncate",
+            conversation.unreadCount > 0 ? "font-bold text-foreground" : "font-medium text-foreground"
+          )}>
+            {conversation.clientName}
+          </span>
+          <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
+            {formatTime(conversation.lastMessageTime)}
+          </span>
+        </div>
+
+        {/* Segunda linha: Última mensagem e Badges */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1 text-sm text-muted-foreground flex-1 min-w-0">
+            {/* Indicador de mensagem enviada */}
+            {conversation.lastMessageFromMe && (
+              <CheckCheck className="h-3 w-3 flex-shrink-0" />
+            )}
+            <span className="truncate line-clamp-1">
+              {conversation.lastMessage}
             </span>
+          </div>
+
+          {/* Badges agrupadas à direita */}
+          <div className="flex items-center gap-1 flex-shrink-0">
             {/* Badge de Cadastrar (para não cadastrados) */}
             {conversation.isUnregistered && (
               <Badge 
@@ -163,6 +182,7 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
                 Novo-Lead
               </Badge>
             )}
+            
             {/* Badge de mensagens não lidas */}
             {conversation.unreadCount > 0 && (
               <Badge 
@@ -173,19 +193,6 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
               </Badge>
             )}
           </div>
-          <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
-            {formatTime(conversation.lastMessageTime)}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-          {/* Indicador de mensagem enviada */}
-          {conversation.lastMessageFromMe && (
-            <CheckCheck className="h-3 w-3 flex-shrink-0" />
-          )}
-          <span className="truncate line-clamp-1">
-            {conversation.lastMessage}
-          </span>
         </div>
       </div>
     </button>
