@@ -3482,6 +3482,7 @@ export type Database = {
           mensagem: string | null
           telefone: string | null
           tipo_mensagem: string | null
+          unit_id: string
         }
         Insert: {
           client_id?: string | null
@@ -3494,6 +3495,7 @@ export type Database = {
           mensagem?: string | null
           telefone?: string | null
           tipo_mensagem?: string | null
+          unit_id?: string
         }
         Update: {
           client_id?: string | null
@@ -3506,6 +3508,7 @@ export type Database = {
           mensagem?: string | null
           telefone?: string | null
           tipo_mensagem?: string | null
+          unit_id?: string
         }
         Relationships: [
           {
