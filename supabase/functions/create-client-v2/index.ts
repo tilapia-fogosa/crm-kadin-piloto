@@ -7,6 +7,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// ID do perfil Sistema-Kadin para registros automáticos
+const SISTEMA_KADIN_ID = 'eaf94b92-7646-485f-bd96-016bf1add2b2'
+
 interface ClientPayloadV2 extends ClientPayload {
   registration_cpf: string
   registration_name: string
@@ -228,7 +231,7 @@ serve(async (req) => {
           client_id: data.id,
           mensagem: ' ',
           from_me: true,
-          created_by: null, // Sistema automático
+          created_by: SISTEMA_KADIN_ID,
           lida: false,
           tipo_mensagem: 'sistema'
         })
