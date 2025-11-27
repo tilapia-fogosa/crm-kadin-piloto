@@ -36,6 +36,8 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
   const [isSending, setIsSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAutoMessages, setShowAutoMessages] = useState(false);
+  const [audioRecordingState, setAudioRecordingState] = useState<'idle' | 'recording' | 'preview' | 'processing'>('idle');
+  const [sendAudioFn, setSendAudioFn] = useState<(() => Promise<void>) | null>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const { data: autoMessages, isLoading: isLoadingAutoMessages } = useAutoMessages();
@@ -157,6 +159,23 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
     setShowAutoMessages(false);
   };
 
+  const handleAudioStateChange = (state: 'idle' | 'recording' | 'preview' | 'processing') => {
+    console.log('ChatInput: Estado do áudio mudou para:', state);
+    setAudioRecordingState(state);
+  };
+
+  const handleSendAudioReady = (sendFn: () => Promise<void>) => {
+    console.log('ChatInput: Função de envio de áudio recebida');
+    setSendAudioFn(() => sendFn);
+  };
+
+  const handleSendAudioClick = async () => {
+    console.log('ChatInput: Botão de enviar áudio clicado');
+    if (sendAudioFn) {
+      await sendAudioFn();
+    }
+  };
+
   // Filtrar apenas mensagens ativas
   const activeAutoMessages = autoMessages?.filter(m => m.ativo) || [];
 
@@ -190,29 +209,44 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
       </Button>
 
       {/* Botão Gravação de Áudio */}
-      <AudioRecorder conversation={conversation} />
+      <AudioRecorder 
+        conversation={conversation}
+        onStateChange={handleAudioStateChange}
+        onSendAudioReady={handleSendAudioReady}
+      />
 
       {/* Input de texto */}
       <Input
         type="text"
-        placeholder="Digite uma mensagem..."
+        placeholder={audioRecordingState === 'preview' ? "Áudio gravado..." : "Digite uma mensagem..."}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyPress={handleKeyPress}
-        disabled={isSending}
+        disabled={isSending || audioRecordingState === 'preview'}
         className="flex-1"
         onClick={() => setShowEmojiPicker(false)} // Fecha picker ao focar no input
       />
 
-      {/* Botão Enviar */}
-      <Button
-        variant="default"
-        size="icon"
-        onClick={handleSendMessage}
-        disabled={isSending || !message.trim()}
-      >
-        <Send className="h-5 w-5" />
-      </Button>
+      {/* Botão Enviar - condicional: áudio ou texto */}
+      {audioRecordingState === 'preview' ? (
+        <Button
+          variant="default"
+          size="icon"
+          onClick={handleSendAudioClick}
+          title="Enviar áudio"
+        >
+          <Send className="h-5 w-5" />
+        </Button>
+      ) : (
+        <Button
+          variant="default"
+          size="icon"
+          onClick={handleSendMessage}
+          disabled={isSending || !message.trim()}
+        >
+          <Send className="h-5 w-5" />
+        </Button>
+      )}
 
       {/* Popover de Mensagens Automáticas */}
       <Popover open={showAutoMessages} onOpenChange={setShowAutoMessages}>
