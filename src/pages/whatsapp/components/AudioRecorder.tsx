@@ -17,7 +17,7 @@
 
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Loader2 } from "lucide-react";
+import { Mic, Square, Loader2, Play, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -29,12 +29,15 @@ interface AudioRecorderProps {
   };
 }
 
-type RecordingState = 'idle' | 'recording' | 'processing';
+type RecordingState = 'idle' | 'recording' | 'preview' | 'processing';
 
 export function AudioRecorder({ conversation }: AudioRecorderProps) {
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const queryClient = useQueryClient();
 
   console.log('AudioRecorder: Componente renderizado para cliente:', conversation.clientId);
@@ -73,10 +76,23 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
         }
       };
 
-      // Quando gravação termina, processa o áudio
+      // Quando gravação termina, prepara preview
       mediaRecorder.onstop = async () => {
-        console.log('AudioRecorder: Gravação finalizada, processando áudio');
-        await processAudio();
+        console.log('AudioRecorder: Gravação finalizada, preparando preview');
+        
+        // Cria blob do áudio
+        const blob = new Blob(audioChunksRef.current, { 
+          type: mediaRecorderRef.current?.mimeType || 'audio/webm' 
+        });
+        
+        setAudioBlob(blob);
+        setRecordingState('preview');
+        
+        console.log('AudioRecorder: Preview pronto, áudio:', blob.size, 'bytes');
+        
+        toast.success('Áudio gravado!', {
+          description: 'Clique em play para ouvir ou enviar'
+        });
         
         // Para todos os tracks do stream
         stream.getTracks().forEach(track => track.stop());
@@ -111,26 +127,56 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
   };
 
   /**
+   * Reproduz o áudio gravado
+   */
+  const playAudio = () => {
+    if (!audioBlob) return;
+    
+    console.log('AudioRecorder: Reproduzindo áudio');
+    
+    if (!audioRef.current) {
+      audioRef.current = new Audio(URL.createObjectURL(audioBlob));
+      audioRef.current.onended = () => setIsPlaying(false);
+    }
+    
+    audioRef.current.play();
+    setIsPlaying(true);
+  };
+
+  /**
+   * Cancela o áudio gravado
+   */
+  const cancelAudio = () => {
+    console.log('AudioRecorder: Cancelando áudio');
+    
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    
+    setAudioBlob(null);
+    setIsPlaying(false);
+    setRecordingState('idle');
+    audioChunksRef.current = [];
+  };
+
+  /**
    * Processa e envia áudio gravado
    * Converte para base64 e envia para webhook
    */
-  const processAudio = async () => {
-    console.log('AudioRecorder: Processando áudio, chunks:', audioChunksRef.current.length);
+  const sendAudio = async () => {
+    console.log('AudioRecorder: Enviando áudio');
     
-    if (audioChunksRef.current.length === 0) {
-      console.log('AudioRecorder: Nenhum chunk de áudio para processar');
-      setRecordingState('idle');
+    if (!audioBlob) {
+      console.log('AudioRecorder: Nenhum áudio para enviar');
       toast.error('Nenhum áudio foi gravado');
       return;
     }
 
+    setRecordingState('processing');
+
     try {
-      // Cria blob do áudio
-      const audioBlob = new Blob(audioChunksRef.current, { 
-        type: mediaRecorderRef.current?.mimeType || 'audio/webm' 
-      });
-      
-      console.log('AudioRecorder: Áudio blob criado:', audioBlob.size, 'bytes');
+      console.log('AudioRecorder: Áudio blob:', audioBlob.size, 'bytes');
 
       // Converte para base64
       const base64Audio = await blobToBase64(audioBlob);
@@ -181,13 +227,23 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
       }, 1000);
 
     } catch (error) {
-      console.error('AudioRecorder: Erro ao processar áudio:', error);
+      console.error('AudioRecorder: Erro ao enviar áudio:', error);
       toast.error('Erro ao enviar áudio', {
         description: 'Tente novamente'
       });
+      setRecordingState('preview');
     } finally {
-      setRecordingState('idle');
-      audioChunksRef.current = [];
+      if (recordingState === 'processing') {
+        // Limpa apenas se o envio foi bem-sucedido
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+        setAudioBlob(null);
+        setIsPlaying(false);
+        setRecordingState('idle');
+        audioChunksRef.current = [];
+      }
     }
   };
 
@@ -221,6 +277,40 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
     }
   };
 
+  // Modo preview: mostra controles de play e enviar
+  if (recordingState === 'preview') {
+    return (
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={playAudio}
+          disabled={isPlaying}
+          title="Ouvir áudio"
+        >
+          <Play className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="default"
+          size="icon"
+          onClick={sendAudio}
+          title="Enviar áudio"
+        >
+          <Send className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={cancelAudio}
+          title="Cancelar"
+        >
+          <X className="h-5 w-5" />
+        </Button>
+      </div>
+    );
+  }
+
+  // Modo normal: botão de gravar
   return (
     <Button
       variant={recordingState === 'recording' ? 'destructive' : 'ghost'}
