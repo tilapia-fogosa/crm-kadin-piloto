@@ -65,6 +65,31 @@ export default function NewClient() {
       if (error) throw error;
 
       console.log("New client created:", data);
+
+      // Registrar automaticamente no histórico comercial
+      try {
+        console.log('Inserindo registro automático no histórico comercial para client_id:', data.id);
+        const { error: historyError } = await supabase
+          .from('historico_comercial')
+          .insert({
+            client_id: data.id,
+            mensagem: ' ',
+            from_me: true,
+            created_by: null, // Sistema automático
+            lida: false,
+            tipo_mensagem: 'sistema'
+          });
+        
+        if (historyError) {
+          console.error('Erro ao inserir histórico comercial:', historyError);
+          // Não bloqueia o fluxo principal
+        } else {
+          console.log('Histórico comercial registrado com sucesso');
+        }
+      } catch (historyErr) {
+        console.error('Exceção ao inserir histórico comercial:', historyErr);
+        // Não bloqueia o fluxo principal
+      }
       
       toast({
         title: "Lead cadastrado com sucesso!",
