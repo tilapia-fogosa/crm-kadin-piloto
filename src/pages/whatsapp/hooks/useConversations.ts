@@ -16,6 +16,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUnit } from "@/contexts/UnitContext";
 import { Conversation } from "../types/whatsapp.types";
 
+// ID do perfil Sistema-Kadin para identificar novos leads
+const SISTEMA_KADIN_ID = 'eaf94b92-7646-485f-bd96-016bf1add2b2';
+
 export function useConversations() {
   const { session } = useAuth();
   const { selectedUnitId } = useUnit();
@@ -58,6 +61,7 @@ export function useConversations() {
           from_me,
           client_id,
           lida,
+          created_by,
           clients (
             id,
             name,
@@ -99,7 +103,8 @@ export function useConversations() {
             mensagem: msg.mensagem,
             created_at: msg.created_at,
             from_me: msg.from_me,
-            lida: msg.lida
+            lida: msg.lida,
+            created_by: msg.created_by
           });
         }
       });
@@ -116,6 +121,9 @@ export function useConversations() {
         // Contar mensagens não lidas (recebidas e não lidas pela equipe)
         const unreadCount = messages.filter(msg => !msg.from_me && msg.lida === false).length;
 
+        // Verificar se é novo lead: apenas 1 mensagem e foi criada pelo Sistema-Kadin
+        const isNewLead = messages.length === 1 && messages[0].created_by === SISTEMA_KADIN_ID;
+
         return {
           clientId: client.id,
           clientName: client.name,
@@ -128,7 +136,8 @@ export function useConversations() {
           lastMessageFromMe: sortedMessages[0]?.from_me || false,
           totalMessages: messages.length,
           tipoAtendimento: client.tipo_atendimento || 'humano',
-          unreadCount
+          unreadCount,
+          isNewLead
         };
       }).sort((a, b) =>
         new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()

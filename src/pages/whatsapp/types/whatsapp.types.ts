@@ -21,6 +21,7 @@ export interface Conversation {
   unitId: string;
   tipoAtendimento: 'bot' | 'humano';
   unreadCount: number; // Quantidade de mensagens não lidas pela equipe
+  isNewLead: boolean; // Indica se o cliente tem apenas a mensagem automática do Sistema-Kadin
 }
 
 // Mensagem individual
