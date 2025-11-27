@@ -27,11 +27,13 @@ interface AudioRecorderProps {
     clientId: string;
     phoneNumber: string;
   };
+  onStateChange?: (state: RecordingState) => void;
+  onSendAudioReady?: (sendFn: () => Promise<void>) => void;
 }
 
 type RecordingState = 'idle' | 'recording' | 'preview' | 'processing';
 
-export function AudioRecorder({ conversation }: AudioRecorderProps) {
+export function AudioRecorder({ conversation, onStateChange, onSendAudioReady }: AudioRecorderProps) {
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -86,9 +88,20 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
         });
         
         setAudioBlob(blob);
-        setRecordingState('preview');
+        const newState = 'preview';
+        setRecordingState(newState);
+        onStateChange?.(newState);
         
         console.log('AudioRecorder: Preview pronto, áudio:', blob.size, 'bytes');
+        
+        // Passa a função sendAudio para o componente pai
+        if (onSendAudioReady) {
+          // Necessário criar closure com o blob atual
+          const sendFn = async () => {
+            await sendAudioInternal(blob);
+          };
+          onSendAudioReady(sendFn);
+        }
         
         toast.success('Áudio gravado!', {
           description: 'Clique em play para ouvir ou enviar'
@@ -99,7 +112,9 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
       };
 
       mediaRecorder.start();
-      setRecordingState('recording');
+      const newState = 'recording';
+      setRecordingState(newState);
+      onStateChange?.(newState);
       console.log('AudioRecorder: Gravação iniciada');
       
       toast.info('Gravando áudio...', {
@@ -122,7 +137,9 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
     
     if (mediaRecorderRef.current && recordingState === 'recording') {
       mediaRecorderRef.current.stop();
-      setRecordingState('processing');
+      const newState = 'processing';
+      setRecordingState(newState);
+      onStateChange?.(newState);
     }
   };
 
@@ -156,7 +173,9 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
     
     setAudioBlob(null);
     setIsPlaying(false);
-    setRecordingState('idle');
+    const newState = 'idle';
+    setRecordingState(newState);
+    onStateChange?.(newState);
     audioChunksRef.current = [];
   };
 
@@ -164,22 +183,24 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
    * Processa e envia áudio gravado
    * Converte para base64 e envia para webhook
    */
-  const sendAudio = async () => {
+  const sendAudioInternal = async (blobToSend: Blob) => {
     console.log('AudioRecorder: Enviando áudio');
     
-    if (!audioBlob) {
+    if (!blobToSend) {
       console.log('AudioRecorder: Nenhum áudio para enviar');
       toast.error('Nenhum áudio foi gravado');
       return;
     }
 
-    setRecordingState('processing');
+    const newState = 'processing';
+    setRecordingState(newState);
+    onStateChange?.(newState);
 
     try {
-      console.log('AudioRecorder: Áudio blob:', audioBlob.size, 'bytes');
+      console.log('AudioRecorder: Áudio blob:', blobToSend.size, 'bytes');
 
       // Converte para base64
-      const base64Audio = await blobToBase64(audioBlob);
+      const base64Audio = await blobToBase64(blobToSend);
       console.log('AudioRecorder: Áudio convertido para base64');
 
       // Busca dados do usuário
@@ -206,7 +227,7 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
           client_id: conversation.clientId,
           user_name: userName,
           profile_id: user?.id,
-          mime_type: audioBlob.type
+          mime_type: blobToSend.type
         })
       });
 
@@ -231,7 +252,9 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
       toast.error('Erro ao enviar áudio', {
         description: 'Tente novamente'
       });
-      setRecordingState('preview');
+      const newState = 'preview';
+      setRecordingState(newState);
+      onStateChange?.(newState);
     } finally {
       if (recordingState === 'processing') {
         // Limpa apenas se o envio foi bem-sucedido
@@ -241,7 +264,9 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
         }
         setAudioBlob(null);
         setIsPlaying(false);
-        setRecordingState('idle');
+        const newState = 'idle';
+        setRecordingState(newState);
+        onStateChange?.(newState);
         audioChunksRef.current = [];
       }
     }
@@ -277,12 +302,12 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
     }
   };
 
-  // Modo preview: mostra controles de play e enviar
+  // Modo preview: mostra controles de play e cancelar (sem enviar)
   if (recordingState === 'preview') {
     return (
       <div className="flex items-center gap-2">
         <Button
-          variant="ghost"
+          className="bg-green-500 hover:bg-green-600 text-white"
           size="icon"
           onClick={playAudio}
           disabled={isPlaying}
@@ -291,15 +316,7 @@ export function AudioRecorder({ conversation }: AudioRecorderProps) {
           <Play className="h-5 w-5" />
         </Button>
         <Button
-          variant="default"
-          size="icon"
-          onClick={sendAudio}
-          title="Enviar áudio"
-        >
-          <Send className="h-5 w-5" />
-        </Button>
-        <Button
-          variant="ghost"
+          className="bg-red-500 hover:bg-red-600 text-white"
           size="icon"
           onClick={cancelAudio}
           title="Cancelar"
