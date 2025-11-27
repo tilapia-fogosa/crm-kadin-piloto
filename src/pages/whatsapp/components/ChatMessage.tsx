@@ -43,6 +43,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
         )}
       >
         <p className="text-sm whitespace-pre-wrap break-words">
+          {message.tipoMensagem === 'audio' && (
+            <span className="font-bold">Áudio transcrito: </span>
+          )}
           {message.content}
         </p>
         <div className="flex items-center justify-between mt-1 text-xs opacity-70 gap-2">

@@ -37,6 +37,7 @@ export function useMessages(clientId: string | null) {
           created_at, 
           from_me,
           created_by,
+          tipo_mensagem,
           profiles:created_by (full_name)
         `)
         .eq('client_id', clientId)
@@ -57,7 +58,8 @@ export function useMessages(clientId: string | null) {
         fromMe: msg.from_me,
         createdByName: msg.profiles?.full_name 
           ? msg.profiles.full_name.split(' ')[0] 
-          : null
+          : null,
+        tipoMensagem: msg.tipo_mensagem
       })) || [];
 
       return messages;
