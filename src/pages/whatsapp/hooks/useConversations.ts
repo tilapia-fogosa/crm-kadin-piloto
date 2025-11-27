@@ -154,6 +154,7 @@ export function useConversations() {
         .select('id, telefone, mensagem, created_at, from_me, lida, created_by')
         .is('client_id', null)
         .not('telefone', 'is', null)
+        .eq('unit_id', selectedUnitId)
         .order('created_at', { ascending: false });
 
       if (unregisteredError) {
