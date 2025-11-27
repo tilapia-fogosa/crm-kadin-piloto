@@ -147,7 +147,10 @@ export function useConversations() {
       console.log('useConversations: Conversas de clientes cadastrados:', conversations.length);
 
       // Etapa 2: Buscar mensagens de números não cadastrados (client_id IS NULL)
-      console.log('useConversations: Buscando mensagens de números não cadastrados');
+      console.log('useConversations: Buscando mensagens de números não cadastrados', {
+        selectedUnitId,
+        filters: { client_id: null, telefone: 'NOT NULL', unit_id: selectedUnitId }
+      });
       
       const { data: unregisteredMessages, error: unregisteredError } = await supabase
         .from('historico_comercial')
@@ -157,8 +160,20 @@ export function useConversations() {
         .eq('unit_id', selectedUnitId)
         .order('created_at', { ascending: false });
 
+      console.log('useConversations: Resultado da busca de não cadastrados:', {
+        count: unregisteredMessages?.length || 0,
+        hasError: !!unregisteredError,
+        firstMessage: unregisteredMessages?.[0]
+      });
+
       if (unregisteredError) {
-        console.error('useConversations: Erro ao buscar mensagens não cadastradas:', unregisteredError);
+        console.error('useConversations: Erro ao buscar mensagens não cadastradas:', {
+          error: unregisteredError,
+          message: unregisteredError.message,
+          details: unregisteredError.details,
+          hint: unregisteredError.hint,
+          code: unregisteredError.code
+        });
         // Continua com apenas as conversas cadastradas
       } else {
         console.log('useConversations: Mensagens não cadastradas recebidas:', unregisteredMessages?.length);
