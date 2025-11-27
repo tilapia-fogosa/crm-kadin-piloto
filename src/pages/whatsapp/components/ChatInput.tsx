@@ -24,6 +24,7 @@ import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAutoMessages } from "../hooks/useAutoMessages";
+import { AudioRecorder } from "./AudioRecorder";
 
 interface ChatInputProps {
   conversation: Conversation;
@@ -188,7 +189,8 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
         <Smile className="h-5 w-5" />
       </Button>
 
-      {/* Botão Anexo REMOVIDO conforme solicitado */}
+      {/* Botão Gravação de Áudio */}
+      <AudioRecorder conversation={conversation} />
 
       {/* Input de texto */}
       <Input
