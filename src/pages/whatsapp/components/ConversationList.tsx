@@ -20,6 +20,8 @@ import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
 import { ConversationItem } from "./ConversationItem";
 import { useConversations } from "../hooks/useConversations";
+import { NewClientDrawer } from "./NewClientDrawer";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ConversationListProps {
   selectedClientId: string | null;
@@ -35,7 +37,24 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [showNewLeadOnly, setShowNewLeadOnly] = useState(false);
   const [showUnregisteredOnly, setShowUnregisteredOnly] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerPhoneNumber, setDrawerPhoneNumber] = useState("");
+  
   const { data: conversations, isLoading } = useConversations();
+  const queryClient = useQueryClient();
+
+  // Handler para abrir o drawer de cadastro
+  const handleCadastrarClick = (phoneNumber: string) => {
+    console.log('ConversationList: Abrindo drawer para cadastrar telefone:', phoneNumber);
+    setDrawerPhoneNumber(phoneNumber);
+    setDrawerOpen(true);
+  };
+
+  // Handler para quando o cadastro for bem sucedido
+  const handleCadastroSuccess = () => {
+    console.log('ConversationList: Cadastro bem sucedido, invalidando queries');
+    queryClient.invalidateQueries({ queryKey: ['whatsapp-conversations'] });
+  };
 
   // Filtrar conversas pela busca
   let filteredConversations = conversations?.filter(conv =>
@@ -141,9 +160,18 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
             onClick={() => onSelectClient(conversation.clientId, conversation.isUnregistered)}
             onActivityClick={conversation.isUnregistered ? undefined : () => onActivityClick(conversation.clientId)}
             onToggleTipoAtendimento={conversation.isUnregistered ? undefined : () => onToggleTipoAtendimento(conversation.clientId, conversation.tipoAtendimento)}
+            onCadastrarClick={handleCadastrarClick}
           />
         ))}
       </ScrollArea>
+
+      {/* Drawer de cadastro de novo cliente */}
+      <NewClientDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        phoneNumber={drawerPhoneNumber}
+        onSuccess={handleCadastroSuccess}
+      />
     </div>
   );
 }
