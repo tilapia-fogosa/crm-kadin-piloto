@@ -146,12 +146,12 @@ export function useConversations() {
 
       console.log('useConversations: Conversas de clientes cadastrados:', conversations.length);
 
-      // Filtrar Novo-Lead com status perdido
+      // Filtrar Novo Cadastro com status perdido
       // Log: Removendo leads que são novos mas já foram marcados como perdidos
       const filteredConversations = conversations.filter(conv => {
-        // Remove Novo-Lead que estão com status perdido
+        // Remove Novo Cadastro que estão com status perdido
         if (conv.isNewLead && conv.status === 'perdido') {
-          console.log('useConversations: Removendo Novo-Lead perdido:', conv.clientName);
+          console.log('useConversations: Removendo Novo Cadastro perdido:', conv.clientName);
           return false;
         }
         return true;

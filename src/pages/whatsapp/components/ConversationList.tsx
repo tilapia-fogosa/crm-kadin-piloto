@@ -67,7 +67,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
     filteredConversations = filteredConversations?.filter(conv => conv.unreadCount > 0);
   }
 
-  // Filtrar apenas novo-lead se toggle estiver ativo
+  // Filtrar apenas novo cadastro se toggle estiver ativo
   if (showNewLeadOnly) {
     filteredConversations = filteredConversations?.filter(conv => !conv.isUnregistered && conv.isNewLead);
   }
@@ -83,7 +83,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
   const totalUnregistered = conversations?.filter(conv => conv.isUnregistered).length || 0;
 
   console.log('ConversationList: Conversas filtradas:', filteredConversations?.length);
-  console.log('ConversationList: Totais - Não lidas:', totalUnread, 'Novo-Lead:', totalNewLead, 'Sem Cadastro:', totalUnregistered);
+  console.log('ConversationList: Totais - Não lidas:', totalUnread, 'Novo Cadastro:', totalNewLead, 'Sem Cadastro:', totalUnregistered);
 
   return (
     <div className="w-full md:w-[350px] flex flex-col border-r border-border bg-card h-full">
@@ -116,7 +116,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
           
           <div className="flex flex-col items-center gap-1">
             <Label htmlFor="newlead-filter" className="text-xs cursor-pointer whitespace-nowrap text-muted-foreground">
-              Novo-Lead {totalNewLead > 0 && `(${totalNewLead})`}
+              Novo Cadastro {totalNewLead > 0 && `(${totalNewLead})`}
             </Label>
             <Switch
               id="newlead-filter"

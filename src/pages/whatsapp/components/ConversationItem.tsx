@@ -173,12 +173,12 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
               </Badge>
             )}
             
-            {/* Badge de Novo Lead (para cadastrados) */}
+            {/* Badge de Novo Cadastro (para cadastrados) */}
             {!conversation.isUnregistered && conversation.isNewLead && (
               <Badge 
                 className="h-5 px-2 flex items-center justify-center bg-purple-600 text-white text-xs font-medium border-purple-600 hover:bg-purple-700"
               >
-                Novo-Lead
+                Novo Cadastro
               </Badge>
             )}
             
