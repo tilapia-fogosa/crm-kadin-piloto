@@ -83,14 +83,14 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
         </div>
         
         {/* Filtros com switches em uma linha */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center space-x-2">
             <Switch
               id="unread-filter"
               checked={showUnreadOnly}
               onCheckedChange={setShowUnreadOnly}
             />
-            <Label htmlFor="unread-filter" className="text-sm cursor-pointer">
+            <Label htmlFor="unread-filter" className="text-sm cursor-pointer whitespace-nowrap">
               Não lidas {totalUnread > 0 && `(${totalUnread})`}
             </Label>
           </div>
@@ -101,7 +101,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
               checked={showNewLeadOnly}
               onCheckedChange={setShowNewLeadOnly}
             />
-            <Label htmlFor="newlead-filter" className="text-sm cursor-pointer">
+            <Label htmlFor="newlead-filter" className="text-sm cursor-pointer whitespace-nowrap">
               Novo-Lead {totalNewLead > 0 && `(${totalNewLead})`}
             </Label>
           </div>
@@ -112,7 +112,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
               checked={showUnregisteredOnly}
               onCheckedChange={setShowUnregisteredOnly}
             />
-            <Label htmlFor="unregistered-filter" className="text-sm cursor-pointer">
+            <Label htmlFor="unregistered-filter" className="text-sm cursor-pointer whitespace-nowrap">
               Sem Cadastro {totalUnregistered > 0 && `(${totalUnregistered})`}
             </Label>
           </div>
