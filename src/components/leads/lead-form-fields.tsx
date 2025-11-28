@@ -15,6 +15,7 @@ import { LeadSourceSelect } from "./lead-source-select";
 interface LeadFormFieldsProps {
   form: UseFormReturn<LeadFormData>;
   isEditing?: boolean;
+  hidePhoneNumber?: boolean;
   clientData?: {
     meta_id?: string | null;
     age_range?: string | null;
@@ -22,7 +23,7 @@ interface LeadFormFieldsProps {
   };
 }
 
-export function LeadFormFields({ form, isEditing = false, clientData }: LeadFormFieldsProps) {
+export function LeadFormFields({ form, isEditing = false, hidePhoneNumber = false, clientData }: LeadFormFieldsProps) {
   return (
     <div className="space-y-6">
       <FormField
@@ -39,27 +40,29 @@ export function LeadFormFields({ form, isEditing = false, clientData }: LeadForm
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="phoneNumber"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Telefone *</FormLabel>
-            <FormControl>
-              <Input
-                placeholder="DDD + número (apenas números)"
-                {...field}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "");
-                  field.onChange(value);
-                }}
-                maxLength={11}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {!hidePhoneNumber && (
+        <FormField
+          control={form.control}
+          name="phoneNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Telefone *</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="DDD + número (apenas números)"
+                  {...field}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    field.onChange(value);
+                  }}
+                  maxLength={11}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <FormField
         control={form.control}
