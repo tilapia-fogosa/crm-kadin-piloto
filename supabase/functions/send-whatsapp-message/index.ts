@@ -17,8 +17,9 @@ interface SendMessagePayload {
   phone_number: string;
   user_name: string;
   message: string;
-  client_id: string;
+  client_id: string | null; // Pode ser null para números não cadastrados
   profile_id: string;
+  unit_id?: string | null; // Unit ID para números não cadastrados
 }
 
 Deno.serve(async (req) => {
@@ -39,11 +40,11 @@ Deno.serve(async (req) => {
     });
 
     // Validar campos obrigatórios
-    if (!payload.phone_number || !payload.user_name || !payload.message || !payload.client_id || !payload.profile_id) {
+    if (!payload.phone_number || !payload.user_name || !payload.message || !payload.profile_id) {
       console.error('send-whatsapp-message: Campos obrigatórios faltando');
       return new Response(
         JSON.stringify({ 
-          error: 'Campos obrigatórios: phone_number, user_name, message, client_id, profile_id' 
+          error: 'Campos obrigatórios: phone_number, user_name, message, profile_id' 
         }),
         { 
           status: 400, 
@@ -103,18 +104,35 @@ Deno.serve(async (req) => {
 
     console.log('send-whatsapp-message: Salvando mensagem no historico_comercial com created_by');
 
-    // Salvar mensagem no historico_comercial (mensagens enviadas já são marcadas como lidas)
+    // Preparar dados para inserção no histórico
+    // Se client_id for null, adiciona o campo telefone para números não cadastrados
+    const historyData: any = {
+      mensagem: payload.message,
+      from_me: true,
+      created_by: payload.profile_id,
+      created_at: new Date().toISOString(),
+      lida: true, // Mensagens enviadas pela equipe já são consideradas lidas
+      lida_em: new Date().toISOString()
+    };
+
+    // Adicionar client_id ou telefone dependendo do caso
+    if (payload.client_id) {
+      historyData.client_id = payload.client_id;
+      console.log('send-whatsapp-message: Salvando com client_id:', payload.client_id);
+    } else {
+      historyData.client_id = null;
+      historyData.telefone = payload.phone_number;
+      // Adicionar unit_id para números não cadastrados se fornecido
+      if (payload.unit_id) {
+        historyData.unit_id = payload.unit_id;
+      }
+      console.log('send-whatsapp-message: Salvando com telefone (sem cadastro):', payload.phone_number, 'unit_id:', payload.unit_id);
+    }
+
+    // Salvar mensagem no historico_comercial
     const { error: insertError } = await supabase
       .from('historico_comercial')
-      .insert({
-        client_id: payload.client_id,
-        mensagem: payload.message,
-        from_me: true,
-        created_by: payload.profile_id,
-        created_at: new Date().toISOString(),
-        lida: true, // Mensagens enviadas pela equipe já são consideradas lidas
-        lida_em: new Date().toISOString()
-      });
+      .insert(historyData);
 
     if (insertError) {
       console.error('send-whatsapp-message: Erro ao salvar no histórico:', insertError);

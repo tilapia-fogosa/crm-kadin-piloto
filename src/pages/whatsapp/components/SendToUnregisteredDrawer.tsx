@@ -24,6 +24,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { z } from "zod";
 import { useAutoMessages } from "../hooks/useAutoMessages";
+import { useUnit } from "@/contexts/UnitContext";
 
 // Schema de validação para o número de telefone
 const phoneSchema = z
@@ -51,6 +52,7 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: autoMessages, isLoading: isLoadingAutoMessages } = useAutoMessages();
+  const { selectedUnitId } = useUnit();
 
   // Fechar emoji picker ao clicar fora
   useEffect(() => {
@@ -136,24 +138,37 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
     setShowEmojiPicker(false);
 
     try {
-      // Buscar usuário logado
+      // Etapa 1: Buscar usuário logado
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('Usuário não autenticado');
       }
 
-      console.log('SendToUnregisteredDrawer: Enviando mensagem via edge function');
+      // Etapa 2: Buscar nome do usuário logado
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      const userName = profile?.full_name || 'Usuário';
 
       // Formatar número para envio (adicionar 55 se necessário)
       const formattedPhone = phoneNumber.startsWith('55') ? phoneNumber : `55${phoneNumber}`;
 
-      // Enviar via edge function
+      console.log('SendToUnregisteredDrawer: Enviando mensagem via edge function');
+
+      // Etapa 3: Enviar via edge function (mesmo fluxo do envio padrão)
       const { data: sendData, error: sendError } = await supabase.functions.invoke(
         'send-whatsapp-message',
         {
           body: {
-            to: formattedPhone,
+            phone_number: formattedPhone,
+            user_name: userName,
             message: message.trim(),
+            client_id: null, // Número não cadastrado
+            profile_id: user.id,
+            unit_id: selectedUnitId, // Unit ID para números não cadastrados
           },
         }
       );
@@ -165,23 +180,6 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
 
       console.log('SendToUnregisteredDrawer: Mensagem enviada com sucesso:', sendData);
 
-      // Salvar no histórico comercial
-      const { error: historyError } = await supabase
-        .from('historico_comercial')
-        .insert({
-          client_id: null, // Número não cadastrado
-          telefone: formattedPhone,
-          mensagem: message.trim(),
-          from_me: true,
-          lida: true,
-          created_by: user.id,
-        });
-
-      if (historyError) {
-        console.error('SendToUnregisteredDrawer: Erro ao salvar no histórico:', historyError);
-        // Não vamos lançar erro aqui pois a mensagem já foi enviada
-      }
-
       toast({
         title: "Mensagem enviada",
         description: "Mensagem enviada com sucesso",
@@ -192,8 +190,11 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
       setMessage("");
       setPhoneError("");
 
-      // Invalidar queries para atualizar lista de conversas
-      queryClient.invalidateQueries({ queryKey: ['whatsapp-conversations'] });
+      // Invalida cache para atualizar lista de conversas com delay de 1s
+      setTimeout(() => {
+        console.log('SendToUnregisteredDrawer: Invalidando cache de conversas após 1s');
+        queryClient.invalidateQueries({ queryKey: ['whatsapp-conversations'] });
+      }, 1000);
 
       // Fechar drawer
       onOpenChange(false);
