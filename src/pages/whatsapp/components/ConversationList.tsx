@@ -17,10 +17,12 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, MessageSquarePlus } from "lucide-react";
 import { ConversationItem } from "./ConversationItem";
 import { useConversations } from "../hooks/useConversations";
 import { NewClientDrawer } from "./NewClientDrawer";
+import { SendToUnregisteredDrawer } from "./SendToUnregisteredDrawer";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface ConversationListProps {
@@ -39,6 +41,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
   const [showUnregisteredOnly, setShowUnregisteredOnly] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerPhoneNumber, setDrawerPhoneNumber] = useState("");
+  const [sendUnregisteredDrawerOpen, setSendUnregisteredDrawerOpen] = useState(false);
   
   const { data: conversations, isLoading } = useConversations();
   const queryClient = useQueryClient();
@@ -89,16 +92,26 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
     <div className="w-full md:w-[350px] flex flex-col border-r border-border bg-card h-full">
       {/* Header com busca e filtros */}
       <div className="p-3 border-b border-border bg-card space-y-3">
-        {/* Campo de busca */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Buscar conversas..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+        {/* Campo de busca com botão de nova mensagem */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar conversas..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Button
+            variant="default"
+            size="icon"
+            onClick={() => setSendUnregisteredDrawerOpen(true)}
+            title="Enviar mensagem para número não cadastrado"
+          >
+            <MessageSquarePlus className="h-4 w-4" />
+          </Button>
         </div>
         
         {/* Filtros com switches em uma linha */}
@@ -171,6 +184,12 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
         onOpenChange={setDrawerOpen}
         phoneNumber={drawerPhoneNumber}
         onSuccess={handleCadastroSuccess}
+      />
+
+      {/* Drawer para enviar mensagem para número não cadastrado */}
+      <SendToUnregisteredDrawer
+        open={sendUnregisteredDrawerOpen}
+        onOpenChange={setSendUnregisteredDrawerOpen}
       />
     </div>
   );
