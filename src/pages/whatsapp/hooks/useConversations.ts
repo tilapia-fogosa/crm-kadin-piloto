@@ -146,6 +146,19 @@ export function useConversations() {
 
       console.log('useConversations: Conversas de clientes cadastrados:', conversations.length);
 
+      // Filtrar Novo-Lead com status perdido
+      // Log: Removendo leads que são novos mas já foram marcados como perdidos
+      const filteredConversations = conversations.filter(conv => {
+        // Remove Novo-Lead que estão com status perdido
+        if (conv.isNewLead && conv.status === 'perdido') {
+          console.log('useConversations: Removendo Novo-Lead perdido:', conv.clientName);
+          return false;
+        }
+        return true;
+      });
+
+      console.log('useConversations: Conversas após filtrar perdidos:', filteredConversations.length);
+
       // Etapa 2: Buscar mensagens de números não cadastrados (client_id IS NULL)
       console.log('useConversations: Buscando mensagens de números não cadastrados', {
         selectedUnitId,
@@ -246,7 +259,7 @@ export function useConversations() {
         console.log('useConversations: Conversas não cadastradas formatadas:', unregisteredConversations.length);
 
         // Mesclar conversas cadastradas e não cadastradas
-        const allConversations = [...conversations, ...unregisteredConversations]
+        const allConversations = [...filteredConversations, ...unregisteredConversations]
           .sort((a, b) => 
             new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
           );
@@ -255,7 +268,7 @@ export function useConversations() {
         return allConversations;
       }
 
-      return conversations;
+      return filteredConversations;
     }
   });
 }
