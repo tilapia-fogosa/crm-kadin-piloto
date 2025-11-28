@@ -15,12 +15,15 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Smile, Send } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Smile, Send, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { z } from "zod";
+import { useAutoMessages } from "../hooks/useAutoMessages";
 
 // Schema de validação para o número de telefone
 const phoneSchema = z
@@ -42,10 +45,12 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAutoMessages, setShowAutoMessages] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: autoMessages, isLoading: isLoadingAutoMessages } = useAutoMessages();
 
   // Fechar emoji picker ao clicar fora
   useEffect(() => {
@@ -80,6 +85,15 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
   const onEmojiClick = (emojiData: EmojiClickData) => {
     setMessage((prev) => prev + emojiData.emoji);
   };
+
+  const handleSelectAutoMessage = (autoMessage: string) => {
+    console.log('SendToUnregisteredDrawer: Mensagem automática selecionada');
+    setMessage(autoMessage);
+    setShowAutoMessages(false);
+  };
+
+  // Filtrar apenas mensagens ativas
+  const activeAutoMessages = autoMessages?.filter(m => m.ativo) || [];
 
   const handleSendMessage = async () => {
     console.log('SendToUnregisteredDrawer: Iniciando envio de mensagem');
@@ -266,6 +280,7 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
                 size="icon"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                 disabled={isSending}
+                className={showEmojiPicker ? "text-primary" : "text-muted-foreground"}
               >
                 <Smile className="h-5 w-5" />
               </Button>
@@ -303,6 +318,57 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
               <Send className="h-4 w-4" />
               Enviar
             </Button>
+
+            {/* Popover de Mensagens Automáticas */}
+            <Popover open={showAutoMessages} onOpenChange={setShowAutoMessages}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  disabled={isSending}
+                  className={showAutoMessages ? "text-primary" : "text-muted-foreground"}
+                >
+                  <MessageSquare className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent 
+                side="top" 
+                align="end"
+                className="w-80 p-3"
+              >
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-foreground mb-3">Mensagens Padronizadas</h4>
+                  
+                  {isLoadingAutoMessages ? (
+                    <p className="text-sm text-muted-foreground py-4 text-center">Carregando...</p>
+                  ) : activeAutoMessages.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-4 text-center">
+                      Nenhuma mensagem ativa encontrada
+                    </p>
+                  ) : (
+                    <ScrollArea className="max-h-[300px]">
+                      <div className="space-y-1.5">
+                        {activeAutoMessages.map((msg) => (
+                          <Button
+                            key={msg.id}
+                            variant="ghost"
+                            className="w-full justify-start text-left h-auto py-2 px-3"
+                            onClick={() => handleSelectAutoMessage(msg.mensagem)}
+                          >
+                            <div className="flex flex-col gap-0.5 w-full">
+                              <span className="font-medium text-sm text-foreground">{msg.nome}</span>
+                              <span className="text-xs text-muted-foreground line-clamp-2">
+                                {msg.mensagem}
+                              </span>
+                            </div>
+                          </Button>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </SheetContent>
