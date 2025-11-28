@@ -21,7 +21,6 @@ import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Bot, CheckCheck, ClipboardList, X, Phone } from "lucide-react";
 import { Conversation } from "../types/whatsapp.types";
-import { useNavigate } from "react-router-dom";
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -29,10 +28,10 @@ interface ConversationItemProps {
   onClick: () => void;
   onActivityClick?: (e: React.MouseEvent) => void;
   onToggleTipoAtendimento?: (e: React.MouseEvent) => void;
+  onCadastrarClick?: (phoneNumber: string) => void;
 }
 
-export function ConversationItem({ conversation, isSelected, onClick, onActivityClick, onToggleTipoAtendimento }: ConversationItemProps) {
-  const navigate = useNavigate();
+export function ConversationItem({ conversation, isSelected, onClick, onActivityClick, onToggleTipoAtendimento, onCadastrarClick }: ConversationItemProps) {
   console.log('ConversationItem: Renderizando conversa:', conversation.clientName);
 
   // Formatar horário da última mensagem
@@ -61,7 +60,7 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
   const handleCadastrarClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Não seleciona a conversa
     console.log('ConversationItem: Clicando em Cadastrar para telefone:', conversation.phoneNumber);
-    navigate(`/clients/new-from-whatsapp?phone=${conversation.phoneNumber}`);
+    onCadastrarClick?.(conversation.phoneNumber);
   };
 
   return (
