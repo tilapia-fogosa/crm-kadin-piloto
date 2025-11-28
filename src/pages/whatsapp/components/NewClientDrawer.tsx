@@ -225,7 +225,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
                   </p>
                 </div>
                 
-                <LeadFormFields form={form} />
+                <LeadFormFields form={form} hidePhoneNumber={true} />
               </div>
               
               <div className="flex gap-4 pt-4">
