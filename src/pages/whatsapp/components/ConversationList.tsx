@@ -83,38 +83,38 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
         </div>
         
         {/* Filtros com switches em uma linha */}
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center space-x-2">
+        <div className="flex items-end gap-6">
+          <div className="flex flex-col items-center gap-1">
+            <Label htmlFor="unread-filter" className="text-xs cursor-pointer whitespace-nowrap text-muted-foreground">
+              Não lidas {totalUnread > 0 && `(${totalUnread})`}
+            </Label>
             <Switch
               id="unread-filter"
               checked={showUnreadOnly}
               onCheckedChange={setShowUnreadOnly}
             />
-            <Label htmlFor="unread-filter" className="text-sm cursor-pointer whitespace-nowrap">
-              Não lidas {totalUnread > 0 && `(${totalUnread})`}
-            </Label>
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col items-center gap-1">
+            <Label htmlFor="newlead-filter" className="text-xs cursor-pointer whitespace-nowrap text-muted-foreground">
+              Novo-Lead {totalNewLead > 0 && `(${totalNewLead})`}
+            </Label>
             <Switch
               id="newlead-filter"
               checked={showNewLeadOnly}
               onCheckedChange={setShowNewLeadOnly}
             />
-            <Label htmlFor="newlead-filter" className="text-sm cursor-pointer whitespace-nowrap">
-              Novo-Lead {totalNewLead > 0 && `(${totalNewLead})`}
-            </Label>
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col items-center gap-1">
+            <Label htmlFor="unregistered-filter" className="text-xs cursor-pointer whitespace-nowrap text-muted-foreground">
+              Sem Cadastro {totalUnregistered > 0 && `(${totalUnregistered})`}
+            </Label>
             <Switch
               id="unregistered-filter"
               checked={showUnregisteredOnly}
               onCheckedChange={setShowUnregisteredOnly}
             />
-            <Label htmlFor="unregistered-filter" className="text-sm cursor-pointer whitespace-nowrap">
-              Sem Cadastro {totalUnregistered > 0 && `(${totalUnregistered})`}
-            </Label>
           </div>
         </div>
       </div>
