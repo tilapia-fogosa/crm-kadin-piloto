@@ -13,10 +13,11 @@
  */
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, Search } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Search } from "lucide-react";
 import { ConversationItem } from "./ConversationItem";
 import { useConversations } from "../hooks/useConversations";
 
@@ -32,6 +33,8 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [showNewLeadOnly, setShowNewLeadOnly] = useState(false);
+  const [showUnregisteredOnly, setShowUnregisteredOnly] = useState(false);
   const { data: conversations, isLoading } = useConversations();
 
   // Filtrar conversas pela busca
@@ -45,15 +48,29 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
     filteredConversations = filteredConversations?.filter(conv => conv.unreadCount > 0);
   }
 
-  // Calcular total de conversas não lidas
-  const totalUnread = conversations?.filter(conv => conv.unreadCount > 0).length || 0;
+  // Filtrar apenas novo-lead se toggle estiver ativo
+  if (showNewLeadOnly) {
+    filteredConversations = filteredConversations?.filter(conv => !conv.isUnregistered && conv.isNewLead);
+  }
 
-  console.log('ConversationList: Conversas filtradas:', filteredConversations?.length, 'Total não lidas:', totalUnread);
+  // Filtrar apenas sem cadastro se toggle estiver ativo
+  if (showUnregisteredOnly) {
+    filteredConversations = filteredConversations?.filter(conv => conv.isUnregistered);
+  }
+
+  // Calcular totais
+  const totalUnread = conversations?.filter(conv => conv.unreadCount > 0).length || 0;
+  const totalNewLead = conversations?.filter(conv => !conv.isUnregistered && conv.isNewLead).length || 0;
+  const totalUnregistered = conversations?.filter(conv => conv.isUnregistered).length || 0;
+
+  console.log('ConversationList: Conversas filtradas:', filteredConversations?.length);
+  console.log('ConversationList: Totais - Não lidas:', totalUnread, 'Novo-Lead:', totalNewLead, 'Sem Cadastro:', totalUnregistered);
 
   return (
     <div className="w-full md:w-[350px] flex flex-col border-r border-border bg-card h-full">
-      {/* Header com busca e filtro */}
-      <div className="p-3 border-b border-border bg-card space-y-2">
+      {/* Header com busca e filtros */}
+      <div className="p-3 border-b border-border bg-card space-y-3">
+        {/* Campo de busca */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -65,16 +82,41 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
           />
         </div>
         
-        {/* Botão de filtro de não lidas */}
-        <Button
-          variant={showUnreadOnly ? "default" : "outline"}
-          size="sm"
-          className="w-full"
-          onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-        >
-          <MessageCircle className="h-4 w-4 mr-2" />
-          Não lidas {totalUnread > 0 && `(${totalUnread})`}
-        </Button>
+        {/* Filtros com switches em uma linha */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="unread-filter"
+              checked={showUnreadOnly}
+              onCheckedChange={setShowUnreadOnly}
+            />
+            <Label htmlFor="unread-filter" className="text-sm cursor-pointer">
+              Não lidas {totalUnread > 0 && `(${totalUnread})`}
+            </Label>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="newlead-filter"
+              checked={showNewLeadOnly}
+              onCheckedChange={setShowNewLeadOnly}
+            />
+            <Label htmlFor="newlead-filter" className="text-sm cursor-pointer">
+              Novo-Lead {totalNewLead > 0 && `(${totalNewLead})`}
+            </Label>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="unregistered-filter"
+              checked={showUnregisteredOnly}
+              onCheckedChange={setShowUnregisteredOnly}
+            />
+            <Label htmlFor="unregistered-filter" className="text-sm cursor-pointer">
+              Sem Cadastro {totalUnregistered > 0 && `(${totalUnregistered})`}
+            </Label>
+          </div>
+        </div>
       </div>
 
       {/* Lista de conversas */}
