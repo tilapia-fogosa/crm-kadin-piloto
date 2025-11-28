@@ -193,7 +193,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-full sm:max-w-xl overflow-y-auto">
+      <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
         <SheetHeader className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
