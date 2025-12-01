@@ -65,19 +65,21 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
     conv.phoneNumber.includes(searchQuery)
   );
 
-  // Filtrar apenas não lidas se toggle estiver ativo
+  // Aplicar filtros exclusivos primeiro (Novo Cadastro ou Sem Cadastro)
+  if (showNewLeadOnly) {
+    // Mostrar APENAS conversas de Novo Cadastro
+    filteredConversations = filteredConversations?.filter(conv => !conv.isUnregistered && conv.isNewLead);
+  } else if (showUnregisteredOnly) {
+    // Mostrar APENAS conversas Sem Cadastro
+    filteredConversations = filteredConversations?.filter(conv => conv.isUnregistered);
+  } else {
+    // Por padrão, EXCLUIR conversas de Novo Cadastro e Sem Cadastro
+    filteredConversations = filteredConversations?.filter(conv => !conv.isNewLead && !conv.isUnregistered);
+  }
+
+  // Depois aplicar filtro de não lidas (pode ser combinado com qualquer um acima)
   if (showUnreadOnly) {
     filteredConversations = filteredConversations?.filter(conv => conv.unreadCount > 0);
-  }
-
-  // Filtrar apenas novo cadastro se toggle estiver ativo
-  if (showNewLeadOnly) {
-    filteredConversations = filteredConversations?.filter(conv => !conv.isUnregistered && conv.isNewLead);
-  }
-
-  // Filtrar apenas sem cadastro se toggle estiver ativo
-  if (showUnregisteredOnly) {
-    filteredConversations = filteredConversations?.filter(conv => conv.isUnregistered);
   }
 
   // Calcular totais
