@@ -222,7 +222,7 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-xl flex flex-col">
         <SheetHeader>
-          <SheetTitle>Enviar para número não cadastrado</SheetTitle>
+          <SheetTitle>Enviar nova mensagem</SheetTitle>
           <SheetDescription>
             Digite o número de telefone e a mensagem que deseja enviar
           </SheetDescription>
@@ -272,7 +272,7 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
 
         {/* Rodapé de envio */}
         <div className="border-t border-border pt-4 pb-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2">
             {/* Botão Emoji Picker */}
             <div ref={emojiPickerRef} className="relative">
               <Button
@@ -287,7 +287,7 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
               </Button>
               
               {showEmojiPicker && (
-                <div className="absolute bottom-full left-0 mb-2 z-50">
+                <div className="absolute bottom-full right-0 mb-2 z-50">
                   <EmojiPicker
                     onEmojiClick={onEmojiClick}
                     theme={Theme.AUTO}
@@ -297,28 +297,6 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
                 </div>
               )}
             </div>
-
-            {/* Input de mensagem rápida (opcional) */}
-            <Input
-              type="text"
-              placeholder="Digite uma mensagem..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              disabled={isSending}
-              className="flex-1"
-              onClick={() => setShowEmojiPicker(false)}
-            />
-
-            {/* Botão Enviar */}
-            <Button
-              onClick={handleSendMessage}
-              disabled={isSending || !message.trim() || !!phoneError || !phoneNumber}
-              className="gap-2"
-            >
-              <Send className="h-4 w-4" />
-              Enviar
-            </Button>
 
             {/* Popover de Mensagens Automáticas */}
             <Popover open={showAutoMessages} onOpenChange={setShowAutoMessages}>
@@ -370,6 +348,16 @@ export function SendToUnregisteredDrawer({ open, onOpenChange }: SendToUnregiste
                 </div>
               </PopoverContent>
             </Popover>
+
+            {/* Botão Enviar */}
+            <Button
+              onClick={handleSendMessage}
+              disabled={isSending || !message.trim() || !!phoneError || !phoneNumber}
+              className="gap-2"
+            >
+              <Send className="h-4 w-4" />
+              Enviar
+            </Button>
           </div>
         </div>
       </SheetContent>
