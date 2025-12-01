@@ -14,7 +14,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Smile, MessageSquare, Send } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,10 +39,25 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
   const [audioRecordingState, setAudioRecordingState] = useState<'idle' | 'recording' | 'preview' | 'processing'>('idle');
   const [sendAudioFn, setSendAudioFn] = useState<(() => Promise<void>) | null>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const queryClient = useQueryClient();
   const { data: autoMessages, isLoading: isLoadingAutoMessages } = useAutoMessages();
 
   console.log('ChatInput: Renderizando input de mensagem para cliente:', conversation.clientId);
+
+  // Ajusta altura do textarea automaticamente
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+    }
+  };
+
+  // Ajusta altura quando mensagem muda
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [message]);
 
   // Fechar emoji picker ao clicar fora
   useEffect(() => {
@@ -184,7 +199,7 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
   const activeAutoMessages = autoMessages?.filter(m => m.ativo) || [];
 
   return (
-    <div className="p-3 border-t border-border bg-muted/50 flex items-center gap-2 relative">
+    <div className="p-3 border-t border-border bg-muted/50 flex items-end gap-2 relative">
       {/* Emoji Picker Popover */}
       {showEmojiPicker && (
         <div
@@ -219,15 +234,16 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
         onSendAudioReady={handleSendAudioReady}
       />
 
-      {/* Input de texto */}
-      <Input
-        type="text"
+      {/* Textarea de texto com auto-expansão */}
+      <Textarea
+        ref={textareaRef}
         placeholder={audioRecordingState === 'preview' ? "Áudio gravado..." : "Digite uma mensagem..."}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        onKeyPress={handleKeyPress}
+        onKeyDown={handleKeyPress}
         disabled={isSending || audioRecordingState === 'preview'}
-        className="flex-1"
+        rows={1}
+        className="flex-1 min-h-[40px] max-h-[150px] resize-none py-2"
         onClick={() => setShowEmojiPicker(false)} // Fecha picker ao focar no input
       />
 
