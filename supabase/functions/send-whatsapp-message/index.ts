@@ -112,20 +112,17 @@ Deno.serve(async (req) => {
       created_by: payload.profile_id,
       created_at: new Date().toISOString(),
       lida: true, // Mensagens enviadas pela equipe já são consideradas lidas
-      lida_em: new Date().toISOString()
+      lida_em: new Date().toISOString(),
+      unit_id: payload.unit_id // Sempre incluir unit_id
     };
 
     // Adicionar client_id ou telefone dependendo do caso
     if (payload.client_id) {
       historyData.client_id = payload.client_id;
-      console.log('send-whatsapp-message: Salvando com client_id:', payload.client_id);
+      console.log('send-whatsapp-message: Salvando com client_id:', payload.client_id, 'unit_id:', payload.unit_id);
     } else {
       historyData.client_id = null;
       historyData.telefone = payload.phone_number;
-      // Adicionar unit_id para números não cadastrados se fornecido
-      if (payload.unit_id) {
-        historyData.unit_id = payload.unit_id;
-      }
       console.log('send-whatsapp-message: Salvando com telefone (sem cadastro):', payload.phone_number, 'unit_id:', payload.unit_id);
     }
 
