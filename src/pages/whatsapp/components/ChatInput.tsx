@@ -118,7 +118,14 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
 
       const userName = profile?.full_name || 'Usuário';
 
-      console.log('ChatInput: Chamando edge function send-whatsapp-message');
+      // Verificar se é número não cadastrado (client_id começa com "phone_")
+      const isUnregistered = conversation.clientId.startsWith('phone_');
+      
+      console.log('ChatInput: Enviando mensagem via webhook:', {
+        conversationClientId: conversation.clientId,
+        isUnregistered,
+        processedMessageLength: processedMessage.length
+      });
 
       // Etapa 3: Enviar mensagem processada
       const { data, error } = await supabase.functions.invoke('send-whatsapp-message', {
@@ -126,8 +133,9 @@ export function ChatInput({ conversation, onMessageSent }: ChatInputProps) {
           phone_number: conversation.phoneNumber,
           user_name: userName,
           message: processedMessage,
-          client_id: conversation.clientId,
-          profile_id: user?.id
+          client_id: isUnregistered ? null : conversation.clientId,
+          profile_id: user?.id,
+          unit_id: conversation.unitId
         }
       });
 
