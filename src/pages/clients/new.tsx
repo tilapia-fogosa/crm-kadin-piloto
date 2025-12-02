@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import { UnitFormField } from "@/components/leads/UnitFormField";
 import { formatPhoneForStorage } from "@/utils/phone-utils";
 import { useCheckDuplicateClient, ExistingClient } from "@/hooks/useCheckDuplicateClient";
+import { updateDuplicateRegistration, getDuplicateRegistrationData } from "@/utils/duplicateRegistration";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -138,6 +139,7 @@ export default function NewClient() {
 
   /**
    * Atualiza um cliente existente com os novos dados
+   * Também atualiza o contador e histórico de cadastros duplicados
    */
   const updateExistingClient = async () => {
     if (!existingClient || !pendingFormData) {
@@ -150,6 +152,22 @@ export default function NewClient() {
     try {
       console.log('NewClient: Atualizando cliente existente:', existingClient.id);
       
+      // Etapa 1: Buscar dados atuais de cadastro duplicado
+      const duplicateData = await getDuplicateRegistrationData(existingClient.id);
+      console.log('NewClient: Dados de cadastro duplicado:', duplicateData);
+      
+      // Etapa 2: Atualizar contador e histórico de cadastros
+      const duplicateResult = await updateDuplicateRegistration(
+        existingClient.id,
+        duplicateData?.quantidade_cadastros || 1,
+        duplicateData?.historico_cadastros || null
+      );
+      
+      if (!duplicateResult.success) {
+        console.warn('NewClient: Falha ao atualizar histórico de duplicados, mas continuando...');
+      }
+      
+      // Etapa 3: Atualizar dados do cliente
       const { error } = await supabase
         .from('clients')
         .update({
@@ -178,7 +196,7 @@ export default function NewClient() {
       
       toast({
         title: "Cadastro atualizado com sucesso!",
-        description: `Os dados de ${existingClient.name} foram atualizados.`,
+        description: `Os dados de ${existingClient.name} foram atualizados. (${duplicateResult.quantidade}º cadastro)`,
       });
       
       // Limpar estados e redirecionar

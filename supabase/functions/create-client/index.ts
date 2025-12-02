@@ -23,6 +23,66 @@ interface ClientPayload {
   unit_number?: number
 }
 
+/**
+ * Gera entrada de histórico para cadastro duplicado
+ */
+function generateHistoryEntry(quantidade: number): string {
+  const dataAtual = new Date().toLocaleDateString('pt-BR')
+  return `• Se cadastrou pela ${quantidade}ª vez no dia ${dataAtual}`
+}
+
+/**
+ * Atualiza contador e histórico de cadastro duplicado
+ */
+async function updateDuplicateRegistration(
+  supabase: any,
+  clientId: string,
+  currentQuantidade: number | null,
+  currentHistorico: string | null
+): Promise<{ success: boolean; quantidade: number; historico: string }> {
+  console.log('updateDuplicateRegistration: Atualizando cadastro duplicado para cliente:', clientId)
+  
+  // Calcular nova quantidade (incrementar)
+  const novaQuantidade = (currentQuantidade || 1) + 1
+  
+  // Gerar nova entrada de histórico
+  const novaEntrada = generateHistoryEntry(novaQuantidade)
+  
+  // Montar histórico atualizado
+  let historicoAtualizado = currentHistorico || '📋 Histórico de cadastros:'
+  historicoAtualizado += `\n${novaEntrada}`
+  
+  console.log('updateDuplicateRegistration: Nova quantidade:', novaQuantidade)
+  console.log('updateDuplicateRegistration: Novo histórico:', historicoAtualizado)
+  
+  // Atualizar no banco de dados
+  const { error } = await supabase
+    .from('clients')
+    .update({
+      quantidade_cadastros: novaQuantidade,
+      historico_cadastros: historicoAtualizado,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', clientId)
+  
+  if (error) {
+    console.error('updateDuplicateRegistration: Erro ao atualizar:', error)
+    return {
+      success: false,
+      quantidade: currentQuantidade || 1,
+      historico: currentHistorico || ''
+    }
+  }
+  
+  console.log('updateDuplicateRegistration: Atualização concluída com sucesso')
+  
+  return {
+    success: true,
+    quantidade: novaQuantidade,
+    historico: historicoAtualizado
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -82,20 +142,75 @@ serve(async (req) => {
       }
     }
 
+    // ============================================
+    // VERIFICAR SE JÁ EXISTE CLIENTE COM ESTE TELEFONE NA UNIDADE
+    // ============================================
+    console.log('Verificando duplicado para telefone:', payload.phone_number, 'na unidade:', unitId)
+    
+    const { data: existingClient, error: duplicateError } = await supabase
+      .from('clients')
+      .select('id, name, phone_number, status, quantidade_cadastros, historico_cadastros')
+      .eq('phone_number', payload.phone_number)
+      .eq('unit_id', unitId)
+      .eq('active', true)
+      .maybeSingle()
+    
+    if (duplicateError) {
+      console.error('Erro ao verificar duplicado:', duplicateError)
+    }
+    
+    // Se existe cliente, atualizar contador e retornar cliente existente
+    if (existingClient) {
+      console.log('Cliente existente encontrado:', existingClient)
+      
+      // Atualizar contador e histórico de cadastros
+      const duplicateResult = await updateDuplicateRegistration(
+        supabase,
+        existingClient.id,
+        existingClient.quantidade_cadastros,
+        existingClient.historico_cadastros
+      )
+      
+      console.log('Resultado da atualização de duplicado:', duplicateResult)
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Cliente já existente atualizado',
+          duplicate: true,
+          client_id: existingClient.id,
+          client_name: existingClient.name,
+          quantidade_cadastros: duplicateResult.quantidade,
+          unit_id: unitId
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+    
+    // ============================================
+    // CRIAR NOVO CLIENTE (não existe duplicado)
+    // ============================================
+    console.log('Nenhum duplicado encontrado, criando novo cliente')
+
     // Prepare client data for insertion
     const clientData = {
       name: payload.name,
       phone_number: payload.phone_number,
       lead_source: normalizedSource,
       observations: payload.observations,
-      created_by: null, // Alterado para null ao invés do UUID zero
+      created_by: null,
       status: 'novo-cadastro',
       meta_id: payload.meta_id,
       original_ad: payload.original_ad,
       original_adset: payload.original_adset,
       age_range: payload.age_range,
       unit_id: unitId,
-      email: payload.email
+      email: payload.email,
+      quantidade_cadastros: 1,
+      historico_cadastros: null
     }
 
     console.log('Tentando inserir cliente:', clientData)
@@ -143,6 +258,8 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         message: 'Cliente registrado com sucesso',
+        duplicate: false,
+        client_id: data.id,
         normalized_source: normalizedSource,
         unit_id: unitId
       }),
