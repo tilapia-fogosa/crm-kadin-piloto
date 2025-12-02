@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCheckDuplicateClient, ExistingClient } from "@/hooks/useCheckDuplicateClient";
 import { format } from "date-fns";
+import { updateDuplicateRegistration, getDuplicateRegistrationData } from "@/utils/duplicateRegistration";
 import { ptBR } from "date-fns/locale";
 
 // ID do perfil Sistema-Kadin para registros automáticos
@@ -233,13 +234,68 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
 
   /**
    * Handler para forçar cadastro mesmo com duplicado
+   * Atualiza o contador e histórico do cliente existente em vez de criar novo
    */
   const handleForceCreate = async () => {
-    console.log("NewClientDrawer: Forçando cadastro mesmo com duplicado");
+    console.log("NewClientDrawer: Atualizando cadastro duplicado");
     setShowDuplicateModal(false);
     
-    if (pendingFormData) {
-      await createClient(pendingFormData);
+    if (existingClient && pendingFormData) {
+      try {
+        // Etapa 1: Buscar dados atuais de cadastro duplicado
+        const duplicateData = await getDuplicateRegistrationData(existingClient.id);
+        console.log('NewClientDrawer: Dados de cadastro duplicado:', duplicateData);
+        
+        // Etapa 2: Atualizar contador e histórico de cadastros
+        const duplicateResult = await updateDuplicateRegistration(
+          existingClient.id,
+          duplicateData?.quantidade_cadastros || 1,
+          duplicateData?.historico_cadastros || null
+        );
+        
+        if (duplicateResult.success) {
+          console.log('NewClientDrawer: Histórico de duplicados atualizado');
+          
+          // Etapa 3: Vincular mensagens existentes ao cliente existente
+          console.log('NewClientDrawer: Vinculando mensagens ao cliente existente');
+          const { data: updatedMessages, error: updateError } = await supabase
+            .from('historico_comercial')
+            .update({ client_id: existingClient.id })
+            .eq('telefone', pendingFormData.phoneNumber)
+            .is('client_id', null)
+            .select('id');
+          
+          if (updateError) {
+            console.error('NewClientDrawer: Erro ao vincular mensagens:', updateError);
+          } else {
+            const messageCount = updatedMessages?.length || 0;
+            console.log(`NewClientDrawer: ${messageCount} mensagens vinculadas ao cliente ${existingClient.id}`);
+          }
+          
+          toast({
+            title: "Cadastro atualizado!",
+            description: `${existingClient.name} agora está no ${duplicateResult.quantidade}º cadastro. Mensagens vinculadas.`,
+          });
+          
+          form.reset();
+          onOpenChange(false);
+          onSuccess?.();
+        } else {
+          console.error('NewClientDrawer: Falha ao atualizar histórico de duplicados');
+          toast({
+            variant: "destructive",
+            title: "Erro ao atualizar",
+            description: "Não foi possível atualizar o histórico de cadastros.",
+          });
+        }
+      } catch (error) {
+        console.error('NewClientDrawer: Erro ao processar duplicado:', error);
+        toast({
+          variant: "destructive",
+          title: "Erro ao processar",
+          description: "Ocorreu um erro inesperado.",
+        });
+      }
     }
     
     setPendingFormData(null);
