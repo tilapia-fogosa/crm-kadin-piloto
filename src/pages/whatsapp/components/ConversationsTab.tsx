@@ -31,22 +31,28 @@ import { Conversation } from "../types/whatsapp.types";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Adaptador para transformar Conversation em KanbanCard
+// Log: Mapeia todos os campos da conversa para exibição no CardSheet
 function conversationToKanbanCard(conversation: Conversation): KanbanCard {
   return {
     id: conversation.clientId,
     clientName: conversation.clientName,
     phoneNumber: conversation.phoneNumber,
-    email: "", // Não temos email nas conversas
-    leadSource: "WhatsApp", // Fonte padrão
-    createdAt: new Date().toISOString(), // Usamos a data atual como fallback
+    email: conversation.email || "",
+    leadSource: conversation.leadSource || "WhatsApp",
+    createdAt: new Date().toISOString(),
     nextContactDate: null,
     scheduledDate: null,
     valorizationConfirmed: false,
     activities: [], // Será carregado pelo CardSheet
     labels: [],
-    registrationName: null,
+    registrationName: conversation.registrationName || null,
     lastUpdated: new Date().toISOString(),
-    unitId: conversation.unitId
+    unitId: conversation.unitId,
+    unitName: conversation.unitName,
+    original_ad: conversation.original_ad,
+    original_adset: conversation.original_adset,
+    observations: conversation.observations,
+    quantidadeCadastros: conversation.quantidadeCadastros
   };
 }
 

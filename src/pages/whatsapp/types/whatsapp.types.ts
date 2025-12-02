@@ -7,7 +7,7 @@
  * - WhatsAppConfig: configuração do status de ativação
  */
 
-// Conversa na lista (JOIN clients + historico_comercial)
+// Conversa na lista (JOIN clients + historico_comercial + units)
 export interface Conversation {
   clientId: string; // UUID do cliente ou "phone_NUMERO" para não cadastrados
   clientName: string;
@@ -24,6 +24,14 @@ export interface Conversation {
   isNewLead: boolean; // Indica se o cliente tem apenas a mensagem automática do Sistema-Kadin
   isUnregistered: boolean; // Indica se é um número não cadastrado no sistema
   quantidadeCadastros?: number; // Contador de cadastros duplicados
+  // Campos adicionais para exibição no CardSheet
+  leadSource: string; // Origem do lead (Facebook, Instagram, etc)
+  email?: string; // Email do cliente
+  original_ad?: string; // Nome do anúncio original
+  original_adset?: string; // Segmentação do anúncio
+  observations?: string; // Observações do cliente
+  unitName?: string; // Nome da unidade
+  registrationName?: string; // Nome de registro
 }
 
 // Mensagem individual
