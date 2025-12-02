@@ -23,6 +23,7 @@ export interface Conversation {
   unreadCount: number; // Quantidade de mensagens não lidas pela equipe
   isNewLead: boolean; // Indica se o cliente tem apenas a mensagem automática do Sistema-Kadin
   isUnregistered: boolean; // Indica se é um número não cadastrado no sistema
+  quantidadeCadastros?: number; // Contador de cadastros duplicados
 }
 
 // Mensagem individual

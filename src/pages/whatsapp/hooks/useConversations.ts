@@ -69,7 +69,8 @@ export function useConversations() {
             primeiro_nome,
             status,
             unit_id,
-            tipo_atendimento
+            tipo_atendimento,
+            quantidade_cadastros
           )
         `)
         .eq('clients.unit_id', selectedUnitId)
@@ -138,7 +139,8 @@ export function useConversations() {
           tipoAtendimento: client.tipo_atendimento || 'humano',
           unreadCount,
           isNewLead,
-          isUnregistered: false
+          isUnregistered: false,
+          quantidadeCadastros: client.quantidade_cadastros || 1
         };
       }).sort((a, b) =>
         new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()

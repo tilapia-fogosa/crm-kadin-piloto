@@ -31,6 +31,8 @@ export const transformClientToCard = (client: any) => {
     unitId: client.unit_id,
     unitName: client.unit_name,
     // Adicionar timestamp da última atualização para detectar mudanças
-    lastUpdated: client.updated_at || client.created_at
+    lastUpdated: client.updated_at || client.created_at,
+    // Contador de cadastros duplicados
+    quantidadeCadastros: client.quantidade_cadastros || 1
   }
 }
