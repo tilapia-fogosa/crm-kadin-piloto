@@ -52,6 +52,7 @@ export function useConversations() {
 
       // Buscar mensagens diretamente com JOIN para evitar problemas com RLS em nested selects
       // Log: Filtrando apenas clientes ativos para exibir conversas relevantes
+      // Log: Incluindo JOIN com units para buscar nome da unidade
       const { data: messages, error: messagesError } = await supabase
         .from('historico_comercial')
         .select(`
@@ -70,7 +71,16 @@ export function useConversations() {
             status,
             unit_id,
             tipo_atendimento,
-            quantidade_cadastros
+            quantidade_cadastros,
+            lead_source,
+            email,
+            original_ad,
+            original_adset,
+            observations,
+            registration_name,
+            units (
+              name
+            )
           )
         `)
         .eq('clients.unit_id', selectedUnitId)
@@ -140,7 +150,15 @@ export function useConversations() {
           unreadCount,
           isNewLead,
           isUnregistered: false,
-          quantidadeCadastros: client.quantidade_cadastros || 1
+          quantidadeCadastros: client.quantidade_cadastros || 1,
+          // Campos adicionais para exibição no CardSheet
+          leadSource: client.lead_source || 'WhatsApp',
+          email: client.email || undefined,
+          original_ad: client.original_ad || undefined,
+          original_adset: client.original_adset || undefined,
+          observations: client.observations || undefined,
+          unitName: client.units?.name || undefined,
+          registrationName: client.registration_name || undefined
         };
       }).sort((a, b) =>
         new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
@@ -254,7 +272,15 @@ export function useConversations() {
             tipoAtendimento: 'humano' as const,
             unreadCount,
             isNewLead: false,
-            isUnregistered: true
+            isUnregistered: true,
+            // Campos vazios para não cadastrados
+            leadSource: 'WhatsApp',
+            email: undefined,
+            original_ad: undefined,
+            original_adset: undefined,
+            observations: undefined,
+            unitName: undefined,
+            registrationName: undefined
           };
         });
 
