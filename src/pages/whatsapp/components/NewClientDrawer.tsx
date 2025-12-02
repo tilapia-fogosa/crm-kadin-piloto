@@ -10,8 +10,8 @@
  * 3. Define "WhatsApp" como origem padrão
  * 4. Ao submeter:
  *    a) Verifica se já existe cliente com mesmo telefone na unidade
- *    b) Se existir, mostra modal com opções
- *    c) Cria novo cliente na tabela 'clients'
+ *    b) Se existir, mostra modal informativo e vincula mensagens ao fechar
+ *    c) Se não existir, cria novo cliente na tabela 'clients'
  *    d) Vincula todas as mensagens existentes (UPDATE historico_comercial)
  *    e) Fecha o drawer e atualiza a lista
  */
@@ -44,7 +44,6 @@ import {
 } from "@/components/ui/dialog";
 import { useCheckDuplicateClient, ExistingClient } from "@/hooks/useCheckDuplicateClient";
 import { format } from "date-fns";
-import { updateDuplicateRegistration, getDuplicateRegistrationData } from "@/utils/duplicateRegistration";
 import { ptBR } from "date-fns/locale";
 
 // ID do perfil Sistema-Kadin para registros automáticos
@@ -113,7 +112,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
     const duplicate = await checkDuplicate(values.phoneNumber, values.unitId);
     
     if (duplicate) {
-      console.log("NewClientDrawer: Cliente duplicado encontrado, exibindo modal");
+      console.log("NewClientDrawer: Cliente duplicado encontrado, exibindo modal informativo");
       setExistingClient(duplicate);
       setPendingFormData(values);
       setShowDuplicateModal(true);
@@ -233,81 +232,49 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
   };
 
   /**
-   * Handler para forçar cadastro mesmo com duplicado
-   * Atualiza o contador e histórico do cliente existente em vez de criar novo
+   * Handler para fechar modal e vincular mensagens ao cliente existente
+   * Ao detectar duplicado, simplesmente vincula as mensagens ao cliente já cadastrado
    */
-  const handleForceCreate = async () => {
-    console.log("NewClientDrawer: Atualizando cadastro duplicado");
+  const handleCloseAndLink = async () => {
+    console.log("NewClientDrawer: Fechando modal e vinculando mensagens ao cliente existente");
     setShowDuplicateModal(false);
     
     if (existingClient && pendingFormData) {
       try {
-        // Etapa 1: Buscar dados atuais de cadastro duplicado
-        const duplicateData = await getDuplicateRegistrationData(existingClient.id);
-        console.log('NewClientDrawer: Dados de cadastro duplicado:', duplicateData);
+        // Etapa 1: Vincular mensagens existentes ao cliente existente
+        console.log('NewClientDrawer: Vinculando mensagens ao cliente existente:', existingClient.id);
+        const { data: updatedMessages, error: updateError } = await supabase
+          .from('historico_comercial')
+          .update({ client_id: existingClient.id })
+          .eq('telefone', pendingFormData.phoneNumber)
+          .is('client_id', null)
+          .select('id');
         
-        // Etapa 2: Atualizar contador e histórico de cadastros
-        const duplicateResult = await updateDuplicateRegistration(
-          existingClient.id,
-          duplicateData?.quantidade_cadastros || 1,
-          duplicateData?.historico_cadastros || null
-        );
-        
-        if (duplicateResult.success) {
-          console.log('NewClientDrawer: Histórico de duplicados atualizado');
-          
-          // Etapa 3: Vincular mensagens existentes ao cliente existente
-          console.log('NewClientDrawer: Vinculando mensagens ao cliente existente');
-          const { data: updatedMessages, error: updateError } = await supabase
-            .from('historico_comercial')
-            .update({ client_id: existingClient.id })
-            .eq('telefone', pendingFormData.phoneNumber)
-            .is('client_id', null)
-            .select('id');
-          
-          if (updateError) {
-            console.error('NewClientDrawer: Erro ao vincular mensagens:', updateError);
-          } else {
-            const messageCount = updatedMessages?.length || 0;
-            console.log(`NewClientDrawer: ${messageCount} mensagens vinculadas ao cliente ${existingClient.id}`);
-          }
-          
-          toast({
-            title: "Cadastro atualizado!",
-            description: `${existingClient.name} agora está no ${duplicateResult.quantidade}º cadastro. Mensagens vinculadas.`,
-          });
-          
-          form.reset();
-          onOpenChange(false);
-          onSuccess?.();
+        if (updateError) {
+          console.error('NewClientDrawer: Erro ao vincular mensagens:', updateError);
         } else {
-          console.error('NewClientDrawer: Falha ao atualizar histórico de duplicados');
-          toast({
-            variant: "destructive",
-            title: "Erro ao atualizar",
-            description: "Não foi possível atualizar o histórico de cadastros.",
-          });
+          const messageCount = updatedMessages?.length || 0;
+          console.log(`NewClientDrawer: ${messageCount} mensagens vinculadas ao cliente ${existingClient.id}`);
         }
+        
+        toast({
+          title: "Mensagens vinculadas!",
+          description: `Conversa vinculada ao cliente existente: ${existingClient.name}`,
+        });
+        
+        form.reset();
+        onOpenChange(false);
+        onSuccess?.();
       } catch (error) {
-        console.error('NewClientDrawer: Erro ao processar duplicado:', error);
+        console.error('NewClientDrawer: Erro ao vincular mensagens:', error);
         toast({
           variant: "destructive",
-          title: "Erro ao processar",
-          description: "Ocorreu um erro inesperado.",
+          title: "Erro ao vincular",
+          description: "Ocorreu um erro ao vincular as mensagens.",
         });
       }
     }
     
-    setPendingFormData(null);
-    setExistingClient(null);
-  };
-
-  /**
-   * Handler para cancelar cadastro duplicado
-   */
-  const handleCancelDuplicate = () => {
-    console.log("NewClientDrawer: Cancelando cadastro duplicado");
-    setShowDuplicateModal(false);
     setPendingFormData(null);
     setExistingClient(null);
   };
@@ -390,7 +357,7 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
         </SheetContent>
       </Sheet>
 
-      {/* Modal de aviso de duplicado */}
+      {/* Modal informativo de cliente já cadastrado */}
       <Dialog open={showDuplicateModal} onOpenChange={setShowDuplicateModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -401,7 +368,8 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
               <DialogTitle>Cliente já cadastrado</DialogTitle>
             </div>
             <DialogDescription className="pt-4">
-              Já existe um cliente com este telefone cadastrado nesta unidade.
+              Este telefone já está vinculado a um cliente cadastrado. 
+              Ao fechar, as mensagens serão automaticamente vinculadas a este cliente.
             </DialogDescription>
           </DialogHeader>
           
@@ -430,18 +398,9 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
             </div>
           )}
           
-          <DialogFooter className="flex gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={handleCancelDuplicate}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleForceCreate}
-            >
-              Cadastrar mesmo assim
+          <DialogFooter>
+            <Button onClick={handleCloseAndLink}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>
