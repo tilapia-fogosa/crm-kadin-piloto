@@ -6428,6 +6428,10 @@ export type Database = {
         }
         Returns: number
       }
+      generate_registration_history: {
+        Args: { dates: string[] }
+        Returns: string
+      }
       get_activity_funnel_stats: {
         Args: {
           p_end_date: string
