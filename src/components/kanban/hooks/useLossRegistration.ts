@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { useUserUnit } from "./useUserUnit"
 import { useUnit } from "@/contexts/UnitContext"
-import { sendActivityWebhookSafe, fetchClientData, getScheduleChangeType } from "../utils/webhookService"
+import { fetchClientData } from "../utils/webhookService"
 
 interface LossRegistrationProps {
   clientId: string

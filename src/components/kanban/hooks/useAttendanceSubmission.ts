@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
 import { useDebounceSubmission } from "./useDebounceSubmission"
 import { useQueryClient } from "@tanstack/react-query"
-import { sendActivityWebhookSafe, getScheduleChangeType } from "../utils/webhookService"
 
 export function useAttendanceSubmission() {
   const { toast } = useToast()
@@ -92,29 +91,8 @@ export function useAttendanceSubmission() {
           throw attendanceError
         }
 
-        // Enviar webhook unificado para atendimento
-        console.log(`[${submissionId}] Enviando webhook unificado para atendimento`)
-        
-        const tipoMudancaAgendamento = getScheduleChangeType(scheduledDateAnterior, null)
-        
-        const webhookPayload = {
-          activity_id: attendanceActivity.id,
-          client_id: cardId,
-          tipo_atividade: 'Atendimento' as const,
-          tipo_contato: 'presencial' as const,
-          unit_id: clientData.unit_id,
-          created_by: session.user.id,
-          operacao: 'criado' as const,
-          notes: notes || observations || `Atendimento realizado - Resultado: ${result}`,
-          scheduled_date_anterior: scheduledDateAnterior,
-          tipo_mudanca_agendamento: tipoMudancaAgendamento,
-          previous_status: previousStatus,
-          new_status: result
-        }
-        
-        console.log(`📤 [useAttendanceSubmission] Webhook payload completo:`, webhookPayload)
-        
-        await sendActivityWebhookSafe(webhookPayload)
+        // Webhook removido - não envia mais para n8n
+        console.log(`[${submissionId}] ✅ Atendimento registrado (webhook desabilitado)`)
 
         // Se for matriculado, registra atividade de Matrícula
         if (result === 'matriculado') {
