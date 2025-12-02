@@ -3,7 +3,6 @@ import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Scheduling } from "../types"
-import { sendActivityWebhookSafe, fetchClientData, getScheduleChangeType } from "../utils/webhookService"
 
 export function useScheduling() {
   const { toast } = useToast()
@@ -63,26 +62,8 @@ export function useScheduling() {
 
       if (updateClientError) throw updateClientError
 
-      // Enviar webhook unificado (não bloqueia se falhar)
-      const novaScheduledDate = scheduling.scheduledDate.toISOString()
-      const tipoMudanca = getScheduleChangeType(scheduledDateAnterior, novaScheduledDate)
-      
-      const webhookPayload = {
-        activity_id: 'temp-id', // Será substituído pela Edge Function
-        client_id: scheduling.cardId,
-        tipo_atividade: 'Agendamento' as const,
-        tipo_contato: scheduling.type,
-        unit_id: unitId,
-        created_by: session.session.user.id,
-        operacao: 'criado' as const,
-        scheduled_date: novaScheduledDate,
-        notes: scheduling.notes,
-        scheduled_date_anterior: scheduledDateAnterior,
-        tipo_mudanca_agendamento: tipoMudanca
-      }
-      
-      console.log('📤 [useScheduling] Enviando webhook payload:', webhookPayload)
-      await sendActivityWebhookSafe(webhookPayload)
+      // Webhook removido - não envia mais para n8n
+      console.log('✅ [useScheduling] Agendamento registrado (webhook desabilitado)')
 
       // Invalida Kanban e atividades para atualização instantânea
       await queryClient.invalidateQueries({ queryKey: ['infinite-clients'], refetchType: 'all' })
