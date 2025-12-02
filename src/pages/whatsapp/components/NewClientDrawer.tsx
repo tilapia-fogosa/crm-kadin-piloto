@@ -9,9 +9,11 @@
  * 2. Pré-preenche o campo de telefone (apenas leitura)
  * 3. Define "WhatsApp" como origem padrão
  * 4. Ao submeter:
- *    a) Cria novo cliente na tabela 'clients'
- *    b) Vincula todas as mensagens existentes (UPDATE historico_comercial)
- *    c) Fecha o drawer e atualiza a lista
+ *    a) Verifica se já existe cliente com mesmo telefone na unidade
+ *    b) Se existir, mostra modal com opções
+ *    c) Cria novo cliente na tabela 'clients'
+ *    d) Vincula todas as mensagens existentes (UPDATE historico_comercial)
+ *    e) Fecha o drawer e atualiza a lista
  */
 
 import { useForm } from "react-hook-form";
@@ -22,9 +24,9 @@ import { Button } from "@/components/ui/button";
 import { LeadFormFields } from "@/components/leads/lead-form-fields";
 import { LeadFormData, leadFormSchema } from "@/types/lead-form";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { UnitFormField } from "@/components/leads/UnitFormField";
-import { Phone, X } from "lucide-react";
+import { Phone, AlertTriangle } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -32,6 +34,17 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useCheckDuplicateClient, ExistingClient } from "@/hooks/useCheckDuplicateClient";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 // ID do perfil Sistema-Kadin para registros automáticos
 const SISTEMA_KADIN_ID = 'eaf94b92-7646-485f-bd96-016bf1add2b2';
@@ -45,6 +58,12 @@ interface NewClientDrawerProps {
 
 export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: NewClientDrawerProps) {
   const { toast } = useToast();
+  const { checkDuplicate, isChecking } = useCheckDuplicateClient();
+  
+  // Estado para controlar o modal de duplicados
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [existingClient, setExistingClient] = useState<ExistingClient | null>(null);
+  const [pendingFormData, setPendingFormData] = useState<LeadFormData | null>(null);
 
   console.log('NewClientDrawer: Montando drawer com telefone:', phoneNumber);
   
@@ -82,7 +101,34 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
     }
   }, [open, phoneNumber, form]);
 
+  /**
+   * Handler principal do formulário
+   * Etapa 1: Verifica duplicados antes de criar
+   */
   const onSubmit = async (values: LeadFormData) => {
+    console.log("NewClientDrawer: Iniciando verificação de duplicados");
+    
+    // Etapa 1: Verificar se já existe cliente com mesmo telefone na unidade
+    const duplicate = await checkDuplicate(values.phoneNumber, values.unitId);
+    
+    if (duplicate) {
+      console.log("NewClientDrawer: Cliente duplicado encontrado, exibindo modal");
+      setExistingClient(duplicate);
+      setPendingFormData(values);
+      setShowDuplicateModal(true);
+      return;
+    }
+    
+    // Se não há duplicado, prosseguir com cadastro
+    console.log("NewClientDrawer: Nenhum duplicado, prosseguindo com cadastro");
+    await createClient(values);
+  };
+
+  /**
+   * Cria o cliente no banco de dados
+   * Etapa 2: Inserção efetiva após validações
+   */
+  const createClient = async (values: LeadFormData) => {
     try {
       console.log("NewClientDrawer: Iniciando cadastro com valores:", values);
       
@@ -185,69 +231,165 @@ export function NewClientDrawer({ open, onOpenChange, phoneNumber, onSuccess }: 
     }
   };
 
+  /**
+   * Handler para forçar cadastro mesmo com duplicado
+   */
+  const handleForceCreate = async () => {
+    console.log("NewClientDrawer: Forçando cadastro mesmo com duplicado");
+    setShowDuplicateModal(false);
+    
+    if (pendingFormData) {
+      await createClient(pendingFormData);
+    }
+    
+    setPendingFormData(null);
+    setExistingClient(null);
+  };
+
+  /**
+   * Handler para cancelar cadastro duplicado
+   */
+  const handleCancelDuplicate = () => {
+    console.log("NewClientDrawer: Cancelando cadastro duplicado");
+    setShowDuplicateModal(false);
+    setPendingFormData(null);
+    setExistingClient(null);
+  };
+
   const handleCancel = () => {
     console.log('NewClientDrawer: Cancelando cadastro, fechando drawer');
     form.reset();
     onOpenChange(false);
   };
 
+  /**
+   * Formata data para exibição
+   */
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    } catch {
+      return dateString;
+    }
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
-        <SheetHeader className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Phone className="h-5 w-5 text-primary" />
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Phone className="h-5 w-5 text-primary" />
+                </div>
+                <SheetTitle>Cadastrar Contato do WhatsApp</SheetTitle>
               </div>
-              <SheetTitle>Cadastrar Contato do WhatsApp</SheetTitle>
             </div>
-          </div>
+            
+            <SheetDescription>
+              Este contato enviou mensagens pelo WhatsApp mas ainda não está cadastrado no sistema.
+              Preencha os dados abaixo para vincular as mensagens existentes.
+            </SheetDescription>
+          </SheetHeader>
           
-          <SheetDescription>
-            Este contato enviou mensagens pelo WhatsApp mas ainda não está cadastrado no sistema.
-            Preencha os dados abaixo para vincular as mensagens existentes.
-          </SheetDescription>
-        </SheetHeader>
-        
-        <div className="mt-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <UnitFormField form={form} />
-              
-              {/* Campo telefone apenas leitura */}
-              <div className="space-y-6">
-                <div className="p-4 bg-muted/50 rounded-lg border border-border">
-                  <p className="text-sm font-medium mb-2">Telefone</p>
-                  <p className="text-lg font-mono">{phoneNumber}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Este telefone será vinculado automaticamente às mensagens existentes
-                  </p>
+          <div className="mt-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <UnitFormField form={form} />
+                
+                {/* Campo telefone apenas leitura */}
+                <div className="space-y-6">
+                  <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                    <p className="text-sm font-medium mb-2">Telefone</p>
+                    <p className="text-lg font-mono">{phoneNumber}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Este telefone será vinculado automaticamente às mensagens existentes
+                    </p>
+                  </div>
+                  
+                  <LeadFormFields form={form} hidePhoneNumber={true} />
                 </div>
                 
-                <LeadFormFields form={form} hidePhoneNumber={true} />
+                <div className="flex gap-4 pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={handleCancel}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="flex-1"
+                    disabled={isChecking}
+                  >
+                    {isChecking ? "Verificando..." : "Cadastrar Contato"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Modal de aviso de duplicado */}
+      <Dialog open={showDuplicateModal} onOpenChange={setShowDuplicateModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
               </div>
-              
-              <div className="flex gap-4 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={handleCancel}
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="flex-1"
-                >
-                  Cadastrar Contato
-                </Button>
+              <DialogTitle>Cliente já cadastrado</DialogTitle>
+            </div>
+            <DialogDescription className="pt-4">
+              Já existe um cliente com este telefone cadastrado nesta unidade.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {existingClient && (
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Nome:</span>
+                <span className="text-sm font-medium">{existingClient.name}</span>
               </div>
-            </form>
-          </Form>
-        </div>
-      </SheetContent>
-    </Sheet>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Telefone:</span>
+                <span className="text-sm font-mono">{existingClient.phone_number}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Origem:</span>
+                <span className="text-sm">{existingClient.lead_source}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Status:</span>
+                <span className="text-sm">{existingClient.status}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Cadastrado em:</span>
+                <span className="text-sm">{formatDate(existingClient.created_at)}</span>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={handleCancelDuplicate}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleForceCreate}
+            >
+              Cadastrar mesmo assim
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
