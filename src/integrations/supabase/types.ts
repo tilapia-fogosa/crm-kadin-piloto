@@ -1023,6 +1023,30 @@ export type Database = {
         }
         Relationships: []
       }
+      apostilas_ah: {
+        Row: {
+          created_at: string
+          exercicios_por_pagina: number | null
+          id: string
+          nome: string
+          total_paginas: number
+        }
+        Insert: {
+          created_at?: string
+          exercicios_por_pagina?: number | null
+          id?: string
+          nome: string
+          total_paginas: number
+        }
+        Update: {
+          created_at?: string
+          exercicios_por_pagina?: number | null
+          id?: string
+          nome?: string
+          total_paginas?: number
+        }
+        Relationships: []
+      }
       atividade_pos_venda: {
         Row: {
           active: boolean
