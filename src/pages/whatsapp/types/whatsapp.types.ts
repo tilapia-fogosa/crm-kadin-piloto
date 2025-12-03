@@ -24,6 +24,7 @@ export interface Conversation {
   isNewLead: boolean; // Indica se o cliente tem apenas a mensagem automática do Sistema-Kadin
   isUnregistered: boolean; // Indica se é um número não cadastrado no sistema
   quantidadeCadastros?: number; // Contador de cadastros duplicados
+  historicoCadastros?: string; // Histórico de datas dos cadastros duplicados
   // Campos adicionais para exibição no CardSheet
   leadSource: string; // Origem do lead (Facebook, Instagram, etc)
   email?: string; // Email do cliente

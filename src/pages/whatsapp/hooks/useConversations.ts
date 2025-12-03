@@ -72,6 +72,7 @@ export function useConversations() {
             unit_id,
             tipo_atendimento,
             quantidade_cadastros,
+            historico_cadastros,
             lead_source,
             email,
             original_ad,
@@ -151,6 +152,7 @@ export function useConversations() {
           isNewLead,
           isUnregistered: false,
           quantidadeCadastros: client.quantidade_cadastros || 1,
+          historicoCadastros: client.historico_cadastros || undefined,
           // Campos adicionais para exibição no CardSheet
           leadSource: client.lead_source || 'WhatsApp',
           email: client.email || undefined,

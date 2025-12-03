@@ -4,6 +4,7 @@ import { ActivitySelector } from "../../ActivitySelector"
 import { ActivityDetails } from "../../ActivityDetails"
 import { CompactHistory } from "../history/CompactHistory"
 import { ClientInformation } from "./ClientInformation"
+import { RegistrationCountInfo } from "./RegistrationCountInfo"
 import { PaginatedActivityHistory } from "./PaginatedActivityHistory"
 import { KanbanCard, ContactAttempt, EffectiveContact, Scheduling, Attendance } from "../../types"
 
@@ -83,6 +84,9 @@ export function ActivityGrid({
         <div>
           <ClientInformation card={card} />
         </div>
+
+        {/* Quadro de Número de Cadastros - só aparece quando há 2+ cadastros */}
+        <RegistrationCountInfo card={card} />
       </div>
 
       <div className="h-full overflow-y-auto">

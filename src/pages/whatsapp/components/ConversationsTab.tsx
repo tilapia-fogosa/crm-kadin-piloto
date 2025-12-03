@@ -52,7 +52,8 @@ function conversationToKanbanCard(conversation: Conversation): KanbanCard {
     original_ad: conversation.original_ad,
     original_adset: conversation.original_adset,
     observations: conversation.observations,
-    quantidadeCadastros: conversation.quantidadeCadastros
+    quantidadeCadastros: conversation.quantidadeCadastros,
+    historicoCadastros: conversation.historicoCadastros
   };
 }
 
