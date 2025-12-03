@@ -78,7 +78,7 @@ export function useConversations() {
             original_adset,
             observations,
             registration_name,
-            units (
+            units!clients_unit_id_fkey (
               name
             )
           )
