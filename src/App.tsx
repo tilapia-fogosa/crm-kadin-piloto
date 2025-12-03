@@ -1,3 +1,9 @@
+/**
+ * App.tsx - Componente raiz da aplicação
+ * 
+ * @version 2.0.1 - Cache rebuild forçado para resolver erro do React Query
+ * @description Força o Vite a reprocessar as dependências do @tanstack/react-query
+ */
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SidebarProvider } from "./components/ui/sidebar";
