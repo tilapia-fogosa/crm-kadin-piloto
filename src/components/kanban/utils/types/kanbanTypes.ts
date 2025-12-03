@@ -69,6 +69,10 @@ export interface ClientSummaryData {
     next_contact_date?: string
     created_by?: string
   }
+  /** Número de vezes que o cliente se cadastrou */
+  quantidade_cadastros?: number
+  /** Histórico das datas de cadastro do cliente */
+  historico_cadastros?: string
 }
 
 export interface ActivityData {
