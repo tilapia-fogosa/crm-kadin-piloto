@@ -82,8 +82,13 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
     filteredConversations = filteredConversations?.filter(conv => conv.unreadCount > 0);
   }
 
-  // Calcular totais
-  const totalUnread = conversations?.filter(conv => conv.unreadCount > 0).length || 0;
+  // Calcular totais corretamente para cada categoria
+  // Log: Contadores agora contam apenas dentro da sua categoria específica
+  // - Não lidas: conta apenas conversas normais (não Novo Cadastro, não Sem Cadastro) que têm unreadCount > 0
+  // - Novo Cadastro: conta clientes cadastrados que são novos leads
+  // - Sem Cadastro: conta números não cadastrados
+  const conversasNormais = conversations?.filter(conv => !conv.isNewLead && !conv.isUnregistered) || [];
+  const totalUnread = conversasNormais.filter(conv => conv.unreadCount > 0).length;
   const totalNewLead = conversations?.filter(conv => !conv.isUnregistered && conv.isNewLead).length || 0;
   const totalUnregistered = conversations?.filter(conv => conv.isUnregistered).length || 0;
 
