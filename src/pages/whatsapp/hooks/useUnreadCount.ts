@@ -15,10 +15,12 @@ export function useUnreadCount() {
   
   const { data: conversations = [], isLoading } = useConversations();
   
-  // Conta quantas conversas têm mensagens não lidas
-  const unreadCount = conversations.filter(conv => conv.unreadCount > 0).length;
+  // Log: Conta apenas conversas normais (não Novo Cadastro, não Sem Cadastro) com mensagens não lidas
+  // Isso mantém o contador da sidebar sincronizado com o contador da página de conversas
+  const conversasNormais = conversations.filter(conv => !conv.isNewLead && !conv.isUnregistered);
+  const unreadCount = conversasNormais.filter(conv => conv.unreadCount > 0).length;
   
-  console.log('useUnreadCount: Total de conversas não lidas:', unreadCount);
+  console.log('useUnreadCount: Total de conversas não lidas (normais):', unreadCount);
   
   return {
     unreadCount,
