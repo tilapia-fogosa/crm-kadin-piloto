@@ -142,9 +142,6 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
             "truncate",
             conversation.unreadCount > 0 ? "font-bold text-foreground" : "font-medium text-foreground"
           )}>
-            {conversation.quantidadeCadastros && conversation.quantidadeCadastros > 1 && (
-              <span className="text-orange-600 font-bold mr-1">{`{${conversation.quantidadeCadastros}}`}</span>
-            )}
             {conversation.clientName}
           </span>
           <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">

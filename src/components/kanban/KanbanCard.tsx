@@ -73,9 +73,6 @@ function KanbanCardComponent({
         <div className="flex justify-between items-start">
           <div className="space-y-1">
             <CardTitle className="text-base -mt-1 text-[#333333]">
-              {card.quantidadeCadastros && card.quantidadeCadastros > 1 && (
-                <span className="text-orange-600 font-bold mr-1">{`{${card.quantidadeCadastros}}`}</span>
-              )}
               {card.clientName}
             </CardTitle>
             <TooltipProvider>
