@@ -6127,6 +6127,7 @@ export type Database = {
         Row: {
           created_at: string | null
           email: string | null
+          historico_cadastros: string | null
           id: string | null
           last_activity: Json | null
           lead_source: string | null
@@ -6136,6 +6137,7 @@ export type Database = {
           original_ad: string | null
           original_adset: string | null
           phone_number: string | null
+          quantidade_cadastros: number | null
           registration_name: string | null
           scheduled_date: string | null
           status: string | null
