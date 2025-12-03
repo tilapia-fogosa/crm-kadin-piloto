@@ -25,6 +25,7 @@ export type KanbanCard = {
   unitName?: string
   lastUpdated?: string // Timestamp da última atualização
   quantidadeCadastros?: number // Contador de cadastros duplicados
+  historicoCadastros?: string // Histórico de datas dos cadastros duplicados
 }
 
 export type ContactAttempt = {
