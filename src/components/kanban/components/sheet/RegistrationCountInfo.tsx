@@ -42,10 +42,10 @@ export function RegistrationCountInfo({ card }: RegistrationCountInfoProps) {
   const historicoItems = parseHistoricoCadastros(card.historicoCadastros || '')
 
   return (
-    <Card className="border-destructive/50 bg-destructive/5">
+    <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm font-medium text-destructive">
-          <AlertTriangle className="h-4 w-4" />
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           Número de Cadastros
         </CardTitle>
       </CardHeader>
@@ -53,7 +53,7 @@ export function RegistrationCountInfo({ card }: RegistrationCountInfoProps) {
         {/* Quantidade em destaque */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Quantidade:</span>
-          <span className="text-2xl font-bold text-destructive">
+          <span className="text-2xl font-bold text-primary">
             {card.quantidadeCadastros}
           </span>
         </div>
@@ -71,7 +71,7 @@ export function RegistrationCountInfo({ card }: RegistrationCountInfoProps) {
                   key={index} 
                   className="text-sm text-foreground flex items-center gap-2"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                   {item}
                 </li>
               ))}
