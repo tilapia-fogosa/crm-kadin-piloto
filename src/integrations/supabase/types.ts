@@ -4555,6 +4555,27 @@ export type Database = {
         }
         Relationships: []
       }
+      registro_ponto: {
+        Row: {
+          created_at: string
+          id: string
+          id_usuario: string
+          tipo_registro: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          id_usuario: string
+          tipo_registro: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          id_usuario?: string
+          tipo_registro?: string
+        }
+        Relationships: []
+      }
       reposicoes: {
         Row: {
           aluno_id: string | null
