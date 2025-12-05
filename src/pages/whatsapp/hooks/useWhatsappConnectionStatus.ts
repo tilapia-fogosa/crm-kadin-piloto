@@ -12,8 +12,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export function useWhatsappStatus() {
-  console.log('useWhatsappStatus: Verificando status da conexão WhatsApp');
+export function useWhatsappConnectionStatus() {
+  console.log('useWhatsappConnectionStatus: Verificando status da conexão WhatsApp');
 
   return useQuery({
     queryKey: ['whatsapp-connection-status'],

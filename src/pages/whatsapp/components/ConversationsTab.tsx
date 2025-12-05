@@ -21,7 +21,7 @@ import { useConversations } from "../hooks/useConversations";
 import { useMarkAsRead } from "../hooks/useMarkAsRead";
 import { useToggleTipoAtendimento } from "../hooks/useToggleTipoAtendimento";
 import { useMessagesRealtime } from "../hooks/useMessagesRealtime";
-import { useWhatsappStatus } from "../hooks/useWhatsappStatus";
+import { useWhatsappConnectionStatus } from "../hooks/useWhatsappConnectionStatus";
 import { WhatsappDisconnectedAlert } from "./WhatsappDisconnectedAlert";
 import { CardSheet } from "@/components/kanban/components/sheet/CardSheet";
 import { useActivityOperations } from "@/components/kanban/hooks/useActivityOperations";
@@ -64,7 +64,7 @@ export function ConversationsTab() {
   const [lastMarkedClientId, setLastMarkedClientId] = useState<string | null>(null);
   const [activityModalClientId, setActivityModalClientId] = useState<string | null>(null);
   const { data: conversations = [] } = useConversations();
-  const { data: whatsappStatus } = useWhatsappStatus();
+  const { data: whatsappStatus } = useWhatsappConnectionStatus();
   const markAsRead = useMarkAsRead();
   const queryClient = useQueryClient();
 
