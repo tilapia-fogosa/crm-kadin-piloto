@@ -102,6 +102,9 @@ export function UserForm({ defaultValues, onSubmit, isSubmitting, onCancel }: Us
                   <SelectItem value="admin">Administrador</SelectItem>
                   <SelectItem value="educador">Educador</SelectItem>
                   <SelectItem value="gestor_pedagogico">Gestor Pedagógico</SelectItem>
+                  <SelectItem value="financeiro">Financeiro</SelectItem>
+                  <SelectItem value="administrativo">Administrativo</SelectItem>
+                  <SelectItem value="estagiario">Estagiário</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
