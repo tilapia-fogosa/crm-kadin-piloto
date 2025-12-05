@@ -7092,6 +7092,13 @@ export type Database = {
         }
         Returns: Json
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_unread_updates: { Args: { p_user_id: string }; Returns: boolean }
       inactivate_activity: { Args: { activity_id: string }; Returns: boolean }
       is_admin: { Args: { user_id: string }; Returns: boolean }
@@ -7353,6 +7360,9 @@ export type Database = {
         | "admin"
         | "educador"
         | "gestor_pedagogico"
+        | "financeiro"
+        | "administrativo"
+        | "estagiario"
       user_role_old: "consultor" | "franqueado" | "gestor_comercial"
       Vinculo_aluno:
         | "Pai do aluno"
@@ -7571,6 +7581,9 @@ export const Constants = {
         "admin",
         "educador",
         "gestor_pedagogico",
+        "financeiro",
+        "administrativo",
+        "estagiario",
       ],
       user_role_old: ["consultor", "franqueado", "gestor_comercial"],
       Vinculo_aluno: [
