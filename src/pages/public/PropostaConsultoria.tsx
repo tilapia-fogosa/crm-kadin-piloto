@@ -580,7 +580,7 @@ const PropostaConsultoria: React.FC = () => {
             <div>
               <h4 className="font-semibold text-foreground mb-4">Contato</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2">agenciakadin@gmai<Mail className="h-4 w-4" />
+                <li className="flex items-center gap-2">agenciakadin@gmail.com<Mail className="h-4 w-4" />
                   contato@kadin.com.br
                 </li>
                 <li className="flex items-center gap-2">(44) 99924-5040<Phone className="h-4 w-4" />
