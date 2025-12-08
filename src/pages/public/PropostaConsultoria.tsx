@@ -16,24 +16,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  FileText, 
-  Target, 
-  CheckCircle2, 
-  XCircle, 
-  Package, 
-  Clock, 
-  DollarSign, 
-  Settings, 
-  Users,
-  ChevronRight,
-  Mail,
-  Phone,
-  Calendar,
-  Building2,
-  Shield,
-  BookOpen
-} from 'lucide-react';
+import { FileText, Target, CheckCircle2, XCircle, Package, Clock, DollarSign, Settings, Users, ChevronRight, Mail, Phone, Calendar, Building2, Shield, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -53,7 +36,7 @@ interface Section {
  */
 const PropostaConsultoria: React.FC = () => {
   console.log('LOG: Renderizando página pública de Proposta de Consultoria');
-  
+
   // Estado para controlar a seção ativa durante scroll
   const [activeSection, setActiveSection] = useState<string>('introducao');
 
@@ -61,16 +44,39 @@ const PropostaConsultoria: React.FC = () => {
    * Definição das seções da página para navegação
    * Cada seção possui um ID único, título e ícone correspondente
    */
-  const sections: Section[] = [
-    { id: 'introducao', title: '1. Introdução', icon: <BookOpen className="h-4 w-4" /> },
-    { id: 'natureza', title: '2. Natureza da Consultoria', icon: <Shield className="h-4 w-4" /> },
-    { id: 'escopo', title: '3. Escopo de Atuação', icon: <Target className="h-4 w-4" /> },
-    { id: 'fora-escopo', title: '4. Fora do Escopo', icon: <XCircle className="h-4 w-4" /> },
-    { id: 'entregaveis', title: '5. Entregáveis Mensais', icon: <Package className="h-4 w-4" /> },
-    { id: 'horas', title: '6. Horas e Banco de Horas', icon: <Clock className="h-4 w-4" /> },
-    { id: 'comercial', title: '7. Condições Comerciais', icon: <DollarSign className="h-4 w-4" /> },
-    { id: 'execucao', title: '8. Forma de Execução', icon: <Settings className="h-4 w-4" /> },
-  ];
+  const sections: Section[] = [{
+    id: 'introducao',
+    title: '1. Introdução',
+    icon: <BookOpen className="h-4 w-4" />
+  }, {
+    id: 'natureza',
+    title: '2. Natureza da Consultoria',
+    icon: <Shield className="h-4 w-4" />
+  }, {
+    id: 'escopo',
+    title: '3. Escopo de Atuação',
+    icon: <Target className="h-4 w-4" />
+  }, {
+    id: 'fora-escopo',
+    title: '4. Fora do Escopo',
+    icon: <XCircle className="h-4 w-4" />
+  }, {
+    id: 'entregaveis',
+    title: '5. Entregáveis Mensais',
+    icon: <Package className="h-4 w-4" />
+  }, {
+    id: 'horas',
+    title: '6. Horas e Banco de Horas',
+    icon: <Clock className="h-4 w-4" />
+  }, {
+    id: 'comercial',
+    title: '7. Condições Comerciais',
+    icon: <DollarSign className="h-4 w-4" />
+  }, {
+    id: 'execucao',
+    title: '8. Forma de Execução',
+    icon: <Settings className="h-4 w-4" />
+  }];
 
   /**
    * Efeito para atualizar a seção ativa baseado no scroll
@@ -82,23 +88,20 @@ const PropostaConsultoria: React.FC = () => {
       rootMargin: '-20% 0px -60% 0px',
       threshold: 0
     };
-
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach((entry) => {
+      entries.forEach(entry => {
         if (entry.isIntersecting) {
           setActiveSection(entry.target.id);
         }
       });
     };
-
     const observer = new IntersectionObserver(observerCallback, observerOptions);
-    
+
     // Observar todas as seções
-    sections.forEach((section) => {
+    sections.forEach(section => {
       const element = document.getElementById(section.id);
       if (element) observer.observe(element);
     });
-
     return () => observer.disconnect();
   }, []);
 
@@ -109,23 +112,20 @@ const PropostaConsultoria: React.FC = () => {
     console.log(`LOG: Navegando para seção: ${sectionId}`);
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
     }
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* HEADER: Cabeçalho com logo e título do documento */}
       <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo da Kadin */}
             <div className="flex items-center gap-3">
-              <img 
-                src="/logo-kadin.png" 
-                alt="Kadin Logo" 
-                className="h-10 w-auto"
-              />
+              <img src="/logo-kadin.png" alt="Kadin Logo" className="h-10 w-auto" />
               <div className="hidden sm:block">
                 <p className="text-sm text-muted-foreground">Consultoria Técnica</p>
               </div>
@@ -180,23 +180,11 @@ const PropostaConsultoria: React.FC = () => {
                 <FileText className="h-4 w-4 text-primary" />
                 Índice
               </h3>
-              {sections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => scrollToSection(section.id)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-left transition-colors ${
-                    activeSection === section.id
-                      ? 'bg-primary/10 text-primary font-medium'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
+              {sections.map(section => <button key={section.id} onClick={() => scrollToSection(section.id)} className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-left transition-colors ${activeSection === section.id ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
                   {section.icon}
                   <span className="truncate">{section.title}</span>
-                  {activeSection === section.id && (
-                    <ChevronRight className="h-4 w-4 ml-auto" />
-                  )}
-                </button>
-              ))}
+                  {activeSection === section.id && <ChevronRight className="h-4 w-4 ml-auto" />}
+                </button>)}
             </nav>
           </aside>
 
@@ -253,20 +241,12 @@ const PropostaConsultoria: React.FC = () => {
                     empresa independente, com as seguintes premissas:
                   </p>
                   <div className="space-y-3">
-                    {[
-                      'Não executa desenvolvimento de software, programação ou criação de telas.',
-                      'Não é responsável por configurar o sistema diretamente nas unidades franqueadas.',
-                      'Não realiza suporte técnico de primeiro nível às unidades.',
-                      'Não aprova nem altera funcionalidades de forma vinculativa; emite parecer técnico, sendo a decisão sempre do Franqueador.',
-                      'Pode envolver participação de técnicos adicionais indicados pela empresa do Consultor, sem ônus gerencial ao Franqueador.'
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+                    {['Não executa desenvolvimento de software, programação ou criação de telas.', 'Não é responsável por configurar o sistema diretamente nas unidades franqueadas.', 'Não realiza suporte técnico de primeiro nível às unidades.', 'Não aprova nem altera funcionalidades de forma vinculativa; emite parecer técnico, sendo a decisão sempre do Franqueador.', 'Pode envolver participação de técnicos adicionais indicados pela empresa do Consultor, sem ônus gerencial ao Franqueador.'].map((item, index) => <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                         <Badge variant="outline" className="shrink-0 mt-0.5">
                           {index + 1}
                         </Badge>
                         <p className="text-sm text-muted-foreground">{item}</p>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </CardContent>
               </Card>
@@ -294,17 +274,10 @@ const PropostaConsultoria: React.FC = () => {
                       <span className="text-primary">3.1</span> Governança e Diretrizes do Sistema
                     </h4>
                     <ul className="space-y-2">
-                      {[
-                        'Construção da visão macro e dos princípios orientadores do ERP.',
-                        'Acompanhamento da arquitetura funcional e das integrações propostas.',
-                        'Identificação e comunicação de riscos operacionais, técnicos ou estratégicos.',
-                        'Recomendações para padronização de fluxos e consistência do produto.'
-                      ].map((item, index) => (
-                        <li key={index} className="flex items-start gap-2 text-muted-foreground">
+                      {['Construção da visão macro e dos princípios orientadores do ERP.', 'Acompanhamento da arquitetura funcional e das integrações propostas.', 'Identificação e comunicação de riscos operacionais, técnicos ou estratégicos.', 'Recomendações para padronização de fluxos e consistência do produto.'].map((item, index) => <li key={index} className="flex items-start gap-2 text-muted-foreground">
                           <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                           <span>{item}</span>
-                        </li>
-                      ))}
+                        </li>)}
                     </ul>
                   </div>
 
@@ -316,18 +289,10 @@ const PropostaConsultoria: React.FC = () => {
                       <span className="text-primary">3.2</span> Validação Técnica (Sem Execução)
                     </h4>
                     <ul className="space-y-2">
-                      {[
-                        'Validação de testes funcionais, homologações e fluxos críticos.',
-                        'Revisão e validação de telas sob a ótica do franqueado e da operação.',
-                        'Proposição de ajustes de UX e otimizações de usabilidade.',
-                        'Emissão de parecer técnico estruturado com recomendações.',
-                        'Identificação de falhas, gaps e inconsistências do sistema.'
-                      ].map((item, index) => (
-                        <li key={index} className="flex items-start gap-2 text-muted-foreground">
+                      {['Validação de testes funcionais, homologações e fluxos críticos.', 'Revisão e validação de telas sob a ótica do franqueado e da operação.', 'Proposição de ajustes de UX e otimizações de usabilidade.', 'Emissão de parecer técnico estruturado com recomendações.', 'Identificação de falhas, gaps e inconsistências do sistema.'].map((item, index) => <li key={index} className="flex items-start gap-2 text-muted-foreground">
                           <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                           <span>{item}</span>
-                        </li>
-                      ))}
+                        </li>)}
                     </ul>
                   </div>
 
@@ -339,18 +304,10 @@ const PropostaConsultoria: React.FC = () => {
                       <span className="text-primary">3.3</span> Acompanhamento da Implantação
                     </h4>
                     <ul className="space-y-2">
-                      {[
-                        'Criação e acompanhamento de grupo piloto.',
-                        'Avaliação da aderência do sistema à rotina das unidades.',
-                        'Diagnóstico de pontos de melhoria, riscos de adoção e gargalos operacionais.',
-                        'Suporte técnico-pedagógico na explicação do uso do ERP aos franqueados.',
-                        'Acompanhamento dos resultados do rollout e etapas de implantação.'
-                      ].map((item, index) => (
-                        <li key={index} className="flex items-start gap-2 text-muted-foreground">
+                      {['Criação e acompanhamento de grupo piloto.', 'Avaliação da aderência do sistema à rotina das unidades.', 'Diagnóstico de pontos de melhoria, riscos de adoção e gargalos operacionais.', 'Suporte técnico-pedagógico na explicação do uso do ERP aos franqueados.', 'Acompanhamento dos resultados do rollout e etapas de implantação.'].map((item, index) => <li key={index} className="flex items-start gap-2 text-muted-foreground">
                           <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                           <span>{item}</span>
-                        </li>
-                      ))}
+                        </li>)}
                     </ul>
                   </div>
 
@@ -362,17 +319,10 @@ const PropostaConsultoria: React.FC = () => {
                       <span className="text-primary">3.4</span> Conciliação entre Stakeholders
                     </h4>
                     <ul className="space-y-2">
-                      {[
-                        'Facilitar comunicação entre Franqueador, Franqueados e equipes técnicas.',
-                        'Apoiar decisões estratégicas com análise técnica imparcial.',
-                        'Mediar conflitos de entendimento entre operação, desenvolvimento e gestão.',
-                        'Traduzir necessidades operacionais para linguagem técnica compreensível.'
-                      ].map((item, index) => (
-                        <li key={index} className="flex items-start gap-2 text-muted-foreground">
+                      {['Facilitar comunicação entre Franqueador, Franqueados e equipes técnicas.', 'Apoiar decisões estratégicas com análise técnica imparcial.', 'Mediar conflitos de entendimento entre operação, desenvolvimento e gestão.', 'Traduzir necessidades operacionais para linguagem técnica compreensível.'].map((item, index) => <li key={index} className="flex items-start gap-2 text-muted-foreground">
                           <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                           <span>{item}</span>
-                        </li>
-                      ))}
+                        </li>)}
                     </ul>
                   </div>
                 </CardContent>
@@ -396,19 +346,10 @@ const PropostaConsultoria: React.FC = () => {
                     responsabilidades da Consultoria:
                   </p>
                   <div className="space-y-3">
-                    {[
-                      'Desenvolvimento de software, criação de telas ou ajustes de programação.',
-                      'Parametrização ou configuração do ERP dentro das unidades franqueadas.',
-                      'Suporte técnico de primeiro nível ou atendimento a tickets operacionais.',
-                      'Acompanhamento diário de dúvidas de usuários.',
-                      'Gestão de fornecedores, squads de desenvolvimento ou equipes externas.',
-                      'Aprovação final de funcionalidades ou definição obrigatória de requisitos.'
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+                    {['Desenvolvimento de software, criação de telas ou ajustes de programação.', 'Parametrização ou configuração do ERP dentro das unidades franqueadas.', 'Suporte técnico de primeiro nível ou atendimento a tickets operacionais.', 'Acompanhamento diário de dúvidas de usuários.', 'Gestão de fornecedores, squads de desenvolvimento ou equipes externas.', 'Aprovação final de funcionalidades ou definição obrigatória de requisitos.'].map((item, index) => <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-destructive/5 border border-destructive/20">
                         <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
                         <p className="text-sm text-muted-foreground">{item}</p>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </CardContent>
               </Card>
@@ -430,29 +371,22 @@ const PropostaConsultoria: React.FC = () => {
                     A consultoria entregará, dentro das horas contratadas, os seguintes materiais e atividades:
                   </p>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    {[
-                      {
-                        title: 'Parecer Técnico Formal',
-                        description: 'Relatório com análises, riscos, classificações e recomendações.'
-                      },
-                      {
-                        title: 'Validação e Homologação',
-                        description: 'Emissão de parecer estruturado por módulo entregue.'
-                      },
-                      {
-                        title: 'Ata de Reuniões Técnicas',
-                        description: 'Registro das decisões, riscos e próximos passos.'
-                      },
-                      {
-                        title: 'Relatório de Adoção e Implantação',
-                        description: 'Status das unidades piloto e indicadores.'
-                      },
-                      {
-                        title: 'Diagnóstico Mensal de Evolução',
-                        description: 'Revisão do progresso versus objetivo do ERP.'
-                      }
-                    ].map((item, index) => (
-                      <Card key={index} className="bg-muted/30 border-border/50">
+                    {[{
+                    title: 'Parecer Técnico Formal',
+                    description: 'Relatório com análises, riscos, classificações e recomendações.'
+                  }, {
+                    title: 'Validação e Homologação',
+                    description: 'Emissão de parecer estruturado por módulo entregue.'
+                  }, {
+                    title: 'Ata de Reuniões Técnicas',
+                    description: 'Registro das decisões, riscos e próximos passos.'
+                  }, {
+                    title: 'Relatório de Adoção e Implantação',
+                    description: 'Status das unidades piloto e indicadores.'
+                  }, {
+                    title: 'Diagnóstico Mensal de Evolução',
+                    description: 'Revisão do progresso versus objetivo do ERP.'
+                  }].map((item, index) => <Card key={index} className="bg-muted/30 border-border/50">
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">
                             <Badge className="bg-primary text-primary-foreground shrink-0">
@@ -464,8 +398,7 @@ const PropostaConsultoria: React.FC = () => {
                             </div>
                           </div>
                         </CardContent>
-                      </Card>
-                    ))}
+                      </Card>)}
                   </div>
                 </CardContent>
               </Card>
@@ -498,16 +431,10 @@ const PropostaConsultoria: React.FC = () => {
                     </Card>
                   </div>
                   <ul className="space-y-3">
-                    {[
-                      'Será mantido banco de horas, compensável em até 30 dias após o fechamento de cada mês.',
-                      'Horas extras poderão ser contratadas conforme tabela comercial a ser apresentada.',
-                      'Todas as horas serão registradas em planilha compartilhada.'
-                    ].map((item, index) => (
-                      <li key={index} className="flex items-start gap-2 text-muted-foreground">
+                    {['Será mantido banco de horas, compensável em até 30 dias após o fechamento de cada mês.', 'Horas extras poderão ser contratadas conforme tabela comercial a ser apresentada.', 'Todas as horas serão registradas em planilha compartilhada.'].map((item, index) => <li key={index} className="flex items-start gap-2 text-muted-foreground">
                         <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                         <span>{item}</span>
-                      </li>
-                    ))}
+                      </li>)}
                   </ul>
                 </CardContent>
               </Card>
@@ -556,9 +483,7 @@ const PropostaConsultoria: React.FC = () => {
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
                             <Badge className="bg-secondary text-secondary-foreground text-lg px-3 py-1">50%</Badge>
-                            <p className="text-sm text-muted-foreground">
-                              Pagos em espécie até o dia 30 do mês subsequente ao serviço prestado.
-                            </p>
+                            <p className="text-sm text-muted-foreground">Pagos em espécie até o dia 30 do mês do serviço prestado.</p>
                           </div>
                         </CardContent>
                       </Card>
@@ -600,17 +525,10 @@ const PropostaConsultoria: React.FC = () => {
                     A consultoria será realizada por meio de:
                   </p>
                   <ul className="space-y-3">
-                    {[
-                      'Reuniões remotas e presenciais conforme necessidade.',
-                      'Comunicação oficial por canais definidos pelo Franqueador.',
-                      'Documentação registrada no backlog e sistema de gestão do projeto.',
-                      'Participação em cerimônias do projeto (kickoff, homologação, implantação, acompanhamento de unidades piloto).'
-                    ].map((item, index) => (
-                      <li key={index} className="flex items-start gap-2 text-muted-foreground">
+                    {['Reuniões remotas e presenciais conforme necessidade.', 'Comunicação oficial por canais definidos pelo Franqueador.', 'Documentação registrada no backlog e sistema de gestão do projeto.', 'Participação em cerimônias do projeto (kickoff, homologação, implantação, acompanhamento de unidades piloto).'].map((item, index) => <li key={index} className="flex items-start gap-2 text-muted-foreground">
                         <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                         <span>{item}</span>
-                      </li>
-                    ))}
+                      </li>)}
                   </ul>
                   
                   <div className="mt-8 p-4 bg-muted/30 rounded-lg border border-border text-center">
@@ -632,11 +550,7 @@ const PropostaConsultoria: React.FC = () => {
           <div className="grid gap-8 md:grid-cols-3">
             {/* Logo e descrição */}
             <div>
-              <img 
-                src="/logo-kadin.png" 
-                alt="Kadin Logo" 
-                className="h-10 w-auto mb-4"
-              />
+              <img src="/logo-kadin.png" alt="Kadin Logo" className="h-10 w-auto mb-4" />
               <p className="text-sm text-muted-foreground">
                 Consultoria Técnica especializada em transformação digital e 
                 implementação de sistemas empresariais.
@@ -686,8 +600,6 @@ const PropostaConsultoria: React.FC = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default PropostaConsultoria;
