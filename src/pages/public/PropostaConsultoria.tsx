@@ -372,20 +372,17 @@ const PropostaConsultoria: React.FC = () => {
                   </p>
                   <div className="grid gap-4 sm:grid-cols-2">
                     {[{
-                    title: 'Parecer Técnico Formal',
-                    description: 'Relatório com análises, riscos, classificações e recomendações.'
+                    title: 'Participação Formal de Reuniões Estratégicas',
+                    description: 'Presença ativa em reuniões de alinhamento e tomada de decisão do projeto.'
                   }, {
                     title: 'Validação e Homologação',
                     description: 'Emissão de parecer estruturado por módulo entregue.'
                   }, {
-                    title: 'Ata de Reuniões Técnicas',
-                    description: 'Registro das decisões, riscos e próximos passos.'
+                    title: 'Parecer Técnico das Reuniões e Decisões',
+                    description: 'Registro formal das análises, riscos e recomendações técnicas.'
                   }, {
-                    title: 'Relatório de Adoção e Implantação',
-                    description: 'Status das unidades piloto e indicadores.'
-                  }, {
-                    title: 'Diagnóstico Mensal de Evolução',
-                    description: 'Revisão do progresso versus objetivo do ERP.'
+                    title: 'Informativo de Insights e Tendências de Mercado',
+                    description: 'Compartilhamento de tendências relevantes (se pertinente ao contexto).'
                   }].map((item, index) => <Card key={index} className="bg-muted/30 border-border/50">
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">
