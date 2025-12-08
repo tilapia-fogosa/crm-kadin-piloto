@@ -41,6 +41,7 @@ import AutomacoesWhatsAppPage from "@/pages/automacoes-whatsapp";
 import PosVendaComercialPage from "@/pages/pos-venda-comercial/index";
 import PoliticaPrivacidade from "@/pages/public/PoliticaPrivacidade";
 import TermosServico from "@/pages/public/TermosServico";
+import PropostaConsultoria from "@/pages/public/PropostaConsultoria";
 import WhatsAppPage from "@/pages/whatsapp";
 
 // Log: Criar QueryClient FORA do componente para evitar recriação
@@ -78,6 +79,9 @@ function App() {
                     <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
                     <Route path="/termos-de-servico" element={<TermosServico />} />
                   </Route>
+                  
+                  {/* Proposta de Consultoria - página pública isolada sem layout */}
+                  <Route path="/proposta-consultoria" element={<PropostaConsultoria />} />
                   
                   {/* Root redirect */}
                   <Route path="/" element={

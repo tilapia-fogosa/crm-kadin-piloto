@@ -5294,6 +5294,42 @@ export type Database = {
         }
         Relationships: []
       }
+      tarefas_pessoais: {
+        Row: {
+          concluida: boolean | null
+          created_at: string
+          data_vencimento: string
+          descricao: string | null
+          id: string
+          prioridade: string | null
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concluida?: boolean | null
+          created_at?: string
+          data_vencimento: string
+          descricao?: string | null
+          id?: string
+          prioridade?: string | null
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concluida?: boolean | null
+          created_at?: string
+          data_vencimento?: string
+          descricao?: string | null
+          id?: string
+          prioridade?: string | null
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       temp_produtividade_abaco: {
         Row: {
           fez_desafio: boolean | null
