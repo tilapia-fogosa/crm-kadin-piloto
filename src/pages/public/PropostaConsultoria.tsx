@@ -517,78 +517,6 @@ const PropostaConsultoria: React.FC = () => {
             </Card>
           </section>
 
-          {/* Seção 9 - Bônus */}
-          <section id="bonus" className="scroll-mt-24">
-            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Gift className="h-6 w-6 text-primary" />
-                  </div>
-                  <CardTitle className="text-2xl">9. Bônus</CardTitle>
-                </div>
-                <CardDescription>
-                  Benefício adicional incluído na proposta
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-muted-foreground mb-4">
-                  Como parte desta proposta, está incluído um bônus especial:
-                </p>
-                
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 p-3 bg-background/50 rounded-lg border border-primary/10">
-                    <div className="p-1.5 bg-primary/10 rounded-full mt-0.5">
-                      <MapPin className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Reunião Presencial em SJC</p>
-                      <p className="text-sm text-muted-foreground">
-                        Participação presencial em reunião ainda em 2025 com o Franqueador em São José dos Campos.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-3 bg-background/50 rounded-lg border border-primary/10">
-                    <div className="p-1.5 bg-primary/10 rounded-full mt-0.5">
-                      <Clock className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Investimento de Horas</p>
-                      <p className="text-sm text-muted-foreground">
-                        Mais de 8 horas de trabalho dedicadas a esta atividade.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-3 bg-background/50 rounded-lg border border-primary/10">
-                    <div className="p-1.5 bg-primary/10 rounded-full mt-0.5">
-                      <Eye className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Atuação como Observador</p>
-                      <p className="text-sm text-muted-foreground">
-                        Ir como consultor e ouvinte, com postura de observação estratégica.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-3 bg-background/50 rounded-lg border border-primary/10">
-                    <div className="p-1.5 bg-primary/10 rounded-full mt-0.5">
-                      <FileText className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Relatório de Percepções</p>
-                      <p className="text-sm text-muted-foreground">
-                        Entrega de relatório terceiro com percepções sobre os departamentos do Franqueador quanto ao projeto do novo ERP.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              </Card>
-            </section>
-
             {/* SEÇÃO 8: Forma de Execução */}
             <section id="execucao" className="scroll-mt-24">
               <Card>
@@ -615,6 +543,78 @@ const PropostaConsultoria: React.FC = () => {
                     <p className="text-sm text-muted-foreground italic">
                       (Documento inicial – será atualizado conforme evolução do projeto.)
                     </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+
+            {/* Seção 9 - Bônus */}
+            <section id="bonus" className="scroll-mt-24">
+              <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Gift className="h-6 w-6 text-primary" />
+                    </div>
+                    <CardTitle className="text-2xl">9. Bônus</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Benefício adicional incluído na proposta
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-muted-foreground mb-4">
+                    Como parte desta proposta, está incluído um bônus especial:
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 p-3 bg-background/50 rounded-lg border border-primary/10">
+                      <div className="p-1.5 bg-primary/10 rounded-full mt-0.5">
+                        <MapPin className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">Reunião Presencial em SJC</p>
+                        <p className="text-sm text-muted-foreground">
+                          Participação presencial em reunião ainda em 2025 com o Franqueador em São José dos Campos.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 p-3 bg-background/50 rounded-lg border border-primary/10">
+                      <div className="p-1.5 bg-primary/10 rounded-full mt-0.5">
+                        <Clock className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">Investimento de Horas</p>
+                        <p className="text-sm text-muted-foreground">
+                          Mais de 8 horas de trabalho dedicadas a esta atividade.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 p-3 bg-background/50 rounded-lg border border-primary/10">
+                      <div className="p-1.5 bg-primary/10 rounded-full mt-0.5">
+                        <Eye className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">Atuação como Observador</p>
+                        <p className="text-sm text-muted-foreground">
+                          Ir como consultor e ouvinte, com postura de observação estratégica.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 p-3 bg-background/50 rounded-lg border border-primary/10">
+                      <div className="p-1.5 bg-primary/10 rounded-full mt-0.5">
+                        <FileText className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">Relatório de Percepções</p>
+                        <p className="text-sm text-muted-foreground">
+                          Entrega de relatório terceiro com percepções sobre os departamentos do Franqueador quanto ao projeto do novo ERP.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
