@@ -458,7 +458,7 @@ const PropostaConsultoria: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">Valor da Hora Técnica</p>
-                          <div className="text-3xl font-bold text-primary">R$ 250,00</div>
+                          <div className="text-3xl font-bold text-primary">R$ 200,00</div>
                         </div>
                         <DollarSign className="h-12 w-12 text-primary/30" />
                       </div>
@@ -503,6 +503,14 @@ const PropostaConsultoria: React.FC = () => {
                     <p className="text-muted-foreground">
                       <strong className="text-foreground">Despesas Operacionais:</strong> Reuniões 
                       presenciais e visitas técnicas terão despesas tratadas conforme acordo prévio.
+                    </p>
+                  </div>
+
+                  {/* NFSe */}
+                  <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                    <p className="text-muted-foreground">
+                      <strong className="text-foreground">Nota Fiscal:</strong> A NFSe será emitida pelo 
+                      valor integral mensal (30 horas × R$ 200,00 = R$ 6.000,00).
                     </p>
                   </div>
                 </CardContent>
