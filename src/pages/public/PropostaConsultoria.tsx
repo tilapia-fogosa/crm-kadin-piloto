@@ -76,6 +76,10 @@ const PropostaConsultoria: React.FC = () => {
     id: 'execucao',
     title: '8. Forma de Execução',
     icon: <Settings className="h-4 w-4" />
+  }, {
+    id: 'bonus',
+    title: '9. Bônus',
+    icon: <Gift className="h-4 w-4" />
   }];
 
   /**
