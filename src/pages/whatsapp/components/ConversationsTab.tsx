@@ -135,8 +135,8 @@ export function ConversationsTab() {
         <WhatsappDisconnectedAlert isDisconnected={whatsappStatus?.isDisconnected || false} />
         
         <div className="flex w-full h-full">
-          {/* Lista de conversas (esconde em mobile quando há conversa selecionada) */}
-          <div className={selectedClientId ? "hidden md:block h-full md:w-[400px] md:flex-shrink-0" : "w-full md:w-[400px] md:flex-shrink-0 h-full"}>
+          {/* Lista de conversas (esconde em mobile quando há conversa selecionada) - 1/3 da largura */}
+          <div className={selectedClientId ? "hidden md:block h-full md:w-1/3" : "w-full md:w-1/3 h-full"}>
             <ConversationList
               selectedClientId={selectedClientId}
               onSelectClient={handleSelectClient}
@@ -145,8 +145,8 @@ export function ConversationsTab() {
             />
           </div>
 
-          {/* Área do chat (esconde em mobile quando não há conversa selecionada) */}
-          <div className={!selectedClientId ? "hidden md:flex flex-1 h-full" : "flex flex-1 h-full"}>
+          {/* Área do chat (esconde em mobile quando não há conversa selecionada) - 2/3 da largura */}
+          <div className={!selectedClientId ? "hidden md:flex md:w-2/3 h-full" : "flex w-full md:w-2/3 h-full"}>
             <ChatArea
               selectedClientId={selectedClientId}
               conversations={conversations}
