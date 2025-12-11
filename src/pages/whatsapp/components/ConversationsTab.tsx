@@ -136,7 +136,7 @@ export function ConversationsTab() {
         
         <div className="flex h-full">
           {/* Lista de conversas (esconde em mobile quando há conversa selecionada) */}
-          <div className={selectedClientId ? "hidden md:block h-full md:w-[350px] md:flex-shrink-0" : "w-full md:w-[350px] md:flex-shrink-0 h-full"}>
+          <div className={selectedClientId ? "hidden md:block h-full md:w-[420px] md:flex-shrink-0" : "w-full md:w-[420px] md:flex-shrink-0 h-full"}>
             <ConversationList
               selectedClientId={selectedClientId}
               onSelectClient={handleSelectClient}

@@ -5395,6 +5395,45 @@ export type Database = {
           },
         ]
       }
+      transcricao_ligacoes: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: number
+          transcricao: Json
+          url_audio: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: number
+          transcricao: Json
+          url_audio?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: number
+          transcricao?: Json
+          url_audio?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcricao_ligacoes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcricao_ligacoes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trofeus_1000_dias: {
         Row: {
           aluno_id: string
@@ -7196,25 +7235,6 @@ export type Database = {
         | {
             Args: {
               p_activity_id: string
-              p_enrollment_amount?: number
-              p_enrollment_installments?: number
-              p_enrollment_payment_date?: string
-              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_first_monthly_fee_date?: string
-              p_kit_type_id?: string
-              p_material_amount?: number
-              p_material_installments?: number
-              p_material_payment_date?: string
-              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_monthly_fee_amount?: number
-              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
-              p_observations?: string
-            }
-            Returns: boolean
-          }
-        | {
-            Args: {
-              p_activity_id: string
               p_commercial_observations?: string
               p_enrollment_amount?: number
               p_enrollment_installments?: number
@@ -7250,6 +7270,25 @@ export type Database = {
               p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
             }
             Returns: Json
+          }
+        | {
+            Args: {
+              p_activity_id: string
+              p_enrollment_amount?: number
+              p_enrollment_installments?: number
+              p_enrollment_payment_date?: string
+              p_enrollment_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_first_monthly_fee_date?: string
+              p_kit_type_id?: string
+              p_material_amount?: number
+              p_material_installments?: number
+              p_material_payment_date?: string
+              p_material_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_monthly_fee_amount?: number
+              p_monthly_fee_payment_method?: Database["public"]["Enums"]["payment_method"]
+              p_observations?: string
+            }
+            Returns: boolean
           }
       save_pos_venda_pedagogical_data: {
         Args: {
