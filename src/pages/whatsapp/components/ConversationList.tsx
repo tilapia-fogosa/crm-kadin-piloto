@@ -96,7 +96,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
   console.log('ConversationList: Totais - Não lidas:', totalUnread, 'Novo Cadastro:', totalNewLead, 'Sem Cadastro:', totalUnregistered);
 
   return (
-    <div className="w-full md:w-[400px] flex flex-col border-r border-border bg-card h-full">
+    <div className="w-full flex flex-col border-r border-border bg-card h-full">
       {/* Header com busca e filtros */}
       <div className="p-3 border-b border-border bg-card space-y-3">
         {/* Campo de busca com botão de nova mensagem */}
