@@ -13,7 +13,6 @@
  * Utiliza cores do sistema: background, foreground, muted, primary
  */
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,6 +20,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Bot, CheckCheck, ClipboardList, X, Phone } from "lucide-react";
 import { Conversation } from "../types/whatsapp.types";
+import { getStatusConfig } from "../utils/statusConfig";
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -46,15 +46,8 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
     return format(date, 'dd/MM', { locale: ptBR });
   };
 
-  // Iniciais ou ícone para não cadastrados
-  const initials = conversation.isUnregistered 
-    ? '??' 
-    : conversation.primeiroNome
-        .split(' ')
-        .map(n => n[0])
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
+  // Configuração do status para o indicador
+  const statusConfig = getStatusConfig(conversation.status);
 
   // Handler para o badge Cadastrar
   const handleCadastrarClick = (e: React.MouseEvent) => {
@@ -67,26 +60,26 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
     <button
       onClick={onClick}
       className={cn(
-        "w-full p-3 flex items-start gap-2 hover:bg-muted/50 transition-colors border-b border-border h-20 relative",
+        "w-full p-2 flex items-center gap-2 hover:bg-muted/50 transition-colors border-b border-border h-14 relative",
         isSelected && "bg-primary/10 border-l-4 border-l-primary shadow-sm"
       )}
     >
       {/* Coluna de botões - apenas para cadastrados */}
       {!conversation.isUnregistered && (
-        <div className="flex flex-col gap-1 flex-shrink-0">
+        <div className="flex flex-col gap-0.5 flex-shrink-0">
           {/* Botão de Atividades */}
           {onActivityClick && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-primary/10"
+              className="h-6 w-6 hover:bg-primary/10"
               onClick={(e) => {
                 e.stopPropagation();
                 onActivityClick(e);
               }}
               title="Gerenciar atividades"
             >
-              <ClipboardList className="h-4 w-4 text-primary" />
+              <ClipboardList className="h-3.5 w-3.5 text-primary" />
             </Button>
           )}
 
@@ -96,7 +89,7 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
               variant="ghost"
               size="icon"
               className={cn(
-                "h-8 w-8 transition-colors relative",
+                "h-6 w-6 transition-colors relative",
                 conversation.tipoAtendimento === 'bot'
                   ? "bg-orange-500 hover:bg-orange-600 text-white"
                   : "hover:bg-muted text-muted-foreground"
@@ -107,51 +100,48 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
               }}
               title={`Atendimento: ${conversation.tipoAtendimento === 'bot' ? 'Bot' : 'Humano'} (clique para alternar)`}
             >
-              <Bot className="h-4 w-4" />
+              <Bot className="h-3.5 w-3.5" />
               {conversation.tipoAtendimento === 'humano' && (
-                <X className="h-3 w-3 absolute top-0 right-0 text-destructive bg-background rounded-full" strokeWidth={3} />
+                <X className="h-2.5 w-2.5 absolute -top-0.5 -right-0.5 text-destructive bg-background rounded-full" strokeWidth={3} />
               )}
             </Button>
           )}
         </div>
       )}
 
-      {/* Avatar */}
-      <Avatar className="h-12 w-12 flex-shrink-0">
-        <AvatarFallback className={cn(
-          "text-sm font-medium",
-          conversation.isUnregistered 
-            ? "bg-gray-400 text-white" 
-            : conversation.unreadCount > 0 
-              ? "bg-primary text-primary-foreground" 
-              : "bg-muted"
-        )}>
-          {conversation.isUnregistered ? (
-            <Phone className="h-5 w-5" />
-          ) : (
-            initials
-          )}
-        </AvatarFallback>
-      </Avatar>
+      {/* Indicador de Etapa do Lead (substituiu Avatar) */}
+      <div 
+        className={cn(
+          "h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs",
+          conversation.isUnregistered ? "bg-gray-400" : statusConfig.cor
+        )}
+        title={conversation.isUnregistered ? 'Não cadastrado' : statusConfig.label}
+      >
+        {conversation.isUnregistered ? (
+          <Phone className="h-4 w-4" />
+        ) : (
+          statusConfig.sigla
+        )}
+      </div>
 
       {/* Conteúdo */}
       <div className="flex-1 min-w-0 text-left">
         {/* Primeira linha: Nome e Horário */}
-        <div className="flex items-baseline justify-between mb-1">
+        <div className="flex items-baseline justify-between">
           <span className={cn(
-            "truncate",
+            "truncate text-sm",
             conversation.unreadCount > 0 ? "font-bold text-foreground" : "font-medium text-foreground"
           )}>
             {conversation.clientName}
           </span>
-          <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
+          <span className="text-[10px] text-muted-foreground ml-2 flex-shrink-0">
             {formatTime(conversation.lastMessageTime)}
           </span>
         </div>
 
         {/* Segunda linha: Última mensagem e Badges */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1 text-sm text-muted-foreground flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground flex-1 min-w-0">
             {/* Indicador de mensagem enviada */}
             {conversation.lastMessageFromMe && (
               <CheckCheck className="h-3 w-3 flex-shrink-0" />
@@ -166,19 +156,10 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
             {/* Badge de Cadastrar (para não cadastrados) */}
             {conversation.isUnregistered && (
               <Badge 
-                className="h-5 px-2 flex items-center justify-center bg-purple-600 text-white text-xs font-medium border-purple-600 hover:bg-purple-700 cursor-pointer transition-colors"
+                className="h-4 px-1.5 flex items-center justify-center bg-purple-600 text-white text-[10px] font-medium border-purple-600 hover:bg-purple-700 cursor-pointer transition-colors"
                 onClick={handleCadastrarClick}
               >
                 Cadastrar
-              </Badge>
-            )}
-            
-            {/* Badge de Novo Cadastro (para cadastrados) */}
-            {!conversation.isUnregistered && conversation.isNewLead && (
-              <Badge 
-                className="h-5 px-2 flex items-center justify-center bg-purple-600 text-white text-xs font-medium border-purple-600 hover:bg-purple-700"
-              >
-                Novo Cadastro
               </Badge>
             )}
             
@@ -186,7 +167,7 @@ export function ConversationItem({ conversation, isSelected, onClick, onActivity
             {conversation.unreadCount > 0 && (
               <Badge 
                 variant="default" 
-                className="h-5 min-w-[20px] px-1.5 flex items-center justify-center bg-primary text-primary-foreground text-xs font-medium"
+                className="h-4 min-w-[16px] px-1 flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-medium"
               >
                 {conversation.unreadCount}
               </Badge>
