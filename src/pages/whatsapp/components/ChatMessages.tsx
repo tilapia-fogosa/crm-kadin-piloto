@@ -67,8 +67,8 @@ export function ChatMessages({ clientId }: ChatMessagesProps) {
   });
 
   return (
-    <ScrollArea className="flex-1 bg-muted/30">
-      <div className="p-4 space-y-4">
+    <ScrollArea className="flex-1 w-full max-w-full bg-muted/30">
+      <div className="p-4 space-y-4 w-full max-w-full">
         {groupedMessages.map((group, groupIndex) => (
           <div key={groupIndex}>
             {/* Separador de data */}

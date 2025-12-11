@@ -22,7 +22,7 @@ export default function WhatsAppPage() {
   console.log('WhatsAppPage: Renderizando página de WhatsApp');
 
   return (
-    <div className="h-[calc(100vh-1rem)] flex flex-col gap-1 p-2">
+    <div className="w-full max-w-full h-[calc(100vh-1rem)] flex flex-col gap-1 p-2 overflow-hidden">
       {/* Header Compacto */}
       <div className="flex-shrink-0 flex items-center gap-4">
         <h1 className="text-lg font-bold">WhatsApp</h1>
@@ -32,7 +32,7 @@ export default function WhatsAppPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="conversas" className="flex-1 flex flex-col overflow-hidden">
+      <Tabs defaultValue="conversas" className="w-full max-w-full flex-1 flex flex-col overflow-hidden">
         <TabsList className="grid w-full max-w-xs grid-cols-2 flex-shrink-0 h-8">
           <TabsTrigger value="conversas" className="gap-1.5 text-sm">
             <MessageCircle className="h-3.5 w-3.5" />
@@ -44,11 +44,11 @@ export default function WhatsAppPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="conversas" className="flex-1 mt-1 overflow-hidden data-[state=inactive]:hidden">
+        <TabsContent value="conversas" className="w-full max-w-full flex-1 mt-1 overflow-hidden data-[state=inactive]:hidden">
           <ConversationsTab />
         </TabsContent>
 
-        <TabsContent value="configuracao" className="flex-1 mt-1 overflow-hidden data-[state=inactive]:hidden">
+        <TabsContent value="configuracao" className="w-full max-w-full flex-1 mt-1 overflow-hidden data-[state=inactive]:hidden">
           <ConfigurationTab />
         </TabsContent>
       </Tabs>
