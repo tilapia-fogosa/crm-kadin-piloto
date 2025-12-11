@@ -130,13 +130,13 @@ export function ConversationsTab() {
 
   return (
     <>
-      <Card className="h-full overflow-hidden border-0 shadow-none md:border relative">
+      <Card className="w-full h-full overflow-hidden border-0 shadow-none md:border relative">
         {/* Alerta de WhatsApp desconectado */}
         <WhatsappDisconnectedAlert isDisconnected={whatsappStatus?.isDisconnected || false} />
         
-        <div className="flex h-full">
+        <div className="flex w-full h-full">
           {/* Lista de conversas (esconde em mobile quando há conversa selecionada) */}
-          <div className={selectedClientId ? "hidden md:block h-full md:w-[420px] md:flex-shrink-0" : "w-full md:w-[420px] md:flex-shrink-0 h-full"}>
+          <div className={selectedClientId ? "hidden md:block h-full md:w-[400px] md:flex-shrink-0" : "w-full md:w-[400px] md:flex-shrink-0 h-full"}>
             <ConversationList
               selectedClientId={selectedClientId}
               onSelectClient={handleSelectClient}
@@ -146,7 +146,7 @@ export function ConversationsTab() {
           </div>
 
           {/* Área do chat (esconde em mobile quando não há conversa selecionada) */}
-          <div className={!selectedClientId ? "hidden md:flex md:flex-1 h-full" : "w-full md:flex-1 h-full"}>
+          <div className={!selectedClientId ? "hidden md:flex flex-1 h-full" : "flex flex-1 h-full"}>
             <ChatArea
               selectedClientId={selectedClientId}
               conversations={conversations}
