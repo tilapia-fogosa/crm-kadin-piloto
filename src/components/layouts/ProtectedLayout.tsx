@@ -7,6 +7,8 @@ export default function ProtectedLayout() {
   console.log("Rendering ProtectedLayout");
   const location = useLocation();
   const isKanbanPage = location.pathname === "/kanban";
+  const isWhatsAppPage = location.pathname === "/whatsapp";
+  const isFullWidthPage = isKanbanPage || isWhatsAppPage;
   
   return (
     <UnitProvider>
@@ -19,8 +21,8 @@ export default function ProtectedLayout() {
         {/* Main content area with padding for sidebar */}
         <div className="flex-1 pl-60">
           <main className="h-full relative">
-            <div className={`h-full ${isKanbanPage ? 'overflow-hidden' : 'max-w-[1400px] mx-auto'}`}>
-              <div className="p-6 h-full">
+            <div className={`h-full ${isFullWidthPage ? 'overflow-hidden' : 'max-w-[1400px] mx-auto'}`}>
+              <div className={`h-full ${isFullWidthPage ? 'p-2' : 'p-6'}`}>
                 <Outlet />
               </div>
             </div>
