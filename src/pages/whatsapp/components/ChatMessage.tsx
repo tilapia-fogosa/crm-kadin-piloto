@@ -24,7 +24,7 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   console.log('ChatMessage: Renderizando mensagem ID:', message.id);
-  
+
   const time = format(new Date(message.createdAt), 'HH:mm', { locale: ptBR });
 
   return (
@@ -37,8 +37,8 @@ export function ChatMessage({ message }: ChatMessageProps) {
       <div
         className={cn(
           "max-w-[70%] rounded-lg px-3 py-2 shadow-sm",
-          message.fromMe 
-            ? "bg-primary text-primary-foreground rounded-br-none" 
+          message.fromMe
+            ? "bg-primary text-primary-foreground rounded-br-none"
             : "bg-card text-card-foreground rounded-bl-none border border-border"
         )}
       >
