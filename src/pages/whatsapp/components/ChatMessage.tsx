@@ -36,13 +36,13 @@ export function ChatMessage({ message }: ChatMessageProps) {
     >
       <div
         className={cn(
-          "max-w-[70%] rounded-lg px-3 py-2 shadow-sm overflow-hidden",
+          "max-w-[70%] rounded-lg px-3 py-2 shadow-sm",
           message.fromMe 
             ? "bg-primary text-primary-foreground rounded-br-none" 
             : "bg-card text-card-foreground rounded-bl-none border border-border"
         )}
       >
-        <p className="text-sm whitespace-pre-wrap break-words overflow-hidden">
+        <p className="text-sm whitespace-pre-wrap break-words">
           {message.tipoMensagem === 'audio' && (
             <span className="font-bold">Áudio transcrito: </span>
           )}

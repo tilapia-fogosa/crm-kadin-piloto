@@ -31,7 +31,7 @@ export function ChatArea({ selectedClientId, conversations }: ChatAreaProps) {
 
   if (!selectedConversation) {
     return (
-      <div className="w-full max-w-full flex-1 flex flex-col items-center justify-center bg-background text-muted-foreground overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center bg-background text-muted-foreground">
         <MessageCircle className="h-24 w-24 mb-4 opacity-20" />
         <h3 className="text-lg font-medium mb-2">Selecione uma conversa</h3>
         <p className="text-sm">
@@ -42,15 +42,15 @@ export function ChatArea({ selectedClientId, conversations }: ChatAreaProps) {
   }
 
   return (
-    <div className="w-full max-w-full flex-1 flex flex-col h-full overflow-hidden relative bg-background">
+    <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-background">
       {/* Header Fixo */}
       <div className="flex-shrink-0 z-10">
         <ChatHeader conversation={selectedConversation} />
       </div>
 
       {/* Área de Mensagens com Scroll Independente */}
-      <div className="flex-1 relative min-h-0 w-full max-w-full overflow-hidden">
-        <div className="absolute inset-0 overflow-y-auto overflow-x-hidden">
+      <div className="flex-1 relative min-h-0">
+        <div className="absolute inset-0 overflow-y-auto">
           <ChatMessages clientId={selectedConversation.clientId} />
         </div>
       </div>
