@@ -79,10 +79,10 @@ export function ConversationsTab() {
   // Marcar mensagens como lidas quando selecionar uma conversa (apenas para cadastrados)
   useEffect(() => {
     console.log('ConversationsTab: useEffect executado, selectedClientId:', selectedClientId, 'lastMarkedClientId:', lastMarkedClientId);
-    
+
     // Não marcar como lida se for número não cadastrado
     const isUnregistered = selectedClientId?.startsWith('phone_');
-    
+
     if (selectedClientId && selectedClientId !== lastMarkedClientId && !isUnregistered) {
       console.log('ConversationsTab: Marcando como lida (nova conversa):', selectedClientId);
       markAsRead.mutate(selectedClientId);
@@ -114,46 +114,48 @@ export function ConversationsTab() {
 
   const handleSelectClient = (clientId: string, isUnregistered: boolean = false) => {
     console.log('ConversationsTab: Selecionando cliente:', clientId, 'não cadastrado:', isUnregistered);
-    
+
     // Permite visualização de mensagens não cadastradas
     if (isUnregistered) {
       console.log('ConversationsTab: Permitindo visualização de mensagens não cadastradas');
     }
-    
+
     // Invalida cache de mensagens do cliente selecionado para garantir dados mais recentes
-    queryClient.invalidateQueries({ 
-      queryKey: ['whatsapp-messages', clientId] 
+    queryClient.invalidateQueries({
+      queryKey: ['whatsapp-messages', clientId]
     });
-    
+
     setSelectedClientId(clientId);
   };
 
   return (
     <>
-      <Card className="h-full overflow-hidden border-0 shadow-none md:border relative">
-        {/* Alerta de WhatsApp desconectado */}
-        <WhatsappDisconnectedAlert isDisconnected={whatsappStatus?.isDisconnected || false} />
-        
-        <div className="flex h-full">
-          {/* Lista de conversas (esconde em mobile quando há conversa selecionada) */}
-          <div className={selectedClientId ? "hidden md:block h-full md:w-[350px] md:flex-shrink-0" : "w-full md:w-[350px] md:flex-shrink-0 h-full"}>
-            <ConversationList
-              selectedClientId={selectedClientId}
-              onSelectClient={handleSelectClient}
-              onActivityClick={handleActivityClick}
-              onToggleTipoAtendimento={handleToggleTipoAtendimento}
-            />
-          </div>
-
-          {/* Área do chat (esconde em mobile quando não há conversa selecionada) */}
-          <div className={!selectedClientId ? "hidden md:flex md:flex-1 h-full" : "w-full md:flex-1 h-full"}>
-            <ChatArea
-              selectedClientId={selectedClientId}
-              conversations={conversations}
-            />
+      <div className="w-full h-full relative overflow-hidden border border-border bg-background rounded-md md:rounded-lg">
+        {/* Alerta de WhatsApp desconectado - Z-Index alto */}
+        <div className="absolute top-0 left-0 right-0 z-50 pointer-events-none">
+          <div className="pointer-events-auto">
+            <WhatsappDisconnectedAlert isDisconnected={whatsappStatus?.isDisconnected || false} />
           </div>
         </div>
-      </Card>
+
+        {/* Lista de conversas - Fixa na esquerda (400px) */}
+        <div className="absolute top-0 left-0 bottom-0 w-[400px] border-r border-border bg-card overflow-hidden z-10">
+          <ConversationList
+            selectedClientId={selectedClientId}
+            onSelectClient={handleSelectClient}
+            onActivityClick={handleActivityClick}
+            onToggleTipoAtendimento={handleToggleTipoAtendimento}
+          />
+        </div>
+
+        {/* Área do chat - Ancorada à esquerda (400px) e direita (0) */}
+        <div className="absolute top-0 bottom-0 right-0 left-[400px] flex flex-col bg-background overflow-hidden z-0">
+          <ChatArea
+            selectedClientId={selectedClientId}
+            conversations={conversations}
+          />
+        </div>
+      </div>
 
       {/* Modal de Atividades - Renderizado fora do Card para evitar problemas de z-index */}
       {activityModalCard && (

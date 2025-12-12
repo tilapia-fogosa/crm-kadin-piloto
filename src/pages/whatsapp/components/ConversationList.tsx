@@ -42,7 +42,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerPhoneNumber, setDrawerPhoneNumber] = useState("");
   const [sendUnregisteredDrawerOpen, setSendUnregisteredDrawerOpen] = useState(false);
-  
+
   const { data: conversations, isLoading } = useConversations();
   const queryClient = useQueryClient();
 
@@ -96,7 +96,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
   console.log('ConversationList: Totais - Não lidas:', totalUnread, 'Novo Cadastro:', totalNewLead, 'Sem Cadastro:', totalUnregistered);
 
   return (
-    <div className="w-full md:w-[350px] flex flex-col border-r border-border bg-card h-full">
+    <div className="w-full flex flex-col border-r border-border bg-card h-full">
       {/* Header com busca e filtros */}
       <div className="p-3 border-b border-border bg-card space-y-3">
         {/* Campo de busca com botão de nova mensagem */}
@@ -120,7 +120,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
             <MessageSquarePlus className="h-4 w-4" />
           </Button>
         </div>
-        
+
         {/* Filtros com switches em uma linha */}
         <div className="flex items-end gap-6">
           <div className="flex flex-col items-center gap-1">
@@ -133,7 +133,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
               onCheckedChange={setShowUnreadOnly}
             />
           </div>
-          
+
           <div className="flex flex-col items-center gap-1">
             <Label htmlFor="newlead-filter" className="text-xs cursor-pointer whitespace-nowrap text-muted-foreground">
               Novo Cadastro {totalNewLead > 0 && `(${totalNewLead})`}
@@ -144,7 +144,7 @@ export function ConversationList({ selectedClientId, onSelectClient, onActivityC
               onCheckedChange={setShowNewLeadOnly}
             />
           </div>
-          
+
           <div className="flex flex-col items-center gap-1">
             <Label htmlFor="unregistered-filter" className="text-xs cursor-pointer whitespace-nowrap text-muted-foreground">
               Sem Cadastro {totalUnregistered > 0 && `(${totalUnregistered})`}

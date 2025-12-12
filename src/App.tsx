@@ -11,6 +11,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { UnitProvider } from "./contexts/UnitContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import ProtectedLayout from "./components/layouts/ProtectedLayout";
+import WhatsAppLayout from "./components/layouts/WhatsAppLayout";
 import PublicLayout from "./components/layouts/PublicLayout";
 import LoginPage from "./pages/auth/LoginPage";
 import NotFound from "@/pages/NotFound";
@@ -60,7 +61,7 @@ const queryClient = new QueryClient({
 // Componente App que contém o QueryClientProvider
 function App() {
   console.log('Renderizando componente App');
-  
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -68,69 +69,77 @@ function App() {
           <UpdatesProvider>
             <NotificationProvider>
               <SidebarProvider>
-              <div className="flex min-h-screen w-full">
-                <Routes>
-                  {/* Public routes - authentication and landing pages */}
-                  <Route path="/auth" element={<LoginPage />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  
-                  {/* Public routes - landing pages with public layout */}
-                  <Route element={<PublicLayout />}>
-                    <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
-                    <Route path="/termos-de-servico" element={<TermosServico />} />
-                  </Route>
-                  
-                  {/* Proposta de Consultoria - página pública isolada sem layout */}
-                  <Route path="/proposta-consultoria" element={<PropostaConsultoria />} />
-                  
-                  {/* Root redirect */}
-                  <Route path="/" element={
-                    <ProtectedRoute>
-                      <Navigate to="/dashboard" replace />
-                    </ProtectedRoute>
-                  } />
+                <div className="flex min-h-screen w-full">
+                  <Routes>
+                    {/* Public routes - authentication and landing pages */}
+                    <Route path="/auth" element={<LoginPage />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
 
-                  {/* Special route for password change - accessible with valid session but outside layout */}
-                  <Route path="/auth/change-password" element={
-                    <ProtectedRoute>
-                      <ChangePassword />
-                    </ProtectedRoute>
-                  } />
+                    {/* Public routes - landing pages with public layout */}
+                    <Route element={<PublicLayout />}>
+                      <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
+                      <Route path="/termos-de-servico" element={<TermosServico />} />
+                    </Route>
 
-                  {/* Protected routes with layout - wrapped with UnitProvider */}
-                  <Route element={
-                    <ProtectedRoute>
-                      <UnitProvider>
-                        <ProtectedLayout />
-                      </UnitProvider>
-                    </ProtectedRoute>
-                  }>
-                    <Route path="/dashboard" element={<Index />} />
-                    <Route path="/kanban" element={<Kanban />} />
-                    <Route path="/clients/new" element={<NewClient />} />
-                    <Route path="/clients" element={<ClientsPage />} />
-                    <Route path="/clients/:id/edit" element={<EditClientPage />} />
-                    <Route path="/users" element={<UsersPage />} />
-                    <Route path="/enrollments" element={<EnrollmentsPage />} />
-                    <Route path="/sales" element={<EnrollmentsPage />} />
-                    <Route path="/api-docs" element={<ApiDocsPage />} />
-                    <Route path="/relatorios-avancados" element={<RelatoriosAvancadosPage />} />
-                    <Route path="/commercial-stats" element={<CommercialStats />} />
-                    <Route path="/schedule" element={<SchedulePage />} />
-                    <Route path="/admin/user-management" element={<UserManagementPage />} />
-                    <Route path="/admin/funcionalidades-unidade" element={<FuncionalidadesUnidadePage />} />
-                    <Route path="/updates" element={<UpdatesPage />} />
-                    <Route path="/updates/admin" element={<UpdatesAdminPage />} />
-                    <Route path="/clients/sources" element={<LeadSourcesPage />} />
-                    <Route path="/automacoes-whatsapp" element={<AutomacoesWhatsAppPage />} />
-                    <Route path="/pos-venda-comercial" element={<PosVendaComercialPage />} />
-                    <Route path="/whatsapp" element={<WhatsAppPage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Route>
-                </Routes>
-              </div>
-              <Toaster />
-            </SidebarProvider>
+                    {/* Proposta de Consultoria - página pública isolada sem layout */}
+                    <Route path="/proposta-consultoria" element={<PropostaConsultoria />} />
+
+                    {/* Root redirect */}
+                    <Route path="/" element={
+                      <ProtectedRoute>
+                        <Navigate to="/dashboard" replace />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Special route for password change - accessible with valid session but outside layout */}
+                    <Route path="/auth/change-password" element={
+                      <ProtectedRoute>
+                        <ChangePassword />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Protected routes with layout - wrapped with UnitProvider */}
+                    <Route element={
+                      <ProtectedRoute>
+                        <UnitProvider>
+                          <ProtectedLayout />
+                        </UnitProvider>
+                      </ProtectedRoute>
+                    }>
+                      <Route path="/dashboard" element={<Index />} />
+                      <Route path="/kanban" element={<Kanban />} />
+                      <Route path="/clients/new" element={<NewClient />} />
+                      <Route path="/clients" element={<ClientsPage />} />
+                      <Route path="/clients/:id/edit" element={<EditClientPage />} />
+                      <Route path="/users" element={<UsersPage />} />
+                      <Route path="/enrollments" element={<EnrollmentsPage />} />
+                      <Route path="/sales" element={<EnrollmentsPage />} />
+                      <Route path="/api-docs" element={<ApiDocsPage />} />
+                      <Route path="/relatorios-avancados" element={<RelatoriosAvancadosPage />} />
+                      <Route path="/commercial-stats" element={<CommercialStats />} />
+                      <Route path="/schedule" element={<SchedulePage />} />
+                      <Route path="/admin/user-management" element={<UserManagementPage />} />
+                      <Route path="/admin/funcionalidades-unidade" element={<FuncionalidadesUnidadePage />} />
+                      <Route path="/updates" element={<UpdatesPage />} />
+                      <Route path="/updates/admin" element={<UpdatesAdminPage />} />
+                      <Route path="/clients/sources" element={<LeadSourcesPage />} />
+                      <Route path="/automacoes-whatsapp" element={<AutomacoesWhatsAppPage />} />
+                      <Route path="/pos-venda-comercial" element={<PosVendaComercialPage />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Route>
+
+                    {/* Rota dedicada para WhatsApp com Layout Full Width */}
+                    <Route element={
+                      <ProtectedRoute>
+                        <WhatsAppLayout />
+                      </ProtectedRoute>
+                    }>
+                      <Route path="/whatsapp" element={<WhatsAppPage />} />
+                    </Route>
+                  </Routes>
+                </div>
+                <Toaster />
+              </SidebarProvider>
             </NotificationProvider>
           </UpdatesProvider>
         </AuthProvider>

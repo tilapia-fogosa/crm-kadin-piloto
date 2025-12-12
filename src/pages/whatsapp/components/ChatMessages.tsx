@@ -25,7 +25,7 @@ interface ChatMessagesProps {
 
 export function ChatMessages({ clientId }: ChatMessagesProps) {
   console.log('ChatMessages: Renderizando mensagens para cliente:', clientId);
-  
+
   const { data: messages, isLoading } = useMessages(clientId);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -67,13 +67,13 @@ export function ChatMessages({ clientId }: ChatMessagesProps) {
   });
 
   return (
-    <ScrollArea className="flex-1 bg-muted/30">
-      <div className="p-4 space-y-4">
+    <div className="flex-1 bg-muted/30 min-h-full">
+      <div className="p-4 space-y-4 pb-4">
         {groupedMessages.map((group, groupIndex) => (
           <div key={groupIndex}>
             {/* Separador de data */}
-            <div className="flex justify-center my-3">
-              <span className="bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full">
+            <div className="flex justify-center my-6">
+              <span className="bg-background border border-border text-muted-foreground text-[10px] font-medium px-3 py-1 rounded-full shadow-sm uppercase tracking-wide">
                 {format(group.date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </span>
             </div>
@@ -84,10 +84,10 @@ export function ChatMessages({ clientId }: ChatMessagesProps) {
             ))}
           </div>
         ))}
-        
+
         {/* Elemento âncora para scroll automático */}
-        <div ref={bottomRef} />
+        <div ref={bottomRef} className="h-4" />
       </div>
-    </ScrollArea>
+    </div>
   );
 }
