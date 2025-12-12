@@ -38,7 +38,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         className={cn(
           "max-w-[70%] rounded-lg px-3 py-2 shadow-sm",
           message.fromMe
-            ? "bg-primary text-primary-foreground rounded-br-none"
+            ? "bg-[#f7dcc9] text-black rounded-br-none"
             : "bg-card text-card-foreground rounded-bl-none border border-border"
         )}
       >
