@@ -1,7 +1,7 @@
+project_id = "hkvjdxxndapxpslovrlc"
 
 [functions.evolution-api]
 verify_jwt = false
-invoker = "service_role" # Adicionando esta configuração para restringir acesso
 
 [functions.transcribe-audio]
 verify_jwt = false
@@ -12,14 +12,8 @@ verify_jwt = false
 [functions.send-whatsapp-message]
 verify_jwt = false
 
+[functions.create-evolution-instance]
+verify_jwt = false
+
 [functions.replace-message-variables]
 # Função para substituir variáveis dinâmicas nas mensagens
-# Chamada pelo frontend antes de enviar mensagens WhatsApp
-# Requer autenticação JWT (padrão)
-
-# Nota: O processamento de webhooks de venda foi desativado
-# e está sendo tratado pelos webhooks de clientes com status "matriculado"
-
-# Edge function para agendamento de aula inaugural
-# Autenticação JWT habilitada (padrão) - chamada via supabase.functions.invoke
-# Envia dados para webhook N8N: https://webhookn8n.agenciakadin.com.br/webhook/agenda-aula-inaugural

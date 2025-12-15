@@ -382,13 +382,14 @@ serve(async (req) => {
       }
     )
 
-  } catch (error) {
-    console.error('Erro ao processar solicitação:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('Erro ao processar solicitação:', errorMessage)
 
     return new Response(
       JSON.stringify({
         error: 'Erro ao processar solicitação',
-        details: error.message
+        details: errorMessage
       }),
       {
         status: 500,

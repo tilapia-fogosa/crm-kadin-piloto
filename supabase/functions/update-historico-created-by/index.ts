@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       .from('historico_comercial')
       .update({ created_by: user_id })
       .is('created_by', null)
-      .select('id', { count: 'exact' });
+      .select('id');
 
     if (error) {
       console.error('update-historico-created-by: Erro ao executar UPDATE:', error);

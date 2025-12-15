@@ -222,12 +222,13 @@ serve(async (req) => {
       }
     );
     
-  } catch (error) {
-    console.error('Edge Function: Erro:', error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao processar mensagem';
+    console.error('Edge Function: Erro:', errorMessage);
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Erro ao processar mensagem',
+        error: errorMessage,
       }),
       {
         status: 500,

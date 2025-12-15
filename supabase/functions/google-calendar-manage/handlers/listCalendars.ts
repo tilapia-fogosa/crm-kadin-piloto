@@ -57,11 +57,12 @@ export const listCalendars = async (req: Request) => {
         } 
       }
     );
-  } catch (error) {
-    console.error('[listCalendars] Erro:', error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('[listCalendars] Erro:', errorMessage);
     return new Response(
       JSON.stringify({
-        error: error.message
+        error: errorMessage
       }),
       { 
         status: 400,
