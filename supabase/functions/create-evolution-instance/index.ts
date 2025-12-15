@@ -21,6 +21,7 @@ interface RequestBody {
 interface WebhookPayload {
   phone: string;
   instanceName: string;
+  hook: string;
 }
 
 serve(async (req) => {
@@ -65,7 +66,8 @@ serve(async (req) => {
     // Montar payload para o webhook N8N
     const webhookPayload: WebhookPayload = {
       phone: cleanPhone,
-      instanceName: "maringacomercial"
+      instanceName: "maringacomercial",
+      hook: "listen-comercial"
     };
     console.log('[create-evolution-instance] Payload para webhook:', webhookPayload);
 
