@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Smartphone, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, Smartphone, XCircle } from "lucide-react";
 
 interface SyncEvolutionModalProps {
   open: boolean;
@@ -39,7 +39,7 @@ export function SyncEvolutionModal({ open, onOpenChange }: SyncEvolutionModalPro
   
   const [phone, setPhone] = useState("");
   const [status, setStatus] = useState<SyncStatus>('idle');
-  const [responseData, setResponseData] = useState<Record<string, unknown> | null>(null);
+  const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
   const { toast } = useToast();
 
   /**
@@ -91,7 +91,7 @@ export function SyncEvolutionModal({ open, onOpenChange }: SyncEvolutionModalPro
     }
 
     setStatus('loading');
-    setResponseData(null);
+    setQrCodeBase64(null);
 
     try {
       console.log('[SyncEvolutionModal] Chamando edge function create-evolution-instance');
@@ -110,10 +110,20 @@ export function SyncEvolutionModal({ open, onOpenChange }: SyncEvolutionModalPro
       if (data?.success) {
         console.log('[SyncEvolutionModal] Sincronização bem sucedida:', data);
         setStatus('success');
-        setResponseData(data.data);
+        
+        // Extrair QR Code base64 da resposta
+        // O webhook pode retornar em diferentes formatos
+        const qrCode = data.data?.qrcode || data.data?.base64 || data.data?.image || data.data;
+        if (typeof qrCode === 'string' && qrCode.length > 100) {
+          // Se for base64 puro, adiciona o prefixo de data URI
+          const base64Image = qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`;
+          setQrCodeBase64(base64Image);
+          console.log('[SyncEvolutionModal] QR Code base64 recebido');
+        }
+        
         toast({
-          title: "Sincronização iniciada",
-          description: "A instância Evolution foi criada/atualizada com sucesso",
+          title: "QR Code gerado",
+          description: "Escaneie o QR Code com seu WhatsApp para conectar",
         });
       } else {
         throw new Error(data?.error || 'Erro desconhecido');
@@ -139,7 +149,7 @@ export function SyncEvolutionModal({ open, onOpenChange }: SyncEvolutionModalPro
       console.log('[SyncEvolutionModal] Fechando modal, resetando estado');
       setPhone("");
       setStatus('idle');
-      setResponseData(null);
+      setQrCodeBase64(null);
     }
     onOpenChange(newOpen);
   };
@@ -150,78 +160,95 @@ export function SyncEvolutionModal({ open, onOpenChange }: SyncEvolutionModalPro
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Smartphone className="h-5 w-5" />
-            Sincronizar WhatsApp
+            {status === 'success' && qrCodeBase64 ? 'Escaneie o QR Code' : 'Sincronizar WhatsApp'}
           </DialogTitle>
           <DialogDescription>
-            Digite o número do WhatsApp para criar uma nova instância Evolution
+            {status === 'success' && qrCodeBase64 
+              ? 'Abra o WhatsApp no celular e escaneie o código abaixo'
+              : 'Digite o número do WhatsApp para criar uma nova instância Evolution'
+            }
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Input de Telefone */}
-          <div className="space-y-2">
-            <Label htmlFor="phone">Número do WhatsApp</Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="+55 (44) 99999-9999"
-              value={phone}
-              onChange={handlePhoneChange}
-              disabled={status === 'loading'}
-              className="font-mono"
-            />
-            <p className="text-xs text-muted-foreground">
-              Digite o número completo com código do país e DDD
-            </p>
-          </div>
-
-          {/* Feedback de Status */}
-          {status === 'success' && (
-            <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-green-600">Sincronização realizada!</p>
-                {responseData && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {JSON.stringify(responseData)}
-                  </p>
-                )}
+          {/* QR Code Display - Mostrado quando há sucesso */}
+          {status === 'success' && qrCodeBase64 && (
+            <div className="flex flex-col items-center gap-4">
+              <div className="bg-white p-4 rounded-lg shadow-inner">
+                <img 
+                  src={qrCodeBase64} 
+                  alt="QR Code WhatsApp"
+                  className="w-64 h-64 object-contain"
+                />
               </div>
+              <p className="text-sm text-muted-foreground text-center">
+                O QR Code expira em alguns minutos. Se expirar, clique em "Gerar Novo".
+              </p>
             </div>
           )}
 
+          {/* Input de Telefone - Mostrado quando não há QR Code */}
+          {!(status === 'success' && qrCodeBase64) && (
+            <div className="space-y-2">
+              <Label htmlFor="phone">Número do WhatsApp</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+55 (44) 99999-9999"
+                value={phone}
+                onChange={handlePhoneChange}
+                disabled={status === 'loading'}
+                className="font-mono"
+              />
+              <p className="text-xs text-muted-foreground">
+                Digite o número completo com código do país e DDD
+              </p>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {status === 'loading' && (
+            <div className="flex flex-col items-center gap-3 py-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Gerando QR Code...</p>
+            </div>
+          )}
+
+          {/* Feedback de Erro */}
           {status === 'error' && (
             <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
               <XCircle className="h-5 w-5 text-destructive" />
               <p className="text-sm text-destructive">
-                Erro ao sincronizar. Tente novamente.
+                Erro ao gerar QR Code. Tente novamente.
               </p>
             </div>
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button
             variant="outline"
             onClick={() => handleOpenChange(false)}
             disabled={status === 'loading'}
           >
-            {status === 'success' ? 'Fechar' : 'Cancelar'}
+            Fechar
           </Button>
           
-          {status !== 'success' && (
+          {status === 'success' && qrCodeBase64 ? (
+            <Button
+              onClick={() => {
+                setStatus('idle');
+                setQrCodeBase64(null);
+              }}
+            >
+              Gerar Novo
+            </Button>
+          ) : status !== 'loading' && (
             <Button
               onClick={handleSync}
-              disabled={status === 'loading' || phone.replace(/\D/g, '').length < 12}
+              disabled={phone.replace(/\D/g, '').length < 12}
             >
-              {status === 'loading' ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sincronizando...
-                </>
-              ) : (
-                'Sincronizar'
-              )}
+              Gerar QR Code
             </Button>
           )}
         </DialogFooter>
