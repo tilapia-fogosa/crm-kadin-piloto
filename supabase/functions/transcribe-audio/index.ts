@@ -101,11 +101,12 @@ serve(async (req) => {
       }
     );
 
-  } catch (error) {
-    console.error('transcribe-audio - Erro:', error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('transcribe-audio - Erro:', errorMessage);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: errorMessage,
         success: false 
       }),
       {

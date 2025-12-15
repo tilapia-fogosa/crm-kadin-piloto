@@ -131,12 +131,13 @@ serve(async (req) => {
       }
     );
 
-  } catch (error) {
-    console.error('LOG: Erro no agendamento de aula inaugural:', error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('LOG: Erro no agendamento de aula inaugural:', errorMessage);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message
+        error: errorMessage
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

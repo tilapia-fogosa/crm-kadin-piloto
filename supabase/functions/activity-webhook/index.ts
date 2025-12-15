@@ -187,13 +187,14 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
-  } catch (error) {
-    console.error('❌ [Activity Webhook] Erro:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('❌ [Activity Webhook] Erro:', errorMessage)
     
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: errorMessage 
       }),
       { 
         status: 500,

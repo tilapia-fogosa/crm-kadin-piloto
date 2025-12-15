@@ -149,11 +149,12 @@ Deno.serve(async (req) => {
       }
     );
 
-  } catch (error) {
-    console.error('send-whatsapp-message: Erro geral:', error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao enviar mensagem';
+    console.error('send-whatsapp-message: Erro geral:', errorMessage);
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Erro ao enviar mensagem' 
+        error: errorMessage 
       }),
       { 
         status: 500, 

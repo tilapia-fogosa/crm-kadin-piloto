@@ -72,12 +72,14 @@ serve(async (req) => {
         status: 200,
       },
     )
-  } catch (error) {
-    console.error('Error in update-user-units function:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    const errorDetails = error instanceof Error && 'details' in error ? (error as { details?: string }).details : 'No additional details available';
+    console.error('Error in update-user-units function:', errorMessage);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        details: error.details || 'No additional details available'
+        error: errorMessage,
+        details: errorDetails
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -92,11 +92,13 @@ export const validateUserAndSettings = async (clients: ReturnType<typeof getAuth
     });
 
     return { user, settings };
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    const errorStack = error instanceof Error ? error.stack : undefined;
     console.error('[auth] Erro detalhado na validação:', {
       error,
-      message: error.message,
-      stack: error.stack
+      message: errorMessage,
+      stack: errorStack
     });
     throw error;
   }
@@ -147,11 +149,13 @@ export const getAccessToken = async (clients: ReturnType<typeof getAuthenticated
     console.log('[auth] Novo access token obtido com sucesso');
 
     return data.access_token;
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    const errorStack = error instanceof Error ? error.stack : undefined;
     console.error('[auth] Erro detalhado ao obter access token:', {
       error,
-      message: error.message,
-      stack: error.stack
+      message: errorMessage,
+      stack: errorStack
     });
     throw error;
   }

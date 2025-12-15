@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { useWhatsAppStatus } from "../hooks/useWhatsAppStatus";
 import { AutoMessageModal } from "./AutoMessageModal";
 import { AutoMessagesList } from "./AutoMessagesList";
@@ -31,6 +31,7 @@ import { MensagemAutomaticaModal } from "./MensagemAutomaticaModal";
 import { MensagensAutomaticasList } from "./MensagensAutomaticasList";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUnit } from "@/contexts/UnitContext";
+import { SyncEvolutionModal } from "./SyncEvolutionModal";
 
 export function ConfigurationTab() {
   console.log('ConfigurationTab: Renderizando aba de configuração');
@@ -40,6 +41,9 @@ export function ConfigurationTab() {
   
   const [autoModalOpen, setAutoModalOpen] = useState(false);
   const [autoEditData, setAutoEditData] = useState<{ id: string; tipo: string; mensagem: string } | null>(null);
+  
+  // Estado para modal de sincronização Evolution
+  const [syncModalOpen, setSyncModalOpen] = useState(false);
   
   const { selectedUnitId } = useUnit();
   
@@ -70,6 +74,11 @@ export function ConfigurationTab() {
     setAutoEditData({ id, tipo, mensagem });
     setAutoModalOpen(true);
   };
+
+  const handleOpenSyncModal = () => {
+    console.log('ConfigurationTab: Abrindo modal de sincronização Evolution');
+    setSyncModalOpen(true);
+  };
   return <ScrollArea className="h-full pr-4">
       <div className="space-y-6 pb-4">
         <Card>
@@ -95,6 +104,22 @@ export function ConfigurationTab() {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">Status em tempo real da conexão com WhatsApp</p>
+          </div>
+
+          <Separator />
+
+          {/* Sincronização Evolution API */}
+          <div className="space-y-2">
+            <Label>Sincronização WhatsApp</Label>
+            <div className="flex items-center gap-3">
+              <Button onClick={handleOpenSyncModal} variant="outline" className="gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Sincronizar WhatsApp
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Crie ou atualize sua instância Evolution API para integração com WhatsApp
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -146,6 +171,12 @@ export function ConfigurationTab() {
         open={autoModalOpen}
         onOpenChange={setAutoModalOpen}
         editData={autoEditData}
+      />
+
+      {/* Modal de sincronização Evolution */}
+      <SyncEvolutionModal
+        open={syncModalOpen}
+        onOpenChange={setSyncModalOpen}
       />
     </ScrollArea>;
 }

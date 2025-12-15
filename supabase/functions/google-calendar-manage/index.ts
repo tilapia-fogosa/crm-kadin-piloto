@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from './utils/cors.ts';
-import { syncEvents } from './handlers/syncEvents.ts';
+import { syncCalendarEvents } from './handlers/syncEvents.ts';
 import { listCalendars } from './handlers/listCalendars.ts';
 import { revokeAccess } from './handlers/revokeAccess.ts';
 
@@ -37,7 +37,7 @@ serve(async (req) => {
 
     switch (path) {
       case 'list-calendars': {
-        result = await listCalendars(user.id);
+        result = await listCalendars(req);
         break;
       }
 
@@ -49,7 +49,7 @@ serve(async (req) => {
           syncToken 
         });
         
-        result = await syncEvents(calendars, syncToken, user.id);
+        result = await syncCalendarEvents(req);
         break;
       }
 
@@ -67,10 +67,11 @@ serve(async (req) => {
       status: 200,
     });
 
-  } catch (error) {
-    console.error('[EdgeFunction] Erro:', error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('[EdgeFunction] Erro:', errorMessage);
     
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     });

@@ -66,9 +66,10 @@ export async function syncCalendarEvents(req: Request) {
       status: 200
     });
 
-  } catch (error) {
-    console.error('[SyncEvents] Erro durante sincronização:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('[SyncEvents] Erro durante sincronização:', errorMessage);
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json'

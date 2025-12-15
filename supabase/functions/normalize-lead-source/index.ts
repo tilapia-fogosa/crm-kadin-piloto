@@ -236,13 +236,15 @@ serve(async (req) => {
       }
     )
 
-  } catch (error) {
-    console.error('Erro ao processar requisição:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('Erro ao processar requisição:', errorMessage)
     return new Response(
       JSON.stringify({ 
         error: 'Erro ao processar requisição',
-        details: error.message,
-        stack: error.stack
+        details: errorMessage,
+        stack: errorStack
       }), 
       { 
         status: 500,

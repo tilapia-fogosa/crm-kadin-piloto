@@ -168,12 +168,14 @@ serve(async (req) => {
 
     throw new Error('Invalid path')
 
-  } catch (error) {
-    console.error('[OAuth] Erro na Edge Function:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('[OAuth] Erro na Edge Function:', errorMessage)
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        details: error.stack 
+        error: errorMessage,
+        details: errorStack 
       }),
       { 
         status: 400,

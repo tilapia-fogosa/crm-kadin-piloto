@@ -93,10 +93,11 @@ serve(async (req) => {
       JSON.stringify({ success: true, result }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
-  } catch (error) {
-    console.error('Erro na função manage-user-accounts:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('Erro na função manage-user-accounts:', errorMessage)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400
@@ -108,19 +109,19 @@ serve(async (req) => {
 /**
  * Renomeia um usuário, atualizando seu email e opcionalmente o nome completo
  */
-async function renameUser(supabase, body: RenameUserBody) {
+async function renameUser(supabase: ReturnType<typeof createClient>, body: RenameUserBody) {
   console.log(`Iniciando renomeação de usuário: ${body.oldEmail} -> ${body.newEmail}`)
   
   // 1. Verificar se o novo email já existe
   const { data: existingUsers } = await supabase.auth.admin.listUsers()
-  const newEmailExists = existingUsers.users.some(u => u.email === body.newEmail)
+  const newEmailExists = existingUsers?.users.some((u: { email?: string }) => u.email === body.newEmail)
   
   if (newEmailExists) {
     throw new Error(`Novo email ${body.newEmail} já está em uso`)
   }
 
   // 2. Encontrar o usuário pelo email antigo
-  const oldUser = existingUsers.users.find(u => u.email === body.oldEmail)
+  const oldUser = existingUsers?.users.find((u: { email?: string }) => u.email === body.oldEmail)
   
   if (!oldUser) {
     throw new Error(`Usuário com email ${body.oldEmail} não encontrado`)
@@ -161,12 +162,12 @@ async function renameUser(supabase, body: RenameUserBody) {
 /**
  * Desativa um usuário no sistema, sem excluí-lo
  */
-async function deactivateUser(supabase, body: DeactivateUserBody) {
+async function deactivateUser(supabase: ReturnType<typeof createClient>, body: DeactivateUserBody) {
   console.log(`Iniciando desativação de usuário: ${body.email}`)
   
   // 1. Encontrar o usuário pelo email
   const { data: existingUsers } = await supabase.auth.admin.listUsers()
-  const user = existingUsers.users.find(u => u.email === body.email)
+  const user = existingUsers?.users.find((u: { email?: string }) => u.email === body.email)
   
   if (!user) {
     throw new Error(`Usuário com email ${body.email} não encontrado`)
@@ -206,18 +207,18 @@ async function deactivateUser(supabase, body: DeactivateUserBody) {
  * Mescla dois usuários, transferindo dados do usuário fonte para o usuário alvo
  * NOTA: Esta função é complexa e pode precisar de ajustes baseados na estrutura específica do banco de dados
  */
-async function mergeUsers(supabase, body: MergeUsersBody) {
+async function mergeUsers(supabase: ReturnType<typeof createClient>, body: MergeUsersBody) {
   console.log(`Iniciando mesclagem de usuários: ${body.sourceEmail} -> ${body.targetEmail}`)
   
   // 1. Encontrar ambos os usuários
   const { data: existingUsers } = await supabase.auth.admin.listUsers()
   
-  const sourceUser = existingUsers.users.find(u => u.email === body.sourceEmail)
+  const sourceUser = existingUsers?.users.find((u: { email?: string }) => u.email === body.sourceEmail)
   if (!sourceUser) {
     throw new Error(`Usuário fonte com email ${body.sourceEmail} não encontrado`)
   }
   
-  const targetUser = existingUsers.users.find(u => u.email === body.targetEmail)
+  const targetUser = existingUsers?.users.find((u: { email?: string }) => u.email === body.targetEmail)
   if (!targetUser) {
     throw new Error(`Usuário alvo com email ${body.targetEmail} não encontrado`)
   }

@@ -52,7 +52,8 @@ async function processPendingWebhooks() {
     const results = await Promise.all(
       pendingLogs.map(async (log) => {
         try {
-          console.log(`Processando webhook ID: ${log.id}, URL: ${log.client_webhooks?.url}`)
+          const webhookUrl = (log.client_webhooks as { url: string } | null)?.url;
+          console.log(`Processando webhook ID: ${log.id}, URL: ${webhookUrl}`)
           
           // Atualizar o log com a tentativa atual
           await supabase
@@ -64,7 +65,7 @@ async function processPendingWebhooks() {
             .eq('id', log.id)
 
           // Enviar o webhook para a URL configurada
-          const response = await fetch(log.client_webhooks.url, {
+          const response = await fetch(webhookUrl!, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
