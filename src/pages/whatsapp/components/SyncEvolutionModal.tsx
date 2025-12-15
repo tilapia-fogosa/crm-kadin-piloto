@@ -112,13 +112,27 @@ export function SyncEvolutionModal({ open, onOpenChange }: SyncEvolutionModalPro
         setStatus('success');
         
         // Extrair QR Code base64 da resposta
-        // O webhook pode retornar em diferentes formatos
-        const qrCode = data.data?.qrcode || data.data?.base64 || data.data?.image || data.data;
+        // O webhook pode retornar em diferentes estruturas aninhadas
+        // Estrutura esperada: data.data = { success, data: { base64, pairingCode, code } }
+        const webhookResponse = data.data;
+        console.log('[SyncEvolutionModal] Webhook response:', webhookResponse);
+        
+        // Tentar diferentes caminhos para o base64
+        const qrCode = 
+          webhookResponse?.data?.base64 ||  // N8N retorna: { success, data: { base64 } }
+          webhookResponse?.base64 ||         // Direto: { base64 }
+          webhookResponse?.qrcode ||         // Alternativo: { qrcode }
+          webhookResponse?.image;            // Alternativo: { image }
+        
+        console.log('[SyncEvolutionModal] QR Code encontrado:', qrCode ? 'sim' : 'não', typeof qrCode);
+        
         if (typeof qrCode === 'string' && qrCode.length > 100) {
           // Se for base64 puro, adiciona o prefixo de data URI
           const base64Image = qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`;
           setQrCodeBase64(base64Image);
-          console.log('[SyncEvolutionModal] QR Code base64 recebido');
+          console.log('[SyncEvolutionModal] QR Code base64 definido com sucesso');
+        } else {
+          console.log('[SyncEvolutionModal] QR Code não encontrado na resposta');
         }
         
         toast({
