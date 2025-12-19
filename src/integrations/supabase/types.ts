@@ -1369,15 +1369,7 @@ export type Database = {
           turma_id?: string
           unit_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "aulas_experimentais_funcionario_registro_id_fkey"
-            columns: ["funcionario_registro_id"]
-            isOneToOne: false
-            referencedRelation: "funcionarios"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       backup_metadata: {
         Row: {
@@ -3259,15 +3251,7 @@ export type Database = {
           turma_id?: string
           unit_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "faltas_antecipadas_funcionario_registro_id_fkey"
-            columns: ["funcionario_registro_id"]
-            isOneToOne: false
-            referencedRelation: "funcionarios"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       faq: {
         Row: {
@@ -3556,22 +3540,22 @@ export type Database = {
       grupos_sup_mga: {
         Row: {
           created_at: string
-          grupo_id: string | null
           grupo_nome: string | null
+          grupo_wpp_id: string | null
           id: number
           turma_id: string | null
         }
         Insert: {
           created_at?: string
-          grupo_id?: string | null
           grupo_nome?: string | null
+          grupo_wpp_id?: string | null
           id?: number
           turma_id?: string | null
         }
         Update: {
           created_at?: string
-          grupo_id?: string | null
           grupo_nome?: string | null
+          grupo_wpp_id?: string | null
           id?: number
           turma_id?: string | null
         }
@@ -3637,6 +3621,129 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      historico_whatsapp_grupos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          enviado_por: string | null
+          from_me: boolean | null
+          grupo_wpp_id: string
+          id: string
+          lida: boolean
+          lida_hora: string | null
+          mensagem: string | null
+          nome_remetente: string | null
+          reaction: string | null
+          tipo_mensagem: string | null
+          unit_id: string
+          url_media: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          enviado_por?: string | null
+          from_me?: boolean | null
+          grupo_wpp_id: string
+          id: string
+          lida?: boolean
+          lida_hora?: string | null
+          mensagem?: string | null
+          nome_remetente?: string | null
+          reaction?: string | null
+          tipo_mensagem?: string | null
+          unit_id: string
+          url_media?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          enviado_por?: string | null
+          from_me?: boolean | null
+          grupo_wpp_id?: string
+          id?: string
+          lida?: boolean
+          lida_hora?: string | null
+          mensagem?: string | null
+          nome_remetente?: string | null
+          reaction?: string | null
+          tipo_mensagem?: string | null
+          unit_id?: string
+          url_media?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_whatsapp_grupos_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      historico_whatsapp_pedagogico: {
+        Row: {
+          aluno_id: string | null
+          created_at: string
+          created_by: string | null
+          from_me: boolean | null
+          id: number
+          lida: boolean | null
+          lida_em: string | null
+          mensagem: string | null
+          telefone: string | null
+          tipo_mensagem: string | null
+          unit_id: string
+        }
+        Insert: {
+          aluno_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          from_me?: boolean | null
+          id?: never
+          lida?: boolean | null
+          lida_em?: string | null
+          mensagem?: string | null
+          telefone?: string | null
+          tipo_mensagem?: string | null
+          unit_id: string
+        }
+        Update: {
+          aluno_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          from_me?: boolean | null
+          id?: never
+          lida?: boolean | null
+          lida_em?: string | null
+          mensagem?: string | null
+          telefone?: string | null
+          tipo_mensagem?: string | null
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_whatsapp_pedagogico_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_whatsapp_pedagogico_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos_projeto_sao_rafael"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_whatsapp_pedagogico_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
             referencedColumns: ["id"]
           },
         ]
@@ -4745,13 +4852,6 @@ export type Database = {
           unit_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "reposicoes_funcionario_registro_id_fkey"
-            columns: ["funcionario_registro_id"]
-            isOneToOne: false
-            referencedRelation: "funcionarios"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "reposicoes_turma_id_fkey"
             columns: ["turma_id"]
@@ -6985,6 +7085,36 @@ export type Database = {
       get_funcionario_devolutiva: {
         Args: { p_data_inicial: string; p_funcionario_id: string }
         Returns: Json
+      }
+      get_group_messages_with_names: {
+        Args: { p_grupo_wpp_id: string }
+        Returns: {
+          created_at: string
+          enviado_por: string
+          from_me: boolean
+          grupo_id: string
+          grupo_nome: string
+          id: string
+          mensagem: string
+          nome_remetente: string
+          nome_remetente_resolvido: string
+          reaction: string
+          tipo_mensagem: string
+          url_media: string
+        }[]
+      }
+      get_groups_with_last_message: {
+        Args: never
+        Returns: {
+          grupo_nome: string
+          grupo_wpp_id: string
+          id: number
+          total_mensagens: number
+          turma_id: string
+          ultima_mensagem: string
+          ultima_mensagem_at: string
+          unread_count: number
+        }[]
       }
       get_horarios_disponiveis_salas: {
         Args: { p_data: string; p_unit_id?: string }
