@@ -16,4 +16,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.replace-message-variables]
-# Função para substituir variáveis dinâmicas nas mensagens
+verify_jwt = false
+
+[functions.whatsapp-webhook-comercial]
+verify_jwt = false
