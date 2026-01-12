@@ -3537,6 +3537,150 @@ export type Database = {
           },
         ]
       }
+      galeria_fotos: {
+        Row: {
+          aluno_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          nome: string
+          thumbnail_url: string | null
+          turma_id: string | null
+          unit_id: string
+          url: string
+        }
+        Insert: {
+          aluno_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nome: string
+          thumbnail_url?: string | null
+          turma_id?: string | null
+          unit_id: string
+          url: string
+        }
+        Update: {
+          aluno_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nome?: string
+          thumbnail_url?: string | null
+          turma_id?: string | null
+          unit_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "galeria_fotos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "galeria_fotos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos_projeto_sao_rafael"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "galeria_fotos_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "calendario_turmas_view"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "galeria_fotos_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "turmas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "galeria_fotos_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "galeria_fotos_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      galeria_fotos_tags: {
+        Row: {
+          foto_id: string
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          foto_id: string
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          foto_id?: string
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "galeria_fotos_tags_foto_id_fkey"
+            columns: ["foto_id"]
+            isOneToOne: false
+            referencedRelation: "galeria_fotos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "galeria_fotos_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "galeria_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      galeria_tags: {
+        Row: {
+          cor: string
+          created_at: string
+          id: string
+          nome: string
+          unit_id: string
+        }
+        Insert: {
+          cor?: string
+          created_at?: string
+          id?: string
+          nome: string
+          unit_id: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "galeria_tags_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grupos_sup_mga: {
         Row: {
           created_at: string
@@ -7701,6 +7845,7 @@ export type Database = {
         | "financeiro"
         | "administrativo"
         | "estagiario"
+        | "sala"
       user_role_old: "consultor" | "franqueado" | "gestor_comercial"
       Vinculo_aluno:
         | "Pai do aluno"
@@ -7922,6 +8067,7 @@ export const Constants = {
         "financeiro",
         "administrativo",
         "estagiario",
+        "sala",
       ],
       user_role_old: ["consultor", "franqueado", "gestor_comercial"],
       Vinculo_aluno: [
