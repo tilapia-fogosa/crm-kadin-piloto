@@ -27,7 +27,7 @@ import { MultipleUnitSelect } from "./MultipleUnitSelect";
 const formSchema = z.object({
   fullName: z.string().min(1, "Nome é obrigatório"),
   email: z.string().email("Email inválido"),
-  role: z.enum(["consultor", "franqueado", "admin", "educador", "gestor_pedagogico", "financeiro", "administrativo", "estagiario"]),
+  role: z.enum(["consultor", "franqueado", "admin", "educador", "gestor_pedagogico", "financeiro", "administrativo", "estagiario", "sala"]),
   unitIds: z.array(z.string()).min(1, "Selecione pelo menos uma unidade"),
 });
 
@@ -136,6 +136,7 @@ export function CreateUserForm() {
                   <SelectItem value="financeiro">Financeiro</SelectItem>
                   <SelectItem value="administrativo">Administrativo</SelectItem>
                   <SelectItem value="estagiario">Estagiário</SelectItem>
+                  <SelectItem value="sala">Sala</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
