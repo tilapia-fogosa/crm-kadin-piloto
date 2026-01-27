@@ -1266,6 +1266,76 @@ export type Database = {
           },
         ]
       }
+      atividades_alerta_evasao: {
+        Row: {
+          alerta_evasao_id: string
+          concluido_por_id: string | null
+          concluido_por_nome: string | null
+          created_at: string
+          data_agendada: string | null
+          departamento_responsavel: string | null
+          descricao: string
+          id: string
+          professor_responsavel_id: string | null
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          status: string
+          tipo_atividade: Database["public"]["Enums"]["tipo_atividade_evasao"]
+        }
+        Insert: {
+          alerta_evasao_id: string
+          concluido_por_id?: string | null
+          concluido_por_nome?: string | null
+          created_at?: string
+          data_agendada?: string | null
+          departamento_responsavel?: string | null
+          descricao: string
+          id?: string
+          professor_responsavel_id?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: string
+          tipo_atividade: Database["public"]["Enums"]["tipo_atividade_evasao"]
+        }
+        Update: {
+          alerta_evasao_id?: string
+          concluido_por_id?: string | null
+          concluido_por_nome?: string | null
+          created_at?: string
+          data_agendada?: string | null
+          departamento_responsavel?: string | null
+          descricao?: string
+          id?: string
+          professor_responsavel_id?: string | null
+          responsavel_id?: string | null
+          responsavel_nome?: string | null
+          status?: string
+          tipo_atividade?: Database["public"]["Enums"]["tipo_atividade_evasao"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atividades_alerta_evasao_alerta_evasao_id_fkey"
+            columns: ["alerta_evasao_id"]
+            isOneToOne: false
+            referencedRelation: "alerta_evasao"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atividades_alerta_evasao_professor_responsavel_id_fkey"
+            columns: ["professor_responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atividades_alerta_evasao_professor_responsavel_id_fkey"
+            columns: ["professor_responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ocupacao_salas_turmas"
+            referencedColumns: ["professor_id"]
+          },
+        ]
+      }
       aulas: {
         Row: {
           conteudo: string | null
@@ -1370,6 +1440,50 @@ export type Database = {
           unit_id?: string
         }
         Relationships: []
+      }
+      avisos: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          id: string
+          imagem_url: string
+          nome: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          id?: string
+          imagem_url: string
+          nome: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          id?: string
+          imagem_url?: string
+          nome?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avisos_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       backup_metadata: {
         Row: {
@@ -2930,8 +3044,10 @@ export type Database = {
           descricao: string | null
           funcionario_registro_id: string | null
           id: string
+          imagem_url: string | null
           local: string | null
           numero_vagas: number
+          publico: boolean | null
           responsavel: string | null
           tipo: string
           titulo: string
@@ -2946,8 +3062,10 @@ export type Database = {
           descricao?: string | null
           funcionario_registro_id?: string | null
           id?: string
+          imagem_url?: string | null
           local?: string | null
           numero_vagas?: number
+          publico?: boolean | null
           responsavel?: string | null
           tipo?: string
           titulo: string
@@ -2962,8 +3080,10 @@ export type Database = {
           descricao?: string | null
           funcionario_registro_id?: string | null
           id?: string
+          imagem_url?: string | null
           local?: string | null
           numero_vagas?: number
+          publico?: boolean | null
           responsavel?: string | null
           tipo?: string
           titulo?: string
@@ -3548,6 +3668,7 @@ export type Database = {
           turma_id: string | null
           unit_id: string
           url: string
+          visivel: boolean
         }
         Insert: {
           aluno_id?: string | null
@@ -3559,6 +3680,7 @@ export type Database = {
           turma_id?: string | null
           unit_id: string
           url: string
+          visivel?: boolean
         }
         Update: {
           aluno_id?: string | null
@@ -3570,6 +3692,7 @@ export type Database = {
           turma_id?: string | null
           unit_id?: string
           url?: string
+          visivel?: boolean
         }
         Relationships: [
           {
@@ -3992,15 +4115,7 @@ export type Database = {
           turma?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "kanban_cards_alerta_evasao_id_fkey"
-            columns: ["alerta_evasao_id"]
-            isOneToOne: false
-            referencedRelation: "alerta_evasao"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       kit_versions: {
         Row: {
@@ -7307,6 +7422,7 @@ export type Database = {
           turma_original_nome: string
           turma_reposicao_id: string
           turma_reposicao_nome: string
+          turma_reposicao_professor: string
           unit_id: string
         }[]
       }
@@ -7809,13 +7925,25 @@ export type Database = {
         | "60+"
         | "80+"
       sale_type: "matricula" | "outros"
-      status_alerta: "pendente" | "em_andamento" | "resolvido" | "cancelado"
+      status_alerta: "pendente" | "retido" | "evadido"
       status_sincronizacao:
         | "nome_incorreto"
         | "sincronizado"
         | "aguardando_dados"
       student_status: "pre_matricula" | "matricula_completa"
       tipo_atendimento: "bot" | "humano"
+      tipo_atividade_evasao:
+        | "acolhimento"
+        | "atendimento_financeiro"
+        | "evasao"
+        | "atendimento_pedagogico"
+        | "retencao"
+        | "remover_sgs"
+        | "cancelar_assinatura"
+        | "remover_whatsapp"
+        | "corrigir_valores_sgs"
+        | "corrigir_valores_assinatura"
+        | "contato_financeiro"
       tipo_evento_sala:
         | "manutencao"
         | "reuniao"
@@ -8028,7 +8156,7 @@ export const Constants = {
         "80+",
       ],
       sale_type: ["matricula", "outros"],
-      status_alerta: ["pendente", "em_andamento", "resolvido", "cancelado"],
+      status_alerta: ["pendente", "retido", "evadido"],
       status_sincronizacao: [
         "nome_incorreto",
         "sincronizado",
@@ -8036,6 +8164,19 @@ export const Constants = {
       ],
       student_status: ["pre_matricula", "matricula_completa"],
       tipo_atendimento: ["bot", "humano"],
+      tipo_atividade_evasao: [
+        "acolhimento",
+        "atendimento_financeiro",
+        "evasao",
+        "atendimento_pedagogico",
+        "retencao",
+        "remover_sgs",
+        "cancelar_assinatura",
+        "remover_whatsapp",
+        "corrigir_valores_sgs",
+        "corrigir_valores_assinatura",
+        "contato_financeiro",
+      ],
       tipo_evento_sala: [
         "manutencao",
         "reuniao",
