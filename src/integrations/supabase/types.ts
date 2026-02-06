@@ -3966,6 +3966,7 @@ export type Database = {
           id: number
           lida: boolean | null
           lida_em: string | null
+          media_url: string | null
           mensagem: string | null
           telefone: string | null
           tipo_mensagem: string | null
@@ -3979,6 +3980,7 @@ export type Database = {
           id?: number
           lida?: boolean | null
           lida_em?: string | null
+          media_url?: string | null
           mensagem?: string | null
           telefone?: string | null
           tipo_mensagem?: string | null
@@ -3992,6 +3994,7 @@ export type Database = {
           id?: number
           lida?: boolean | null
           lida_em?: string | null
+          media_url?: string | null
           mensagem?: string | null
           telefone?: string | null
           tipo_mensagem?: string | null
