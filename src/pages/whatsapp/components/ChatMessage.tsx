@@ -28,6 +28,35 @@ interface ChatMessageProps {
 }
 
 /**
+ * Normaliza tipo de mensagem para aceitar valores em inglês e português
+ * Log: Converte 'image' → 'imagem' para compatibilidade com dados existentes
+ */
+const normalizeMediaType = (type: string | null | undefined): string | null => {
+  if (!type) return null;
+  
+  const typeMap: Record<string, string> = {
+    'image': 'imagem',
+    'imagem': 'imagem',
+    'audio': 'audio',
+    'video': 'video',
+  };
+  
+  return typeMap[type.toLowerCase()] || type;
+};
+
+/**
+ * Normaliza URL do Supabase Storage para garantir path público
+ * Log: Adiciona '/public/' quando ausente em URLs do storage
+ */
+const normalizeStorageUrl = (url: string): string => {
+  // Se a URL já tem /public/, retorna sem alteração
+  if (url.includes('/object/public/')) return url;
+  
+  // Substitui /object/BUCKET por /object/public/BUCKET
+  return url.replace('/object/', '/object/public/');
+};
+
+/**
  * Componente para renderizar imagem com lightbox
  * - Exibe miniatura clicável (max 250x200px)
  * - Abre em modal para visualização em tamanho real
@@ -163,7 +192,11 @@ function MediaVideo({ url }: { url: string }) {
  * Renderiza mídia baseado no tipoMensagem e mediaUrl
  */
 export function ChatMessage({ message }: ChatMessageProps) {
-  console.log('ChatMessage: Renderizando mensagem ID:', message.id, 'tipo:', message.tipoMensagem, 'hasMedia:', !!message.mediaUrl);
+  // Normaliza tipo e URL para compatibilidade com dados em inglês/português e URLs malformadas
+  const normalizedType = normalizeMediaType(message.tipoMensagem);
+  const normalizedUrl = message.mediaUrl ? normalizeStorageUrl(message.mediaUrl) : null;
+
+  console.log('ChatMessage: Renderizando mensagem ID:', message.id, 'tipo:', message.tipoMensagem, '→', normalizedType, 'hasMedia:', !!normalizedUrl);
 
   const time = format(new Date(message.createdAt), 'HH:mm', { locale: ptBR });
 
@@ -176,22 +209,22 @@ export function ChatMessage({ message }: ChatMessageProps) {
    * 5. Outros casos → Renderizar texto normalmente
    */
   const renderMedia = () => {
-    if (!message.mediaUrl) return null;
+    if (!normalizedUrl) return null;
 
-    switch (message.tipoMensagem) {
+    switch (normalizedType) {
       case 'imagem':
-        return <MediaImage url={message.mediaUrl} />;
+        return <MediaImage url={normalizedUrl} />;
       case 'audio':
-        return <MediaAudio url={message.mediaUrl} />;
+        return <MediaAudio url={normalizedUrl} />;
       case 'video':
-        return <MediaVideo url={message.mediaUrl} />;
+        return <MediaVideo url={normalizedUrl} />;
       default:
         return null;
     }
   };
 
-  const hasMediaToRender = message.mediaUrl && ['imagem', 'audio', 'video'].includes(message.tipoMensagem || '');
-  const isTranscribedAudio = message.tipoMensagem === 'audio' && !message.mediaUrl;
+  const hasMediaToRender = normalizedUrl && ['imagem', 'audio', 'video'].includes(normalizedType || '');
+  const isTranscribedAudio = normalizedType === 'audio' && !normalizedUrl;
 
   return (
     <div
