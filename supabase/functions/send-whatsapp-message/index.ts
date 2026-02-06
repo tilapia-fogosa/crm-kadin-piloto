@@ -21,6 +21,8 @@ interface SendMessagePayload {
   audio?: string;         // Base64 do áudio (opcional)
   imagem?: string;        // Base64 da imagem (opcional)
   video?: string;         // Base64 do vídeo (opcional)
+  media_url?: string;     // URL da mídia já hospedada (opcional)
+  tipo_mensagem?: string; // Tipo de mídia: 'texto', 'audio', 'imagem', 'video'
   client_id: string | null;
   profile_id: string;
   unit_id?: string | null;
@@ -60,15 +62,19 @@ Deno.serve(async (req) => {
     const hasAudio = !!payload.audio;
     const hasImagem = !!payload.imagem;
     const hasVideo = !!payload.video;
-    const hasAnyContent = hasTextMessage || hasAudio || hasImagem || hasVideo;
+    const hasMediaUrl = !!payload.media_url;
+    const hasAnyContent = hasTextMessage || hasAudio || hasImagem || hasVideo || hasMediaUrl;
 
     console.log('send-whatsapp-message: Análise de conteúdo:', {
       hasTextMessage,
       hasAudio,
       hasImagem,
       hasVideo,
+      hasMediaUrl,
       hasAnyContent,
-      messageContent: messageContent?.substring(0, 50) // Primeiros 50 chars para debug
+      messageContent: messageContent?.substring(0, 50), // Primeiros 50 chars para debug
+      mediaUrl: payload.media_url?.substring(0, 50),
+      tipoMensagem: payload.tipo_mensagem
     });
 
     // Validar campos obrigatórios
@@ -131,6 +137,8 @@ Deno.serve(async (req) => {
     if (hasAudio) webhookPayload.audio = payload.audio;
     if (hasImagem) webhookPayload.imagem = payload.imagem;
     if (hasVideo) webhookPayload.video = payload.video;
+    if (hasMediaUrl) webhookPayload.media_url = payload.media_url;
+    if (payload.tipo_mensagem) webhookPayload.tipo_mensagem = payload.tipo_mensagem;
 
     console.log('send-whatsapp-message: Enviando para webhook:', {
       url: webhookUrl,
@@ -184,7 +192,25 @@ Deno.serve(async (req) => {
     if (hasTextMessage) {
       historyData.mensagem = messageContent;
     }
-    // TODO: Adicionar suporte para salvar audio/imagem/video no histórico se necessário
+
+    // Adicionar URL de mídia ao histórico se disponível
+    if (hasMediaUrl) {
+      historyData.media_url = payload.media_url;
+      console.log('send-whatsapp-message: Salvando media_url no histórico:', payload.media_url);
+    }
+
+    // Determinar tipo de mensagem para o histórico
+    if (payload.tipo_mensagem) {
+      historyData.tipo_mensagem = payload.tipo_mensagem;
+    } else if (hasImagem) {
+      historyData.tipo_mensagem = 'imagem';
+    } else if (hasAudio) {
+      historyData.tipo_mensagem = 'audio';
+    } else if (hasVideo) {
+      historyData.tipo_mensagem = 'video';
+    } else if (hasTextMessage) {
+      historyData.tipo_mensagem = 'texto';
+    }
 
     // Adicionar client_id ou telefone dependendo do caso
     if (payload.client_id) {

@@ -44,6 +44,7 @@ export interface Message {
   fromMe: boolean;
   createdByName?: string | null;
   tipoMensagem?: string | null;
+  mediaUrl?: string | null; // URL da mídia (imagem, áudio, vídeo)
 }
 
 // Configuração
