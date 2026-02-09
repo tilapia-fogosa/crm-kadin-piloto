@@ -1,87 +1,95 @@
 
-# Plano: Correção da Exibição de Mídia no WhatsApp CRM
+# Plano: Adicionar campo "Nome Completo do Aluno" no Atendimento (Matriculado)
 
-## Problema Identificado
-A imagem não aparece na conversa porque:
+## Objetivo
+Adicionar um campo de texto obrigatorio "Nome completo do Aluno" que aparece ao selecionar "Matriculado" no formulario de atendimento, posicionado entre o "Qualidade do Lead" e o informativo de matricula. Esse nome sera enviado no processo de matricula em vez do nome do cliente.
 
-1. **Campo `tipo_mensagem` está em inglês (`image`) em vez de português (`imagem`)**
-   - O componente espera: `'imagem'`, `'audio'`, `'video'`
-   - O banco tem: `'image'`
+## Alteracoes
 
-2. **URL do storage está incompleta** (falta `/public/` no path)
-   - Salvo: `.../storage/v1/object/wpp_comercial/...`
-   - Correto: `.../storage/v1/object/public/wpp_comercial/...`
+### 1. Tipo `Attendance` (`src/components/kanban/types.ts`)
+- Adicionar campo `studentName?: string` ao tipo `Attendance`
+
+### 2. Hook de estado (`src/components/kanban/components/attendance-form/hooks/useAttendanceFormState.ts`)
+- Adicionar estado `studentName` e `studentNameValidationError`
+- Retornar os setters correspondentes
+
+### 3. Componente do formulario (`src/components/kanban/components/attendance-form/AttendanceFormContent.tsx`)
+- Adicionar campo de input "Nome completo do Aluno" logo apos o `QualityScore`, **antes** do `MatriculationMessage`
+- Visivel apenas quando `selectedResult === 'matriculado'`
+- Validacao: campo obrigatorio (exibir erro se vazio ao submeter)
+- Incluir `studentName` no objeto enviado ao `onSubmit`
+- Desabilitar botao "Cadastrar Atendimento" se `studentName` estiver vazio (quando matriculado)
+
+### 4. Hook de submissao (`src/components/kanban/hooks/useAttendanceSubmission.ts`)
+- Aceitar `studentName` no parametro
+- Passar o `studentName` ao registrar a atividade de Matricula (campo `notes` ou campo dedicado, conforme disponivel na tabela)
+- Usar `studentName` em vez de `clientName` nos processos subsequentes de matricula
+
+### 5. Informativo atualizado (`src/components/kanban/components/attendance/MatriculationMessage.tsx`)
+- Manter o componente, mas considerar exibir o nome do aluno digitado (ou manter o nome do cliente como referencia)
 
 ---
 
-## Solução
+## Detalhes Tecnicos
 
-Atualizar o componente `ChatMessage.tsx` para:
-1. Aceitar tipos de mídia em **inglês E português** (tornando o sistema robusto)
-2. **Normalizar URLs** para garantir que tenham `/public/` quando necessário
-
----
-
-## Alterações Técnicas
-
-### Arquivo: `src/pages/whatsapp/components/ChatMessage.tsx`
-
-**Mudança 1: Normalizar tipo de mensagem**
-Criar função helper que converte tipos em inglês para português:
+### Novo campo no formulario (dentro de `AttendanceFormContent.tsx`)
+Sera um `Input` com `Label`, renderizado condicionalmente:
 
 ```text
-const normalizeMediaType = (type: string | null | undefined): string | null => {
-  if (!type) return null;
-  
-  const typeMap: Record<string, string> = {
-    'image': 'imagem',
-    'imagem': 'imagem',
-    'audio': 'audio',
-    'video': 'video',
-  };
-  
-  return typeMap[type.toLowerCase()] || type;
-};
+{selectedResult === 'matriculado' && (
+  <>
+    <div className="space-y-2">
+      <Label>Nome completo do Aluno *</Label>
+      <Input
+        value={studentName}
+        onChange={(e) => setStudentName(e.target.value)}
+        placeholder="Digite o nome completo do aluno"
+        disabled={isDisabled || isProcessing}
+      />
+      {studentNameValidationError && (
+        <Alert variant="destructive">...</Alert>
+      )}
+    </div>
+    <MatriculationMessage clientName={clientName} />
+    <MatriculationSection ... />
+  </>
+)}
 ```
 
-**Mudança 2: Normalizar URL do storage**
-Criar função helper que corrige URLs sem `/public/`:
+### Validacao no `handleSubmit`
+Antes de submeter, verificar:
 
 ```text
-const normalizeStorageUrl = (url: string): string => {
-  // Se a URL já tem /public/, retorna sem alteração
-  if (url.includes('/object/public/')) return url;
-  
-  // Substitui /object/BUCKET por /object/public/BUCKET
-  return url.replace('/object/', '/object/public/');
-};
+if (selectedResult === 'matriculado' && !studentName.trim()) {
+  setStudentNameValidationError(true)
+  // toast de erro
+  return
+}
 ```
 
-**Mudança 3: Aplicar normalizações**
-Atualizar a lógica de renderização para usar as funções de normalização.
+### Botao desabilitado
+Adicionar condicao ao `disabled` do botao:
 
----
+```text
+(selectedResult === 'matriculado' && !studentName.trim())
+```
 
-## Benefícios
-
-1. **Retrocompatibilidade**: Funciona com dados existentes em inglês ou português
-2. **Resiliência**: Corrige URLs malformadas automaticamente
-3. **Sem migração de dados**: Não precisa alterar registros existentes no banco
-4. **Preparado para o futuro**: Aceita ambos os formatos de entrada
+### Fluxo de dados
+O campo `studentName` sera adicionado ao tipo `Attendance` e passado no `onSubmit`, chegando ao `useAttendanceSubmission` para ser persistido junto com a atividade de matricula.
 
 ---
 
 ## Arquivos a Modificar
 
-| Arquivo | Alteração |
+| Arquivo | Alteracao |
 |---------|-----------|
-| `src/pages/whatsapp/components/ChatMessage.tsx` | Adicionar funções de normalização e aplicá-las na renderização |
+| `src/components/kanban/types.ts` | Adicionar `studentName?: string` ao tipo `Attendance` |
+| `src/components/kanban/components/attendance-form/hooks/useAttendanceFormState.ts` | Adicionar estados `studentName` e `studentNameValidationError` |
+| `src/components/kanban/components/attendance-form/AttendanceFormContent.tsx` | Adicionar campo de input, validacao e inclui-lo no submit |
+| `src/components/kanban/hooks/useAttendanceSubmission.ts` | Aceitar e persistir `studentName` |
 
----
-
-## Resultado Esperado
-
-Após a correção:
-- Imagens com `tipo_mensagem = 'image'` serão exibidas corretamente
-- URLs sem `/public/` serão corrigidas automaticamente
-- O sistema funcionará com ambos os formatos (inglês/português)
+## Ordem de Implementacao
+1. Tipo `Attendance` (sem dependencias)
+2. Hook `useAttendanceFormState` (depende do tipo)
+3. `AttendanceFormContent` (depende do hook)
+4. `useAttendanceSubmission` (depende do tipo)
