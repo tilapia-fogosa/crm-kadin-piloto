@@ -1,23 +1,49 @@
 
-
-# Plano: Atualizar informativo com nome do aluno em tempo real
+# Plano: Preencher `full_name` na trigger de pos-venda
 
 ## Objetivo
-O informativo "Matriculando..." deve exibir o nome digitado no campo "Nome completo do Aluno" em tempo real, em vez do nome do cliente.
+Modificar a trigger function `create_pos_venda_activity` para popular o campo `full_name` da tabela `atividade_pos_venda` automaticamente, usando o nome do aluno que ja e salvo no campo `notes` da atividade de Matricula.
+
+## Contexto
+- Quando o consultor registra uma matricula, o nome completo do aluno e salvo em `client_activities.notes`
+- A trigger `create_pos_venda_activity` dispara no INSERT de `client_activities` quando `tipo_atividade = 'Matricula'`
+- A coluna `full_name` ja existe em `atividade_pos_venda` mas nao e preenchida pela trigger atual
 
 ## Alteracao
 
-### Arquivo: `src/components/kanban/components/attendance-form/AttendanceFormContent.tsx`
-- Passar `studentName` (ou fallback para `clientName`) ao componente `MatriculationMessage`
-- Trocar de `clientName={clientName}` para `clientName={studentName.trim() || clientName}`
+### Migracaoo SQL
+Recriar a function `create_pos_venda_activity` adicionando `NEW.notes` como valor de `full_name`:
 
-Dessa forma, enquanto o usuario digita o nome do aluno, o informativo atualiza automaticamente para "Matriculando [Nome Digitado]". Se o campo estiver vazio, exibe o nome do cliente como fallback.
+```sql
+CREATE OR REPLACE FUNCTION create_pos_venda_activity()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.tipo_atividade = 'Matrícula' AND NEW.active = true THEN
+    RAISE NOTICE 'LOG: Criando atividade pós-venda para client_activity %', NEW.id;
+    
+    INSERT INTO atividade_pos_venda (
+      client_id,
+      client_activity_id,
+      client_name,
+      full_name,
+      created_by
+    ) VALUES (
+      NEW.client_id,
+      NEW.id,
+      (SELECT name FROM clients WHERE id = NEW.client_id),
+      NEW.notes,
+      NEW.created_by
+    );
+    
+    RAISE NOTICE 'LOG: Atividade pós-venda criada com sucesso com full_name: %', NEW.notes;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+```
 
-## Arquivos a Modificar
-
-| Arquivo | Alteracao |
-|---------|-----------|
-| `src/components/kanban/components/attendance-form/AttendanceFormContent.tsx` | Passar `studentName` ao `MatriculationMessage` |
-
-Nenhuma alteracao necessaria no `MatriculationMessage.tsx` pois ele ja aceita `clientName` como prop.
-
+## Resumo
+- 1 migracao SQL (recriar function)
+- 0 arquivos de codigo alterados
+- O campo `full_name` sera preenchido automaticamente nas proximas matriculas
