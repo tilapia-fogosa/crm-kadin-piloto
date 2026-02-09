@@ -62,6 +62,7 @@ export type Attendance = {
   observations?: string
   nextContactDate?: Date
   notes?: string // Novo campo para o descritivo
+  studentName?: string // Nome completo do aluno (obrigatório quando matriculado)
 }
 
 export type PaymentMethod = 'dinheiro' | 'pix' | 'cartao_credito' | 'cartao_debito' | 'boleto' | 'recorrencia';

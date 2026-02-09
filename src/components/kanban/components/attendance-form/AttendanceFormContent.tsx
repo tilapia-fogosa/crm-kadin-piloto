@@ -1,6 +1,8 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Attendance } from "../../types"
 import { SaleForm } from "../../SaleForm"
 import { useSale } from "../../hooks/useSale"
@@ -27,6 +29,8 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName, isDisabled
     nextContactDate,
     notes,
     notesValidationError,
+    studentName,
+    studentNameValidationError,
     isProcessing,
     setShowSaleForm,
     setSelectedResult,
@@ -36,7 +40,9 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName, isDisabled
     setNextContactDate,
     setIsProcessing,
     setNotes,
-    setNotesValidationError
+    setNotesValidationError,
+    setStudentName,
+    setStudentNameValidationError
   } = useAttendanceFormState();
 
   const [showLossConfirmation, setShowLossConfirmation] = useState(false)
@@ -82,8 +88,21 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName, isDisabled
         return
       }
 
+      // Validação para o nome completo do aluno quando matriculado
+      if (selectedResult === 'matriculado' && !studentName.trim()) {
+        setStudentNameValidationError(true)
+        toast({
+          variant: "destructive",
+          title: "Nome completo do Aluno é obrigatório",
+          description: "Por favor, preencha o nome completo do aluno para registrar a matrícula."
+        })
+        setIsProcessing(false)
+        return
+      }
+
       // Resetar erros de validação se tudo estiver ok
       setNotesValidationError(false)
+      setStudentNameValidationError(false)
 
       await onSubmit({
         result: selectedResult,
@@ -92,7 +111,8 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName, isDisabled
         selectedReasons,
         observations,
         nextContactDate,
-        notes
+        notes,
+        studentName: studentName.trim() || undefined
       })
     } catch (error) {
       console.error('Erro ao registrar atendimento:', error)
@@ -109,8 +129,9 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName, isDisabled
       setShowLossConfirmation(true)
     } else {
       setSelectedResult(result)
-      // Resetar o erro de validação quando mudar o resultado
+      // Resetar erros de validação quando mudar o resultado
       setNotesValidationError(false)
+      setStudentNameValidationError(false)
     }
   }
 
@@ -167,6 +188,28 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName, isDisabled
 
           {selectedResult === 'matriculado' && (
             <>
+              <div className="space-y-2">
+                <Label htmlFor="studentName">Nome completo do Aluno *</Label>
+                <Input
+                  id="studentName"
+                  value={studentName}
+                  onChange={(e) => {
+                    if (isDisabled) return
+                    setStudentName(e.target.value)
+                    if (e.target.value.trim() && studentNameValidationError) {
+                      setStudentNameValidationError(false)
+                    }
+                  }}
+                  placeholder="Digite o nome completo do aluno"
+                  disabled={isDisabled || isProcessing}
+                  className={studentNameValidationError ? "border-destructive" : ""}
+                />
+                {studentNameValidationError && (
+                  <p className="text-sm text-destructive">
+                    Nome completo do aluno é obrigatório.
+                  </p>
+                )}
+              </div>
               <MatriculationMessage clientName={clientName} />
               <MatriculationSection
                 notes={notes}
@@ -212,7 +255,8 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName, isDisabled
         disabled={isDisabled || isProcessing || !selectedResult || 
           (selectedResult === 'perdido' && selectedReasons.length === 0) ||
           (selectedResult === 'negociacao' && !nextContactDate) ||
-          (selectedResult === 'matriculado' && !notes.trim())}
+          (selectedResult === 'matriculado' && !notes.trim()) ||
+          (selectedResult === 'matriculado' && !studentName.trim())}
       >
         {isProcessing ? (
           <span className="flex items-center gap-2">

@@ -18,7 +18,8 @@ export function useAttendanceSubmission() {
     selectedReasons,
     observations,
     nextContactDate,
-    notes
+    notes,
+    studentName
   }: {
     cardId: string
     result: 'matriculado' | 'negociacao' | 'perdido'
@@ -27,6 +28,7 @@ export function useAttendanceSubmission() {
     observations?: string
     nextContactDate?: Date
     notes?: string
+    studentName?: string
   }) => {
     return wrapSubmission(async () => {
       const submissionId = Math.random().toString(36).substring(7)
@@ -37,7 +39,8 @@ export function useAttendanceSubmission() {
         selectedReasons,
         observations,
         nextContactDate,
-        notes
+        notes,
+        studentName
       })
 
       try {
@@ -96,7 +99,7 @@ export function useAttendanceSubmission() {
 
         // Se for matriculado, registra atividade de Matrícula
         if (result === 'matriculado') {
-          console.log(`[${submissionId}] Cliente matriculado, registrando atividade de matrícula`)
+          console.log(`[${submissionId}] Cliente matriculado, registrando atividade de matrícula com studentName:`, studentName)
           
           const { error: matriculaError } = await supabase
             .from('client_activities')
@@ -106,7 +109,7 @@ export function useAttendanceSubmission() {
               tipo_contato: 'presencial',
               created_by: session.user.id,
               unit_id: clientData.unit_id,
-              notes: notes || observations || null, // CORREÇÃO: Usando notes como prioridade, depois observations
+              notes: studentName || notes || observations || null, // Prioriza studentName para matrícula
               active: true
             })
 
