@@ -210,7 +210,7 @@ export function AttendanceFormContent({ onSubmit, cardId, clientName, isDisabled
                   </p>
                 )}
               </div>
-              <MatriculationMessage clientName={clientName} />
+              <MatriculationMessage clientName={studentName.trim() || clientName} />
               <MatriculationSection
                 notes={notes}
                 onNotesChange={handleNotesChange}
