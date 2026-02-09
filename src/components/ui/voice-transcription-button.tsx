@@ -137,11 +137,6 @@ export function VoiceTranscriptionButton({
       
       onTranscript(transcribedText);
       
-      toast({
-        title: "Sucesso",
-        description: "Áudio transcrito com sucesso!",
-      });
-      
     } catch (error) {
       console.error('VoiceTranscriptionButton - Erro no processamento:', error);
       toast({
