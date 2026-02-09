@@ -13,6 +13,8 @@ export function useAttendanceFormState() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [notes, setNotes] = useState("") 
   const [notesValidationError, setNotesValidationError] = useState(false)
+  const [studentName, setStudentName] = useState("")
+  const [studentNameValidationError, setStudentNameValidationError] = useState(false)
 
   return {
     selectedResult,
@@ -23,6 +25,8 @@ export function useAttendanceFormState() {
     nextContactDate,
     notes,
     notesValidationError,
+    studentName,
+    studentNameValidationError,
     isProcessing,
     setSelectedResult,
     setShowSaleForm,
@@ -32,6 +36,8 @@ export function useAttendanceFormState() {
     setNextContactDate,
     setIsProcessing,
     setNotes,
-    setNotesValidationError
+    setNotesValidationError,
+    setStudentName,
+    setStudentNameValidationError
   }
 }
