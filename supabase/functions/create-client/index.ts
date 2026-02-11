@@ -143,25 +143,73 @@ serve(async (req) => {
     }
 
     // ============================================
-    // VERIFICAR SE JÁ EXISTE CLIENTE COM ESTE TELEFONE NA UNIDADE
+    // NORMALIZAR TELEFONE PARA BUSCA DE DUPLICADO
     // ============================================
-    console.log('Verificando duplicado para telefone:', payload.phone_number, 'na unidade:', unitId)
+    const normalizedPhone = normalizePhoneBR(payload.phone_number)
+    console.log('Telefone normalizado para busca:', normalizedPhone)
     
-    const { data: existingClient, error: duplicateError } = await supabase
+    console.log('Verificando duplicado para telefone:', normalizedPhone, 'na unidade:', unitId)
+    
+    const { data: existingClients, error: duplicateError } = await supabase
       .from('clients')
-      .select('id, name, phone_number, status, quantidade_cadastros, historico_cadastros')
-      .eq('phone_number', payload.phone_number)
+      .select('id, name, phone_number, status, quantidade_cadastros, historico_cadastros, observations')
+      .eq('phone_number', normalizedPhone)
       .eq('unit_id', unitId)
       .eq('active', true)
-      .maybeSingle()
+      .order('created_at', { ascending: true })
+      .limit(1)
     
     if (duplicateError) {
       console.error('Erro ao verificar duplicado:', duplicateError)
     }
     
-    // Se existe cliente, atualizar contador e retornar cliente existente
+    const existingClient = existingClients && existingClients.length > 0 ? existingClients[0] : null
+    
+    // Se existe cliente, atualizar dados e contador
     if (existingClient) {
       console.log('Cliente existente encontrado:', existingClient)
+      
+      // ============================================
+      // ATUALIZAR DADOS DO CLIENTE COM NOVOS VALORES
+      // ============================================
+      const updateData: Record<string, unknown> = {}
+      
+      // Atualizar apenas campos que vieram preenchidos no payload
+      if (payload.email) updateData.email = payload.email
+      if (payload.original_ad) updateData.original_ad = payload.original_ad
+      if (payload.original_adset) updateData.original_adset = payload.original_adset
+      if (payload.meta_id) updateData.meta_id = payload.meta_id
+      if (payload.age_range) updateData.age_range = payload.age_range
+      
+      // Normalizar e atualizar lead_source se fornecido
+      if (payload.lead_source) {
+        updateData.lead_source = normalizedSource
+      }
+      
+      // Concatenar observations (não sobrescrever)
+      if (payload.observations) {
+        const existingObs = existingClient.observations || ''
+        updateData.observations = existingObs
+          ? `${existingObs} | ${payload.observations}`
+          : payload.observations
+      }
+      
+      // Sempre atualizar updated_at
+      updateData.updated_at = new Date().toISOString()
+      
+      console.log('Dados a atualizar no cliente existente:', updateData)
+      
+      // Executar update dos dados
+      const { error: updateError } = await supabase
+        .from('clients')
+        .update(updateData)
+        .eq('id', existingClient.id)
+      
+      if (updateError) {
+        console.error('Erro ao atualizar dados do cliente existente:', updateError)
+      } else {
+        console.log('Dados do cliente existente atualizados com sucesso')
+      }
       
       // Atualizar contador e histórico de cadastros
       const duplicateResult = await updateDuplicateRegistration(
@@ -176,12 +224,13 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Cliente já existente atualizado',
+          message: 'Cliente já existente atualizado com novos dados',
           duplicate: true,
           client_id: existingClient.id,
           client_name: existingClient.name,
           quantidade_cadastros: duplicateResult.quantidade,
-          unit_id: unitId
+          unit_id: unitId,
+          updated_fields: Object.keys(updateData).filter(k => k !== 'updated_at')
         }),
         {
           status: 200,
@@ -304,4 +353,36 @@ function normalizeLead(source?: string): string {
     default:
       return 'outros'
   }
+}
+
+/**
+ * Normaliza telefone brasileiro para formato 55DDDNNNNNNNNN (13 dígitos)
+ * Replica a lógica do trigger normalizar_telefone_brasil do banco
+ */
+function normalizePhoneBR(phone: string): string {
+  // Remove tudo que não for número
+  const clean = phone.replace(/\D/g, '')
+  
+  // Se já começa com 55 e tem 13 dígitos: OK
+  if (/^55\d{11}$/.test(clean)) return clean
+  
+  // Se começa com 55 e tem 12 dígitos: inserir 9 após DDD
+  if (/^55\d{10}$/.test(clean)) {
+    const ddd = clean.substring(2, 4)
+    const numero = clean.substring(4)
+    return `55${ddd}9${numero}`
+  }
+  
+  // Se tem 11 dígitos (DDD + 9 dígitos): adicionar 55
+  if (/^\d{11}$/.test(clean)) return `55${clean}`
+  
+  // Se tem 10 dígitos (DDD + 8 dígitos): adicionar 9 e 55
+  if (/^\d{10}$/.test(clean)) {
+    const ddd = clean.substring(0, 2)
+    const numero = clean.substring(2)
+    return `55${ddd}9${numero}`
+  }
+  
+  // Qualquer outro formato, retorna original
+  return phone
 }
