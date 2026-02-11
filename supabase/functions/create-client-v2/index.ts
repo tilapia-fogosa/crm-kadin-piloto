@@ -137,27 +137,40 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Ler body como texto primeiro para debug de JSON inválido
+    // Ler body como texto primeiro para debug e sanitização de JSON
     const rawBody = await req.text()
     console.log('Raw body recebido (primeiros 500 chars):', rawBody.substring(0, 500))
     
     let payload: ClientPayloadV2
     try {
       payload = JSON.parse(rawBody)
-    } catch (parseError) {
-      console.error('Erro ao fazer parse do JSON:', parseError)
-      console.error('Body completo:', rawBody)
-      return new Response(
-        JSON.stringify({
-          error: 'JSON inválido no body da requisição',
-          details: parseError instanceof Error ? parseError.message : 'Parse error',
-          raw_body_preview: rawBody.substring(0, 200)
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
+    } catch (_firstParseError) {
+      // Tentativa de sanitização: remover caracteres de controle e corrigir quebras de linha
+      console.log('Primeira tentativa de parse falhou, tentando sanitizar JSON...')
+      try {
+        // Remove caracteres de controle (exceto \n, \r, \t) e escapa quebras de linha dentro de strings
+        const sanitized = rawBody
+          .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control chars
+          .replace(/(?<=:\s*"[^"]*)\n/g, '\\n') // Escapa \n dentro de valores string
+          .replace(/(?<=:\s*"[^"]*)\r/g, '\\r') // Escapa \r dentro de valores string
+          .replace(/(?<=:\s*"[^"]*)\t/g, '\\t') // Escapa \t dentro de valores string
+        payload = JSON.parse(sanitized)
+        console.log('JSON sanitizado com sucesso')
+      } catch (secondParseError) {
+        console.error('Erro ao fazer parse do JSON mesmo após sanitização:', secondParseError)
+        console.error('Body completo:', rawBody)
+        return new Response(
+          JSON.stringify({
+            error: 'JSON inválido no body da requisição',
+            details: secondParseError instanceof Error ? secondParseError.message : 'Parse error',
+            raw_body_preview: rawBody.substring(0, 500)
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
+      }
     }
     console.log('Payload recebido:', payload)
 
