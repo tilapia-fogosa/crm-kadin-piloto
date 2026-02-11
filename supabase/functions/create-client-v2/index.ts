@@ -145,15 +145,12 @@ serve(async (req) => {
     try {
       payload = JSON.parse(rawBody)
     } catch (_firstParseError) {
-      // Tentativa de sanitização: remover caracteres de controle e corrigir quebras de linha
+      // Tentativa de sanitização robusta para JSON malformado
       console.log('Primeira tentativa de parse falhou, tentando sanitizar JSON...')
       try {
-        // Remove caracteres de controle (exceto \n, \r, \t) e escapa quebras de linha dentro de strings
-        const sanitized = rawBody
-          .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control chars
-          .replace(/(?<=:\s*"[^"]*)\n/g, '\\n') // Escapa \n dentro de valores string
-          .replace(/(?<=:\s*"[^"]*)\r/g, '\\r') // Escapa \r dentro de valores string
-          .replace(/(?<=:\s*"[^"]*)\t/g, '\\t') // Escapa \t dentro de valores string
+        // Estratégia: processar linha por linha e escapar aspas internas em valores string
+        const sanitized = sanitizeJsonBody(rawBody)
+        console.log('JSON após sanitização (primeiros 500 chars):', sanitized.substring(0, 500))
         payload = JSON.parse(sanitized)
         console.log('JSON sanitizado com sucesso')
       } catch (secondParseError) {
@@ -471,6 +468,44 @@ serve(async (req) => {
     )
   }
 })
+
+/**
+ * Sanitiza JSON malformado, tratando aspas não-escapadas dentro de valores string
+ * e caracteres de controle. Processa linha por linha para maior robustez.
+ * @param raw - String JSON potencialmente malformada
+ * @returns String JSON sanitizada
+ */
+function sanitizeJsonBody(raw: string): string {
+  // Etapa 1: Remover caracteres de controle (exceto whitespace padrão)
+  let cleaned = raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+  
+  // Etapa 2: Substituir aspas tipográficas (curly quotes) por aspas retas
+  cleaned = cleaned
+    .replace(/\u201C/g, '\\"')  // " → \"
+    .replace(/\u201D/g, '\\"')  // " → \"
+    .replace(/\u2018/g, "\\'")  // ' → \'
+    .replace(/\u2019/g, "\\'")  // ' → \'
+  
+  // Etapa 3: Processar cada linha para escapar aspas internas em valores
+  const lines = cleaned.split('\n')
+  const processedLines = lines.map(line => {
+    // Detectar padrão: "key": "value com "aspas" internas"
+    const match = line.match(/^(\s*"[^"]+"\s*:\s*")(.*)(",?\s*)$/)
+    if (match) {
+      const prefix = match[1]   // '  "key": "'
+      let value = match[2]      // 'value com "aspas" internas'
+      const suffix = match[3]   // '",' ou '"'
+      
+      // Escapar aspas duplas não-escapadas dentro do valor
+      value = value.replace(/(?<!\\)"/g, '\\"')
+      
+      return `${prefix}${value}${suffix}`
+    }
+    return line
+  })
+  
+  return processedLines.join('\n')
+}
 
 /**
  * Normaliza telefone brasileiro para formato 55DDDNNNNNNNNN (13 dígitos)
