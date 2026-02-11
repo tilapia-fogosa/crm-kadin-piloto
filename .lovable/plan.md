@@ -1,49 +1,55 @@
 
-# Plano: Preencher `full_name` na trigger de pos-venda
 
-## Objetivo
-Modificar a trigger function `create_pos_venda_activity` para popular o campo `full_name` da tabela `atividade_pos_venda` automaticamente, usando o nome do aluno que ja e salvo no campo `notes` da atividade de Matricula.
+# Plano: Corrigir bloqueio de leads duplicados na API
 
-## Contexto
-- Quando o consultor registra uma matricula, o nome completo do aluno e salvo em `client_activities.notes`
-- A trigger `create_pos_venda_activity` dispara no INSERT de `client_activities` quando `tipo_atividade = 'Matricula'`
-- A coluna `full_name` ja existe em `atividade_pos_venda` mas nao e preenchida pela trigger atual
+## Problema
+Quando um lead duplicado chega pela API `create-client`, o sistema apenas incrementa o contador e retorna, sem atualizar os dados novos do lead (anuncio, email, observacoes, etc.). Isso trava o fluxo de disparo de leads para dentro do sistema.
+
+## Solucao
+Modificar a edge function `create-client` para que, ao detectar um duplicado, alem de incrementar o contador, **atualize os dados do cliente existente** com as informacoes novas recebidas no payload.
 
 ## Alteracao
 
-### Migracaoo SQL
-Recriar a function `create_pos_venda_activity` adicionando `NEW.notes` como valor de `full_name`:
+### Arquivo: `supabase/functions/create-client/index.ts`
 
-```sql
-CREATE OR REPLACE FUNCTION create_pos_venda_activity()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.tipo_atividade = 'Matrícula' AND NEW.active = true THEN
-    RAISE NOTICE 'LOG: Criando atividade pós-venda para client_activity %', NEW.id;
-    
-    INSERT INTO atividade_pos_venda (
-      client_id,
-      client_activity_id,
-      client_name,
-      full_name,
-      created_by
-    ) VALUES (
-      NEW.client_id,
-      NEW.id,
-      (SELECT name FROM clients WHERE id = NEW.client_id),
-      NEW.notes,
-      NEW.created_by
-    );
-    
-    RAISE NOTICE 'LOG: Atividade pós-venda criada com sucesso com full_name: %', NEW.notes;
-  END IF;
-  
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+Na secao onde o duplicado e detectado (linhas ~163-190), adicionar um UPDATE nos campos relevantes do cliente existente:
+
+**Campos a atualizar (somente se o valor novo nao for vazio/null):**
+- `email` - novo email se fornecido
+- `original_ad` - novo anuncio de origem
+- `original_adset` - novo adset de origem
+- `meta_id` - novo ID do Meta
+- `observations` - concatenar novas observacoes (nao sobrescrever)
+- `age_range` - faixa etaria atualizada
+- `lead_source` - nova fonte do lead (normalizada)
+
+**Status:** Manter o status atual do cliente (nao alterar).
+
+### Logica de atualizacao
+
+```text
+1. Detecta duplicado (ja existe)
+2. Monta objeto de update somente com campos que vieram preenchidos no payload
+3. Concatena observations (antigo + " | " + novo) em vez de sobrescrever
+4. Executa UPDATE no cliente existente
+5. Incrementa quantidade_cadastros e historico_cadastros (ja existe)
+6. Retorna sucesso com duplicate: true e os dados atualizados
+```
+
+### Exemplo do codigo modificado (trecho principal)
+
+Na secao do `if (existingClient)`, antes do `updateDuplicateRegistration`, adicionar:
+
+```text
+- Montar updateData com campos nao-vazios do payload
+- Se payload.observations existe, concatenar com o existente
+- Normalizar lead_source antes de atualizar
+- Executar supabase.from('clients').update(updateData).eq('id', existingClient.id)
+- Manter o status atual (nao incluir status no update)
 ```
 
 ## Resumo
-- 1 migracao SQL (recriar function)
-- 0 arquivos de codigo alterados
-- O campo `full_name` sera preenchido automaticamente nas proximas matriculas
+- 1 arquivo alterado: `supabase/functions/create-client/index.ts`
+- 0 migracoes SQL necessarias
+- O fluxo de disparo de leads continuara funcionando normalmente
+- Leads duplicados terao seus dados atualizados sem perder o historico do funil
