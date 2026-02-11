@@ -137,8 +137,28 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Get request body
-    const payload: ClientPayloadV2 = await req.json()
+    // Ler body como texto primeiro para debug de JSON inválido
+    const rawBody = await req.text()
+    console.log('Raw body recebido (primeiros 500 chars):', rawBody.substring(0, 500))
+    
+    let payload: ClientPayloadV2
+    try {
+      payload = JSON.parse(rawBody)
+    } catch (parseError) {
+      console.error('Erro ao fazer parse do JSON:', parseError)
+      console.error('Body completo:', rawBody)
+      return new Response(
+        JSON.stringify({
+          error: 'JSON inválido no body da requisição',
+          details: parseError instanceof Error ? parseError.message : 'Parse error',
+          raw_body_preview: rawBody.substring(0, 200)
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
     console.log('Payload recebido:', payload)
 
     // Check each required field individually and collect missing fields
@@ -254,25 +274,64 @@ serve(async (req) => {
     console.log('Unidade encontrada:', unit)
 
     // ============================================
-    // VERIFICAR SE JÁ EXISTE CLIENTE COM ESTE TELEFONE NA UNIDADE
+    // NORMALIZAR TELEFONE E VERIFICAR DUPLICADO
     // ============================================
-    console.log('Verificando duplicado para telefone:', payload.phone_number, 'na unidade:', unit.id)
+    const normalizedPhone = normalizePhoneBR(payload.phone_number)
+    console.log('Telefone normalizado para busca:', normalizedPhone)
+    console.log('Verificando duplicado para telefone:', normalizedPhone, 'na unidade:', unit.id)
 
-    const { data: existingClient, error: duplicateError } = await supabase
+    const { data: existingClients, error: duplicateError } = await supabase
       .from('clients')
-      .select('id, name, phone_number, status, quantidade_cadastros, historico_cadastros')
-      .eq('phone_number', payload.phone_number)
+      .select('id, name, phone_number, status, quantidade_cadastros, historico_cadastros, observations')
+      .eq('phone_number', normalizedPhone)
       .eq('unit_id', unit.id)
       .eq('active', true)
-      .maybeSingle()
+      .order('created_at', { ascending: true })
+      .limit(1)
 
     if (duplicateError) {
       console.error('Erro ao verificar duplicado:', duplicateError)
     }
 
-    // Se existe cliente com mesmo telefone na mesma unidade, atualizar contador
+    const existingClient = existingClients && existingClients.length > 0 ? existingClients[0] : null
+
+    // Se existe cliente, atualizar dados e contador
     if (existingClient) {
       console.log('⚠️ Cliente duplicado encontrado:', existingClient)
+      
+      // Montar objeto de update com campos não-vazios do payload
+      const updateData: Record<string, unknown> = {}
+      if (payload.email) updateData.email = payload.email
+      if (payload.original_ad) updateData.original_ad = payload.original_ad
+      if (payload.original_adset) updateData.original_adset = payload.original_adset
+      if (payload.meta_id) updateData.meta_id = payload.meta_id
+      if (payload.age_range) updateData.age_range = payload.age_range
+      if (payload.registration_cpf) updateData.registration_cpf = payload.registration_cpf
+      if (payload.registration_name) updateData.registration_name = payload.registration_name
+      if (payload.lead_source) updateData.lead_source = normalizedSource
+      
+      // Concatenar observations
+      if (payload.observations) {
+        const existingObs = existingClient.observations || ''
+        updateData.observations = existingObs
+          ? `${existingObs} | ${payload.observations}`
+          : payload.observations
+      }
+      
+      updateData.updated_at = new Date().toISOString()
+      
+      console.log('Dados a atualizar no cliente existente:', updateData)
+      
+      const { error: updateError } = await supabase
+        .from('clients')
+        .update(updateData)
+        .eq('id', existingClient.id)
+      
+      if (updateError) {
+        console.error('Erro ao atualizar dados do cliente existente:', updateError)
+      } else {
+        console.log('Dados do cliente existente atualizados com sucesso')
+      }
       
       // Atualizar contador e histórico de cadastros
       const duplicateResult = await updateDuplicateRegistration(
@@ -287,7 +346,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Cliente já existente - contador atualizado',
+          message: 'Cliente já existente atualizado com novos dados',
           duplicate: true,
           client_id: existingClient.id,
           client_name: existingClient.name,
@@ -295,7 +354,8 @@ serve(async (req) => {
           quantidade_cadastros: duplicateResult.quantidade,
           unit_id: unit.id,
           normalized_source: normalizedSource,
-          original_source: originalLeadSource
+          original_source: originalLeadSource,
+          updated_fields: Object.keys(updateData).filter(k => k !== 'updated_at')
         }),
         {
           status: 200,
@@ -398,3 +458,20 @@ serve(async (req) => {
     )
   }
 })
+
+/**
+ * Normaliza telefone brasileiro para formato 55DDDNNNNNNNNN (13 dígitos)
+ * Replica a lógica do trigger normalizar_telefone_brasil do banco
+ */
+function normalizePhoneBR(phone: string): string {
+  const clean = phone.replace(/\D/g, '')
+  if (/^55\d{11}$/.test(clean)) return clean
+  if (/^55\d{10}$/.test(clean)) {
+    return `55${clean.substring(2, 4)}9${clean.substring(4)}`
+  }
+  if (/^\d{11}$/.test(clean)) return `55${clean}`
+  if (/^\d{10}$/.test(clean)) {
+    return `55${clean.substring(0, 2)}9${clean.substring(2)}`
+  }
+  return phone
+}
