@@ -194,6 +194,9 @@ serve(async (req) => {
           : payload.observations
       }
       
+      // Resetar status para reentrar no funil
+      updateData.status = 'novo-cadastro'
+      
       // Sempre atualizar updated_at
       updateData.updated_at = new Date().toISOString()
       

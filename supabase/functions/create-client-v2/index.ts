@@ -328,6 +328,7 @@ serve(async (req) => {
           : payload.observations
       }
       
+      updateData.status = 'novo-cadastro'
       updateData.updated_at = new Date().toISOString()
       
       console.log('Dados a atualizar no cliente existente:', updateData)
