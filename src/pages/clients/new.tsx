@@ -178,6 +178,7 @@ export default function NewClient() {
           age_range: pendingFormData.ageRange || null,
           meta_id: pendingFormData.metaId || null,
           original_ad: pendingFormData.originalAd || null,
+          status: 'novo-cadastro',
           updated_at: new Date().toISOString()
         })
         .eq('id', existingClient.id);

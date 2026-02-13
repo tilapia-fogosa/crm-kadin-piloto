@@ -2848,6 +2848,7 @@ export type Database = {
       eventos_professor: {
         Row: {
           active: boolean | null
+          client_id: string | null
           created_at: string | null
           created_by: string | null
           data: string | null
@@ -2870,6 +2871,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          client_id?: string | null
           created_at?: string | null
           created_by?: string | null
           data?: string | null
@@ -2892,6 +2894,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          client_id?: string | null
           created_at?: string | null
           created_by?: string | null
           data?: string | null
@@ -2913,6 +2916,20 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "eventos_professor_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eventos_professor_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_client_summary"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "eventos_professor_funcionario_registro_id_fkey"
             columns: ["funcionario_registro_id"]
