@@ -60,33 +60,35 @@ function BoardHeaderComponent({
   return (
     <div className="flex flex-col bg-[#311D64] w-full">
       <div className="flex items-center gap-6 p-4 flex-wrap">
-        {/* Switches */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center space-x-2">
+        {/* Switches empilhados */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center space-x-1.5">
             <Switch
               id="pending-mode"
               checked={showPendingOnly}
               onCheckedChange={setShowPendingOnly}
+              className="scale-75 origin-left"
             />
-            <Label htmlFor="pending-mode" className="text-white text-sm">Mostrar apenas pendentes</Label>
+            <Label htmlFor="pending-mode" className="text-white text-xs">Mostrar apenas pendentes</Label>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <Switch
               id="sound-mode"
               checked={soundEnabled}
               onCheckedChange={setSoundEnabled}
+              className="scale-75 origin-left"
             />
-            <Label htmlFor="sound-mode" className="text-white text-sm">Som para novos leads</Label>
+            <Label htmlFor="sound-mode" className="text-white text-xs">Som para novos leads</Label>
             {soundEnabled && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-white hover:bg-white/20 p-1 h-6 w-6"
+                className="text-white hover:bg-white/20 p-0.5 h-5 w-5"
                 onClick={testSound}
                 title="Testar som"
               >
-                <Volume2 className="h-3 w-3" />
+                <Volume2 className="h-2.5 w-2.5" />
               </Button>
             )}
             {!isAudioSupported && soundEnabled && (
