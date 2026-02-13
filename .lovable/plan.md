@@ -1,33 +1,35 @@
 
+# Simplificar Header do Kanban
 
-# Plano: Alterar status para "novo-cadastro" ao atualizar lead duplicado
+## O que sera mantido
+- Switch "Mostrar apenas pendentes"
+- Switch "Som para novos leads" (com botao de teste)
+- Botao "Painel de Atividade" (ActivityDashboard)
+- Botao "Agenda de Leads" (CalendarDashboard)
+- Campo de pesquisa por nome ou telefone
 
-## Problema
-Quando um lead duplicado e detectado e atualizado, o status atual do cliente e preservado. O comportamento desejado e que o status volte para `novo-cadastro`, fazendo o lead reaparecer no inicio do funil.
+## O que sera removido
+- Seletor de unidades (MultiUnitSelector)
+- Botao de refresh (RefreshCw)
+- Painel de produtividade inteiro (UserProductivityPanel com TC, CE, AG, AT)
 
 ## Alteracoes
 
-### 1. Formulario manual (`src/pages/clients/new.tsx`)
-Na funcao `updateExistingClient`, adicionar `status: 'novo-cadastro'` ao objeto de update (linha ~173).
+### 1. `src/components/kanban/BoardHeader.tsx`
+- Remover imports: `MultiUnitSelector`, `UserProductivityPanel`, `useUserProductivityStats`, `useCanFilterByUsers`, `useUnitUsers`, `RefreshCw`
+- Remover props da interface: `availableUnits`, `selectedUnitIds`, `setSelectedUnitIds`, `isMultiUnit`, `onRefresh`, `onOpenClient`
+- Remover hooks internos: `selectedUserIds`, `canFilterByUsers`, `availableUsers`, `stats/isLoadingStats`
+- Remover JSX: bloco do seletor de unidades, botao refresh, painel de produtividade
+- Simplificar layout: remover grid de 2 colunas, largura fixa de 448px -- usar layout simples de linha unica
+- Atualizar memo comparison para refletir props restantes
 
-### 2. Edge Function `create-client-v2`
-No bloco de update do cliente duplicado (~linha 313-331), adicionar `status: 'novo-cadastro'` ao objeto `updateData`.
+### 2. Componentes pais que passam props ao BoardHeader
+- Remover passagem das props removidas (`availableUnits`, `setSelectedUnitIds`, `isMultiUnit`, `onRefresh`, `onOpenClient`)
+- Nota: `selectedUnitIds` ainda pode ser necessario internamente no pai para queries, mas nao sera passado ao header
 
-### 3. Edge Function `create-client`
-Mesmo ajuste no bloco equivalente de update do cliente duplicado.
+### 3. Limpeza (se nao usados em outro lugar)
+- Avaliar remocao de `UserProductivityPanel.tsx`, `UserProductivityFilter.tsx`, `MultiUserSelector.tsx`
+- Avaliar remocao dos hooks `useUserProductivityStats`, `useCanFilterByUsers`, `useUnitUsers`
 
-## Detalhes tecnicos
-
-Cada alteracao e uma unica linha adicionada ao objeto de update:
-
-```text
-// Em cada local de update de duplicado:
-updateData.status = 'novo-cadastro'
-```
-
-## Escopo
-- 3 arquivos alterados (1 pagina React + 2 edge functions)
-- 1 linha adicionada em cada arquivo
-- 0 migracoes SQL necessarias
-- Requer redeploy das 2 edge functions
-
+## Layout resultante
+Uma barra horizontal compacta com: switches a esquerda, botoes de atividade/agenda ao centro, e campo de pesquisa a direita -- tudo em uma unica linha.
