@@ -53,7 +53,7 @@ serve(async (req) => {
     }
 
     // Obter chave da OpenAI dos secrets
-    const openaiKey = Deno.env.get('OpenAI Whisper');
+    const openaiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiKey) {
       throw new Error('Chave OpenAI não configurada');
     }
