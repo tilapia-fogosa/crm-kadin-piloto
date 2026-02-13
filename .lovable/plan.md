@@ -1,55 +1,40 @@
 
 
-# Plano: Corrigir bloqueio de leads duplicados na API
+# Plano: Corrigir trigger de criacao de atividade pos-venda
 
 ## Problema
-Quando um lead duplicado chega pela API `create-client`, o sistema apenas incrementa o contador e retorna, sem atualizar os dados novos do lead (anuncio, email, observacoes, etc.). Isso trava o fluxo de disparo de leads para dentro do sistema.
+O trigger `create_pos_venda_activity` que cria automaticamente um registro na tabela `atividade_pos_venda` quando uma matricula e registrada **nao inclui o campo `unit_id`** no INSERT. Como a coluna `unit_id` e NOT NULL, o INSERT falha com o erro:
 
-## Solucao
-Modificar a edge function `create-client` para que, ao detectar um duplicado, alem de incrementar o contador, **atualize os dados do cliente existente** com as informacoes novas recebidas no payload.
-
-## Alteracao
-
-### Arquivo: `supabase/functions/create-client/index.ts`
-
-Na secao onde o duplicado e detectado (linhas ~163-190), adicionar um UPDATE nos campos relevantes do cliente existente:
-
-**Campos a atualizar (somente se o valor novo nao for vazio/null):**
-- `email` - novo email se fornecido
-- `original_ad` - novo anuncio de origem
-- `original_adset` - novo adset de origem
-- `meta_id` - novo ID do Meta
-- `observations` - concatenar novas observacoes (nao sobrescrever)
-- `age_range` - faixa etaria atualizada
-- `lead_source` - nova fonte do lead (normalizada)
-
-**Status:** Manter o status atual do cliente (nao alterar).
-
-### Logica de atualizacao
-
-```text
-1. Detecta duplicado (ja existe)
-2. Monta objeto de update somente com campos que vieram preenchidos no payload
-3. Concatena observations (antigo + " | " + novo) em vez de sobrescrever
-4. Executa UPDATE no cliente existente
-5. Incrementa quantidade_cadastros e historico_cadastros (ja existe)
-6. Retorna sucesso com duplicate: true e os dados atualizados
+```
+null value in column "unit_id" of relation "atividade_pos_venda" violates not-null constraint
 ```
 
-### Exemplo do codigo modificado (trecho principal)
+## Causa Raiz
+Na ultima atualizacao do trigger (migracao `20260209134425`), o campo `unit_id` foi omitido. O `unit_id` esta disponivel em `NEW.unit_id` (vindo de `client_activities`), mas nao esta sendo passado.
 
-Na secao do `if (existingClient)`, antes do `updateDuplicateRegistration`, adicionar:
+## Correcao
+Uma unica migracao SQL para atualizar o trigger, adicionando `unit_id` ao INSERT:
 
 ```text
-- Montar updateData com campos nao-vazios do payload
-- Se payload.observations existe, concatenar com o existente
-- Normalizar lead_source antes de atualizar
-- Executar supabase.from('clients').update(updateData).eq('id', existingClient.id)
-- Manter o status atual (nao incluir status no update)
+INSERT INTO atividade_pos_venda (
+  client_id,
+  client_activity_id,
+  client_name,
+  full_name,
+  created_by,
+  unit_id          -- campo adicionado
+) VALUES (
+  NEW.client_id,
+  NEW.id,
+  (SELECT name FROM clients WHERE id = NEW.client_id),
+  NEW.notes,
+  NEW.created_by,
+  NEW.unit_id      -- valor vindo de client_activities
+);
 ```
 
-## Resumo
-- 1 arquivo alterado: `supabase/functions/create-client/index.ts`
-- 0 migracoes SQL necessarias
-- O fluxo de disparo de leads continuara funcionando normalmente
-- Leads duplicados terao seus dados atualizados sem perder o historico do funil
+## Escopo
+- 1 migracao SQL (CREATE OR REPLACE FUNCTION)
+- 0 arquivos de codigo alterados
+- Correcao imediata: apos aplicar, novas matriculas criarao o registro pos-venda corretamente
+
