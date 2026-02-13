@@ -1,40 +1,33 @@
 
 
-# Plano: Corrigir trigger de criacao de atividade pos-venda
+# Plano: Alterar status para "novo-cadastro" ao atualizar lead duplicado
 
 ## Problema
-O trigger `create_pos_venda_activity` que cria automaticamente um registro na tabela `atividade_pos_venda` quando uma matricula e registrada **nao inclui o campo `unit_id`** no INSERT. Como a coluna `unit_id` e NOT NULL, o INSERT falha com o erro:
+Quando um lead duplicado e detectado e atualizado, o status atual do cliente e preservado. O comportamento desejado e que o status volte para `novo-cadastro`, fazendo o lead reaparecer no inicio do funil.
 
-```
-null value in column "unit_id" of relation "atividade_pos_venda" violates not-null constraint
-```
+## Alteracoes
 
-## Causa Raiz
-Na ultima atualizacao do trigger (migracao `20260209134425`), o campo `unit_id` foi omitido. O `unit_id` esta disponivel em `NEW.unit_id` (vindo de `client_activities`), mas nao esta sendo passado.
+### 1. Formulario manual (`src/pages/clients/new.tsx`)
+Na funcao `updateExistingClient`, adicionar `status: 'novo-cadastro'` ao objeto de update (linha ~173).
 
-## Correcao
-Uma unica migracao SQL para atualizar o trigger, adicionando `unit_id` ao INSERT:
+### 2. Edge Function `create-client-v2`
+No bloco de update do cliente duplicado (~linha 313-331), adicionar `status: 'novo-cadastro'` ao objeto `updateData`.
+
+### 3. Edge Function `create-client`
+Mesmo ajuste no bloco equivalente de update do cliente duplicado.
+
+## Detalhes tecnicos
+
+Cada alteracao e uma unica linha adicionada ao objeto de update:
 
 ```text
-INSERT INTO atividade_pos_venda (
-  client_id,
-  client_activity_id,
-  client_name,
-  full_name,
-  created_by,
-  unit_id          -- campo adicionado
-) VALUES (
-  NEW.client_id,
-  NEW.id,
-  (SELECT name FROM clients WHERE id = NEW.client_id),
-  NEW.notes,
-  NEW.created_by,
-  NEW.unit_id      -- valor vindo de client_activities
-);
+// Em cada local de update de duplicado:
+updateData.status = 'novo-cadastro'
 ```
 
 ## Escopo
-- 1 migracao SQL (CREATE OR REPLACE FUNCTION)
-- 0 arquivos de codigo alterados
-- Correcao imediata: apos aplicar, novas matriculas criarao o registro pos-venda corretamente
+- 3 arquivos alterados (1 pagina React + 2 edge functions)
+- 1 linha adicionada em cada arquivo
+- 0 migracoes SQL necessarias
+- Requer redeploy das 2 edge functions
 
