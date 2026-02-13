@@ -859,6 +859,7 @@ export type Database = {
           status_manual: string | null
           status_sincronizacao: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id: string | null
+          unit_id: string
           updated_at: string
           whatsapp_contato: string | null
         }
@@ -917,6 +918,7 @@ export type Database = {
           status_manual?: string | null
           status_sincronizacao?: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id?: string | null
+          unit_id: string
           updated_at?: string
           whatsapp_contato?: string | null
         }
@@ -975,6 +977,7 @@ export type Database = {
           status_manual?: string | null
           status_sincronizacao?: Database["public"]["Enums"]["status_sincronizacao"]
           turma_id?: string | null
+          unit_id?: string
           updated_at?: string
           whatsapp_contato?: string | null
         }
@@ -999,6 +1002,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_ocupacao_salas_turmas"
             referencedColumns: ["turma_id"]
+          },
+          {
+            foreignKeyName: "atividade_pos_venda_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_atividade_pos_venda_client_activity_id"
@@ -7519,6 +7529,14 @@ export type Database = {
       unpublish_update: { Args: { p_update_id: string }; Returns: boolean }
       update_existing_kanban_cards_history: { Args: never; Returns: undefined }
       user_has_access_to_unit: { Args: { unit_id: string }; Returns: boolean }
+      user_has_role_in_unit: {
+        Args: {
+          p_roles: Database["public"]["Enums"]["user_role"][]
+          p_unit_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       user_has_unit_access: { Args: { p_unit_id: string }; Returns: boolean }
       verificar_conflito_sala: {
         Args: {
