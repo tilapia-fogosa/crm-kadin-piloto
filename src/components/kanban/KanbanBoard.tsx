@@ -128,13 +128,9 @@ export function KanbanBoard() {
       <BoardHeader 
         showPendingOnly={showPendingOnly}
         setShowPendingOnly={setShowPendingOnly}
-        onRefresh={() => refetch()}
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
-        availableUnits={userUnits || []}
         selectedUnitIds={selectedUnitIds}
-        setSelectedUnitIds={setSelectedUnitIds}
-        isMultiUnit={isMultiUnit || false}
         isSearching={isFetching && !isFetchingNextPage}
         onOpenClient={(id) => setOpenClientId(id)}
       />
