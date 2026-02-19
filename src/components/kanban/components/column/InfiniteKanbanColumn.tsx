@@ -90,12 +90,12 @@ function InfiniteKanbanColumnComponent({
   const isEven = index % 2 === 0
 
   return (
-    <div className={`h-full flex flex-col gap-4 rounded-lg p-4 shadow-sm ${isEven ? 'bg-white' : 'bg-[#F1F0FB]'}`}>
+    <div className={`h-full flex flex-col gap-2 rounded-lg p-2 shadow-sm ${isEven ? 'bg-white' : 'bg-[#F1F0FB]'}`}>
       <ColumnHeader title={column.title} cardCount={column.cards.length} />
       
       <div 
         ref={scrollContainerRef}
-        className="flex flex-col gap-4 min-h-0 overflow-y-auto"
+        className="flex flex-col gap-2 min-h-0 overflow-y-auto"
       >
         {column.cards.map((card) => (
           <CardSheet

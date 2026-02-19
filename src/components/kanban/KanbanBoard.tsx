@@ -128,13 +128,9 @@ export function KanbanBoard() {
       <BoardHeader 
         showPendingOnly={showPendingOnly}
         setShowPendingOnly={setShowPendingOnly}
-        onRefresh={() => refetch()}
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
-        availableUnits={userUnits || []}
         selectedUnitIds={selectedUnitIds}
-        setSelectedUnitIds={setSelectedUnitIds}
-        isMultiUnit={isMultiUnit || false}
         isSearching={isFetching && !isFetchingNextPage}
         onOpenClient={(id) => setOpenClientId(id)}
       />
@@ -143,13 +139,13 @@ export function KanbanBoard() {
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-x-auto pb-4">
           <div 
-            className="flex gap-4 min-w-fit"
-            style={{ minWidth: `${columns.length * 336}px` }}
+            className="grid gap-2 w-full"
+            style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(160px, 1fr))` }}
           >
             {columns.map((column, index) => (
               <div 
                 key={column.id}
-                className="flex-shrink-0 w-[320px]"
+                className="min-w-0"
               >
                 <InfiniteKanbanColumn
                   column={column}
