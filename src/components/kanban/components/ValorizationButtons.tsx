@@ -133,25 +133,25 @@ export function ValorizationButtons({
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8 bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700"
+            className="h-6 w-6 bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700"
             onClick={(e) => {
               e.stopPropagation();
               setIsConfirmDialogOpen(true);
             }}
           >
-            <Check className="h-4 w-4" />
+            <Check className="h-3 w-3" />
           </Button>
           
           <Button
             variant="destructive"
             size="icon"
-            className="h-8 w-8"
+            className="h-6 w-6"
             onClick={(e) => {
               e.stopPropagation();
               setIsCancelDialogOpen(true);
             }}
           >
-            <X className="h-4 w-4" />
+            <X className="h-3 w-3" />
           </Button>
         </div>
       </div>
