@@ -8,14 +8,14 @@ interface UserUpdateData {
   full_name: string;
   email: string;
   unitIds: string[];
-  role: 'consultor' | 'franqueado' | 'admin' | 'educador' | 'gestor_pedagogico' | 'financeiro' | 'administrativo' | 'estagiario' | 'sala';
+  role: 'consultor' | 'franqueado' | 'admin' | 'educador' | 'gestor_pedagogico' | 'financeiro' | 'administrativo' | 'estagiario' | 'sala' | 'sdr';
 }
 
 interface UpdateUserValues {
   email: string;
   full_name: string;
   unitIds: string[];
-  role: 'consultor' | 'franqueado' | 'admin' | 'educador' | 'gestor_pedagogico' | 'financeiro' | 'administrativo' | 'estagiario' | 'sala';
+  role: 'consultor' | 'franqueado' | 'admin' | 'educador' | 'gestor_pedagogico' | 'financeiro' | 'administrativo' | 'estagiario' | 'sala' | 'sdr';
 }
 
 export function useUserOperations() {
