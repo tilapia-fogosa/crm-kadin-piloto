@@ -70,25 +70,31 @@ function KanbanCardComponent({
 
   return (
     <Card 
-      className="group cursor-pointer bg-[#F5F5F5] hover:bg-[#F8E4CC]/10 transition-colors duration-200"
+      className="group cursor-pointer bg-card hover:bg-accent/10 transition-colors duration-200 rounded-xl border border-border"
       onClick={onClick}
     >
       <CardContent className="p-2 flex flex-col gap-1.5">
-        {/* Nome do cliente - truncado para nomes longos */}
-        <span className="text-sm font-semibold text-foreground truncate">
-          {card.clientName}
-        </span>
+        {/* Sub-quadro 1: Nome do cliente */}
+        <div className="rounded-lg border border-border bg-muted/40 px-2 py-1.5">
+          <span className="text-sm font-semibold text-foreground truncate block">
+            {card.clientName}
+          </span>
+        </div>
 
-        {/* Próximo contato - com cores indicativas de urgência */}
-        {nextContactDate && (
-          <div className={`flex items-center gap-1 text-xs ${nextContactColor} font-medium`}>
-            <Clock className="h-3 w-3 flex-shrink-0" />
-            <span>{format(nextContactDate, 'dd-MM-yy HH:mm')}</span>
-          </div>
-        )}
+        {/* Sub-quadro 2: Próximo contato */}
+        <div className="rounded-md border border-border bg-muted/40 px-2 py-1">
+          {nextContactDate ? (
+            <div className={`flex items-center gap-1 text-xs ${nextContactColor} font-medium`}>
+              <Clock className="h-3 w-3 flex-shrink-0" />
+              <span>{format(nextContactDate, 'dd-MM-yy HH:mm')}</span>
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground">Sem contato agendado</span>
+          )}
+        </div>
 
-        {/* Botões de valorização - exibidos apenas quando há agendamento */}
-        <div onClick={(e) => e.stopPropagation()}>
+        {/* Sub-quadro 3: Valorização + WhatsApp */}
+        <div className="rounded-lg border border-border bg-muted/40 px-2 py-1.5 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
           <ValorizationButtons 
             clientId={card.id}
             clientName={card.clientName}
@@ -97,16 +103,14 @@ function KanbanCardComponent({
             onValorizationChange={handleValorizationChange}
             onOpenSchedulingForm={onOpenSchedulingForm}
           />
+          <WhatsAppIcon 
+            className="h-4 w-4 text-[hsl(142,71%,45%)] cursor-pointer flex-shrink-0" 
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              onWhatsAppClick(e);
+            }} 
+          />
         </div>
-
-        {/* Ícone do WhatsApp - abre conversa */}
-        <WhatsAppIcon 
-          className="h-4 w-4 text-green-500 cursor-pointer" 
-          onClick={(e: React.MouseEvent) => {
-            e.stopPropagation();
-            onWhatsAppClick(e);
-          }} 
-        />
       </CardContent>
     </Card>
   );
