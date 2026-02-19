@@ -2136,6 +2136,85 @@ export type Database = {
           },
         ]
       }
+      comissao_config: {
+        Row: {
+          aceleradores: Json
+          created_at: string
+          formula_display: string
+          formula_json: Json
+          id: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          aceleradores?: Json
+          created_at?: string
+          formula_display?: string
+          formula_json?: Json
+          id?: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          aceleradores?: Json
+          created_at?: string
+          formula_display?: string
+          formula_json?: Json
+          id?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comissao_config_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: true
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comissao_metas: {
+        Row: {
+          ano: number
+          created_at: string
+          id: string
+          mes: number
+          numero_matriculas: number
+          unit_id: string
+          updated_at: string
+          valor_meta: number
+        }
+        Insert: {
+          ano: number
+          created_at?: string
+          id?: string
+          mes: number
+          numero_matriculas?: number
+          unit_id: string
+          updated_at?: string
+          valor_meta?: number
+        }
+        Update: {
+          ano?: number
+          created_at?: string
+          id?: string
+          mes?: number
+          numero_matriculas?: number
+          unit_id?: string
+          updated_at?: string
+          valor_meta?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comissao_metas_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_calculations: {
         Row: {
           consolidated_at: string | null
@@ -4976,7 +5055,7 @@ export type Database = {
           capacidade?: number | null
           cor_calendario?: string | null
           created_at?: string | null
-          id: string
+          id?: string
           nome: string
           recursos?: string[] | null
           unit_id: string
@@ -7693,6 +7772,7 @@ export type Database = {
         | "administrativo"
         | "estagiario"
         | "sala"
+        | "sdr"
       user_role_old: "consultor" | "franqueado" | "gestor_comercial"
       Vinculo_aluno:
         | "Pai do aluno"
@@ -7934,6 +8014,7 @@ export const Constants = {
         "administrativo",
         "estagiario",
         "sala",
+        "sdr",
       ],
       user_role_old: ["consultor", "franqueado", "gestor_comercial"],
       Vinculo_aluno: [
