@@ -147,6 +147,7 @@ export type Database = {
           data_recolhida: string
           funcionario_registro_id: string | null
           id: number
+          ignorado_ate: string | null
           pessoa_id: string
           professor_id: string | null
           responsavel_correcao_id: string | null
@@ -165,6 +166,7 @@ export type Database = {
           data_recolhida: string
           funcionario_registro_id?: string | null
           id?: number
+          ignorado_ate?: string | null
           pessoa_id: string
           professor_id?: string | null
           responsavel_correcao_id?: string | null
@@ -183,6 +185,7 @@ export type Database = {
           data_recolhida?: string
           funcionario_registro_id?: string | null
           id?: number
+          ignorado_ate?: string | null
           pessoa_id?: string
           professor_id?: string | null
           responsavel_correcao_id?: string | null
@@ -813,6 +816,8 @@ export type Database = {
           address_postal_code: string | null
           address_state: string | null
           address_street: string | null
+          avaliacao_abaco: string | null
+          avaliacao_ah: string | null
           birth_date: string | null
           check_assinar_contrato: boolean | null
           check_cadastrar_pagamento: boolean | null
@@ -851,8 +856,11 @@ export type Database = {
           monthly_fee_payment_method:
             | Database["public"]["Enums"]["payment_method"]
             | null
+          motivo_procura: string | null
+          percepcao_coordenador: string | null
           photo_thumbnail_url: string | null
           photo_url: string | null
+          pontos_atencao: string | null
           responsavel: string
           rg: string | null
           sincronizar_agenda_google: boolean
@@ -872,6 +880,8 @@ export type Database = {
           address_postal_code?: string | null
           address_state?: string | null
           address_street?: string | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           birth_date?: string | null
           check_assinar_contrato?: boolean | null
           check_cadastrar_pagamento?: boolean | null
@@ -910,8 +920,11 @@ export type Database = {
           monthly_fee_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
             | null
+          motivo_procura?: string | null
+          percepcao_coordenador?: string | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          pontos_atencao?: string | null
           responsavel?: string
           rg?: string | null
           sincronizar_agenda_google?: boolean
@@ -931,6 +944,8 @@ export type Database = {
           address_postal_code?: string | null
           address_state?: string | null
           address_street?: string | null
+          avaliacao_abaco?: string | null
+          avaliacao_ah?: string | null
           birth_date?: string | null
           check_assinar_contrato?: boolean | null
           check_cadastrar_pagamento?: boolean | null
@@ -969,8 +984,11 @@ export type Database = {
           monthly_fee_payment_method?:
             | Database["public"]["Enums"]["payment_method"]
             | null
+          motivo_procura?: string | null
+          percepcao_coordenador?: string | null
           photo_thumbnail_url?: string | null
           photo_url?: string | null
+          pontos_atencao?: string | null
           responsavel?: string
           rg?: string | null
           sincronizar_agenda_google?: boolean
@@ -1355,6 +1373,7 @@ export type Database = {
           data_entrega: string | null
           funcionario_registro_id: string | null
           id: string
+          ignorado_ate: string | null
           nao_tem_tamanho: boolean | null
           observacoes: string | null
           responsavel_entrega_id: string | null
@@ -1370,6 +1389,7 @@ export type Database = {
           data_entrega?: string | null
           funcionario_registro_id?: string | null
           id?: string
+          ignorado_ate?: string | null
           nao_tem_tamanho?: boolean | null
           observacoes?: string | null
           responsavel_entrega_id?: string | null
@@ -1385,6 +1405,7 @@ export type Database = {
           data_entrega?: string | null
           funcionario_registro_id?: string | null
           id?: string
+          ignorado_ate?: string | null
           nao_tem_tamanho?: boolean | null
           observacoes?: string | null
           responsavel_entrega_id?: string | null
@@ -1784,6 +1805,7 @@ export type Database = {
         Row: {
           active: boolean
           age_range: string | null
+          alterar_nome: boolean
           concatena: boolean | null
           concatena_tempo: string | null
           created_at: string
@@ -1820,6 +1842,7 @@ export type Database = {
         Insert: {
           active?: boolean
           age_range?: string | null
+          alterar_nome?: boolean
           concatena?: boolean | null
           concatena_tempo?: string | null
           created_at?: string
@@ -1856,6 +1879,7 @@ export type Database = {
         Update: {
           active?: boolean
           age_range?: string | null
+          alterar_nome?: boolean
           concatena?: boolean | null
           concatena_tempo?: string | null
           created_at?: string
@@ -2927,6 +2951,7 @@ export type Database = {
       eventos_professor: {
         Row: {
           active: boolean | null
+          atividade_pos_venda_id: string | null
           client_id: string | null
           created_at: string | null
           created_by: string | null
@@ -2950,6 +2975,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          atividade_pos_venda_id?: string | null
           client_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -2973,6 +2999,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          atividade_pos_venda_id?: string | null
           client_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -2995,6 +3022,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "eventos_professor_atividade_pos_venda_id_fkey"
+            columns: ["atividade_pos_venda_id"]
+            isOneToOne: false
+            referencedRelation: "atividade_pos_venda"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "eventos_professor_client_id_fkey"
             columns: ["client_id"]
@@ -4254,6 +4288,7 @@ export type Database = {
           data_entrega: string | null
           funcionario_registro_id: string | null
           id: string
+          ignorado_ate: string | null
           professor_responsavel_id: string | null
           status: string
         }
@@ -4265,6 +4300,7 @@ export type Database = {
           data_entrega?: string | null
           funcionario_registro_id?: string | null
           id?: string
+          ignorado_ate?: string | null
           professor_responsavel_id?: string | null
           status?: string
         }
@@ -4276,6 +4312,7 @@ export type Database = {
           data_entrega?: string | null
           funcionario_registro_id?: string | null
           id?: string
+          ignorado_ate?: string | null
           professor_responsavel_id?: string | null
           status?: string
         }
@@ -5778,6 +5815,7 @@ export type Database = {
           horario_fim: string | null
           horario_inicio: string | null
           id: string
+          is_projeto: boolean | null
           nome: string
           perfil: string | null
           professor_id: string
@@ -5795,6 +5833,7 @@ export type Database = {
           horario_fim?: string | null
           horario_inicio?: string | null
           id?: string
+          is_projeto?: boolean | null
           nome: string
           perfil?: string | null
           professor_id: string
@@ -5812,6 +5851,7 @@ export type Database = {
           horario_fim?: string | null
           horario_inicio?: string | null
           id?: string
+          is_projeto?: boolean | null
           nome?: string
           perfil?: string | null
           professor_id?: string
@@ -6948,6 +6988,50 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_closer_performance: {
+        Args: { p_end_date: string; p_start_date: string; p_unit_ids: string[] }
+        Returns: {
+          assigned_visits: number
+          completed_visits: number
+          enrollments: number
+          user_name: string
+        }[]
+      }
+      get_commercial_conversations_by_phone: {
+        Args: never
+        Returns: {
+          alterar_nome: boolean
+          nome_contato: string
+          origem_nome: string
+          telefone: string
+          total_mensagens: number
+          ultima_mensagem: string
+          ultima_mensagem_at: string
+          unread_count: number
+        }[]
+      }
+      get_commercial_funnel: {
+        Args: { p_end_date: string; p_start_date: string; p_unit_ids: string[] }
+        Returns: {
+          client_count: number
+          stage: string
+          step_order: number
+        }[]
+      }
+      get_commercial_messages_by_phone: {
+        Args: { p_telefone: string }
+        Returns: {
+          client_id: string
+          created_at: string
+          created_by_name: string
+          from_me: boolean
+          id: number
+          mensagem: string
+          telefone: string
+          tipo_mensagem: string
+          url_media: string
+        }[]
+      }
       get_commercial_unit_stats: {
         Args: {
           p_end_date: string
@@ -7216,6 +7300,19 @@ export type Database = {
           total_motivo: number
         }[]
       }
+      get_origin_performance: {
+        Args: { p_end_date: string; p_start_date: string; p_unit_ids: string[] }
+        Returns: {
+          awaiting_visits: number
+          completed_visits: number
+          effective_contacts: number
+          enrollments: number
+          new_clients: number
+          scheduled_visits: number
+          source_name: string
+          total_contacts: number
+        }[]
+      }
       get_periodo_data: { Args: { p_periodo: string }; Returns: string }
       get_pessoas_turma: {
         Args: { p_turma_id: string }
@@ -7381,6 +7478,19 @@ export type Database = {
           variacao_percentual_anterior: number
         }[]
       }
+      get_sdr_performance: {
+        Args: { p_end_date: string; p_start_date: string; p_unit_ids: string[] }
+        Returns: {
+          awaiting_visits: number
+          completed_visits: number
+          effective_contacts: number
+          enrollments: number
+          new_clients: number
+          scheduled_visits: number
+          total_contacts: number
+          user_name: string
+        }[]
+      }
       get_slots_disponiveis_aula_inaugural: {
         Args: { p_data: string; p_unit_id: string }
         Returns: {
@@ -7453,6 +7563,34 @@ export type Database = {
           turma_id: string
           turma_nome: string
           turma_sala: string
+        }[]
+      }
+      get_unit_clients_with_next_activity: {
+        Args: { p_unit_id: string }
+        Returns: {
+          created_at: string
+          created_by_name: string
+          id: string
+          lead_source: string
+          name: string
+          next_activity_date: string
+          next_activity_type: string
+          original_ad: string
+          phone_number: string
+          status: string
+        }[]
+      }
+      get_unit_performance: {
+        Args: { p_end_date: string; p_start_date: string; p_unit_ids: string[] }
+        Returns: {
+          awaiting_visits: number
+          completed_visits: number
+          effective_contacts: number
+          enrollments: number
+          new_clients: number
+          scheduled_visits: number
+          total_contacts: number
+          unit_name: string
         }[]
       }
       get_user_access_info: {
@@ -7742,6 +7880,7 @@ export type Database = {
         | "envio_agradecimento_nps"
         | "digitalizar_rescisao"
         | "comentario"
+        | "digitalizar_contrato_remover_arquivos"
       tipo_evento_sala:
         | "manutencao"
         | "reuniao"
@@ -7981,6 +8120,7 @@ export const Constants = {
         "envio_agradecimento_nps",
         "digitalizar_rescisao",
         "comentario",
+        "digitalizar_contrato_remover_arquivos",
       ],
       tipo_evento_sala: [
         "manutencao",
