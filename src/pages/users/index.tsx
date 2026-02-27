@@ -7,6 +7,8 @@ import { CreateUserDialog } from "@/components/users/create-user-dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminRoute } from "@/components/auth/AdminRoute";
+import { useUsersFilter } from "@/components/users/hooks/useUsersFilter";
+import { UsersFilters } from "@/components/users/UsersFilters";
 
 // Interfaces para representar a estrutura exata dos dados
 interface Unit {
@@ -99,6 +101,9 @@ export default function UsersPage() {
     },
   });
 
+  // Hook de filtros client-side aplicado sobre os dados carregados
+  const filterState = useUsersFilter(users || []);
+
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
   }
@@ -114,7 +119,9 @@ export default function UsersPage() {
           </Button>
         </div>
 
-        <UsersTable users={users || []} />
+        <UsersFilters {...filterState} />
+
+        <UsersTable users={filterState.filteredUsers} />
 
         <CreateUserDialog
           open={isCreateDialogOpen}
